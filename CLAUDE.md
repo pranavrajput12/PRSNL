@@ -32,6 +32,8 @@ git branch -a
 
 ## Important Files
 - `/AI_COLLABORATION_GUIDE.md` - Primary rulebook for all AI collaboration
+- `/GIT_MERGE_STRATEGY.md` - Git-based conflict prevention and merge rules
+- `/PROGRESS_TRACKER.md` - Real-time work coordination
 - `/.github/PULL_REQUEST_TEMPLATE.md` - Template for all PRs
 - `/.github/ISSUE_TEMPLATE/task_assignment.md` - Template for task assignments
 

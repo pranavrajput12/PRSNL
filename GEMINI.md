@@ -61,5 +61,7 @@ git branch -a | grep -E "(cc-|ws-)"  # Check other AI branches
 - `/AI_COLLABORATION_GUIDE.md` - The primary rulebook
 - `/GEMINI.md` - This file
 - `/BOUNDARIES.md` - Conflict prevention rules
+- `/GIT_MERGE_STRATEGY.md` - Git workflows and automated conflict prevention
+- `/PROGRESS_TRACKER.md` - Coordinate work with other agents
 - `/.github/ISSUE_TEMPLATE/task_assignment.md` - Issue template for task assignments
 - `/.github/PULL_REQUEST_TEMPLATE.md` - PR template to follow

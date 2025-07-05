@@ -48,6 +48,8 @@ git branch -a | grep -E "(cc-|gc-)"  # Check other AI branches
 ```
 
 ## Key Files
-- `/AI_COLLABORATION_GUIDE.md` - The primary rulebook.
-- `/WINDSURF.md` - This file.
-- `/BOUNDARIES.md` - Conflict prevention rules.
+- `/AI_COLLABORATION_GUIDE.md` - The primary rulebook
+- `/WINDSURF.md` - This file
+- `/BOUNDARIES.md` - Conflict prevention rules
+- `/GIT_MERGE_STRATEGY.md` - Git workflows and automated conflict prevention
+- `/PROGRESS_TRACKER.md` - Coordinate work with other agents
