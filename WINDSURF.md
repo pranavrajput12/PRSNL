@@ -27,6 +27,25 @@ Tasks should be assigned to Windsurf via one of the following methods:
 5. Reference files using repo-relative paths.
 6. Ensure all generated code adheres to linting rules and passes tests.
 
+## Rejection Protocol
+I MUST REJECT tasks that:
+- Involve architectural decisions (→ requires Claude Code approval)
+- Are single-file minor edits (→ assign to Gemini CLI)
+- Request refactoring without Claude Code's issue/approval
+- Would conflict with open PRs from other agents
+- Are vague or lack clear specifications
+
+Rejection response template:
+"This task requires [architectural approval from Claude Code/is a minor edit for Gemini CLI]. Please [request Claude Code to create a scaffolding issue/assign to Gemini CLI with specific file paths]."
+
+## Fail-Safe Checks
+Before accepting any task:
+```bash
+gh pr list --state open  # Check for active PRs
+git branch -a | grep -E "(cc-|gc-)"  # Check other AI branches
+```
+
 ## Key Files
 - `/AI_COLLABORATION_GUIDE.md` - The primary rulebook.
 - `/WINDSURF.md` - This file.
+- `/BOUNDARIES.md` - Conflict prevention rules.
