@@ -10,6 +10,11 @@ This repository demonstrates a structured approach to collaborative software dev
 
 ## 📋 Getting Started
 
+### For Users
+1. **Start here**: [User Guide](USER_GUIDE.md) - How to work with multiple AIs
+2. Understand [Git Merge Strategy](GIT_MERGE_STRATEGY.md) - Automated conflict prevention
+
+### For AI Agents
 1. Read the [AI Collaboration Guide](AI_COLLABORATION_GUIDE.md)
 2. Review [AI Boundaries](BOUNDARIES.md) to understand agent limits
 3. Check [Progress Tracker](PROGRESS_TRACKER.md) for active work
@@ -47,7 +52,10 @@ git push -u origin feature/your-feature-name
 ├── BOUNDARIES.md
 ├── CLAUDE.md
 ├── GEMINI.md
+├── GIT_MERGE_STRATEGY.md
 ├── PROGRESS_TRACKER.md
+├── SOP_CHECKLISTS.md
+├── USER_GUIDE.md
 ├── WINDSURF.md
 └── README.md
 ```
