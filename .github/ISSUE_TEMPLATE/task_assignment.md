@@ -19,7 +19,7 @@ Clear description of what needs to be done
 ## Assigned To
 - [ ] Claude Code (Complex features, architecture)
 - [ ] Cursor (Minor edits, quick fixes)
-- [ ] Windsurf (TBD)
+- [ ] Windsurf (Scaffolding, large-scale refactoring)
 
 ## Priority
 - [ ] High
