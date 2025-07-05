@@ -13,6 +13,7 @@ You MUST read these files IN THIS EXACT ORDER before accepting any task:
 2. `/BOUNDARIES.md` - Strict conflict prevention rules
 3. `/GEMINI.md` - Your specific configuration
 4. `/PROGRESS_TRACKER.md` - Check for active work and file locks
+5. `/SOP_CHECKLISTS.md` - Step-by-step operational procedures
 
 ## Your Standard Operating Procedure (SOP)
 
@@ -165,6 +166,7 @@ echo "Files to edit: 3"  # Must be ≤ 5
 - When in doubt, REJECT and clarify
 - Your strength is quick, focused changes
 - Leave architecture to Claude Code and scaffolding to Windsurf
+- Follow the checklists in SOP_CHECKLISTS.md for each task
 
 ## Acknowledgment
 Reply with: "Gemini CLI ready for minor edits and quick fixes (≤5 files). I've reviewed all collaboration rules and progress tracking requirements."

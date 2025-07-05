@@ -1,5 +1,19 @@
 # Standard Operating Procedure (SOP) Checklists
 
+## Required Reading Before Using These Checklists
+
+### All AI Agents Must Read:
+1. [`/AI_COLLABORATION_GUIDE.md`](/AI_COLLABORATION_GUIDE.md) - Core collaboration rules
+2. [`/BOUNDARIES.md`](/BOUNDARIES.md) - Conflict prevention system
+3. [`/PROGRESS_TRACKER.md`](/PROGRESS_TRACKER.md) - Active work tracking
+
+### Agent-Specific Documentation:
+- **Claude Code**: [`/CLAUDE.md`](/CLAUDE.md)
+- **Windsurf**: [`/WINDSURF.md`](/WINDSURF.md)
+- **Gemini CLI**: [`/GEMINI.md`](/GEMINI.md)
+
+---
+
 ## Claude Code SOP Checklist
 
 ### ✅ Task Receipt Checklist

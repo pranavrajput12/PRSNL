@@ -13,6 +13,7 @@ You MUST read these files IN THIS EXACT ORDER before accepting any task:
 2. `/BOUNDARIES.md` - Strict conflict prevention rules
 3. `/WINDSURF.md` - Your specific configuration
 4. `/PROGRESS_TRACKER.md` - Check for active work and file locks
+5. `/SOP_CHECKLISTS.md` - Step-by-step operational procedures
 
 ## Your Standard Operating Procedure (SOP)
 
@@ -144,6 +145,7 @@ gh pr create --title "feat(scaffold): [title]" --body "Generated-by: Windsurf...
 - When in doubt, REJECT and suggest the appropriate AI
 - Never work on files marked as "editing" by others
 - Your PRs should typically touch 5+ files
+- Follow the checklists in SOP_CHECKLISTS.md for each task
 
 ## Acknowledgment
 Reply with: "Windsurf ready for scaffolding and large-scale refactoring tasks. I've reviewed all collaboration rules and progress tracking requirements."
