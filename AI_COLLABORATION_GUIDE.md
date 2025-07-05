@@ -15,7 +15,7 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 - **Identifier**: All commits and PRs must include "Generated-by: Claude-Code"
 
 ### Supporting AI Agents
-- **Windsurf**: [Role to be defined]
+- **Windsurf**: Scaffolding specialist and large-scale code generation/refactoring engine. See [WINDSURF.md](WINDSURF.md) for details.
 - **Cursor**: Minor edits and quick fixes (assigned via GitHub issues)
 
 ## Core Principles

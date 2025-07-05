@@ -5,7 +5,7 @@ This repository demonstrates a structured approach to collaborative software dev
 ## 🤖 AI Agents
 
 - **Claude Code**: Primary architect and complex feature lead
-- **Windsurf**: [Role TBD]
+- **Windsurf**: Scaffolds new modules and performs large-scale refactors. See [WINDSURF.md](WINDSURF.md).
 - **Cursor**: Minor edits and quick fixes
 
 ## 📋 Getting Started
@@ -42,6 +42,7 @@ git push -u origin feature/your-feature-name
 ├── tests/                # Test files (when added)
 ├── AI_COLLABORATION_GUIDE.md
 ├── CLAUDE.md
+├── WINDSURF.md
 └── README.md
 ```
 
