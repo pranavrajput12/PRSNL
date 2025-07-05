@@ -56,20 +56,66 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 - Windsurf: `feat/ws-*`, `scaffold/ws-*`, `refactor/ws-*`
 - Gemini CLI: `fix/gc-*`, `chore/gc-*`
 
+## Task Breakdown Protocol
+
+### Complex Task Handling
+When receiving a complex task, Claude Code must:
+1. Analyze the full scope of work required
+2. Break down into discrete sub-tasks
+3. Assign each sub-task to appropriate AI agent:
+   - **Claude Code**: Architecture, complex logic, system design
+   - **Windsurf**: Scaffolding, multi-file generation, large refactors
+   - **Gemini CLI**: Minor fixes, small updates, documentation tweaks
+4. Create GitHub issues for delegated tasks
+5. Update PROGRESS_TRACKER.md with complete breakdown
+
+### Task Delegation Example
+```
+User Request: "Build a user authentication system"
+↓
+Claude Code breaks down into:
+1. Design auth architecture (Claude Code)
+2. Create auth module structure (Windsurf via issue)
+3. Implement core auth logic (Claude Code)
+4. Generate CRUD endpoints (Windsurf via issue)
+5. Fix any linting issues (Gemini CLI via issue)
+```
+
+## Progress Tracking Requirements
+
+### All AI Agents MUST:
+1. **Before Starting**: Update PROGRESS_TRACKER.md with task details
+2. **During Work**: Update progress every 30 minutes
+3. **File Locking**: Mark files as "editing" to prevent conflicts
+4. **After Completion**: Update status and move to completed section
+
+### Progress Update Commands
+```bash
+# Before any work
+git pull --rebase
+# Edit PROGRESS_TRACKER.md
+git add PROGRESS_TRACKER.md
+git commit -m "chore: update progress - starting [task]"
+git push
+```
+
 ## Workflow Rules
 
 ### Before Starting Any Task
 1. **Always** run `git pull --rebase` to sync with latest changes
-2. Review all open Pull Requests to avoid duplicate work
-3. Check GitHub issues for assigned tasks
-4. Create a new feature branch from main/master
+2. **CHECK PROGRESS_TRACKER.md** for active work and file locks
+3. Review all open Pull Requests to avoid duplicate work
+4. Check GitHub issues for assigned tasks
+5. Update PROGRESS_TRACKER.md with your task
+6. Create a new feature branch from main/master
 
 ### During Development
-1. Make atomic commits with clear messages
-2. Run all tests before committing
-3. Ensure pre-commit hooks pass
-4. Use repo-relative paths for all cross-file references
-5. Document complex logic inline when necessary
+1. Update PROGRESS_TRACKER.md every 30 minutes
+2. Make atomic commits with clear messages
+3. Run all tests before committing
+4. Ensure pre-commit hooks pass
+5. Use repo-relative paths for all cross-file references
+6. Document complex logic inline when necessary
 
 ### Submitting Work
 1. Push feature branch to remote

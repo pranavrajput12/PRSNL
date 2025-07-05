@@ -13,6 +13,7 @@ This is a collaborative AI development project where multiple AI agents work tog
 ```bash
 # Before starting any work
 git pull --rebase
+cat PROGRESS_TRACKER.md  # Check for active work
 
 # Check for conflicts
 git status
@@ -40,6 +41,8 @@ git branch -a
 3. Add "Generated-by: Claude-Code" to all PRs
 4. Review open PRs before starting work
 5. Delegate minor tasks to Gemini CLI via issues
+6. **Update PROGRESS_TRACKER.md before, during, and after work**
+7. **Break complex tasks into sub-tasks and delegate appropriately**
 
 ## Rejection Protocol
 I MUST REJECT tasks that:

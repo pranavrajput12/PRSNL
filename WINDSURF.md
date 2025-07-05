@@ -21,11 +21,13 @@ Tasks should be assigned to Windsurf via one of the following methods:
 
 ## Workflow Reminders
 1. Always pull/rebase before starting work.
-2. Work in a dedicated feature branch.
-3. Follow Conventional Commits (e.g., `feat(scaffold)`, `refactor`, `chore(deps)`).
-4. First bullet in PR description: "Generated-by: Windsurf".
-5. Reference files using repo-relative paths.
-6. Ensure all generated code adheres to linting rules and passes tests.
+2. **Check PROGRESS_TRACKER.md for active tasks and file locks**.
+3. Work in a dedicated feature branch.
+4. Follow Conventional Commits (e.g., `feat(scaffold)`, `refactor`, `chore(deps)`).
+5. First bullet in PR description: "Generated-by: Windsurf".
+6. Reference files using repo-relative paths.
+7. Ensure all generated code adheres to linting rules and passes tests.
+8. **Update PROGRESS_TRACKER.md when starting and completing work**.
 
 ## Rejection Protocol
 I MUST REJECT tasks that:
