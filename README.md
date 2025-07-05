@@ -6,7 +6,7 @@ This repository demonstrates a structured approach to collaborative software dev
 
 - **Claude Code**: Primary architect and complex feature lead
 - **Windsurf**: Scaffolds new modules and performs large-scale refactors. See [WINDSURF.md](WINDSURF.md).
-- **Cursor**: Minor edits and quick fixes
+- **Gemini CLI**: Minor edits and quick fixes. See [GEMINI.md](GEMINI.md).
 
 ## 📋 Getting Started
 
@@ -42,6 +42,7 @@ git push -u origin feature/your-feature-name
 ├── tests/                # Test files (when added)
 ├── AI_COLLABORATION_GUIDE.md
 ├── CLAUDE.md
+├── GEMINI.md
 ├── WINDSURF.md
 └── README.md
 ```

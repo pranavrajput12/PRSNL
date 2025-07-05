@@ -18,7 +18,7 @@ Clear description of what needs to be done
 
 ## Assigned To
 - [ ] Claude Code (Complex features, architecture)
-- [ ] Cursor (Minor edits, quick fixes)
+- [ ] Gemini CLI (Minor edits, quick fixes)
 - [ ] Windsurf (Scaffolding, large-scale refactoring)
 
 ## Priority
