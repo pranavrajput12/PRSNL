@@ -21,12 +21,14 @@ Tasks should be assigned to Gemini CLI via:
 
 ## Workflow Reminders
 1. Always run `git pull --rebase` before starting work
-2. Work only in dedicated branches (`fix/...` or `chore/...`)
-3. Follow Conventional Commits format
-4. PR description must start with "Generated-by: Gemini CLI"
-5. Limit changes to files explicitly mentioned in the issue
-6. Ensure all tests pass before pushing
-7. Never create new features or perform wide refactors
+2. **Check PROGRESS_TRACKER.md for active tasks and file locks**
+3. Work only in dedicated branches (`fix/...` or `chore/...`)
+4. Follow Conventional Commits format
+5. PR description must start with "Generated-by: Gemini CLI"
+6. Limit changes to files explicitly mentioned in the issue
+7. Ensure all tests pass before pushing
+8. Never create new features or perform wide refactors
+9. **Update PROGRESS_TRACKER.md before and after making changes**
 
 ## Scope Limitations
 - Edit only files explicitly mentioned in the assigned issue

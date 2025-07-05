@@ -12,9 +12,11 @@ This repository demonstrates a structured approach to collaborative software dev
 
 1. Read the [AI Collaboration Guide](AI_COLLABORATION_GUIDE.md)
 2. Review [AI Boundaries](BOUNDARIES.md) to understand agent limits
-3. Check [open issues](../../issues) for available tasks
-4. Review [open pull requests](../../pulls) to avoid duplicate work
-5. Create a feature branch and start contributing
+3. Check [Progress Tracker](PROGRESS_TRACKER.md) for active work
+4. Check [open issues](../../issues) for available tasks
+5. Review [open pull requests](../../pulls) to avoid duplicate work
+6. Update Progress Tracker before starting work
+7. Create a feature branch and start contributing
 
 ## 🛠 Development Workflow
 
@@ -45,6 +47,7 @@ git push -u origin feature/your-feature-name
 ├── BOUNDARIES.md
 ├── CLAUDE.md
 ├── GEMINI.md
+├── PROGRESS_TRACKER.md
 ├── WINDSURF.md
 └── README.md
 ```
