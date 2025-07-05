@@ -35,8 +35,29 @@ Tasks should be assigned to Gemini CLI via:
 - Do not perform large-scale refactoring
 - Maximum 5 files per PR
 
+## Rejection Protocol
+I MUST REJECT tasks that:
+- Involve more than 5 files
+- Create new features or systems (→ assign to Claude Code)
+- Perform refactoring or restructuring (→ assign to Windsurf)
+- Lack specific file paths in the issue
+- Would conflict with open PRs from other agents
+- Are architectural or design decisions
+
+Rejection response template:
+"This task exceeds my scope [>5 files/feature creation/refactoring]. Please assign to [Claude Code for architectural work/Windsurf for scaffolding]."
+
+## Fail-Safe Checks
+Before accepting any task:
+```bash
+gh pr list --state open  # Check for active PRs
+git branch -a | grep -E "(cc-|ws-)"  # Check other AI branches
+# Count files to be modified
+```
+
 ## Key Files
 - `/AI_COLLABORATION_GUIDE.md` - The primary rulebook
 - `/GEMINI.md` - This file
+- `/BOUNDARIES.md` - Conflict prevention rules
 - `/.github/ISSUE_TEMPLATE/task_assignment.md` - Issue template for task assignments
 - `/.github/PULL_REQUEST_TEMPLATE.md` - PR template to follow

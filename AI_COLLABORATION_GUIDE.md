@@ -20,22 +20,41 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 
 ## Core Principles
 
-### 1. Git as Single Source of Truth
+### 1. Strict Agent Boundaries
+- **No agent shall modify another agent's active work**
+- **Each agent must reject out-of-scope tasks**
+- **See [BOUNDARIES.md](BOUNDARIES.md) for detailed conflict prevention**
+- **When in doubt: REJECT and ESCALATE**
+
+### 2. Git as Single Source of Truth
 - All work must be performed within the repository
 - No external code or modifications outside the repo
 - All decisions and implementations must be tracked in git history
 
-### 2. Branch Strategy
+### 3. Branch Strategy
 - **Main/Master**: Production-ready code only
 - **Feature Branches**: One branch per task/feature
 - **Naming Convention**: `feature/<task-description>` or `fix/<issue-description>`
 - **No Direct Commits**: Never commit directly to main/master
 
-### 3. Commit Standards
+### 4. Commit Standards
 - **Format**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
 - **Types**: feat, fix, docs, style, refactor, test, chore
 - **Example**: `feat: add user authentication system`
 - **Body**: Include detailed description when necessary
+
+## Fail-Safe Mechanisms
+
+### Task Validation Requirements
+1. Check for active PRs: `gh pr list --state open`
+2. Verify no conflicting branches: `git branch -a | grep -E "(cc-|ws-|gc-)"`
+3. Validate task scope matches assigned role
+4. Reject tasks that overlap with other agents' work
+
+### Branch Naming Requirements
+- Claude Code: `feat/cc-*`, `fix/cc-*`, `refactor/cc-*`
+- Windsurf: `feat/ws-*`, `scaffold/ws-*`, `refactor/ws-*`
+- Gemini CLI: `fix/gc-*`, `chore/gc-*`
 
 ## Workflow Rules
 
