@@ -39,7 +39,7 @@ git branch -a
 2. Follow Conventional Commits
 3. Add "Generated-by: Claude-Code" to all PRs
 4. Review open PRs before starting work
-5. Delegate minor tasks to Cursor via issues
+5. Delegate minor tasks to Gemini CLI via issues
 
 ## Project-Specific Notes
 [To be updated as project evolves]

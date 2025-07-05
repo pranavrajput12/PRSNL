@@ -16,7 +16,7 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 
 ### Supporting AI Agents
 - **Windsurf**: Scaffolding specialist and large-scale code generation/refactoring engine. See [WINDSURF.md](WINDSURF.md) for details.
-- **Cursor**: Minor edits and quick fixes (assigned via GitHub issues)
+- **Gemini CLI**: Minor edits and quick fixes (assigned via GitHub issues). See [GEMINI.md](GEMINI.md) for details.
 
 ## Core Principles
 
@@ -81,7 +81,7 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 
 ### Task Assignment
 - **Complex Features**: Assigned directly to Claude Code
-- **Minor Edits**: Created as GitHub issues and assigned to Cursor
+- **Minor Edits**: Created as GitHub issues and assigned to Gemini CLI
 - **Bug Fixes**: Assigned based on complexity
 
 ### Conflict Resolution
