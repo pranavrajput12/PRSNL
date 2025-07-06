@@ -53,3 +53,20 @@ git branch -a | grep -E "(cc-|gc-)"  # Check other AI branches
 - `/BOUNDARIES.md` - Conflict prevention rules
 - `/GIT_MERGE_STRATEGY.md` - Git workflows and automated conflict prevention
 - `/PROGRESS_TRACKER.md` - Coordinate work with other agents
+
+## Project-Specific Notes
+
+### Knowledge Vault Project
+- **Your Scaffolding Tasks**:
+  - Create full project directory structure
+  - Generate FastAPI backend boilerplate
+  - Scaffold SvelteKit frontend with components
+  - Create browser extension structure (Manifest V3)
+  - Generate Docker and docker-compose configs
+  - Set up testing frameworks
+- **Key Directories You'll Create**:
+  - `/backend/` - FastAPI application
+  - `/frontend/` - SvelteKit application  
+  - `/extension/` - Browser extension
+  - `/scripts/` - Utility scripts
+  - `/tests/` - Test suites

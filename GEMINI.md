@@ -65,3 +65,19 @@ git branch -a | grep -E "(cc-|ws-)"  # Check other AI branches
 - `/PROGRESS_TRACKER.md` - Coordinate work with other agents
 - `/.github/ISSUE_TEMPLATE/task_assignment.md` - Issue template for task assignments
 - `/.github/PULL_REQUEST_TEMPLATE.md` - PR template to follow
+
+## Project-Specific Notes
+
+### Knowledge Vault Project
+- **Your Minor Fix Tasks**:
+  - Fix linting errors after scaffolding
+  - Update configuration files
+  - Fix import paths
+  - Correct typos in documentation
+  - Add missing type hints
+  - Update package.json dependencies
+- **Files You'll Likely Touch**:
+  - Configuration files (`.env`, `config.py`)
+  - Documentation files (README, API docs)
+  - Package manifests (`package.json`, `requirements.txt`)
+  - Docker configs (small tweaks only)

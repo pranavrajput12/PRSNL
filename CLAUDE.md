@@ -64,4 +64,12 @@ git branch -a | grep -E "(ws-|gc-)"  # Check other AI branches
 ```
 
 ## Project-Specific Notes
-[To be updated as project evolves]
+
+### Knowledge Vault Project
+- **Type**: Local-first personal knowledge management system
+- **Stack**: FastAPI + PostgreSQL + SvelteKit + Docker
+- **My Focus**: Architecture, API design, core capture/search logic
+- **Key Files**:
+  - `/ARCHITECTURE.md` - System design (I own this)
+  - `/backend/` - Core API implementation
+  - `/docker-compose.yml` - Local deployment config

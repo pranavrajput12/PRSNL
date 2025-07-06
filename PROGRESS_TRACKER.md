@@ -26,7 +26,26 @@ Each task entry must follow this structure:
 
 ## In Progress
 
-<!-- AI agents add active tasks here -->
+### [VAULT-001] Knowledge Vault - Initial Architecture & Setup
+- **Status**: IN_PROGRESS
+- **Assigned to**: Claude Code (Lead)
+- **Branch**: `feat/cc-vault-architecture`
+- **Started**: 2025-01-06 10:00
+- **Last Updated**: 2025-01-06 10:30
+- **Files Being Modified**:
+  - `/ARCHITECTURE.md` (status: complete)
+  - `/README.md` (status: pending)
+  - Project config files (status: pending)
+- **Sub-tasks**:
+  - [x] Design local-first architecture (Owner: Claude Code)
+  - [x] Document system components (Owner: Claude Code)
+  - [x] Define database schema (Owner: Claude Code)
+  - [ ] Create project structure (Owner: Windsurf - Issue #TBD)
+  - [ ] Scaffold FastAPI backend (Owner: Windsurf - Issue #TBD)
+  - [ ] Scaffold SvelteKit frontend (Owner: Windsurf - Issue #TBD)
+  - [ ] Set up Docker Compose (Owner: Claude Code)
+  - [ ] Implement capture API (Owner: Claude Code)
+  - [ ] Create browser extension (Owner: Windsurf - Issue #TBD)
 
 ## Completed Today
 
@@ -34,7 +53,24 @@ Each task entry must follow this structure:
 
 ## Task Queue
 
-<!-- Upcoming tasks that haven't been started -->
+### Backend Development
+- [ ] Implement scraper service with BeautifulSoup
+- [ ] Set up Celery task queue
+- [ ] Integrate Ollama for local LLM
+- [ ] Create search orchestrator
+- [ ] Implement pgvector hybrid search
+
+### Frontend Development  
+- [ ] Design keyboard-first UI
+- [ ] Implement global hotkey overlay
+- [ ] Create command palette
+- [ ] Build focus reader mode
+
+### Infrastructure
+- [ ] Configure PostgreSQL with pgvector
+- [ ] Set up Redis for caching
+- [ ] Create backup scripts
+- [ ] Write deployment documentation
 
 ---
 

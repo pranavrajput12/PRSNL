@@ -1,6 +1,6 @@
-# AI Collaborative Development Project
+# Knowledge Vault - Local-First Personal Knowledge Management
 
-This repository demonstrates a structured approach to collaborative software development using multiple AI agents.
+A keyboard-first, zero-friction vault that captures any digital artifact with one shortcut and resurfaces it in < 1s. Built using AI-collaborative development.
 
 ## 🤖 AI Agents
 
@@ -23,48 +23,69 @@ This repository demonstrates a structured approach to collaborative software dev
 6. Update Progress Tracker before starting work
 7. Create a feature branch and start contributing
 
-## 🛠 Development Workflow
+## 🚀 Quick Start (Local Development)
 
 ```bash
-# Sync with latest changes
-git pull --rebase
+# Clone the repository
+git clone https://github.com/pranavrajput12/PRSNL.git
+cd PRSNL
 
-# Create feature branch
-git checkout -b feature/your-feature-name
+# Start the vault locally
+docker-compose up -d
 
-# Make changes and commit
-git add .
-git commit -m "feat: your feature description"
+# Install browser extension
+# Chrome: chrome://extensions → Load unpacked → select /extension
 
-# Push and create PR
-git push -u origin feature/your-feature-name
+# Access the vault
+# Press Ctrl+Shift+Space (or Cmd+Shift+Space on Mac)
 ```
+
+## 🎯 Key Features
+
+- **One-Key Capture**: Ctrl+Shift+S saves any webpage instantly
+- **Instant Search**: < 1s hybrid search across 100k+ items
+- **Local-First**: Everything runs on YOUR machine, zero cloud costs
+- **Keyboard-Only**: Navigate without touching your mouse
+- **AI-Powered**: Local Llama 3 for smart summaries and tags
 
 ## 📁 Project Structure
 
 ```
 .
-├── .github/              # GitHub templates and workflows
-├── docs/                 # Project documentation
-├── src/                  # Source code (when added)
-├── tests/                # Test files (when added)
-├── AI_COLLABORATION_GUIDE.md
-├── BOUNDARIES.md
-├── CLAUDE.md
-├── GEMINI.md
-├── GIT_MERGE_STRATEGY.md
-├── PROGRESS_TRACKER.md
-├── SOP_CHECKLISTS.md
-├── USER_GUIDE.md
-├── WINDSURF.md
-└── README.md
+├── backend/              # FastAPI backend application
+│   ├── api/             # API endpoints
+│   ├── core/            # Core business logic
+│   ├── models/          # Database models
+│   └── services/        # External services
+├── frontend/            # SvelteKit web interface
+│   ├── src/            # Frontend source
+│   └── static/         # Static assets
+├── extension/          # Browser extension
+│   ├── manifest.json   # Extension config
+│   └── src/           # Extension source
+├── docker/            # Docker configurations
+├── scripts/           # Utility scripts
+├── docs/              # Project documentation
+│   ├── ARCHITECTURE.md # System design
+│   └── AI_GUIDES/     # AI collaboration docs
+└── docker-compose.yml # Local development setup
 ```
 
-## 🔧 Configuration
+## 💻 Tech Stack
 
-- Git hooks: [To be configured]
-- CI/CD: [To be configured]
-- Testing: [To be configured]
+- **Backend**: FastAPI + PostgreSQL (pgvector) + Redis + Celery
+- **Frontend**: SvelteKit + TypeScript  
+- **Search**: Hybrid (BM25 + Vector embeddings)
+- **LLM**: Ollama + Llama 3 (local) / Azure OpenAI (fallback)
+- **Extension**: Chrome/Firefox Manifest V3
+- **Deployment**: Docker Compose (local)
+
+## 📊 Performance Targets
+
+- Capture latency: < 3s (90th percentile)
+- Search latency: < 1s (95th percentile)  
+- Zero monthly costs (local deployment)
+- 100k+ items capacity
 
 ## 📝 Contributing
 
