@@ -24,9 +24,6 @@ This directory contains all documentation for AI agent collaboration on PRSNL.
 - **[AI_AGENTS.md](./AI_AGENTS.md)** - Capabilities and roles of each AI
 - **[COLLABORATION_RULES.md](./COLLABORATION_RULES.md)** - Boundaries and ownership rules
 
-### Legacy (Old Approaches)
-- **[legacy/](./legacy/)** - Previous workflows we tried (kept for reference)
-
 ## 🎯 Key Points
 
 1. **Simple Workflow**: Only Claude Code uses Git

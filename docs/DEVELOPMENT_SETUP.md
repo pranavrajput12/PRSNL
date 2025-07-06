@@ -748,4 +748,4 @@ For questions or issues, refer to:
 - **Troubleshooting Section**: Common problems and solutions
 - **GitHub Issues**: Known bugs and feature requests  
 - **Documentation**: Complete technical reference
-- **AI Assistant**: Use Claude.md for development guidance
+- **AI Assistant**: Use /docs/CLAUDE.md for development guidance

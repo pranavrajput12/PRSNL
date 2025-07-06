@@ -99,6 +99,27 @@ PRSNL/
 - **Blockers**: None
 ```
 
+### Key Commands to Run
+```bash
+# Before starting any work
+git pull --rebase
+cat PROGRESS_TRACKER.md  # Check for active work
+
+# Check for conflicts
+git status
+git branch -a
+
+# Run tests (when test framework is set up)
+# npm test
+# pytest
+# cargo test
+
+# Run linter (when linter is configured)
+# npm run lint
+# ruff check
+# cargo clippy
+```
+
 #### Understand the Request
 - Identify which component(s) are affected
 - Determine if it's a new feature, bug fix, or refactoring
