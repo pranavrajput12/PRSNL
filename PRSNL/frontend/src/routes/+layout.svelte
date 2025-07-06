@@ -4,7 +4,9 @@
   import { page } from '$app/stores';
   import Notifications from '$lib/components/Notifications.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import PerformanceMonitor from '$lib/components/PerformanceMonitor.svelte';
   import { preferences } from '$lib/stores/app';
+  import { mediaSettings } from '$lib/stores/media';
   
   // Global keyboard navigation
   onMount(() => {
@@ -71,6 +73,10 @@
 </main>
 
 <Notifications />
+
+{#if $mediaSettings.logPerformanceMetrics}
+  <PerformanceMonitor position="bottom-right" />
+{/if}
 
 <style>
   nav {

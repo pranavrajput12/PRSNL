@@ -4,8 +4,12 @@ import os
 import asyncio
 import httpx
 from pathlib import Path
-from typing import List, Optional, Dict, Callable, Any
+from typing import List, Optional, Dict, Callable, Any, Coroutine
 from datetime import datetime, timedelta
+from dataclasses import dataclass
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+import time
+
 import asyncio
 import httpx
 import os
@@ -24,6 +28,9 @@ from app.services.platforms.instagram import InstagramProcessor
 from app.services.platforms.youtube import YouTubeProcessor
 from app.services.platforms.twitter import TwitterProcessor
 from app.services.platforms.tiktok import TikTokProcessor
+from app.monitoring.metrics import VIDEO_PROCESSING_DURATION_SECONDS
+from app.services.transcription_service import transcription_service
+from app.services.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +74,10 @@ class VideoProcessor:
 
     def set_progress_callback(self, callback: Callable[[Dict], Coroutine[Any, Any, None]]):
         self._progress_callback = callback
+
+    async def _progress_hook(self, d: Dict):
+        if self._progress_callback:
+            await self._progress_callback(d)
 
     def _get_platform_processor(self, url: str) -> Optional[PlatformProcessor]:
         for processor in self.platform_processors:
@@ -115,6 +126,8 @@ class VideoProcessor:
             logger.error(f"Video URL validation failed for {url}: {e}")
             raise ValueError(f"Video validation failed: {e}")
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2), reraise=True,
+           retry=retry_if_exception_type((httpx.RequestError, ValueError, FileNotFoundError)))
     async def download_video(self, url: str) -> VideoData:
         """
         Download video from URL, compress, and generate thumbnails.
@@ -212,13 +225,14 @@ class VideoProcessor:
         Compresses and converts video to MP4 using ffmpeg.
         Assumes ffmpeg is available in the environment.
         """
+        start_time = time.time()
         # Example: H.264 video, AAC audio, CRF for quality control
         # You might need to adjust CRF (Constant Rate Factor) for desired quality/size
         # Lower CRF means higher quality, larger file. 23 is a good default.
         ffmpeg_cmd = [
             "ffmpeg",
             "-i", str(input_path),
-            "-c:v", "libx264",
+            "-c:v", "libx64",
             "-crf", "28", # Adjust as needed (e.g., 23 for higher quality, 30 for more compression)
             "-preset", "fast", # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
             "-c:a", "aac",
@@ -239,8 +253,10 @@ class VideoProcessor:
         if proc.returncode != 0:
             error_message = f"FFmpeg compression/conversion failed: {stderr.decode()}"
             logger.error(error_message)
+            VIDEO_PROCESSING_DURATION_SECONDS.labels(outcome='failed').observe(time.time() - start_time)
             raise RuntimeError(error_message)
         logger.info(f"Video compressed/converted: {output_path}")
+        VIDEO_PROCESSING_DURATION_SECONDS.labels(outcome='success').observe(time.time() - start_time)
 
     async def _generate_thumbnails(self, video_path: Path, video_id: str) -> Optional[Path]:
         """
@@ -289,6 +305,200 @@ class VideoProcessor:
                     generated_thumbnail_path = output_thumbnail_path
         
         return generated_thumbnail_path
+
+    async def transcribe_video(self, video_path: str) -> Optional[str]:
+        """Transcribes the given video file."""
+        logger.info(f"Starting transcription for video: {video_path}")
+        transcription = await transcription_service.transcribe_audio(video_path)
+        if transcription:
+            logger.info(f"Transcription complete for {video_path}")
+            return transcription
+        else:
+            logger.error(f"Transcription failed for {video_path}")
+            return None
+
+    def _detect_platform(self, url: str) -> str:
+        """
+        Detect the platform from URL
+        """
+        if 'instagram.com' in url:
+            if '/reel/' in url:
+                return 'instagram_reel'
+            elif '/p/' in url:
+                return 'instagram_post'
+            else:
+                return 'instagram'
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            return 'youtube'
+        elif 'tiktok.com' in url:
+            return 'tiktok'
+        elif 'twitter.com' in url or 'x.com' in url:
+            return 'twitter'
+        else:
+            return 'unknown'
+    
+    async def get_video_info(self, url: str) -> Optional[Dict]:
+        """
+        Get video info without downloading
+        """
+        try:
+            info = await asyncio.to_thread(lambda: yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'skip_download': True}).extract_info(url, download=False))
+            if not info:
+                return None
+            return {
+                'title': info.get('title'),
+                'duration': info.get('duration'),
+                'author': info.get('uploader', info.get('channel')),
+                'thumbnail': info.get('thumbnail'),
+                'platform': self._detect_platform(url),
+                'filesize': info.get('filesize') or info.get('filesize_approx'),
+                'width': info.get('width'),
+                'height': info.get('height'),
+                'ext': info.get('ext')
+            }
+        except Exception as e:
+            logger.error(f"Error getting video info: {str(e)}")
+            return None
+
+    async def transcribe_video(self, video_path: str) -> Optional[str]:
+        """Transcribes the given video file."""
+        logger.info(f"Starting transcription for video: {video_path}")
+        transcription = await transcription_service.transcribe_audio(video_path)
+        if transcription:
+            logger.info(f"Transcription complete for {video_path}")
+            return transcription
+        else:
+            logger.error(f"Transcription failed for {video_path}")
+            return None
+
+    def _detect_platform(self, url: str) -> str:
+        """
+        Detect the platform from URL
+        """
+        if 'instagram.com' in url:
+            if '/reel/' in url:
+                return 'instagram_reel'
+            elif '/p/' in url:
+                return 'instagram_post'
+            else:
+                return 'instagram'
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            return 'youtube'
+        elif 'tiktok.com' in url:
+            return 'tiktok'
+        elif 'twitter.com' in url or 'x.com' in url:
+            return 'twitter'
+        else:
+            return 'unknown'
+    
+    async def get_video_info(self, url: str) -> Optional[Dict]:
+        """
+        Get video info without downloading
+        """
+        try:
+            info = await asyncio.to_thread(lambda: yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'skip_download': True}).extract_info(url, download=False))
+            if not info:
+                return None
+            return {
+                'title': info.get('title'),
+                'duration': info.get('duration'),
+                'author': info.get('uploader', info.get('channel')),
+                'thumbnail': info.get('thumbnail'),
+                'platform': self._detect_platform(url),
+                'filesize': info.get('filesize') or info.get('filesize_approx'),
+                'width': info.get('width'),
+                'height': info.get('height'),
+                'ext': info.get('ext')
+            }
+        except Exception as e:
+            logger.error(f"Error getting video info: {str(e)}")
+            return None
+
+    def _detect_platform(self, url: str) -> str:
+        """
+        Detect the platform from URL
+        """
+        if 'instagram.com' in url:
+            if '/reel/' in url:
+                return 'instagram_reel'
+            elif '/p/' in url:
+                return 'instagram_post'
+            else:
+                return 'instagram'
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            return 'youtube'
+        elif 'tiktok.com' in url:
+            return 'tiktok'
+        elif 'twitter.com' in url or 'x.com' in url:
+            return 'twitter'
+        else:
+            return 'unknown'
+    
+    async def get_video_info(self, url: str) -> Optional[Dict]:
+        """
+        Get video info without downloading
+        """
+        try:
+            info = await asyncio.to_thread(lambda: yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'skip_download': True}).extract_info(url, download=False))
+            if not info:
+                return None
+            return {
+                'title': info.get('title'),
+                'duration': info.get('duration'),
+                'author': info.get('uploader', info.get('channel')),
+                'thumbnail': info.get('thumbnail'),
+                'platform': self._detect_platform(url),
+                'filesize': info.get('filesize') or info.get('filesize_approx'),
+                'width': info.get('width'),
+                'height': info.get('height'),
+                'ext': info.get('ext')
+            }
+        except Exception as e:
+            logger.error(f"Error getting video info: {str(e)}")
+            return None
+
+    def _detect_platform(self, url: str) -> str:
+        """
+        Detect the platform from URL
+        """
+        if 'instagram.com' in url:
+            if '/reel/' in url:
+                return 'instagram_reel'
+            elif '/p/' in url:
+                return 'instagram_post'
+            else:
+                return 'instagram'
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            return 'youtube'
+        elif 'tiktok.com' in url:
+            return 'tiktok'
+        elif 'twitter.com' in url or 'x.com' in url:
+            return 'twitter'
+        else:
+            return 'unknown'
+    
+    async def get_video_info(self, url: str) -> Optional[Dict]:
+        """
+        Get video info without downloading
+        """
+        try:
+            info = await asyncio.to_thread(lambda: yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'skip_download': True}).extract_info(url, download=False))
+            if not info:
+                return None
+            return {
+                'title': info.get('title'),
+                'duration': info.get('duration'),
+                'author': info.get('uploader', info.get('channel')),
+                'thumbnail': info.get('thumbnail'),
+                'platform': self._detect_platform(url),
+                'filesize': info.get('filesize') or info.get('filesize_approx'),
+                'width': info.get('width'),
+                'height': info.get('height'),
+                'ext': info.get('ext')
+            }
+        except Exception as e:
+            logger.error(f"Error getting video info: {str(e)}")
+            return None
 
     def _detect_platform(self, url: str) -> str:
         """

@@ -5,6 +5,7 @@
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   
   type Item = {
     id: string;
@@ -42,9 +43,15 @@
       isLoading = true;
       error = null;
       
+      console.log('Starting to load data...');
+      
       // Fetch recent items from timeline
       const timelineResponse = await getTimeline(1);
+      console.log('Timeline response:', timelineResponse);
+      
       recentItems = timelineResponse.items?.slice(0, 6) || [];
+      console.log('Recent items:', recentItems);
+      console.log('First item detail:', recentItems[0]);
       
       // Calculate stats
       const today = new Date();
@@ -64,6 +71,8 @@
       
       // Get tags
       const tagsResponse = await getTags();
+      console.log('Tags response:', tagsResponse);
+      
       const tagsCount = tagsResponse?.tags?.length || 0;
       
       stats = {
@@ -71,6 +80,8 @@
         todayItems: todayCount,
         totalTags: tagsCount
       };
+      
+      console.log('Final stats:', stats);
     } catch (err) {
       console.error('Error loading data:', err);
       error = err instanceof Error ? err : new Error(String(err));
@@ -180,7 +191,9 @@
       </a>
     </div>
     
-    {#if recentItems.length > 0}
+    {#if isLoading}
+      <SkeletonLoader type="card" count={6} />
+    {:else if recentItems.length > 0}
       <div class="items-grid">
         {#each recentItems as item, i}
           <div class="item-card" style="animation-delay: {300 + i * 50}ms">
@@ -192,7 +205,7 @@
             {#if item.item_type === 'video' && item.file_path}
               <div class="item-video">
                 <VideoPlayer 
-                  src={item.file_path}
+                  src={`/api/videos/${item.id}/stream`}
                   thumbnail={item.thumbnail_url}
                   title={item.title}
                   duration={item.duration}
@@ -468,13 +481,31 @@
     transition: all var(--transition-base);
     cursor: pointer;
     animation: fadeIn var(--transition-slow) ease-out forwards;
-    opacity: 0;
+    opacity: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .item-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-red));
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
   }
   
   .item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
     border-color: var(--accent);
+  }
+  
+  .item-card:hover::before {
+    transform: translateX(0);
   }
   
   .item-header {
@@ -498,10 +529,10 @@
   }
   
   .item-video {
-    margin: 0.5rem 0 1rem;
-    max-width: 100%;
-    border-radius: var(--radius);
+    margin: 0.75rem -1.5rem 1rem -1.5rem;
+    border-radius: 0;
     overflow: hidden;
+    background: #000;
   }
   
   .item-footer {
@@ -599,5 +630,17 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 </style>

@@ -1,51 +1,88 @@
-# PRSNL - Personal Knowledge Base
+# PRSNL - Personal Knowledge Management System
 
-Your keyboard-first, zero-friction second brain. Capture anything with Ctrl+Shift+S, find it in < 1s.
+Your AI-powered personal knowledge base. Capture anything from the web, process it with AI, and find it instantly.
 
-## 🎯 Current Status (2025-01-06)
+## 🎯 Current Status (2025-07-07)
 
-✅ **COMPLETED FEATURES**
+✅ **PRODUCTION READY**
+- **Full Stack Application**: Complete with all core features working
+- **Backend APIs**: All endpoints implemented with proper database integration
 - **Frontend UI**: Complete with Manchester United red design (#dc143c)
+- **Video Support**: Instagram, YouTube, Twitter, TikTok video capture & processing
+- **AI Processing**: Multi-provider support (OpenAI, Azure, Anthropic, Ollama)
+- **Vision AI**: Image analysis and OCR capabilities
+- **Real-time Search**: Full-text search with PostgreSQL
 - **Chrome Extension**: Full implementation with context menus & shortcuts
-- **Sample Data**: 25 realistic items across all pages  
-- **Settings Page**: Complete configuration interface
-- **Development Environment**: Ready with Docker, scripts, and database
+- **Development Environment**: Docker setup with PostgreSQL, Ollama, and all services
+- **Production Config**: Docker production setup with monitoring
 
-🚧 **NEXT STEPS**
-- Backend API integration
-- Real-time search functionality
-- Production deployment
+✅ **WORKING FEATURES**
+- **AI-Powered Capture**: Automatic summarization and tagging with LLMs
+- **Multi-Provider AI Router**: Intelligent routing between AI providers
+- **Universal Video Support**: Download from YouTube, Instagram, Twitter, TikTok
+- **Timeline View**: Browse captured content chronologically
+- **Smart Search**: Full-text search across all content
+- **Individual Item Pages**: View, edit, and manage each item
+- **Tag Management**: AI-generated and manual tags
+- **Vision Processing**: Extract text and analyze images
+- **Modern UI**: Dark theme with smooth animations
+- **Storage Management**: Automatic cleanup and optimization
+- **Health Monitoring**: Service status and metrics
+- **Telegram Bot**: Capture content via Telegram (API ready)
+
+✅ **RECENTLY COMPLETED**
+- **Semantic Search**: Find similar content using embeddings (Backend: Gemini, UI: Windsurf)
+- **WebSocket Streaming**: Real-time AI responses (Backend: Claude)
+- **Video Transcription**: Speech-to-text for searchable transcripts (Gemini)
+
+🚧 **IN DEVELOPMENT**
+- **AI Insights Dashboard**: Visualize knowledge patterns (Not started)
 
 ## 🚀 Quick Start
 
-### Frontend Development
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd PRSNL
+```
+
+### 2. Start all services with Docker
+```bash
+# Start PostgreSQL, Ollama, and other services
+docker compose up -d
+
+# Check service health
+docker compose ps
+```
+
+### 3. Start the Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# API available at http://localhost:8000
+```
+
+### 4. Start the Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
-# Visit http://localhost:3000
+# UI available at http://localhost:3002
 ```
 
-### Chrome Extension
+### 5. Load Chrome Extension (Optional)
 ```bash
-# Load extension in Chrome
 # 1. Go to chrome://extensions/
 # 2. Enable Developer mode
 # 3. Click "Load unpacked"
 # 4. Select the /extension folder
 ```
 
-### Full Stack (Docker)
-```bash
-# Start all services
-docker-compose up -d
-
-# Install backend dependencies
-cd backend && pip install -r requirements.txt
-
-# Run the API
-uvicorn app.main:app --reload
-```
+### 6. Access the Application
+- **Frontend**: http://localhost:3002
+- **Backend API**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
 ## 📁 Project Structure
 
@@ -71,12 +108,13 @@ PRSNL/
 ## 🧠 Architecture
 
 - **Local-First**: Everything runs on your machine
-- **Cost**: $0/month (uses Ollama for local LLM)
-- **Privacy**: Your data never leaves your computer
+- **Multi-AI Support**: OpenAI, Azure OpenAI, Anthropic, and Ollama
+- **Privacy**: Your data stays under your control
 - **Speed**: Sub-second search on 100k+ items
+- **Scalable**: Microservices architecture with Docker
 - **Design**: Manchester United red (#dc143c) with Mulish + Poppins fonts
 
-See [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for detailed system design.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system design.
 
 ## 🎨 Design System
 
@@ -128,11 +166,17 @@ The frontend includes 25 realistic sample items covering:
 
 ## 📖 Documentation
 
-- [Architecture Overview](../docs/ARCHITECTURE.md)
-- [Implementation Plan](../docs/IMPLEMENTATION_PLAN.md)
-- [Progress Tracker](../PROGRESS_TRACKER.md)
-- [Task Summary](../TASK_SUMMARY.md)
-- [AI Collaboration Workflow](../docs/ai-collaboration/SIMPLIFIED_WORKFLOW.md)
+### Core Documentation
+- [API Documentation](./API_DOCUMENTATION.md) - Complete API reference
+- [Architecture Overview](./ARCHITECTURE.md) - System design and components
+- [Design Language](./DESIGN_LANGUAGE.md) - UI/UX guidelines
+- [Developer Guide](./DEVELOPER_GUIDE.md) - Development setup and workflow
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment instructions
+
+### Project Management
+- [Model Activity Log](./MODEL_ACTIVITY_LOG.md) - Detailed work tracking
+- [Task Summary](./TASK_SUMMARY.md) - Current progress
+- [Consolidated Task Tracker](./CONSOLIDATED_TASK_TRACKER.md) - Unified task management
 
 ## 🤝 Contributing
 

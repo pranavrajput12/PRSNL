@@ -27,8 +27,16 @@ async function fetchWithErrorHandling(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<any> {
+  const fullUrl = `${API_BASE_URL}${endpoint}`;
+  console.log('🔵 API Request:', {
+    url: fullUrl,
+    method: options.method || 'GET',
+    endpoint,
+    API_BASE_URL
+  });
+
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -36,16 +44,37 @@ async function fetchWithErrorHandling(
       },
     });
 
+    console.log('🟡 API Response:', {
+      url: fullUrl,
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('🔴 API Error:', {
+        url: fullUrl,
+        status: response.status,
+        errorData
+      });
       throw new ApiError(
         errorData.message || `API request failed with status ${response.status}`,
         response.status
       );
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log('🟢 API Success:', {
+      url: fullUrl,
+      dataPreview: Array.isArray(data) ? `Array[${data.length}]` : typeof data
+    });
+    return data;
   } catch (error) {
+    console.error('🔴 API Catch Error:', {
+      url: fullUrl,
+      error: error instanceof Error ? error.message : error
+    });
     if (error instanceof ApiError) {
       throw error;
     }
@@ -84,6 +113,8 @@ export async function searchItems(
     date?: string;
     type?: string;
     tags?: string;
+    mode?: 'keyword' | 'semantic' | 'hybrid';
+    limit?: number;
   } = {}
 ) {
   const params = new URLSearchParams();
@@ -92,15 +123,59 @@ export async function searchItems(
   if (filters.date) params.append('date', filters.date);
   if (filters.type) params.append('type', filters.type);
   if (filters.tags) params.append('tags', filters.tags);
+  if (filters.mode) params.append('mode', filters.mode);
+  if (filters.limit) params.append('limit', filters.limit.toString());
   
-  return fetchWithErrorHandling(`/search?${params.toString()}`);
+  // Use semantic search endpoint if mode is semantic or hybrid
+  const endpoint = (filters.mode === 'semantic' || filters.mode === 'hybrid') 
+    ? '/search/semantic' 
+    : '/search';
+  
+  return fetchWithErrorHandling(`${endpoint}?${params.toString()}`);
+}
+
+/**
+ * Get similar items to a specific item
+ */
+export async function getSimilarItems(id: string, limit: number = 5) {
+  return fetchWithErrorHandling(`/items/${id}/similar?limit=${limit}`);
+}
+
+/**
+ * Transform snake_case to camelCase for a single item
+ */
+function transformItem(item: any) {
+  // If already has camelCase fields, return as is
+  if (item.createdAt) {
+    return item;
+  }
+  
+  return {
+    ...item,
+    createdAt: item.createdAt || item.created_at,
+    updatedAt: item.updatedAt || item.updated_at,
+    itemType: item.itemType || item.item_type,
+    thumbnailUrl: item.thumbnailUrl || item.thumbnail_url,
+    filePath: item.filePath || item.file_path
+  };
 }
 
 /**
  * Get timeline items with pagination
  */
 export async function getTimeline(page: number = 1) {
-  return fetchWithErrorHandling(`/timeline?page=${page}`);
+  const response = await fetchWithErrorHandling(`/timeline?page=${page}`);
+  
+  console.log('Raw timeline response before transform:', response);
+  
+  // Transform snake_case to camelCase for frontend compatibility
+  if (response && response.items) {
+    response.items = response.items.map(transformItem);
+  }
+  
+  console.log('Timeline response after transform:', response);
+  
+  return response;
 }
 
 /**
@@ -121,7 +196,10 @@ export async function getRecentTags() {
  * Get all tags
  */
 export async function getTags() {
-  return fetchWithErrorHandling('/tags');
+  const tags = await fetchWithErrorHandling('/tags');
+  
+  // Backend returns array directly, frontend expects object with tags array
+  return { tags: Array.isArray(tags) ? tags : [] };
 }
 
 /**

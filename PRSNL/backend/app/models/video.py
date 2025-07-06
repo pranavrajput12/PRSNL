@@ -1,5 +1,5 @@
-from pydantic import BaseModel, HttpUrl, Field
-from typing import Optional, List, Dict
+from pydantic import BaseModel, HttpUrl
+from typing import Optional, Dict
 from datetime import datetime
 from uuid import UUID
 
@@ -8,41 +8,27 @@ class VideoMetadata(BaseModel):
     height: Optional[int] = None
     view_count: Optional[int] = None
     like_count: Optional[int] = None
-    upload_date: Optional[str] = None
+    upload_date: Optional[str] = None # YYYYMMDD format
     codec: Optional[str] = None
     audio_codec: Optional[str] = None
     average_bitrate: Optional[float] = None
-    filesize: Optional[int] = None
+    filesize: Optional[int] = None # in bytes
 
-class VideoItem(BaseModel):
-    id: UUID
+class VideoBase(BaseModel):
     url: HttpUrl
     title: str
     description: Optional[str] = None
     author: Optional[str] = None
-    duration: Optional[int] = None
+    duration: Optional[int] = None  # in seconds
+    platform: str
+    metadata: Optional[VideoMetadata] = None
+
+class VideoInDB(VideoBase):
+    id: UUID
     video_path: str
     thumbnail_path: Optional[str] = None
-    platform: str
-    metadata: VideoMetadata
     downloaded_at: datetime
-    status: str
+    status: str = "completed"
 
     class Config:
         from_attributes = True
-
-class VideoStreamResponse(BaseModel):
-    message: str
-    stream_url: str
-
-class VideoTranscodeRequest(BaseModel):
-    quality: str = Field(..., description="Desired quality for transcoding (e.g., 'low', 'medium', 'high')")
-
-class VideoTranscodeResponse(BaseModel):
-    message: str
-    task_id: UUID
-    status: str
-
-class VideoDeleteResponse(BaseModel):
-    message: str
-    item_id: UUID

@@ -37,3 +37,33 @@ async def get_db_connection() -> asyncpg.Connection:
     pool = await get_db_pool()
     async with pool.acquire() as connection:
         yield connection
+
+async def apply_migrations():
+    """Apply database migrations"""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        # Read and execute migration files
+        # In a real scenario, you'd want a more robust migration system
+        # that tracks applied migrations. For this task, we'll just
+        # execute the new migration file.
+        migration_file_path = "/Users/pronav/Personal Knowledge Base/PRSNL/backend/app/db/migrations/003_add_embedding_to_items.sql"
+        with open(migration_file_path, "r") as f:
+            migration_sql = f.read()
+        await conn.execute(migration_sql)
+        print(f"Applied migration: {migration_file_path}")
+
+        migration_file_path = "/Users/pronav/Personal Knowledge Base/PRSNL/backend/app/db/migrations/004_add_transcription_to_items.sql"
+        with open(migration_file_path, "r") as f:
+            migration_sql = f.read()
+        await conn.execute(migration_sql)
+        print(f"Applied migration: {migration_file_path}")
+
+async def update_item_embedding(item_id: str, embedding: List[float]):
+    """Update the embedding for a specific item"""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "UPDATE items SET embedding = $1 WHERE id = $2",
+            embedding,
+            item_id
+        )

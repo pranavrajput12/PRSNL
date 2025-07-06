@@ -15,7 +15,7 @@ class SearchResult(BaseModel):
     url: Optional[str] = None
     snippet: Optional[str] = None
 
-@router.get("/search", response_model=List[SearchResult])
+@router.get("/search")
 async def search_items(
     query: str,
     limit: int = 10,
@@ -29,14 +29,20 @@ async def search_items(
         search_engine = SearchEngine(db_connection)
         results = await search_engine.search(query, limit, offset)
         
-        # Map results to SearchResult model
-        return [
-            SearchResult(
-                id=str(item.id),
-                title=item.title,
-                url=item.url,
-                snippet=item.snippet
-            ) for item in results
-        ]
+        # Frontend expects object with items array
+        return {
+            "items": [
+                {
+                    "id": str(item.id),
+                    "title": item.title,
+                    "url": item.url,
+                    "summary": item.snippet,
+                    "tags": item.tags,
+                    "createdAt": item.created_at.isoformat(),
+                    "type": "article"  # TODO: Get actual type from DB
+                } for item in results
+            ],
+            "total": len(results)
+        }
     except Exception as e:
         raise InternalServerError(f"Failed to perform search: {e}")

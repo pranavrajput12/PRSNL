@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     build-essential \
     gcc \
+    tesseract-ocr \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user and switch to it

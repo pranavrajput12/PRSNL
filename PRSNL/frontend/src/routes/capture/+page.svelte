@@ -1,29 +1,49 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { captureItem, getRecentTags } from '$lib/api';
   import { addNotification } from '$lib/stores/app';
+  import { isVideoUrl, getVideoPlatform, estimateDownloadTime, formatTime } from '$lib/utils/url';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import UrlPreview from '$lib/components/UrlPreview.svelte';
   import TagAutocomplete from '$lib/components/TagAutocomplete.svelte';
+  import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import Icon from '$lib/components/Icon.svelte';
 
+  // Form fields and state
   let url = '';
   let title = '';
   let highlight = '';
-  let tags = [];
+  let tags: string[] = [];
   let isSubmitting = false;
   let message = '';
   let messageType = '';
-  let error = null;
-  let recentTags = [];
+  let error: Error | null = null;
+  let recentTags: string[] = [];
   let isLoadingTags = false;
   let isDragging = false;
   let progress = 0;
-  let progressInterval;
+  let progressInterval: number | null = null;
+  
+  // Video-specific variables
+  let isVideoDetected = false;
+  let videoPlatform: string | null = null;
+  let estimatedDownloadTimeSeconds = 0;
+  let videoQuality: 'standard' | 'high' = 'high';
+  let thumbnailPreviewUrl: string | null = null;
 
   // Focus on URL input on mount
-  let urlInput;
-  let dropZone;
+  let urlInput: HTMLInputElement;
+  let dropZone: HTMLDivElement;
+
+  // Watch for URL changes to detect video URLs
+  $: {
+    if (url) {
+      detectVideoUrl(url);
+    } else {
+      resetVideoDetection();
+    }
+  }
 
   onMount(() => {
     urlInput?.focus();
@@ -42,57 +62,103 @@
       if (progressInterval) clearInterval(progressInterval);
     };
   });
+  
+  /**
+   * Detects if the URL is a video URL and updates the UI accordingly
+   */
+  function detectVideoUrl(urlToCheck: string): void {
+    isVideoDetected = isVideoUrl(urlToCheck);
+    
+    if (isVideoDetected) {
+      videoPlatform = getVideoPlatform(urlToCheck);
+      estimatedDownloadTimeSeconds = estimateDownloadTime(urlToCheck);
+      
+      // Add video tag if not already present
+      if (videoPlatform && !tags.includes('video')) {
+        tags = [...tags, 'video'];
+        
+        // Add platform tag if not already present
+        const platformTag = videoPlatform.toLowerCase();
+        if (!tags.includes(platformTag)) {
+          tags = [...tags, platformTag];
+        }
+      }
+      
+      // For Instagram, we could potentially fetch a thumbnail preview
+      // This would require a backend endpoint in a real implementation
+      if (videoPlatform === 'Instagram') {
+        // Simulating a thumbnail URL - in a real app, this would come from an API
+        thumbnailPreviewUrl = null;
+      }
+    } else {
+      resetVideoDetection();
+    }
+  }
+  
+  /**
+   * Resets video detection state
+   */
+  function resetVideoDetection(): void {
+    isVideoDetected = false;
+    videoPlatform = null;
+    estimatedDownloadTimeSeconds = 0;
+    thumbnailPreviewUrl = null;
+  }
 
   function setupDragAndDrop() {
     if (!dropZone) return;
 
-    dropZone.addEventListener('dragenter', (e) => {
+    dropZone.addEventListener('dragover', (e: DragEvent) => {
       e.preventDefault();
       isDragging = true;
     });
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      isDragging = true;
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
+    dropZone.addEventListener('dragleave', (e: DragEvent) => {
       e.preventDefault();
       isDragging = false;
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('dragenter', (e: DragEvent) => {
+      e.preventDefault();
+    });
+
+    dropZone.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
       isDragging = false;
 
-      const items = e.dataTransfer.items;
+      if (e.dataTransfer) {
+        const items = e.dataTransfer.items;
 
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].kind === 'string' && items[i].type === 'text/uri-list') {
-          items[i].getAsString((droppedUrl) => {
-            url = droppedUrl;
-          });
-        } else if (items[i].kind === 'string' && items[i].type === 'text/plain') {
-          items[i].getAsString((text) => {
-            if (text.startsWith('http://') || text.startsWith('https://')) {
-              url = text;
-            } else {
-              highlight = text;
-            }
-          });
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].kind === 'string' && items[i].type === 'text/uri-list') {
+            items[i].getAsString((droppedUrl: string) => {
+              url = droppedUrl;
+            });
+          } else if (items[i].kind === 'string' && items[i].type === 'text/plain') {
+            items[i].getAsString((text: string) => {
+              if (text.startsWith('http://') || text.startsWith('https://')) {
+                url = text;
+              } else {
+                highlight = text;
+              }
+            });
+          }
         }
       }
     });
   }
 
-  function handlePaste(e) {
+  function handlePaste(e: ClipboardEvent) {
     // Only handle paste if not focused in an input
-    if (document.activeElement.tagName === 'INPUT' || 
-        document.activeElement.tagName === 'TEXTAREA') {
+    const activeElement = document.activeElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA')) {
       return;
     }
 
-    const clipboardData = e.clipboardData || window.clipboardData;
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+    
     const pastedText = clipboardData.getData('text');
 
     if (pastedText) {
@@ -119,7 +185,7 @@
     }
   }
 
-  function handleTagsUpdate(event) {
+  function handleTagsUpdate(event: CustomEvent) {
     tags = event.detail.tags;
   }
 
@@ -138,12 +204,30 @@
       // Start progress indicator
       startProgressIndicator();
 
-      await captureItem({
+      // Include video-specific options if a video is detected
+      const captureData: {
+        url?: string;
+        title?: string;
+        highlight?: string;
+        tags?: string[];
+        is_video?: boolean;
+        video_platform?: string | null;
+        video_quality?: string;
+      } = {
         url,
         title,
         highlight,
         tags
-      });
+      };
+      
+      // Add video-specific data if detected
+      if (isVideoDetected) {
+        captureData.is_video = true;
+        captureData.video_platform = videoPlatform;
+        captureData.video_quality = videoQuality;
+      }
+
+      await captureItem(captureData);
 
       message = 'Successfully captured!';
       messageType = 'success';
@@ -157,24 +241,29 @@
         title = '';
         highlight = '';
         tags = [];
+        resetVideoDetection();
         window.location.href = '/';
       }, 1000);
     } catch (err) {
-      error = err;
-      message = err instanceof Error ? err.message : 'Failed to capture. Please try again.';
+      error = err instanceof Error ? err : new Error(String(err));
+      message = error.message || 'Failed to capture. Please try again.';
       messageType = 'error';
     } finally {
       isSubmitting = false;
-      clearInterval(progressInterval);
+      if (progressInterval !== null) {
+        clearInterval(progressInterval);
+      }
       progress = 0;
     }
   }
 
   function startProgressIndicator() {
     progress = 0;
-    clearInterval(progressInterval);
+    if (progressInterval !== null) {
+      clearInterval(progressInterval);
+    }
 
-    progressInterval = setInterval(() => {
+    progressInterval = window.setInterval(() => {
       // Simulate progress, but slow down as we approach 90%
       if (progress < 90) {
         progress += (90 - progress) / 10;
@@ -183,7 +272,7 @@
   }
 
   // Keyboard shortcuts
-  function handleKeydown(e) {
+  function handleKeydown(e: KeyboardEvent) {
     // CMD/CTRL + Enter to submit
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
@@ -225,17 +314,46 @@
     <form on:submit|preventDefault={handleSubmit}>
       <div class="form-group">
         <label for="url">URL</label>
-        <input 
-          type="text" 
-          id="url" 
-          bind:this={urlInput}
-          bind:value={url} 
-          placeholder="https://example.com" 
-          disabled={isSubmitting}
-        />
+        <div class="url-input-container">
+          <input 
+            type="text" 
+            id="url" 
+            bind:this={urlInput}
+            bind:value={url} 
+            placeholder="https://example.com" 
+            disabled={isSubmitting}
+          />
+          {#if isVideoDetected}
+            <div class="video-indicator">
+              <Icon name="video" size="small" />
+              <span>{videoPlatform} Video</span>
+            </div>
+          {/if}
+        </div>
 
-        {#if url}
+        {#if url && !isVideoDetected}
           <UrlPreview {url} />
+        {/if}
+        
+        {#if isVideoDetected}
+          <div class="video-info">
+            <div class="video-platform">
+              <strong>Platform:</strong> {videoPlatform}
+            </div>
+            <div class="video-download-time">
+              <strong>Estimated download time:</strong> {formatTime(estimatedDownloadTimeSeconds)}
+            </div>
+            
+            <div class="video-options">
+              <label class="video-quality-label">
+                <span>Video Quality:</span>
+                <select bind:value={videoQuality} disabled={isSubmitting}>
+                  <option value="standard">Standard</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+            </div>
+          </div>
         {/if}
       </div>
 
@@ -341,6 +459,58 @@
     position: relative;
     min-height: 400px;
     transition: all 0.3s ease;
+  }
+  
+  .url-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .video-indicator {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    background-color: var(--accent);
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+  }
+  
+  .video-indicator :global(svg) {
+    margin-right: 5px;
+  }
+  
+  .video-info {
+    margin-top: 10px;
+    padding: 12px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--accent);
+  }
+  
+  .video-platform,
+  .video-download-time {
+    margin-bottom: 8px;
+  }
+  
+  .video-options {
+    margin-top: 12px;
+  }
+  
+  .video-quality-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .video-quality-label select {
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background-color: var(--bg-primary);
+    color: var(--text);
   }
 
   .dragging {

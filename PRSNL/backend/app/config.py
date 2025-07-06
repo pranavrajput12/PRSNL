@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_DEPLOYMENT: str = "gpt-4o"
     AZURE_OPENAI_API_VERSION: str = "2025-01-01-preview"
+
+    # Telegram Bot
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_WEBHOOK_SECRET: str = ""
     
     # Processing
     MAX_CONTENT_LENGTH: int = 50000  # Max chars to process

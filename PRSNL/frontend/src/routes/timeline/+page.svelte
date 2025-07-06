@@ -1,17 +1,19 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { getTimeline } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import { browser } from '$app/environment';
+  import { mediaSettings, recordMemoryUsage } from '$lib/stores/media';
 
   type Item = {
     id: string;
     title: string;
     url?: string;
-    summary: string;
+    summary?: string; // Make summary optional since it might be null
     createdAt: string;
     tags: string[];
     type?: string;
@@ -38,11 +40,95 @@
   let typeFilter = '';
   let tagsFilter = '';
   let scrollContainer: HTMLElement | null = null;
+  let visibleItems = new Set<string>();
+  let videoObserver: IntersectionObserver | null = null;
+  
+  // Virtual scrolling variables
+  let virtualScrollEnabled = false;
+  let visibleGroupIndices: number[] = [];
+  let viewportHeight = 0;
+  let scrollPosition = 0;
+  let itemHeights: Record<string, number> = {};
+  let groupHeights: number[] = [];
+  let totalHeight = 0;
+  let bufferSize = 3; // Number of groups to render above and below visible area
+  let resizeObserver: ResizeObserver | null = null;
+  let performanceMetricsInterval: number | null = null;
 
-  onMount(() => {
+  onMount(async () => {
+    console.log('Starting to load data...');
+    
+    // First, let's check the debug endpoint
+    try {
+      const debugResponse = await fetch('/api/admin/debug/items');
+      const debugData = await debugResponse.json();
+      console.log('[DEBUG] Items in database:', debugData);
+    } catch (e) {
+      console.error('[DEBUG] Failed to fetch debug data:', e);
+    }
+    
     loadTimeline(true);
-    setupInfiniteScroll();
+    
+    if (browser) {
+      // Set up video lazy loading
+      setupVideoLazyLoading();
+      
+      // Set up virtual scrolling
+      if (virtualScrollEnabled) {
+        setupVirtualScroll();
+      } else {
+        setupInfiniteScroll();
+      }
+      
+      // Set up performance monitoring
+      if ($mediaSettings.logPerformanceMetrics) {
+        performanceMetricsInterval = window.setInterval(() => {
+          recordMemoryUsage();
+        }, 10000); // Record every 10 seconds
+      }
+      
+      // Set up resize observer to recalculate heights when window resizes
+      resizeObserver = new ResizeObserver(debounce(() => {
+        calculateHeights();
+        updateVisibleGroups();
+      }, 200));
+      
+      if (scrollContainer) {
+        resizeObserver.observe(scrollContainer);
+      }
+    }
   });
+  
+  onDestroy(() => {
+    if (videoObserver) {
+      videoObserver.disconnect();
+    }
+    
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+    
+    if (performanceMetricsInterval !== null) {
+      window.clearInterval(performanceMetricsInterval);
+    }
+  });
+  
+  function setupVideoLazyLoading() {
+    videoObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute('data-item-id');
+          if (id) {
+            if (entry.isIntersecting) {
+              visibleItems = visibleItems.add(id);
+            }
+          }
+        });
+        visibleItems = new Set(visibleItems); // Trigger reactivity
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+  }
 
   async function loadTimeline(reset = false) {
     try {
@@ -50,6 +136,9 @@
         page = 1;
         groups = [];
         hasMore = true;
+        visibleGroupIndices = [];
+        groupHeights = [];
+        totalHeight = 0;
       }
       
       if (!hasMore || isLoading) return;
@@ -57,10 +146,26 @@
       isLoading = true;
       error = null;
       
+      console.log('[Timeline] Loading page:', page);
+      
+      // Direct API call for debugging
+      try {
+        const directResponse = await fetch(`/api/timeline?page=${page}`);
+        const directData = await directResponse.json();
+        console.log('[Timeline] Direct API response:', directData);
+      } catch (e) {
+        console.error('[Timeline] Direct API call failed:', e);
+      }
+      
       const response = await getTimeline(page);
+      console.log('[Timeline] Response received:', response);
       
       if (response && response.items && response.items.length > 0) {
+        console.log('[Timeline] Items received:', response.items.length);
+        console.log('[Timeline] First item:', response.items[0]);
+        
         const newGroups = groupByDate(response.items);
+        console.log('[Timeline] Groups created:', newGroups);
         
         if (reset) {
           groups = newGroups;
@@ -68,9 +173,20 @@
           groups = mergeGroups(groups, newGroups);
         }
         
+        console.log('[Timeline] Total groups after merge:', groups.length);
+        console.log('[Timeline] All groups:', groups);
+        
         hasMore = response.total > (page * response.pageSize);
         page += 1;
+        
+        // Recalculate heights for virtual scrolling after DOM update
+        if (virtualScrollEnabled) {
+          await tick(); // Wait for DOM update
+          calculateHeights();
+          updateVisibleGroups();
+        }
       } else {
+        console.log('[Timeline] No items received or empty response');
         hasMore = false;
       }
     } catch (err) {
@@ -82,11 +198,18 @@
   }
 
   function groupByDate(items: Item[]): TimelineGroup[] {
+    console.log('[groupByDate] Input items:', items);
     const grouped: Record<string, TimelineGroup> = {};
     
     items.forEach((item: Item) => {
+      console.log('[groupByDate] Processing item:', item);
+      console.log('[groupByDate] createdAt value:', item.createdAt);
+      
       const date = new Date(item.createdAt);
+      console.log('[groupByDate] Parsed date:', date);
+      
       const dateKey = date.toDateString();
+      console.log('[groupByDate] Date key:', dateKey);
       
       if (!grouped[dateKey]) {
         grouped[dateKey] = {
@@ -98,7 +221,9 @@
       grouped[dateKey].items.push(item);
     });
 
-    return Object.values(grouped);
+    const result = Object.values(grouped);
+    console.log('[groupByDate] Final grouped result:', result);
+    return result;
   }
 
   function mergeGroups(existing: TimelineGroup[], newGroups: TimelineGroup[]): TimelineGroup[] {
@@ -116,26 +241,136 @@
     return merged;
   }
 
-  function setupInfiniteScroll() {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadTimeline();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    // Observe sentinel element
-    const sentinel = document.createElement('div');
-    sentinel.id = 'scroll-sentinel';
-    document.body.appendChild(sentinel);
-    observer.observe(sentinel);
-
-    return () => {
-      observer.disconnect();
-      document.getElementById('scroll-sentinel')?.remove();
+  // Debounce utility function to limit how often a function runs
+  function debounce(func: Function, wait: number) {
+    let timeout: number | null = null;
+    return function(...args: any[]) {
+      const later = () => {
+        timeout = null;
+        func(...args);
+      };
+      if (timeout !== null) {
+        clearTimeout(timeout);
+      }
+      timeout = window.setTimeout(later, wait);
     };
+  }
+
+  function setupVirtualScroll() {
+    // Get reference to the scroll container
+    scrollContainer = document.querySelector('.timeline-content');
+    if (!scrollContainer) {
+      console.error('Scroll container not found');
+      return;
+    }
+    
+    // Initial calculations
+    viewportHeight = window.innerHeight;
+    
+    // Set up scroll event listener with debounce
+    scrollContainer.addEventListener('scroll', debounce(() => {
+      scrollPosition = scrollContainer?.scrollTop || 0;
+      updateVisibleGroups();
+      
+      // Load more content when approaching the bottom
+      const scrollBottom = scrollPosition + viewportHeight;
+      const scrollThreshold = totalHeight - (viewportHeight * 1.5);
+      
+      if (scrollBottom > scrollThreshold && hasMore && !isLoading) {
+        loadTimeline();
+      }
+    }, 50));
+    
+    // Initial height calculation after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      calculateHeights();
+      updateVisibleGroups();
+    }, 200);
+    
+    // Update viewport height on window resize
+    window.addEventListener('resize', debounce(() => {
+      viewportHeight = window.innerHeight;
+      updateVisibleGroups();
+    }, 200));
+  }
+  
+  function calculateHeights() {
+    if (!scrollContainer || groups.length === 0) return;
+    
+    // Reset heights
+    groupHeights = [];
+    totalHeight = 0;
+    
+    // Calculate heights for each group
+    groups.forEach((group, index) => {
+      const groupElement = scrollContainer?.querySelector(`[data-group-index="${index}"]`);
+      if (groupElement) {
+        const height = groupElement.getBoundingClientRect().height;
+        groupHeights[index] = height;
+        totalHeight += height;
+      } else {
+        // Estimate height if element is not rendered
+        const estimatedHeight = 200 + (group.items.length * 150);
+        groupHeights[index] = estimatedHeight;
+        totalHeight += estimatedHeight;
+      }
+    });
+  }
+  
+  function updateVisibleGroups() {
+    if (!scrollContainer || groups.length === 0) return;
+    
+    scrollPosition = scrollContainer.scrollTop;
+    const viewportBottom = scrollPosition + viewportHeight;
+    
+    // Find which groups are visible in the viewport
+    let currentPosition = 0;
+    let newVisibleIndices: number[] = [];
+    
+    for (let i = 0; i < groups.length; i++) {
+      const groupHeight = groupHeights[i] || 0;
+      const groupTop = currentPosition;
+      const groupBottom = groupTop + groupHeight;
+      
+      // Check if group is visible or within buffer
+      if (
+        (groupBottom >= scrollPosition - (bufferSize * viewportHeight) && 
+         groupTop <= viewportBottom + (bufferSize * viewportHeight)) ||
+        // Always include first and last few groups for smoother scrolling
+        i < 2 || i >= groups.length - 2
+      ) {
+        newVisibleIndices.push(i);
+      }
+      
+      currentPosition += groupHeight;
+    }
+    
+    // Update visible groups if changed
+    if (JSON.stringify(newVisibleIndices) !== JSON.stringify(visibleGroupIndices)) {
+      visibleGroupIndices = newVisibleIndices;
+    }
+  }
+  
+  function setupInfiniteScroll() {
+    // Fallback for when virtual scrolling is disabled
+    setTimeout(() => {
+      const sentinel = document.getElementById('scroll-sentinel');
+      if (!sentinel) {
+        console.error('Scroll sentinel not found');
+        return;
+      }
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !isLoading) {
+            loadTimeline();
+          }
+        },
+        { threshold: 0.1 }
+      );
+      
+      observer.observe(sentinel);
+    }, 100);
   }
 
   function formatDate(dateString: string): string {
@@ -196,6 +431,21 @@
       ...group,
       items: group.items.filter(item => item.id !== itemId)
     })).filter(group => group.items.length > 0);
+  }
+  
+  // Action to observe video items for lazy loading
+  function observeVideo(node: HTMLElement) {
+    if (videoObserver && node.getAttribute('data-item-id')) {
+      videoObserver.observe(node);
+      
+      return {
+        destroy() {
+          if (videoObserver) {
+            videoObserver.unobserve(node);
+          }
+        }
+      };
+    }
   }
 </script>
 
@@ -297,7 +547,28 @@
       </div>
     {/if}
 
-    <div class="timeline-content" class:compact={viewMode === 'compact'}>
+    <div class="timeline-content" class:compact={viewMode === 'compact'} bind:this={scrollContainer}>
+      <!-- Debug info -->
+      <!-- <div style="background: yellow; padding: 10px; margin-bottom: 10px;">
+        Debug: groups.length = {groups.length}, isLoading = {isLoading}, hasMore = {hasMore}
+        <button 
+          style="margin-left: 10px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+          on:click={async () => {
+            try {
+              const response = await fetch('/api/admin/test/create-item', { method: 'POST' });
+              const data = await response.json();
+              console.log('Test item created:', data);
+              alert('Test item created! Refresh the page to see it.');
+            } catch (e) {
+              console.error('Failed to create test item:', e);
+              alert('Failed to create test item. Check console.');
+            }
+          }}
+        >
+          Create Test Item
+        </button>
+      </div> -->
+      
       {#if groups.length === 0 && !isLoading}
         <div class="empty-state">
           <div class="empty-icon animate-pulse">
@@ -311,77 +582,192 @@
           </button>
         </div>
       {:else}
-        {#each groups as group, groupIndex}
-          <div class="timeline-group" style="animation-delay: {groupIndex * 100}ms">
-            <div class="date-separator">
-              <h2>{formatDate(group.date)}</h2>
-              <div class="separator-line"></div>
-            </div>
-            
-            <div class="timeline-items">
-              {#each group.items as item, itemIndex}
-                <div 
-                  class="timeline-item {viewMode}" 
-                  style="animation-delay: {(groupIndex * 100) + (itemIndex * 50)}ms"
-                >
-                  <div class="item-time">
-                    {getRelativeTime(item.createdAt)}
-                  </div>
-                  
-                  <div class="item-content">
-                    <div class="item-header">
-                      <a href="/item/{item.id}" class="item-title">
-                        {item.title}
-                      </a>
+        {#if virtualScrollEnabled}
+          <!-- Virtual scrolling spacer to maintain scroll position -->
+          <div class="virtual-scroll-spacer" style="height: {totalHeight}px;"></div>
+          
+          <!-- Only render visible groups -->
+          {#each visibleGroupIndices as groupIndex (groupIndex)}
+            {#if groups[groupIndex]}
+              <div 
+                class="timeline-group" 
+                data-group-index={groupIndex}
+                style="position: absolute; top: {groupHeights.slice(0, groupIndex).reduce((sum, h) => sum + h, 0)}px; width: 100%;"
+              >
+                <div class="date-separator">
+                  <h2>{formatDate(groups[groupIndex].date)}</h2>
+                  <div class="separator-line"></div>
+                </div>
+                
+                <div class="timeline-items">
+                  {#each groups[groupIndex].items as item, itemIndex}
+                    <div 
+                      class="timeline-item {viewMode}"
+                      data-item-id={item.id}
+                      use:observeVideo
+                    >
+                      <div class="item-time">
+                        {getRelativeTime(item.createdAt)}
+                        {#if item.item_type === 'video'}
+                          <span class="item-type video">
+                            <Icon name="video" size="small" />
+                            Video
+                          </span>
+                        {/if}
+                      </div>
                       
-                      <div class="item-actions">
-                        <button class="action-btn" title="Edit">
-                          <Icon name="edit" size="small" />
-                        </button>
-                        <button class="action-btn delete" title="Delete" on:click={() => deleteItem(item.id)}>
-                          <Icon name="close" size="small" />
-                        </button>
+                      <div class="item-content">
+                        <div class="item-header">
+                          <a href="/item/{item.id}" class="item-title">
+                            {item.title}
+                          </a>
+                          
+                          <div class="item-actions">
+                            <button class="action-btn" title="Edit">
+                              <Icon name="edit" size="small" />
+                            </button>
+                            <button class="action-btn delete" title="Delete" on:click={() => deleteItem(item.id)}>
+                              <Icon name="close" size="small" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {#if item.url}
+                          <div class="item-url">
+                            <Icon name="external-link" size="small" />
+                            <a href={item.url} target="_blank" rel="noopener">
+                              {new URL(item.url).hostname}
+                            </a>
+                          </div>
+                        {/if}
+                        
+                        {#if item.item_type === 'video' && item.file_path && viewMode !== 'compact'}
+                          <div class="item-video">
+                            <VideoPlayer 
+                              src={`/api/videos/${item.id}/stream`}
+                              thumbnail={item.thumbnail_url}
+                              thumbnailUrl={item.thumbnail_url}
+                              title={item.title}
+                              duration={item.duration}
+                              platform={item.platform}
+                              lazyLoad={true}
+                              autoplay={false}
+                              videoId={item.id}
+                            />
+                          </div>
+                        {:else if viewMode !== 'compact'}
+                          <p class="item-summary">{item.summary}</p>
+                        {/if}
+                        
+                        {#if item.tags?.length > 0}
+                          <div class="item-tags">
+                            {#each item.tags as tag}
+                              <span class="tag">
+                                <Icon name="tag" size="small" />
+                                {tag}
+                              </span>
+                            {/each}
+                          </div>
+                        {/if}
                       </div>
                     </div>
-                    
-                    {#if item.url}
-                      <div class="item-url">
-                        <Icon name="external-link" size="small" />
-                        <a href={item.url} target="_blank" rel="noopener">
-                          {new URL(item.url).hostname}
-                        </a>
-                      </div>
-                    {/if}
-                    
-                    {#if item.item_type === 'video' && item.file_path && viewMode !== 'compact'}
-                      <div class="item-video">
-                        <VideoPlayer 
-                          src={item.file_path}
-                          thumbnail={item.thumbnail_url}
-                          title={item.title}
-                          duration={item.duration}
-                        />
-                      </div>
-                    {:else if viewMode !== 'compact'}
-                      <p class="item-summary">{item.summary}</p>
-                    {/if}
-                    
-                    {#if item.tags?.length > 0}
-                      <div class="item-tags">
-                        {#each item.tags as tag}
-                          <span class="tag">
-                            <Icon name="tag" size="small" />
-                            {tag}
-                          </span>
-                        {/each}
-                      </div>
-                    {/if}
-                  </div>
+                  {/each}
                 </div>
-              {/each}
+              </div>
+            {/if}
+          {/each}
+        {:else}
+          <!-- Regular rendering without virtual scrolling -->
+          {#each groups as group, groupIndex}
+            <div class="timeline-group" style="animation-delay: {groupIndex * 100}ms">
+              <!-- Debug info for each group -->
+              <div style="background: lightblue; padding: 5px; margin-bottom: 5px;">
+                Group {groupIndex}: {group.date} - {group.items.length} items
+              </div>
+              
+              <div class="date-separator">
+                <h2>{formatDate(group.date)}</h2>
+                <div class="separator-line"></div>
+              </div>
+              
+              <div class="timeline-items">
+                {#each group.items as item, itemIndex}
+                  <div 
+                    class="timeline-item {viewMode}" 
+                    style="animation-delay: {(groupIndex * 100) + (itemIndex * 50)}ms"
+                    data-item-id={item.id}
+                    use:observeVideo
+                  >
+                    <div class="item-time">
+                      {getRelativeTime(item.createdAt)}
+                      {#if item.item_type === 'video'}
+                        <span class="item-type video">
+                          <Icon name="video" size="small" />
+                          Video
+                        </span>
+                      {/if}
+                    </div>
+                    
+                    <div class="item-content">
+                      <div class="item-header">
+                        <a href="/item/{item.id}" class="item-title">
+                          {item.title}
+                        </a>
+                        
+                        <div class="item-actions">
+                          <button class="action-btn" title="Edit">
+                            <Icon name="edit" size="small" />
+                          </button>
+                          <button class="action-btn delete" title="Delete" on:click={() => deleteItem(item.id)}>
+                            <Icon name="close" size="small" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {#if item.url}
+                        <div class="item-url">
+                          <Icon name="external-link" size="small" />
+                          <a href={item.url} target="_blank" rel="noopener">
+                            {new URL(item.url).hostname}
+                          </a>
+                        </div>
+                      {/if}
+                      
+                      {#if item.item_type === 'video' && item.file_path && viewMode !== 'compact'}
+                        <div class="item-video">
+                          <VideoPlayer 
+                            src={`/api/videos/${item.id}/stream`}
+                            thumbnail={item.thumbnail_url}
+                            thumbnailUrl={item.thumbnail_url}
+                            title={item.title}
+                            duration={item.duration}
+                            platform={item.platform}
+                            lazyLoad={true}
+                            autoplay={false}
+                            videoId={item.id}
+                          />
+                        </div>
+                      {:else if viewMode !== 'compact' && item.summary}
+                        <p class="item-summary">{item.summary}</p>
+                      {/if}
+                      
+                      {#if item.tags?.length > 0}
+                        <div class="item-tags">
+                          {#each item.tags as tag}
+                            <span class="tag">
+                              <Icon name="tag" size="small" />
+                              {tag}
+                            </span>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  </div>
+                {/each}
+              </div>
             </div>
-          </div>
-        {/each}
+          {/each}
+        {/if}
       {/if}
 
       {#if isLoading}
@@ -396,31 +782,48 @@
 
 <style>
   .timeline-container {
-    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 0 1rem;
   }
   
   .timeline-header {
     display: flex;
-    align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 3rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
   }
   
-  .header-content h1 {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-    font-weight: 800;
-  }
-  
-  .subtitle {
-    color: var(--text-secondary);
-    font-size: 1.25rem;
-    font-weight: 500;
+  .timeline-title {
+    font-size: 1.5rem;
+    font-weight: 600;
     margin: 0;
+  }
+  
+  .timeline-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .timeline-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+    position: relative; /* Required for virtual scrolling */
+  }
+  
+  /* Virtual scrolling styles */
+  .virtual-scroll-spacer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+    pointer-events: none;
   }
   
   .header-actions {
@@ -511,7 +914,7 @@
   .timeline-group {
     margin-bottom: 3rem;
     animation: fadeIn var(--transition-slow) ease-out forwards;
-    opacity: 0;
+    opacity: 1; /* Changed from 0 to 1 as fallback */
   }
   
   .date-separator {
@@ -542,7 +945,8 @@
   }
   
   .timeline-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 120px 1fr;
     gap: 1.5rem;
     padding: 1.5rem;
     background: var(--bg-secondary);
@@ -550,13 +954,31 @@
     border-radius: var(--radius);
     transition: all var(--transition-base);
     animation: fadeIn var(--transition-slow) ease-out forwards;
+    opacity: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent);
     opacity: 0;
+    transition: opacity var(--transition-base);
   }
   
   .timeline-item:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     border-color: var(--accent);
+  }
+  
+  .timeline-item:hover::before {
+    opacity: 1;
   }
   
   .timeline-item.compact {
@@ -653,6 +1075,32 @@
   .item-video {
     margin: 1rem 0;
     max-width: 600px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    background: #000;
+  }
+  
+  .item-video:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .item-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 8px;
+  }
+  
+  .item-type.video {
+    background-color: var(--man-united-red);
+    color: white;
   }
   
   .item-tags {
@@ -747,6 +1195,18 @@
     
     .filters {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 </style>

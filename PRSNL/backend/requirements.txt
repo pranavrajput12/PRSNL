@@ -29,3 +29,16 @@ structlog==24.1.0
 # Media Processing
 yt-dlp
 pillow==10.2.0
+
+# Vision AI
+pytesseract==0.3.10
+aiofiles==23.2.1
+python-multipart==0.0.6
+
+# Monitoring
+prometheus-client==0.19.0
+python-telegram-bot==20.8
+tenacity==8.2.3
+
+# AI/ML
+openai==1.35.3

@@ -16,19 +16,32 @@ class CaptureEngine:
         self.scraper = WebScraper()
         self.llm_processor = LLMProcessor()
     
-    async def process_item(self, item_id: UUID, url: str):
+    async def process_item(self, item_id: UUID, url: str = None, content: str = None):
         """
         Process a captured item:
-        1. Scrape content
+        1. Scrape content (if URL provided)
         2. Process with LLM
         3. Update database
         """
         try:
             pool = await get_db_pool()
             
-            # Scrape the URL
-            logger.info(f"Scraping URL: {url}")
-            scraped_data = await self.scraper.scrape(url)
+            # If content is provided directly, use it; otherwise scrape the URL
+            if content:
+                logger.info(f"Using provided content for item {item_id}")
+                scraped_data = type('ScrapedData', (), {
+                    'content': content,
+                    'title': 'User Note',
+                    'html': content,
+                    'author': None,
+                    'published_date': None,
+                    'scraped_at': None
+                })()
+            elif url:
+                logger.info(f"Scraping URL: {url}")
+                scraped_data = await self.scraper.scrape(url)
+            else:
+                raise ValueError("Either URL or content must be provided")
             
             if not scraped_data.content:
                 logger.error(f"Failed to scrape content from {url}")
