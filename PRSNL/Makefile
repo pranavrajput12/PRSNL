@@ -1,61 +1,51 @@
-# PRSNL Development Makefile
+SHELL := /bin/bash
 
-.PHONY: help install install-backend install-frontend install-hooks format lint test clean
+.PHONY: dev stop reset seed logs
 
-help:
-	@echo "Available commands:"
-	@echo "  make install         - Install all dependencies"
-	@echo "  make install-backend - Install Python dependencies"
-	@echo "  make install-frontend - Install Node.js dependencies"
-	@echo "  make install-hooks   - Install pre-commit hooks"
-	@echo "  make format          - Format all code"
-	@echo "  make lint            - Run all linters"
-	@echo "  make test            - Run all tests"
-	@echo "  make clean           - Clean up generated files"
+# Define colors for output
+GREEN=\033[0;32m
+YELLOW=\033[0;33m
+NC=\033[0m # No Color
 
-install: install-backend install-frontend install-hooks
+# Navigate to the PRSNL directory
+PRSNL_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-install-backend:
-	cd backend && python -m venv venv
-	cd backend && ./venv/bin/pip install -r requirements-dev.txt
+dev:
+	@echo "$(GREEN)Starting all services...$(NC)"
+	@cd $(PRSNL_DIR) && docker-compose up -d --build
+	@echo "$(YELLOW)Waiting for PostgreSQL to be ready...$(NC)"
+	@until docker-compose -f $(PRSNL_DIR)/docker-compose.yml exec db pg_isready -U postgres -d prsnl > /dev/null 2>&1; do \
+	  echo "$(YELLOW)PostgreSQL is unavailable - sleeping$(NC)"; \
+	  sleep 2; \
+	done
+	@echo "$(GREEN)PostgreSQL is up and running.$(NC)"
+	@echo "$(YELLOW)Applying database schema...$(NC)"
+	@docker-compose -f $(PRSNL_DIR)/docker-compose.yml exec -T db psql -U postgres -d prsnl -f /app/db/schema.sql
+	@echo "$(YELLOW)Waiting for Ollama to be ready...$(NC)"
+	@until curl -s http://localhost:11434/api/tags > /dev/null 2>&1; do \
+	  echo "$(YELLOW)Ollama is unavailable - sleeping$(NC)"; \
+	  sleep 5; \
+	done
+	@echo "$(GREEN)Ollama is up and running.$(NC)"
+	@echo "$(YELLOW)Downloading Ollama model: llama3...$(NC)"
+	@curl -X POST http://localhost:11434/api/pull -d '{ "name": "llama3" }' > /dev/null 2>&1 || true
+	@echo "$(GREEN)Development environment is ready!$(NC)"
 
-install-frontend:
-	cd frontend && npm install
+stop:
+	@echo "$(YELLOW)Stopping all services...$(NC)"
+	@cd $(PRSNL_DIR) && docker-compose down
+	@echo "$(GREEN)All services stopped.$(NC)"
 
-install-hooks:
-	pre-commit install
-	@echo "✅ Pre-commit hooks installed!"
+reset:
+	@echo "$(YELLOW)Resetting database...$(NC)"
+	@cd $(PRSNL_DIR) && docker-compose down -v
+	@echo "$(GREEN)Database reset. Run 'make dev' to re-initialize.$(NC)"
 
-format:
-	# Python formatting
-	cd backend && black .
-	cd backend && isort .
-	# JavaScript/TypeScript formatting
-	cd frontend && npm run format
-	@echo "✅ Code formatted!"
+seed:
+	@echo "$(GREEN)Seeding initial data...$(NC)"
+	@cd $(PRSNL_DIR) && python3 scripts/seed_data.py
+	@echo "$(GREEN)Data seeding complete.$(NC)"
 
-lint:
-	# Python linting
-	cd backend && flake8
-	cd backend && mypy app
-	# JavaScript/TypeScript linting
-	cd frontend && npm run lint
-	@echo "✅ Linting complete!"
-
-test:
-	# Run backend tests
-	cd backend && pytest
-	# Run frontend tests (when added)
-	# cd frontend && npm test
-	@echo "✅ Tests complete!"
-
-clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
-	find . -type d -name "node_modules" -exec rm -rf {} +
-	find . -type d -name "dist" -exec rm -rf {} +
-	find . -type d -name "build" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name ".coverage" -delete
-	@echo "✅ Cleaned up!"
+logs:
+	@echo "$(YELLOW)Showing all service logs (Ctrl+C to exit)...$(NC)"
+	@cd $(PRSNL_DIR) && docker-compose logs -f

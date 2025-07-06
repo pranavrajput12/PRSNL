@@ -1,24 +1,39 @@
 # AI Collaboration Documentation
 
-This directory contains all documentation related to AI agent collaboration on the PRSNL project.
+This directory contains all documentation for AI agent collaboration on PRSNL.
 
-## Quick Start
+## 🚀 Quick Start for AI Agents
 
-### For Human Operators
-1. Read [Simplified Workflow](./SIMPLIFIED_WORKFLOW.md) - Our current approach
-2. Use [Task Assignment SOP](./TASK_ASSIGNMENT_SOP.md) when giving tasks
-3. Check agent capabilities in [AI Agents Overview](./AI_AGENTS.md)
+### If you're Windsurf or Gemini CLI:
+1. **Read This First**: [Simplified Workflow](./SIMPLIFIED_WORKFLOW.md)
+2. **Key Rule**: You do NOT use Git commands - just edit files
+3. **When Done**: Update TASK_SUMMARY.md in the root folder
 
-### For AI Agents
-1. **Most Important**: You do NOT use Git commands
-2. Read [AI Agents Overview](./AI_AGENTS.md) for your role
-3. Follow [Collaboration Rules](./COLLABORATION_RULES.md)
-4. Create TASK_SUMMARY.md after completing work
+### If you're Claude Code:
+1. You handle ALL Git operations
+2. Review and commit work from other AIs
+3. Maintain code quality and documentation
 
-## Documentation Structure
+## 📋 Documentation Guide
 
-- **[SIMPLIFIED_WORKFLOW.md](./SIMPLIFIED_WORKFLOW.md)** - Current workflow (NO Git for Windsurf/Gemini)
-- **[TASK_ASSIGNMENT_SOP.md](./TASK_ASSIGNMENT_SOP.md)** - How to assign tasks to AI agents
-- **[AI_AGENTS.md](./AI_AGENTS.md)** - Roles and capabilities of each AI
-- **[COLLABORATION_RULES.md](./COLLABORATION_RULES.md)** - Rules and boundaries
-- **[LEGACY/](./LEGACY/)** - Old approaches we tried (for reference only)
+### Core Workflow
+- **[SIMPLIFIED_WORKFLOW.md](./SIMPLIFIED_WORKFLOW.md)** - Our current workflow (NO Git for Windsurf/Gemini)
+- **[TASK_ASSIGNMENT_SOP.md](./TASK_ASSIGNMENT_SOP.md)** - How humans assign tasks to AIs
+
+### AI Information
+- **[AI_AGENTS.md](./AI_AGENTS.md)** - Capabilities and roles of each AI
+- **[COLLABORATION_RULES.md](./COLLABORATION_RULES.md)** - Boundaries and ownership rules
+
+### Legacy (Old Approaches)
+- **[legacy/](./legacy/)** - Previous workflows we tried (kept for reference)
+
+## 🎯 Key Points
+
+1. **Simple Workflow**: Only Claude Code uses Git
+2. **Clear Ownership**: Each AI has specific domains
+3. **Shared Task Summary**: One TASK_SUMMARY.md for all AIs
+4. **No Conflicts**: Since only one AI handles Git
+
+## 📝 Task Summary Location
+
+All AIs update: `/TASK_SUMMARY.md` (in project root, not in PRSNL folder)

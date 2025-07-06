@@ -1,6 +1,8 @@
 <script lang="ts">
   import '../app.css';
   import { onMount } from 'svelte';
+  import Notifications from '$lib/components/Notifications.svelte';
+  import { preferences } from '$lib/stores/app';
   
   // Global keyboard navigation
   onMount(() => {
@@ -40,6 +42,8 @@
 <main>
   <slot />
 </main>
+
+<Notifications />
 
 <style>
   nav {

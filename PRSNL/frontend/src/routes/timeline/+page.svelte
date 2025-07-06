@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { getTimeline } from '$lib/api';
+  import Spinner from '$lib/components/Spinner.svelte';
+  import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   
   interface TimelineItem {
     id: string;
@@ -19,6 +22,7 @@
   let isLoading = true;
   let currentPage = 1;
   let hasMore = true;
+  let error: Error | null = null;
   
   onMount(() => {
     loadTimeline();
@@ -26,10 +30,8 @@
   
   async function loadTimeline() {
     try {
-      const response = await fetch(`/api/timeline?page=${currentPage}`);
-      if (!response.ok) throw new Error('Failed to load timeline');
-      
-      const data = await response.json();
+      error = null;
+      const data = await getTimeline(currentPage);
       
       // Group items by date
       const grouped = data.items.reduce((acc: any, item: TimelineItem) => {
@@ -55,8 +57,9 @@
       
       hasMore = data.hasMore;
       isLoading = false;
-    } catch (error) {
-      console.error('Timeline error:', error);
+    } catch (err) {
+      console.error('Timeline error:', err);
+      error = err as Error;
       isLoading = false;
     }
   }
@@ -81,8 +84,17 @@
   <p class="subtitle">Your knowledge vault over time</p>
   
   <div class="timeline" on:scroll={handleScroll}>
-    {#if isLoading && currentPage === 1}
-      <div class="loading">Loading timeline...</div>
+    {#if error}
+      <ErrorMessage 
+        message="Failed to load timeline" 
+        details={error.message} 
+        retry={loadTimeline} 
+        dismiss={() => error = null} 
+      />
+    {:else if isLoading && currentPage === 1}
+      <div class="loading">
+        <Spinner size="medium" center message="Loading timeline..." />
+      </div>
     {:else if groups.length === 0}
       <div class="empty-state">
         <p>No items in your vault yet</p>
@@ -124,7 +136,12 @@
       {#if hasMore}
         <div class="load-more">
           <button on:click={loadMore} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Load more'}
+            {#if isLoading}
+              <Spinner size="small" />
+              <span>Loading...</span>
+            {:else}
+              Load more
+            {/if}
           </button>
         </div>
       {/if}

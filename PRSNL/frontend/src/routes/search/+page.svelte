@@ -1,55 +1,71 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  
+  import { searchItems } from '$lib/api';
+  import { addRecentSearch } from '$lib/stores/app';
+  import Spinner from '$lib/components/Spinner.svelte';
+  import ErrorMessage from '$lib/components/ErrorMessage.svelte';
+
+  interface SearchResult {
+    id: string;
+    title: string;
+    url?: string;
+    snippet: string;
+    created_at: string;
+    tags: string[];
+  }
+
   let query = '';
-  let results: any[] = [];
-  let isSearching = false;
+  let results: SearchResult[] = [];
+  let isLoading = false;
+  let selectedIndex = -1;
   let searchInput: HTMLInputElement;
-  let selectedIndex = 0;
-  
-  // Search filters
-  let dateFilter = 'all';
-  let typeFilter = 'all';
-  let tagFilter = '';
-  
+  let dateFilter = '';
+  let typeFilter = '';
+  let tagsFilter = '';
+  let error: Error | null = null;
+
   onMount(() => {
     searchInput?.focus();
   });
-  
-  async function performSearch() {
-    if (!query.trim() && !tagFilter) return;
-    
-    isSearching = true;
-    selectedIndex = 0;
-    
+
+  async function handleSearch() {
+    if (!query.trim()) {
+      results = [];
+      return;
+    }
+
+    isLoading = true;
+    selectedIndex = -1;
+    error = null;
+
     try {
-      const params = new URLSearchParams({
-        q: query,
+      // Save to recent searches
+      addRecentSearch(query);
+
+      // Call the API
+      const response = await searchItems(query, {
         date: dateFilter,
         type: typeFilter,
-        tags: tagFilter
+        tags: tagsFilter
       });
-      
-      const response = await fetch(`/api/search?${params}`);
-      if (!response.ok) throw new Error('Search failed');
-      
-      const data = await response.json();
-      results = data.results;
-    } catch (error) {
-      console.error('Search error:', error);
+
+      results = response.items || [];
+    } catch (err) {
+      console.error('Search error:', err);
+      error = err as Error;
       results = [];
     } finally {
-      isSearching = false;
+      isLoading = false;
     }
   }
-  
+
   // Debounced search
   let searchTimeout: ReturnType<typeof setTimeout>;
   function handleSearchInput() {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(performSearch, 300);
+    searchTimeout = setTimeout(handleSearch, 300);
   }
-  
+
   // Keyboard navigation
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'ArrowDown') {
@@ -71,7 +87,7 @@
       }
     }
   }
-  
+
   function highlightMatch(text: string, query: string) {
     if (!query) return text;
     const regex = new RegExp(`(${query})`, 'gi');
@@ -84,47 +100,58 @@
 <div class="container">
   <div class="search-container">
     <div class="search-header">
-      <h1>Search Your Vault</h1>
-      <div class="search-box">
-        <input
-          bind:this={searchInput}
-          bind:value={query}
-          on:input={handleSearchInput}
-          type="text"
-          placeholder="Search for anything..."
-          class="search-input"
-        />
-        {#if isSearching}
-          <div class="spinner" />
-        {/if}
-      </div>
-      
-      <div class="filters">
-        <select bind:value={dateFilter} on:change={performSearch}>
-          <option value="all">All time</option>
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-          <option value="year">This year</option>
-        </select>
-        
-        <select bind:value={typeFilter} on:change={performSearch}>
-          <option value="all">All types</option>
-          <option value="url">URLs</option>
-          <option value="text">Text</option>
-          <option value="file">Files</option>
-        </select>
-        
-        <input
-          bind:value={tagFilter}
-          on:input={handleSearchInput}
-          type="text"
-          placeholder="Filter by tags..."
-          class="tag-filter"
-        />
-      </div>
+      <h1>Search</h1>
+      <p class="subtitle">Find items in your knowledge vault</p>
     </div>
-    
+
+    {#if error}
+      <ErrorMessage 
+        message="Search failed" 
+        details={error.message} 
+        retry={handleSearch} 
+        dismiss={() => error = null} 
+      />
+    {/if}
+
+    <div class="search-box">
+      <input
+        bind:this={searchInput}
+        bind:value={query}
+        on:input={handleSearchInput}
+        type="text"
+        placeholder="Search for anything..."
+        class="search-input"
+      />
+      {#if isLoading}
+        <Spinner />
+      {/if}
+    </div>
+
+    <div class="filters">
+      <select bind:value={dateFilter} on:change={handleSearch}>
+        <option value="">All time</option>
+        <option value="today">Today</option>
+        <option value="week">This week</option>
+        <option value="month">This month</option>
+        <option value="year">This year</option>
+      </select>
+
+      <select bind:value={typeFilter} on:change={handleSearch}>
+        <option value="">All types</option>
+        <option value="url">URLs</option>
+        <option value="text">Text</option>
+        <option value="file">Files</option>
+      </select>
+
+      <input
+        bind:value={tagsFilter}
+        on:input={handleSearchInput}
+        type="text"
+        placeholder="Filter by tags..."
+        class="tag-filter"
+      />
+    </div>
+
     <div class="results">
       {#if results.length > 0}
         <div class="results-count">{results.length} results</div>
@@ -151,7 +178,7 @@
             </a>
           {/each}
         </div>
-      {:else if query || tagFilter}
+      {:else if query || tagsFilter}
         <div class="empty-state">
           <p>No results found</p>
           <p class="hint">Try different keywords or filters</p>

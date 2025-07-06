@@ -1,58 +1,28 @@
-"""Search API endpoints"""
-from fastapi import APIRouter, Query, Depends
-from typing import Optional, List
-from app.models.schemas import SearchResponse, SearchResult
-from app.core.search_engine import SearchEngine
-from app.db.database import get_db_connection
-import asyncpg
-import time
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
+from typing import List, Optional
 
+from app.core.exceptions import InvalidInput, InternalServerError
 
-router = APIRouter(prefix="/search", tags=["search"])
+router = APIRouter()
 
+class SearchResult(BaseModel):
+    id: str
+    title: str
+    url: Optional[str] = None
+    content_snippet: Optional[str] = None
 
-@router.get("/", response_model=SearchResponse)
-async def search(
-    q: str = Query(..., description="Search query"),
-    date: Optional[str] = Query("all", description="Date filter"),
-    type: Optional[str] = Query("all", description="Type filter"),
-    tags: Optional[str] = Query(None, description="Comma-separated tags"),
-    limit: int = Query(20, le=100),
-    conn: asyncpg.Connection = Depends(get_db_connection)
-):
-    """
-    Full-text search with PostgreSQL
-    """
-    start_time = time.time()
-    
-    # Build search query
-    search_engine = SearchEngine(conn)
-    
-    # Parse tags
-    tag_list = tags.split(",") if tags else []
-    
-    # Perform search
-    results = await search_engine.search(
-        query=q,
-        date_filter=date,
-        type_filter=type,
-        tags=tag_list,
-        limit=limit
-    )
-    
-    # Count total results
-    total = await search_engine.count_results(
-        query=q,
-        date_filter=date,
-        type_filter=type,
-        tags=tag_list
-    )
-    
-    # Calculate timing
-    took_ms = int((time.time() - start_time) * 1000)
-    
-    return SearchResponse(
-        results=results,
-        total=total,
-        took_ms=took_ms
-    )
+@router.get("/search", response_model=List[SearchResult])
+async def search_items(query: str, limit: int = 10, offset: int = 0):
+    """Search for items by keyword or phrase."""
+    if not query:
+        raise InvalidInput("Search query cannot be empty.")
+    try:
+        # Simulate search logic
+        results = [
+            {"id": "1", "title": "Sample Result 1", "url": "http://example.com/1", "content_snippet": "...snippet 1..."},
+            {"id": "2", "title": "Sample Result 2", "url": "http://example.com/2", "content_snippet": "...snippet 2..."},
+        ]
+        return results
+    except Exception as e:
+        raise InternalServerError(f"Failed to perform search: {e}")

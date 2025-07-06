@@ -1,97 +1,104 @@
-# Knowledge Vault - Local-First Personal Knowledge Management
+# PRSNL - Personal Knowledge Vault
 
 A keyboard-first, zero-friction vault that captures any digital artifact with one shortcut and resurfaces it in < 1s. Built using AI-collaborative development.
 
-## 🤖 AI Agents
-
-- **Claude Code**: Primary architect and complex feature lead
-- **Windsurf**: Scaffolds new modules and performs large-scale refactors. See [WINDSURF.md](WINDSURF.md).
-- **Gemini CLI**: Minor edits and quick fixes. See [GEMINI.md](GEMINI.md).
-
-## 📋 Getting Started
-
-### For Users
-1. **Start here**: [User Guide](USER_GUIDE.md) - How to work with multiple AIs
-2. Understand [Git Merge Strategy](GIT_MERGE_STRATEGY.md) - Automated conflict prevention
-
-### For AI Agents
-1. Read the [AI Collaboration Guide](AI_COLLABORATION_GUIDE.md)
-2. Review [AI Boundaries](BOUNDARIES.md) to understand agent limits
-3. Check [Progress Tracker](PROGRESS_TRACKER.md) for active work
-4. Check [open issues](../../issues) for available tasks
-5. Review [open pull requests](../../pulls) to avoid duplicate work
-6. Update Progress Tracker before starting work
-7. Create a feature branch and start contributing
-
-## 🚀 Quick Start (Local Development)
+## 🚀 Quick Start
 
 ```bash
-# Clone the repository
+# Clone and enter directory
 git clone https://github.com/pranavrajput12/PRSNL.git
 cd PRSNL
 
-# Start the vault locally
-docker-compose up -d
+# Start everything with one command
+make dev
 
-# Install browser extension
-# Chrome: chrome://extensions → Load unpacked → select /extension
+# Open frontend
+open http://localhost:3000
 
-# Access the vault
-# Press Ctrl+Shift+Space (or Cmd+Shift+Space on Mac)
+# API docs
+open http://localhost:8000/docs
 ```
 
-## 🎯 Key Features
+## 🎯 Features
 
-- **One-Key Capture**: Ctrl+Shift+S saves any webpage instantly
-- **Instant Search**: < 1s hybrid search across 100k+ items
-- **Local-First**: Everything runs on YOUR machine, zero cloud costs
-- **Keyboard-Only**: Navigate without touching your mouse
-- **AI-Powered**: Local Llama 3 for smart summaries and tags
+- **One-Key Capture**: Press `Cmd+Shift+S` to capture any webpage
+- **Instant Search**: Press `Cmd+Shift+Space` for global search overlay
+- **Smart Processing**: Automatic summarization and tagging with Ollama
+- **Local-First**: Everything runs on your machine, no cloud dependencies
+- **Zero-Friction**: Keyboard-driven interface for maximum speed
 
-## 📁 Project Structure
+## 🏗️ Architecture
 
+- **Frontend**: SvelteKit with TypeScript
+- **Backend**: FastAPI with PostgreSQL
+- **Extension**: Chrome extension for web capture
+- **Overlay**: Electron app for global search
+- **Processing**: Ollama (local) or Azure OpenAI (optional)
+
+## 📖 Documentation
+
+- **[Full Documentation](./docs/)** - All project documentation
+- **[Architecture](./docs/ARCHITECTURE.md)** - System design details
+- **[AI Collaboration](./docs/ai-collaboration/)** - How we build with AI
+- **[Progress Tracker](./PROGRESS_TRACKER.md)** - Current development status
+
+## 🤖 AI Development Team
+
+This project is built collaboratively by AI agents:
+
+- **Claude Code**: Architecture and complex features
+- **Windsurf**: Frontend and UI implementation
+- **Gemini CLI**: Backend and infrastructure
+
+See [AI Collaboration Guide](./docs/ai-collaboration/) for details.
+
+## 🛠️ Development
+
+```bash
+# Install dependencies
+cd PRSNL/frontend && npm install
+cd ../backend && pip install -r requirements.txt
+
+# Run tests
+make test
+
+# Format code
+make format
+
+# Stop services
+make stop
+
+# Reset database
+make reset
 ```
-.
-├── PRSNL/                # Main application code
-│   ├── backend/         # FastAPI backend
-│   ├── frontend/        # SvelteKit web interface
-│   ├── extension/       # Browser extension
-│   ├── docker/          # Docker configurations
-│   ├── scripts/         # Utility scripts
-│   └── tests/           # Test suites
-├── docs/                 # Documentation
-│   ├── ARCHITECTURE.md  # System design
-│   ├── IMPLEMENTATION_PLAN.md
-│   └── AI_GUIDES/       # AI collaboration docs
-├── AI_COLLABORATION_GUIDE.md
-├── PROGRESS_TRACKER.md
-└── [Other AI config files]
+
+## 📱 Usage
+
+### Capture
+- Browser: Click extension or press `Cmd+Shift+S`
+- Direct: Go to http://localhost:3000/capture
+
+### Search
+- Global: Press `Cmd+Shift+Space` anywhere
+- Web: Go to http://localhost:3000/search
+
+### Browse
+- Timeline: http://localhost:3000/timeline
+- Tags: Coming soon
+
+## 🔧 Configuration
+
+Create `.env` file:
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/prsnl
+OLLAMA_BASE_URL=http://localhost:11434
+AZURE_OPENAI_API_KEY=your_key_here (optional)
 ```
-
-## 💻 Tech Stack
-
-- **Backend**: FastAPI + PostgreSQL (pgvector) + Redis + Celery
-- **Frontend**: SvelteKit + TypeScript  
-- **Search**: Hybrid (BM25 + Vector embeddings)
-- **LLM**: Ollama + Llama 3 (local) / Azure OpenAI (fallback)
-- **Extension**: Chrome/Firefox Manifest V3
-- **Deployment**: Docker Compose (local)
-
-## 📊 Performance Targets
-
-- Capture latency: < 3s (90th percentile)
-- Search latency: < 1s (95th percentile)  
-- Zero monthly costs (local deployment)
-- 100k+ items capacity
-
-## 📝 Contributing
-
-All contributions must follow the guidelines in [AI_COLLABORATION_GUIDE.md](AI_COLLABORATION_GUIDE.md).
 
 ## 📄 License
 
-[To be determined]
+MIT License - see LICENSE file
 
----
+## 🙏 Acknowledgments
 
-*Generated and maintained by AI agents following strict collaboration protocols.*
+Built with AI collaboration using Claude, Windsurf, and Gemini.

@@ -29,31 +29,42 @@ Each task entry must follow this structure:
 
 ## In Progress
 
-### [VAULT-001] Knowledge Vault - Initial Architecture & Setup
+### [DOC-001] Documentation Cleanup & Reorganization
 - **Status**: IN_PROGRESS
-- **Assigned to**: Claude Code (Lead)
-- **Branch**: `feat/cc-vault-architecture`
-- **Started**: 2025-01-06 10:00
-- **Last Updated**: 2025-01-06 10:30
+- **Assigned to**: Claude Code
+- **Started**: 2025-01-06 14:00
+- **Last Updated**: 2025-01-06 14:00
 - **Files Being Modified**:
-  - `/docs/ARCHITECTURE.md` (status: complete)
-  - `/docs/IMPLEMENTATION_PLAN.md` (status: complete)
-  - `/README.md` (status: complete)
-  - `/PRSNL/` directory structure (status: in progress)
-- **Sub-tasks**:
-  - [x] Design local-first architecture (Owner: Claude Code)
-  - [x] Document system components (Owner: Claude Code)
-  - [x] Define database schema (Owner: Claude Code)
-  - [ ] Create project structure (Owner: Windsurf - Issue #TBD)
-  - [ ] Scaffold FastAPI backend (Owner: Windsurf - Issue #TBD)
-  - [ ] Scaffold SvelteKit frontend (Owner: Windsurf - Issue #TBD)
-  - [ ] Set up Docker Compose (Owner: Claude Code)
-  - [ ] Implement capture API (Owner: Claude Code)
-  - [ ] Create browser extension (Owner: Windsurf - Issue #TBD)
+  - `/docs/` directory structure (status: editing)
+- **Tasks**:
+  - [ ] Remove duplicate documentation
+  - [ ] Consolidate AI collaboration docs
+  - [ ] Update README with clear navigation
+  - [ ] Create single source of truth for each topic
+
+### [DEV-001] Development Environment Setup
+- **Status**: PENDING
+- **Assigned to**: Gemini CLI
+- **Started**: 2025-01-06 14:00
+- **Files to Create**:
+  - `/PRSNL/scripts/setup_dev.sh`
+  - `/PRSNL/.env.example`
+  - `/PRSNL/scripts/seed_data.py`
+- **Note**: Task assigned, waiting for completion
 
 ## Completed Today
 
-<!-- Move completed tasks here at end of day -->
+### [VAULT-001] Knowledge Vault - Initial Implementation
+- **Status**: COMPLETED
+- **Completed**: 2025-01-06 14:00
+- **Deliverables**:
+  - [x] Frontend with capture, search, timeline pages
+  - [x] Backend API with all endpoints
+  - [x] Chrome extension for web capture
+  - [x] Electron overlay for global search
+  - [x] PostgreSQL worker for background processing
+  - [x] Development environment setup
+  - [x] Documentation reorganization
 
 ## Task Queue
 

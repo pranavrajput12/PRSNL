@@ -1,5 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { captureItem, getRecentTags } from '$lib/api';
+  import { addNotification } from '$lib/stores/app';
+  import Spinner from '$lib/components/Spinner.svelte';
+  import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   
   let url = '';
   let text = '';
@@ -7,6 +11,9 @@
   let isSubmitting = false;
   let message = '';
   let messageType: 'success' | 'error' | '' = '';
+  let error: Error | null = null;
+  let recentTags: string[] = [];
+  let isLoadingTags = false;
   
   // Focus on URL input on mount
   let urlInput: HTMLInputElement;
@@ -21,7 +28,22 @@
     }).catch(() => {
       // Clipboard access denied
     });
+    
+    // Load recent tags for suggestions
+    loadRecentTags();
   });
+  
+  async function loadRecentTags() {
+    try {
+      isLoadingTags = true;
+      const response = await getRecentTags();
+      recentTags = response.tags || [];
+    } catch (err) {
+      console.error('Failed to load tags:', err);
+    } finally {
+      isLoadingTags = false;
+    }
+  }
   
   async function handleSubmit() {
     if (!url && !text) {
@@ -32,25 +54,27 @@
     
     isSubmitting = true;
     message = '';
+    error = null;
     
     try {
-      const response = await fetch('/api/capture', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url || undefined,
-          text: text || undefined,
-          tags: tags.split(',').map(t => t.trim()).filter(Boolean)
-        })
+      const parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+      
+      const response = await captureItem({
+        url: url || undefined,
+        title: undefined, // The backend will extract title from URL if needed
+        highlight: text || undefined,
+        tags: parsedTags
       });
       
-      if (!response.ok) throw new Error('Failed to capture');
-      
-      const data = await response.json();
       message = 'Captured successfully!';
       messageType = 'success';
+      
+      // Add notification that will show in the main app
+      addNotification({
+        type: 'success',
+        message: 'Item captured successfully',
+        timeout: 3000
+      });
       
       // Clear form
       url = '';
@@ -61,8 +85,9 @@
       setTimeout(() => {
         window.location.href = '/';
       }, 1000);
-    } catch (error) {
-      message = 'Failed to capture. Please try again.';
+    } catch (err) {
+      error = err as Error;
+      message = err instanceof Error ? err.message : 'Failed to capture. Please try again.';
       messageType = 'error';
     } finally {
       isSubmitting = false;
@@ -129,9 +154,38 @@
           disabled={isSubmitting}
         />
         <div class="hint">Comma-separated tags for organization</div>
+        
+        {#if recentTags.length > 0}
+          <div class="recent-tags">
+            <span class="recent-tags-label">Recent:</span>
+            {#each recentTags as tag}
+              <button 
+                type="button" 
+                class="tag-suggestion"
+                on:click={() => {
+                  const currentTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+                  if (!currentTags.includes(tag)) {
+                    tags = currentTags.length > 0 
+                      ? `${tags}, ${tag}` 
+                      : tag;
+                  }
+                }}
+              >
+                {tag}
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
       
-      {#if message}
+      {#if error}
+        <ErrorMessage 
+          message="Failed to capture item" 
+          details={error.message} 
+          retry={handleSubmit} 
+          dismiss={() => error = null} 
+        />
+      {:else if message}
         <div class="message {messageType}">
           {message}
         </div>
@@ -139,8 +193,13 @@
       
       <div class="actions">
         <button type="submit" class="primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Capturing...' : 'Capture'}
-          <span class="keyboard-hint">⌘↵</span>
+          {#if isSubmitting}
+            <Spinner size="small" />
+            <span>Capturing...</span>
+          {:else}
+            <span>Capture</span>
+            <span class="keyboard-hint">⌘↵</span>
+          {/if}
         </button>
         <button type="button" on:click={() => window.location.href = '/'} disabled={isSubmitting}>
           Cancel
