@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+asyncpg
+SQLAlchemy
+beautifulsoup4
+httpx
+python-readability
