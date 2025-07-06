@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRSNL Capture</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PRSNL Capture</h1>
+    </header>
+    
+    <div class="capture-form">
+      <div class="url-preview">
+        <div id="favicon-container"></div>
+        <div id="url-info">
+          <div id="page-title" class="truncate"></div>
+          <div id="page-url" class="truncate"></div>
+        </div>
+      </div>
+      
+      <div class="tag-input-container">
+        <label for="tag-input">Add Tags (optional)</label>
+        <div class="tag-input-wrapper">
+          <input 
+            type="text" 
+            id="tag-input" 
+            placeholder="Type tags and press Enter"
+            autocomplete="off"
+          >
+        </div>
+        <div id="tags-container"></div>
+      </div>
+      
+      <div class="selection-preview" id="selection-container">
+        <label>Selected Text</label>
+        <div id="selection-text" class="selection-text"></div>
+      </div>
+      
+      <div class="actions">
+        <button id="capture-btn" class="primary-btn">Capture</button>
+        <button id="cancel-btn" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+    
+    <div id="status-message"></div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -30,12 +30,14 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 - All work must be performed within the repository
 - No external code or modifications outside the repo
 - All decisions and implementations must be tracked in git history
+- **IMPORTANT**: Only Claude Code performs Git operations
+- Windsurf & Gemini make local changes only
 
-### 3. Branch Strategy
-- **Main/Master**: Production-ready code only
-- **Feature Branches**: One branch per task/feature
-- **Naming Convention**: `feature/<task-description>` or `fix/<issue-description>`
-- **No Direct Commits**: Never commit directly to main/master
+### 3. Branch Strategy (Claude Code Only)
+- **Main**: Production-ready code only
+- **Simplified Workflow**: All work happens on main branch
+- **No Feature Branches**: Since only Claude commits, branching is unnecessary
+- **Linear History**: Clean, simple commit history
 
 ### 4. Commit Standards
 - **Format**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
@@ -51,10 +53,10 @@ This document serves as the definitive rulebook for AI agents collaborating on t
 3. Validate task scope matches assigned role
 4. Reject tasks that overlap with other agents' work
 
-### Branch Naming Requirements
-- Claude Code: `feat/cc-*`, `fix/cc-*`, `refactor/cc-*`
-- Windsurf: `feat/ws-*`, `scaffold/ws-*`, `refactor/ws-*`
-- Gemini CLI: `fix/gc-*`, `chore/gc-*`
+### Git Operation Requirements
+- **Claude Code**: Handles ALL git operations (add, commit, push, pull)
+- **Windsurf**: Local file changes only, NO git commands
+- **Gemini CLI**: Local file changes only, NO git commands
 
 ## Task Breakdown Protocol
 
@@ -89,25 +91,26 @@ Claude Code breaks down into:
 3. **File Locking**: Mark files as "editing" to prevent conflicts
 4. **After Completion**: Update status and move to completed section
 
-### Progress Update Commands
-```bash
-# Before any work
-git pull --rebase
-# Edit PROGRESS_TRACKER.md
-git add PROGRESS_TRACKER.md
-git commit -m "chore: update progress - starting [task]"
-git push
-```
+### Progress Update Protocol
+- **Windsurf/Gemini**: Update PROGRESS_TRACKER.md locally
+- **Claude Code**: Commits and pushes all progress updates
+- **No Git commands** for Windsurf/Gemini
 
 ## Workflow Rules
 
 ### Before Starting Any Task
-1. **Always** run `git pull --rebase` to sync with latest changes
-2. **CHECK PROGRESS_TRACKER.md** for active work and file locks
-3. Review all open Pull Requests to avoid duplicate work
-4. Check GitHub issues for assigned tasks
-5. Update PROGRESS_TRACKER.md with your task
-6. Create a new feature branch from main/master
+
+#### For Claude Code:
+1. **Always** run `git pull` to sync with latest changes
+2. Check PROGRESS_TRACKER.md for active work
+3. Review recent commits
+4. Plan task breakdown
+
+#### For Windsurf/Gemini:
+1. Wait for task assignment from human
+2. Work in local files only
+3. Create TASK_SUMMARY.md when complete
+4. NO git operations
 
 ### During Development
 1. Update PROGRESS_TRACKER.md every 30 minutes
@@ -118,14 +121,18 @@ git push
 6. Document complex logic inline when necessary
 
 ### Submitting Work
-1. Push feature branch to remote
-2. Create Pull Request with:
-   - Clear title following conventional commit format
-   - Detailed description of changes
-   - "Generated-by: [AI-Agent-Name]" in description
-   - Link to related issue (if applicable)
-3. Ensure all CI/CD checks pass
-4. Mark PR as ready for review only after all tests pass
+
+#### For Windsurf/Gemini:
+1. Save all files locally
+2. Create TASK_SUMMARY.md listing changes
+3. Tell human "Task complete"
+4. Wait for Claude Code to review and commit
+
+#### For Claude Code:
+1. Review local changes with `git status` and `git diff`
+2. Test changes if possible
+3. Commit with clear message including attribution
+4. Push directly to main branch
 
 ## Quality Standards
 
@@ -176,13 +183,21 @@ project-root/
 ```
 
 ## Prohibited Actions
-- ❌ Direct commits to main/master
-- ❌ Force pushing to shared branches
-- ❌ Modifying git history on shared branches
+
+### For ALL AI Agents:
 - ❌ Working outside the repository
-- ❌ Ignoring pre-commit hook failures
-- ❌ Creating PRs without running tests
-- ❌ Modifying other AI agent's active branches
+- ❌ Modifying files without task assignment
+- ❌ Creating conflicts with other agents' work
+
+### For Windsurf/Gemini Specifically:
+- ❌ ANY git commands (add, commit, push, pull, etc.)
+- ❌ Creating or switching branches
+- ❌ Viewing git history or status
+
+### For Claude Code:
+- ❌ Committing without reviewing
+- ❌ Force pushing
+- ❌ Modifying git history
 
 ## Getting Started Checklist
 - [ ] Clone the repository
