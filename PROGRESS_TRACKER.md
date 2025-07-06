@@ -2,6 +2,9 @@
 
 > **CRITICAL**: This file is the single source of truth for all active work. ALL AI agents MUST update this file when starting, progressing, or completing tasks.
 
+> **NEW WORKSPACE PROTOCOL**: All AI work now happens in isolated workspaces at `/workspaces/[ai-name]/`
+> See AI_WORKSPACE_PROTOCOL.md for details. NO DIRECT EDITS to main PRSNL folder!
+
 ## Active Tasks
 
 ### Format
