@@ -27,7 +27,6 @@ PRSNL/
 │   │   └── schemas.py        # Pydantic models (Claude)
 │   └── services/
 │       ├── scraper.py        # Web scraping (Claude)
-│       ├── embeddings.py     # Vector generation (Claude)
 │       └── storage.py        # Blob storage (Claude)
 ├── docker-compose.yml        # Local stack (Claude)
 └── requirements.txt          # Dependencies (Windsurf)
@@ -58,8 +57,7 @@ class Item(Base):
     processed_content = Column(String)  # Clean text
     content_hash = Column(String, unique=True)  # Deduplication
     
-    # Search vectors
-    embedding = Column(Vector(1536))  # OpenAI ada-002 dimensions
+    # Search
     search_vector = Column(TSVector)  # Full-text search
     
     # Metadata
@@ -71,7 +69,6 @@ class Item(Base):
     __table_args__ = (
         UniqueConstraint('src_type', 'src_id'),
         Index('idx_search', 'search_vector', postgresql_using='gin'),
-        Index('idx_embedding', 'embedding', postgresql_using='ivfflat'),
         Index('idx_created', 'created_at'),
     )
 ```
@@ -125,13 +122,11 @@ import hashlib
 from typing import Optional, List
 from app.services.scraper import SmartScraper
 from app.services.llm_processor import LLMProcessor
-from app.services.embeddings import EmbeddingService
 
 class CaptureEngine:
     def __init__(self):
         self.scraper = SmartScraper()
         self.llm = LLMProcessor()
-        self.embeddings = EmbeddingService()
     
     async def quick_save(self, url: str, highlight: Optional[str], tags: List[str]) -> str:
         """Stage 1: Immediate save with minimal processing"""
@@ -168,17 +163,13 @@ class CaptureEngine:
             existing_tags=item.tags
         )
         
-        # 3. Generate embeddings
-        embedding = await self.embeddings.generate(llm_result.processed_text)
-        
-        # 4. Update item
+        # 3. Update item
         await self.db.update_item(item_id, {
             "title": scraped.title or llm_result.title,
             "summary": llm_result.summary,
             "raw_content": scraped.html,
             "processed_content": llm_result.processed_text,
             "tags": llm_result.tags,
-            "embedding": embedding,
             "metadata": {
                 "author": scraped.author,
                 "published": scraped.published,
@@ -197,11 +188,9 @@ class CaptureEngine:
 # backend/app/core/search_engine.py
 from typing import List, Dict, Any
 import asyncio
-from app.services.embeddings import EmbeddingService
-
 class SearchEngine:
     def __init__(self):
-        self.embeddings = EmbeddingService()
+        pass
         
     async def search(
         self, 
@@ -210,29 +199,16 @@ class SearchEngine:
         limit: int = 20
     ) -> List[SearchResult]:
         """
-        Hybrid search combining:
+        PostgreSQL full-text search with:
         1. BM25 keyword search
-        2. Vector similarity search
-        3. Recency boost
-        4. LLM re-ranking (optional)
+        2. Recency boost
+        3. Tag filters
         """
-        # Run searches in parallel
-        keyword_task = asyncio.create_task(self._keyword_search(query, filters))
-        vector_task = asyncio.create_task(self._vector_search(query, filters))
-        
-        keyword_results, vector_results = await asyncio.gather(
-            keyword_task, vector_task
-        )
-        
-        # Merge and rank
-        merged = self._merge_results(keyword_results, vector_results)
+        # Full-text search
+        keyword_results = await self._keyword_search(query, filters)
         
         # Apply recency boost
-        boosted = self._apply_recency_boost(merged)
-        
-        # Optional: LLM re-rank for top results
-        if len(query.split()) > 3:  # Complex query
-            boosted[:5] = await self._llm_rerank(query, boosted[:5])
+        boosted = self._apply_recency_boost(keyword_results)
         
         return boosted[:limit]
     
@@ -257,26 +233,6 @@ class SearchEngine:
         
         return results
     
-    async def _vector_search(self, query: str, filters: Dict) -> List[Dict]:
-        """pgvector similarity search"""
-        # Generate query embedding
-        query_embedding = await self.embeddings.generate(query)
-        
-        sql = """
-        SELECT id, title, summary, url,
-               1 - (embedding <=> %s::vector) as similarity
-        FROM items
-        WHERE (%s)
-        ORDER BY embedding <=> %s::vector
-        LIMIT 50
-        """
-        
-        filter_clause = self._build_filter_clause(filters)
-        results = await self.db.fetch(
-            sql, query_embedding, filter_clause, query_embedding
-        )
-        
-        return results
 ```
 
 ### 2.2 Search API (Day 5)
@@ -411,49 +367,6 @@ class LLMProcessor:
         return self._parse_llm_response(response.choices[0].message.content)
 ```
 
-### 3.2 Embedding Service (Day 7)
-**Owner: Claude Code**
-
-```python
-# backend/app/services/embeddings.py
-import numpy as np
-from sentence_transformers import SentenceTransformer
-import hashlib
-from typing import List, Optional
-
-class EmbeddingService:
-    def __init__(self):
-        # Local model for embeddings (no API costs!)
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.cache = {}  # Simple in-memory cache
-        
-    async def generate(self, text: str) -> List[float]:
-        """Generate embeddings with caching"""
-        # Check cache first
-        text_hash = hashlib.md5(text.encode()).hexdigest()
-        if text_hash in self.cache:
-            return self.cache[text_hash]
-        
-        # Generate embedding
-        embedding = self.model.encode(text, convert_to_numpy=True)
-        
-        # Normalize for better similarity search
-        embedding = embedding / np.linalg.norm(embedding)
-        
-        # Cache it
-        self.cache[text_hash] = embedding.tolist()
-        
-        return embedding.tolist()
-    
-    async def batch_generate(self, texts: List[str]) -> List[List[float]]:
-        """Efficient batch processing"""
-        embeddings = self.model.encode(texts, convert_to_numpy=True)
-        
-        # Normalize all
-        embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
-        
-        return embeddings.tolist()
-```
 
 ## Phase 4: Browser Extension (Week 2)
 
@@ -619,10 +532,10 @@ async def test_capture_latency():
 
 ## Key Decisions I'm Making
 
-1. **PostgreSQL over separate vector DB** - Simpler ops, pgvector is fast enough
-2. **Local embeddings model** - No API costs, good enough quality
+1. **PostgreSQL with full-text search** - Simpler ops, no vector complexity
+2. **LISTEN/NOTIFY for background jobs** - No Redis/Celery overhead
 3. **Background processing** - Instant capture feel, process later
 4. **Simple overlay** - Native Python, no Electron bloat
-5. **Hybrid search from day 1** - Both keyword and semantic
+5. **Ollama + Azure OpenAI** - Local first, cloud fallback
 
 Ready to start implementation?

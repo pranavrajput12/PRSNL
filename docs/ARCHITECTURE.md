@@ -29,7 +29,8 @@ The Knowledge Vault is a keyboard-first, zero-friction personal knowledge manage
                                │
                         ┌──────▼──────┐
                         │ Task Queue  │
-                        │   (Celery)  │
+                        │ (PostgreSQL │
+                        │LISTEN/NOTIFY)│
                         └─────────────┘
 ```
 
@@ -38,9 +39,9 @@ The Knowledge Vault is a keyboard-first, zero-friction personal knowledge manage
 ┌─────────────────┐     ┌─────────────────┐     ┌──────────────┐
 │ Stage 1: Scrape │────▶│ Stage 2: Enrich │────▶│ Stage 3: Index│
 ├─────────────────┤     ├─────────────────┤     ├──────────────┤
-│ • BeautifulSoup │     │ • Local Llama 3 │     │ • Embeddings │
-│ • Readability   │     │ • Azure GPT-4o  │     │ • Full-text  │
-│ • OCR (if PDF)  │     │ • Auto-tagging  │     │ • Metadata   │
+│ • BeautifulSoup │     │ • Ollama (local)│     │ • Full-text  │
+│ • Readability   │     │ • Azure OpenAI  │     │ • Metadata   │
+│ • OCR (if PDF)  │     │ • Auto-tagging  │     │ • Search idx │
 └─────────────────┘     └─────────────────┘     └──────────────┘
 ```
 
@@ -51,7 +52,6 @@ The Knowledge Vault is a keyboard-first, zero-friction personal knowledge manage
 ├─────────────────────────────────────────────┤
 │ • Metadata (items table)                    │
 │ • Full-text search (tsvector)               │
-│ • Vector embeddings (pgvector)              │
 │ • Tags & relationships                      │
 └─────────────────────────────────────────────┘
                     │
@@ -73,14 +73,14 @@ User Query
 │ Search Orchestrator │
 └─────┬───────────┘
       │
-      ├──────────────┬──────────────┬──────────────┐
-      ▼              ▼              ▼              ▼
-┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
-│ Keyword  │  │  Vector  │  │ Recency  │  │  Filters │
-│  (FTS)   │  │ (pgvector)│ │  Boost   │  │  (tags)  │
-└────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘
-     │             │             │             │
-     └─────────────┴─────────────┴─────────────┘
+      ├──────────────┬──────────────┐
+      ▼              ▼              ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Keyword  │  │ Recency  │  │  Filters │
+│  (FTS)   │  │  Boost   │  │  (tags)  │
+└────┬─────┘  └────┬─────┘  └────┬─────┘
+     │             │             │
+     └─────────────┴─────────────┘
                          │
                    ┌─────▼─────┐
                    │ Re-ranker │
@@ -127,7 +127,6 @@ CREATE TABLE items (
     content_hash TEXT, -- for deduplication
     raw_content TEXT, -- cached for re-processing
     processed_content TEXT, -- cleaned/structured
-    embedding vector(1536), -- pgvector
     search_vector tsvector, -- full-text search
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -157,7 +156,6 @@ CREATE TABLE item_tags (
 
 -- Performance indexes
 CREATE INDEX idx_items_search ON items USING GIN(search_vector);
-CREATE INDEX idx_items_embedding ON items USING ivfflat(embedding vector_l2_ops);
 CREATE INDEX idx_items_created ON items(created_at DESC);
 CREATE INDEX idx_items_accessed ON items(accessed_at DESC);
 CREATE INDEX idx_items_src ON items(src_type, created_at DESC);
@@ -214,16 +212,10 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
   
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - ./data/redis:/data
-  
   app:
     build: .
     depends_on:
       - postgres
-      - redis
     volumes:
       - ./data/blobs:/app/storage
     ports:
@@ -231,10 +223,9 @@ services:
   
   worker:
     build: .
-    command: celery -A app.worker worker
+    command: python -m app.worker
     depends_on:
       - postgres
-      - redis
   
   ollama:
     image: ollama/ollama
@@ -321,7 +312,7 @@ vault_capture_duration_seconds{status="success|failure"}
 vault_search_duration_seconds{type="keyword|vector|hybrid"}
 vault_items_total
 vault_storage_bytes_used
-vault_llm_tokens_used{provider="ollama|azure"}
+vault_llm_tokens_used{provider="ollama|azure_openai"}
 ```
 
 ### 2. Logging
@@ -336,7 +327,7 @@ GET /api/health
   "status": "healthy",
   "checks": {
     "database": "ok",
-    "redis": "ok", 
+ 
     "storage": "ok",
     "llm": "ok"
   },
@@ -349,7 +340,7 @@ GET /api/health
 ### 1. Local Development
 ```bash
 # Start services
-docker-compose up -d postgres redis
+docker-compose up -d postgres
 
 # Run migrations
 alembic upgrade head
@@ -358,7 +349,7 @@ alembic upgrade head
 uvicorn app.main:app --reload
 
 # Start worker
-celery -A app.worker worker --loglevel=info
+python -m app.worker
 
 # Start frontend
 cd frontend && npm run dev
