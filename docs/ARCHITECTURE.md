@@ -4,19 +4,25 @@
 
 PRSNL is a keyboard-first, zero-friction personal knowledge management system designed for LOCAL deployment with ZERO recurring costs. Everything runs on your machine.
 
-## Current Implementation Status (Updated 2025-01-06)
+## Current Implementation Status (Updated 2025-07-06)
 
 ✅ **COMPLETED COMPONENTS**
 - Frontend UI with Manchester United red design (#dc143c)
 - Chrome Extension with options page and keyboard shortcuts
-- Sample data system with 25 realistic items
-- Settings management and configuration
-- Development environment with Docker
+- Backend API with FastAPI (fully integrated)
+- PostgreSQL database with pgvector extension
+- Docker containerization for all backend services
+- Azure OpenAI integration as Ollama fallback
+- Instagram video download support with yt-dlp
+- Video storage and display in frontend
+- Real capture endpoint with background processing
+- Search endpoint with database integration
+- Frontend running on port 3002 with API proxy
 
 🚧 **IN DEVELOPMENT**
-- Backend API integration
-- Real-time search functionality
-- Database seeding with actual content
+- Testing end-to-end capture flow
+- Ollama local AI integration
+- Performance optimization
 
 ## Architecture Principles
 
@@ -52,11 +58,12 @@ PRSNL is a keyboard-first, zero-friction personal knowledge management system de
 ### 2. Processing Pipeline
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌──────────────┐
-│ Stage 1: Scrape │────▶│ Stage 2: Enrich │────▶│ Stage 3: Index│
+│ Stage 1: Capture│────▶│ Stage 2: Enrich │────▶│ Stage 3: Index│
 ├─────────────────┤     ├─────────────────┤     ├──────────────┤
 │ • BeautifulSoup │     │ • Ollama (local)│     │ • Full-text  │
 │ • Readability   │     │ • Azure OpenAI  │     │ • Metadata   │
-│ • OCR (if PDF)  │     │ • Auto-tagging  │     │ • Search idx │
+│ • yt-dlp (video)│     │ • Auto-tagging  │     │ • Search idx │
+│ • OCR (if PDF)  │     │ • Summarization │     │ • Media files│
 └─────────────────┘     └─────────────────┘     └──────────────┘
 ```
 
@@ -73,9 +80,12 @@ PRSNL is a keyboard-first, zero-friction personal knowledge management system de
 ┌───────────────────┴─────────────────────────┐
 │           Object Storage                     │
 ├─────────────────────────────────────────────┤
-│ • Local: File system (/vault/blobs/)        │
+│ • Local: File system                        │
+│   - Articles: /vault/blobs/                 │
+│   - Videos: /app/media/videos/              │
+│   - Thumbnails: /app/media/thumbnails/      │
 │ • Cloud: NOT USED (local only)              │
-│ • Structure: /YYYY/MM/DD/{uuid}/            │
+│ • Structure: /{type}/{uuid}.{ext}           │
 └─────────────────────────────────────────────┘
 ```
 
@@ -134,21 +144,23 @@ User Query
 -- Main items table
 CREATE TABLE items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    src_type VARCHAR(20) NOT NULL, -- 'web', 'github', 'twitter', etc
-    src_id TEXT NOT NULL, -- unique identifier within source
     url TEXT NOT NULL,
     title TEXT NOT NULL,
     summary TEXT,
-    content_hash TEXT, -- for deduplication
-    raw_content TEXT, -- cached for re-processing
-    processed_content TEXT, -- cleaned/structured
-    search_vector tsvector, -- full-text search
+    raw_content TEXT,
+    processed_content TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    item_type VARCHAR(20) NOT NULL DEFAULT 'article', -- 'article', 'video', 'note', 'bookmark'
+    file_path TEXT, -- for video files
+    duration INTEGER, -- video duration in seconds
+    thumbnail_url TEXT, -- video thumbnail
+    platform VARCHAR(50), -- instagram, youtube, etc
+    search_vector tsvector,
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     accessed_at TIMESTAMPTZ DEFAULT NOW(),
-    access_count INTEGER DEFAULT 0,
-    UNIQUE(src_type, src_id)
+    access_count INTEGER DEFAULT 0
 );
 
 -- Tags with hierarchy
@@ -167,6 +179,18 @@ CREATE TABLE item_tags (
     tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
     confidence FLOAT DEFAULT 1.0, -- for ML-suggested tags
     PRIMARY KEY (item_id, tag_id)
+);
+
+-- Attachments table for media files
+CREATE TABLE attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    file_path TEXT NOT NULL,
+    file_type VARCHAR(50) NOT NULL, -- 'video', 'image', 'document'
+    mime_type VARCHAR(100),
+    file_size BIGINT, -- in bytes
+    metadata JSONB DEFAULT '{}', -- video: width, height, bitrate, etc.
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Performance indexes

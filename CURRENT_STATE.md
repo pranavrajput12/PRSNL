@@ -1,50 +1,60 @@
-# PRSNL Project Current State - January 6, 2025
+# PRSNL Project Current State - July 6, 2025
 
 ## 🎯 IMMEDIATE NEXT ACTION
-**Backend Integration** - Connect frontend to live backend APIs
+**Testing & Documentation** - Test all features and update documentation
 ```bash
 cd /Users/pronav/Personal Knowledge Base
 make dev  # Start Docker containers
-# Then update frontend/src/lib/api.ts to use http://localhost:8000
+# Frontend at http://localhost:3002
+# Backend at http://localhost:8000
 ```
 
 ## Recent Changes
-1. **Documentation Cleanup Complete**
-   - Removed legacy folder with outdated multi-AI Git workflows
-   - Removed empty folders (AI_GUIDES, guides, project)
-   - Combined CLAUDE.md files into main docs
-   - Created CHANGELOG.md
-   - All changes committed to git
+1. **Video Support Implemented**
+   - Added Instagram video download with yt-dlp
+   - Updated database schema for video support
+   - Created VideoPlayer component for frontend
+   - Configured media storage directories
 
-2. **Session Continuity System**
-   - Created SESSION_CONTINUITY.md for maintaining context
-   - Added AI model starter prompts below
+2. **Frontend Issues Fixed**
+   - Fixed 500 error (added TypeScript preprocessor)
+   - Standardized port to 3002
+   - Updated API client to use proxy
+   - Frontend runs on host (not in Docker)
 
-## Project Status (90% Complete)
+3. **Backend Integration Complete**
+   - Capture endpoint uses real CaptureEngine
+   - Search endpoint connected to database
+   - Azure OpenAI configured as fallback
+   - All services running and healthy
+
+## Project Status (95% Complete)
 - Frontend UI: ✅ Complete (SvelteKit, Manchester United red #dc143c)
 - Chrome Extension: ✅ Complete (all features implemented)
-- Backend Structure: ✅ Complete (FastAPI, PostgreSQL, Docker)
-- Backend Running: ✅ Complete (all services healthy)
-- Database Seeded: ✅ Complete (20 items with tags)
-- Frontend Integration: 🚧 Partial (API client updated, sample data still imported)
-- Search Implementation: 🚧 Pending (endpoint returns mock data)
+- Backend API: ✅ Complete (FastAPI, PostgreSQL, Docker)
+- Video Support: ✅ Complete (Instagram downloads with yt-dlp)
+- AI Integration: ✅ Complete (Ollama + Azure OpenAI fallback)
+- Frontend Integration: ✅ Complete (connected to live APIs)
+- Search Implementation: ✅ Complete (using real database)
+- Testing: 🚧 In Progress
+- Documentation: 🚧 In Progress
 - Production Deployment: 📋 Pending
 
 ## AI Model Starter Prompts
 
 ### For Claude Code
 ```
-Read SESSION_CONTINUITY.md first. We're working on PRSNL project (Personal Knowledge Vault). Currently at 85% completion. Main task: Backend integration - connecting frontend to live APIs. Frontend and Chrome extension are complete. Check TODO list and continue from where we left off.
+Read SESSION_CONTINUITY.md first. We're working on PRSNL project (Personal Knowledge Vault). Currently at 95% completion. All major features integrated including Instagram video support. Main tasks: Testing and documentation updates. Frontend runs on port 3002, backend on 8000. Check TODO list and continue from where we left off.
 ```
 
 ### For Windsurf (Frontend/UI)
 ```
-Working on PRSNL project frontend. Current state: UI complete with Manchester United red theme (#dc143c), all pages implemented. Read /docs/ai-collaboration/AI_AGENTS.md for your constraints. Main pending task: Update API client to connect to backend at http://localhost:8000 instead of using sample data. DO NOT use git commands.
+Working on PRSNL project frontend. Current state: UI complete with Manchester United red theme (#dc143c), all pages implemented, video support added. Frontend runs on port 3002 with API proxy to backend. Read /docs/ai-collaboration/AI_AGENTS.md for your constraints. Main task: Test all features end-to-end. DO NOT use git commands.
 ```
 
 ### For Gemini CLI (Backend/Infrastructure)
 ```
-Working on PRSNL project backend. Current state: FastAPI structure complete, Docker setup ready. Read /docs/ai-collaboration/AI_AGENTS.md for your constraints. Main pending task: Ensure backend is ready for frontend integration, test all endpoints. DO NOT use git commands.
+Working on PRSNL project backend. Current state: FastAPI fully integrated, Docker containers running, video processing with yt-dlp implemented. Read /docs/ai-collaboration/AI_AGENTS.md for your constraints. Main task: Performance optimization and testing. DO NOT use git commands.
 ```
 
 ## Key Files for AI Collaboration
@@ -54,12 +64,12 @@ Working on PRSNL project backend. Current state: FastAPI structure complete, Doc
 - `/docs/progress/TASK_TRACKER.md` - Detailed task tracking
 
 ## Active TODO List
-1. ~~Create SESSION_CONTINUITY.md~~ ✅
-2. Update CURRENT_STATE.md ⏳ (in progress)
-3. Connect frontend to live backend APIs 🎯 (NEXT)
-4. Test end-to-end capture flow
-5. Implement real-time search
-6. Set up database with production data
-7. Test Chrome extension
-8. Create production Docker config
-9. Fix homepage card display issue
+1. ✅ Backend fully integrated
+2. ✅ Frontend connected to live APIs 
+3. ✅ Video support implemented (Instagram)
+4. ✅ Azure OpenAI configured
+5. 🚧 Update all documentation (IN PROGRESS)
+6. 📋 Test end-to-end capture flow
+7. 📋 Test Instagram video capture
+8. 📋 Performance optimization
+9. 📋 Production deployment setup

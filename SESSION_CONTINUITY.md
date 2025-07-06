@@ -1,60 +1,68 @@
 # SESSION CONTINUITY - PRSNL Project
 > CRITICAL: This file ensures Claude picks up EXACTLY where we left off. Update at session end.
 
-## Last Updated: January 6, 2025
+## Last Updated: July 6, 2025
 
 ## IMMEDIATE CONTEXT
-We are implementing the PRSNL (Personal Knowledge Vault) project - a keyboard-first knowledge management system. The project is 85% complete with frontend and Chrome extension done, backend structure ready. Main work remaining: Backend integration.
+We are implementing the PRSNL (Personal Knowledge Vault) project - a keyboard-first knowledge management system. The project is 95% complete with all major components integrated. Main work remaining: Testing and documentation.
 
 ## CURRENT TASK IN PROGRESS
-**Task**: Backend Integration (connecting frontend to live APIs)
-**Status**: ✅ COMPLETED - Backend is running successfully
-**Why**: Frontend currently uses sample data. Need to connect to real backend for full functionality.
+**Task**: Documentation Updates
+**Status**: 🚧 IN PROGRESS - Updating all docs with current state
+**Why**: Major features completed, need to document the current system state.
 
-### What was done:
-1. Fixed Docker setup issues (pgvector, build-essential, PATH)
-2. Fixed Python import issues (readability-lxml)
-3. Backend now running on http://localhost:8000
-4. All health checks passing (Database, Ollama, Disk)
+### What was done in this session:
+1. Fixed frontend 500 error (missing TypeScript preprocessor)
+2. Standardized frontend port to 3002
+3. Added Instagram video download support (yt-dlp)
+4. Updated database schema for video support
+5. Created VideoPlayer component for frontend
+6. Integrated Azure OpenAI as fallback for Ollama
+7. Wired up capture endpoint to use real CaptureEngine
 
 ## EXACT NEXT STEPS
-1. ✅ **Backend services running**
-   - Docker containers: db (PostgreSQL), backend (FastAPI), ollama
-   - Database schema applied with pgvector extension
-   - 20 sample items seeded with tags
+1. ✅ **All services integrated and running**
+   - Frontend: http://localhost:3002 (on host machine)
+   - Backend: http://localhost:8000 (in Docker)
+   - Database: PostgreSQL with pgvector (in Docker)
+   - Ollama: Local AI processing (in Docker)
+   - Azure OpenAI: Configured as fallback
 
-2. ✅ **Frontend API configuration updated** (by Windsurf)
-   - API client updated to use `http://localhost:8000/api`
-   - BUT: Frontend still imports sampleData in some components
+2. ✅ **Video support implemented**
+   - Instagram video download with yt-dlp
+   - Database schema updated with video fields
+   - VideoPlayer component created
+   - Media storage directories configured
 
 3. **IMMEDIATE TASKS**
-   - Complete frontend integration (remove sample data imports)
-   - Wire up search endpoint to use real SearchEngine
-   - Test end-to-end functionality
-   - Fix homepage card display issue
+   - Complete documentation updates
+   - Test end-to-end capture flow
+   - Test Instagram video capture
+   - Performance optimization
 
 ## PROJECT STATUS SUMMARY
 ### ✅ Completed
 - Frontend UI (SvelteKit, Manchester United red theme #dc143c)
 - Chrome Extension (all features implemented)
-- Backend structure (FastAPI, PostgreSQL, Docker)
-- Backend services running (all containers healthy)
-- Database schema applied with pgvector extension
-- Database seeded with 20 items and 7 tags
-- API client updated to use http://localhost:8000/api
-- Development environment fully operational
-- Documentation cleanup
+- Backend API fully integrated (FastAPI, PostgreSQL, Docker)
+- All services running and healthy
+- Database schema with video support
+- Instagram video download support (yt-dlp)
+- Azure OpenAI integration configured
+- Frontend API proxy configured
+- Capture endpoint using real CaptureEngine
+- Search endpoint connected to database
+- VideoPlayer component for media display
+- Media storage directory structure
 
 ### 🚧 In Progress
-- Frontend still imports sampleData in components
-- Search endpoint returns mock data (not using SearchEngine)
+- Documentation updates (ARCHITECTURE.md, etc.)
+- End-to-end testing
 
 ### 📋 Pending
-- Complete frontend integration (remove sample data imports)
-- Wire search endpoint to real database
-- Test end-to-end capture flow
-- Chrome extension testing with backend
+- Performance optimization
 - Production deployment setup
+- Comprehensive testing suite
 
 ## KEY PROJECT DETAILS
 - **Architecture**: Frontend (SvelteKit) + Backend (FastAPI) + Extension (Chrome) + Database (PostgreSQL)
@@ -63,21 +71,22 @@ We are implementing the PRSNL (Personal Knowledge Vault) project - a keyboard-fi
 - **Performance**: Target sub-second search on 100k+ items
 
 ## ACTIVE TODO LIST
-1. Create SESSION_CONTINUITY.md ✅ (just completed)
-2. Update CURRENT_STATE.md with specific next actions
-3. Connect frontend to live backend APIs (NEXT)
-4. Test end-to-end capture flow
-5. Implement real-time search
-6. Set up database with production data
-7. Test Chrome extension
-8. Create production Docker config
-9. Fix homepage card display issue
+1. ✅ Backend fully integrated
+2. ✅ Frontend connected to live APIs
+3. ✅ Video support implemented
+4. ✅ Azure OpenAI configured
+5. 🚧 Update all documentation
+6. 📋 Test end-to-end capture flow
+7. 📋 Test Instagram video capture
+8. 📋 Performance optimization
+9. 📋 Production deployment setup
 
 ## SESSION NOTES
 - User expressed frustration about losing context between sessions
-- Created this file to prevent future time loss
-- Must update this file at end of each session
-- Should read this FIRST when starting any new session
+- Frontend runs on host (not in Docker) for better dev experience
+- Port confusion resolved: standardized to 3002
+- All major features now implemented and integrated
+- Focus shifting to testing and documentation
 
 ## COMMAND REMINDERS
 ```bash
@@ -90,7 +99,7 @@ make logs
 # Stop services
 make down
 
-# Frontend dev server
+# Frontend dev server (now on port 3002)
 cd frontend && npm run dev
 
 # Backend direct access

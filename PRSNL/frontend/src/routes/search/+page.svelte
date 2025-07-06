@@ -1,35 +1,67 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
-  import { searchItems } from '$lib/api';
-  import { addRecentSearch } from '$lib/stores/app';
+  import Icon from '$lib/components/Icon.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
-  import Icon from '$lib/components/Icon.svelte';
-
-  // SearchResult type
-  // id: string
-  // title: string
-  // url?: string
-  // snippet: string
-  // created_at: string
-  // tags: string[]
-
+  import { searchItems } from '$lib/api';
+  
+  type SearchResult = {
+    id: string;
+    title: string;
+    url?: string;
+    snippet: string;
+    tags: string[];
+    created_at: string;
+    type?: string;
+  };
+  
   let query = '';
-  let results = [];
+  let results: SearchResult[] = [];
   let isLoading = false;
+  let error: Error | null = null;
+  let hasSearched = false;
+  let searchTimeout: ReturnType<typeof setTimeout> | undefined;
   let selectedIndex = -1;
-  let searchInput;
+  let recentSearches: string[] = [];
+  let searchInput: HTMLInputElement | null = null;
   let dateFilter = '';
   let typeFilter = '';
   let tagsFilter = '';
-  let error = null;
-  let searchTimeout;
-  let hasSearched = false;
   let showFilters = false;
+
+  onMount(() => {
+    // Load recent searches from localStorage
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      try {
+        recentSearches = JSON.parse(saved);
+      } catch (e: unknown) {
+        console.error('Error parsing recent searches', e);
+      }
+    }
+  });
 
   onMount(() => {
     searchInput?.focus();
   });
+
+  function addRecentSearch(query: string): void {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    
+    // Remove if already exists
+    recentSearches = recentSearches.filter(s => s !== trimmed);
+    
+    // Add to beginning
+    recentSearches = [trimmed, ...recentSearches].slice(0, 5);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+    } catch (e: unknown) {
+      console.error('Error saving recent searches', e);
+    }
+  }
 
   async function handleSearch() {
     if (!query.trim()) {
@@ -45,22 +77,27 @@
 
     try {
       // Save to recent searches
-      addRecentSearch(query);
+      addRecentSearch(query.trim());
 
-      // Use sample data for demo (simulate search)
-      const lowerQuery = query.toLowerCase();
-      results = sampleData.filter(item => 
-        item.title.toLowerCase().includes(lowerQuery) ||
-        item.summary.toLowerCase().includes(lowerQuery) ||
-        item.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
-      ).map(item => ({
-        ...item,
-        snippet: item.summary,
-        created_at: item.createdAt
-      }));
+      // Search using the API
+      const response = await searchItems(query);
+      
+      if (response && response.items) {
+        results = response.items.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          url: item.url,
+          snippet: item.summary,
+          tags: item.tags,
+          created_at: item.createdAt,
+          type: item.type
+        }));
+      } else {
+        results = [];
+      }
     } catch (err) {
       console.error('Search error:', err);
-      error = err;
+      error = err instanceof Error ? err : new Error(String(err));
       results = [];
     } finally {
       isLoading = false;
@@ -74,16 +111,23 @@
   }
 
   // Keyboard navigation
-  function handleKeydown(e) {
+  function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
+      if (selectedIndex < results.length - 1) {
+        selectedIndex++;
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      selectedIndex = Math.max(selectedIndex - 1, 0);
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
+      if (selectedIndex > 0) {
+        selectedIndex--;
+      }
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
-      window.location.href = `/item/${results[selectedIndex].id}`;
+      const selectedItem = results[selectedIndex];
+      if (selectedItem?.url) {
+        window.open(selectedItem.url, '_blank');
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault();
       if (query || results.length > 0) {
@@ -96,9 +140,10 @@
     }
   }
 
-  function highlightMatch(text, query) {
+  function highlightText(text: string, query: string): string {
     if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     return text.replace(regex, '<mark>$1</mark>');
   }
 
@@ -135,11 +180,12 @@
         </div>
         
         <input
-          bind:this={searchInput}
-          bind:value={query}
-          on:input={handleSearchInput}
           type="text"
-          placeholder="Search for anything..."
+          bind:value={query}
+          bind:this={searchInput}
+          placeholder="Search your knowledge base..."
+          on:input={handleSearchInput}
+          on:keydown={handleKeyDown}
           class="search-input"
         />
         
@@ -238,12 +284,13 @@
               </div>
               
               <div class="result-content">
-                <div class="result-header">
-                  <h3>{@html highlightMatch(result.title, query)}</h3>
-                  <time>{new Date(result.created_at).toLocaleDateString()}</time>
+                <div class="result-title">
+                  {@html highlightText(result.title, query)}
                 </div>
-                
-                <p class="result-snippet">{@html highlightMatch(result.snippet, query)}</p>
+                <div class="result-snippet">
+                  {@html highlightText(result.snippet, query)}
+                </div>
+                <time>{new Date(result.created_at).toLocaleDateString()}</time>
                 
                 {#if result.tags?.length > 0}
                   <div class="result-tags">

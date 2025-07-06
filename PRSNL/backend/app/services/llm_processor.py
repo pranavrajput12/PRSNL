@@ -148,7 +148,7 @@ PROCESSED:
         ]
         
         response = await self.azure_client.post(
-            f"{settings.AZURE_OPENAI_ENDPOINT}/openai/deployments/{settings.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-02-01",
+            f"{settings.AZURE_OPENAI_ENDPOINT}/openai/deployments/{settings.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version={settings.AZURE_OPENAI_API_VERSION}",
             json={
                 "messages": messages,
                 "temperature": 0.3,

@@ -1,86 +1,90 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { getTimeline } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  import { sampleData } from '$lib/data/sampleData.js';
+  import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 
-  // TimelineItem type
-  // id: string
-  // title: string
-  // url?: string
-  // summary: string
-  // created_at: string
-  // tags: string[]
+  type Item = {
+    id: string;
+    title: string;
+    url?: string;
+    summary: string;
+    createdAt: string;
+    tags: string[];
+    type?: string;
+    item_type?: string;
+    file_path?: string;
+    thumbnail_url?: string;
+    duration?: number;
+    platform?: string;
+  };
 
-  let groups = [];
+  type TimelineGroup = {
+    date: string;
+    items: Item[];
+  };
+
+  let groups: TimelineGroup[] = [];
   let isLoading = false;
   let hasMore = true;
   let page = 1;
-  let error = null;
+  let error: Error | null = null;
   let viewMode = 'card'; // card, compact, detailed
   let showFilters = false;
   let dateFilter = '';
   let typeFilter = '';
   let tagsFilter = '';
-  let scrollContainer;
+  let scrollContainer: HTMLElement | null = null;
 
   onMount(() => {
-    // Use sample data for demo
-    const sortedData = [...sampleData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const grouped = groupByDate(sortedData);
-    groups = grouped;
-    
-    // loadTimeline();
-    // setupInfiniteScroll();
+    loadTimeline(true);
+    setupInfiniteScroll();
   });
 
   async function loadTimeline(reset = false) {
-    if (isLoading) return;
-
     try {
-      isLoading = true;
-      error = null;
-
       if (reset) {
         page = 1;
         groups = [];
+        hasMore = true;
       }
-
-      const response = await getTimeline(page);
-      const items = response.items || [];
-
-      if (items.length === 0) {
-        hasMore = false;
-        return;
-      }
-
-      // Group items by date
-      const grouped = groupByDate(items);
       
-      if (reset) {
-        groups = grouped;
+      if (!hasMore || isLoading) return;
+      
+      isLoading = true;
+      error = null;
+      
+      const response = await getTimeline(page);
+      
+      if (response && response.items && response.items.length > 0) {
+        const newGroups = groupByDate(response.items);
+        
+        if (reset) {
+          groups = newGroups;
+        } else {
+          groups = mergeGroups(groups, newGroups);
+        }
+        
+        hasMore = response.total > (page * response.pageSize);
+        page += 1;
       } else {
-        // Merge with existing groups
-        groups = mergeGroups(groups, grouped);
+        hasMore = false;
       }
-
-      page++;
-      hasMore = response.hasMore || false;
     } catch (err) {
-      error = err;
-      console.error('Timeline error:', err);
+      console.error('Error loading timeline:', err);
+      error = err instanceof Error ? err : new Error(String(err));
     } finally {
       isLoading = false;
     }
   }
 
-  function groupByDate(items) {
-    const grouped = {};
+  function groupByDate(items: Item[]): TimelineGroup[] {
+    const grouped: Record<string, TimelineGroup> = {};
     
-    items.forEach(item => {
+    items.forEach((item: Item) => {
       const date = new Date(item.createdAt);
       const dateKey = date.toDateString();
       
@@ -97,10 +101,10 @@
     return Object.values(grouped);
   }
 
-  function mergeGroups(existing, newGroups) {
+  function mergeGroups(existing: TimelineGroup[], newGroups: TimelineGroup[]): TimelineGroup[] {
     const merged = [...existing];
     
-    newGroups.forEach(newGroup => {
+    newGroups.forEach((newGroup: TimelineGroup) => {
       const existingIndex = merged.findIndex(g => g.date === newGroup.date);
       if (existingIndex >= 0) {
         merged[existingIndex].items.push(...newGroup.items);
@@ -134,7 +138,7 @@
     };
   }
 
-  function formatDate(dateString) {
+  function formatDate(dateString: string): string {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -154,10 +158,10 @@
     }
   }
 
-  function getRelativeTime(dateString) {
+  function getRelativeTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMins = Math.floor(diffMs / (1000 * 60));
 
@@ -186,7 +190,7 @@
     loadTimeline(true);
   }
 
-  function deleteItem(itemId) {
+  function deleteItem(itemId: string): void {
     // Remove item from timeline
     groups = groups.map(group => ({
       ...group,
@@ -264,9 +268,10 @@
           </label>
           <select id="type-filter" bind:value={typeFilter} on:change={handleFilter}>
             <option value="">All types</option>
-            <option value="url">URLs</option>
-            <option value="text">Text</option>
-            <option value="file">Files</option>
+            <option value="article">Articles</option>
+            <option value="video">Videos</option>
+            <option value="note">Notes</option>
+            <option value="bookmark">Bookmarks</option>
           </select>
         </div>
 
@@ -348,7 +353,16 @@
                       </div>
                     {/if}
                     
-                    {#if viewMode !== 'compact'}
+                    {#if item.item_type === 'video' && item.file_path && viewMode !== 'compact'}
+                      <div class="item-video">
+                        <VideoPlayer 
+                          src={item.file_path}
+                          thumbnail={item.thumbnail_url}
+                          title={item.title}
+                          duration={item.duration}
+                        />
+                      </div>
+                    {:else if viewMode !== 'compact'}
                       <p class="item-summary">{item.summary}</p>
                     {/if}
                     
@@ -634,6 +648,11 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     margin: 0 0 1rem;
+  }
+  
+  .item-video {
+    margin: 1rem 0;
+    max-width: 600px;
   }
   
   .item-tags {

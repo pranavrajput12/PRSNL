@@ -27,11 +27,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.db.database import create_db_pool, close_db_pool
+
 # Placeholder for worker task
 worker_task = None
 
 @app.on_event("startup")
 async def startup_event():
+    await create_db_pool()
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     print("Worker started in background.")
@@ -45,6 +48,7 @@ async def shutdown_event():
         except asyncio.CancelledError:
             print("Worker task cancelled successfully.")
     print("Worker stopped.")
+    await close_db_pool()
 
 from app.api import capture, search, timeline, items
 

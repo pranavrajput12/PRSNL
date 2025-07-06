@@ -1,9 +1,21 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
-  import { sampleData } from '$lib/data/sampleData.js';
+  import { getTimeline, getTags } from '$lib/api';
+  import Spinner from '$lib/components/Spinner.svelte';
+  import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   
-  let recentItems = [];
+  type Item = {
+    id: string;
+    title: string;
+    url?: string;
+    summary: string;
+    tags: string[];
+    createdAt: string;
+    type?: string;
+  };
+  
+  let recentItems: Item[] = [];
   let stats = {
     totalItems: 0,
     todayItems: 0,
@@ -11,37 +23,55 @@
   };
   
   let mounted = false;
+  let isLoading = true;
+  let error: Error | null = null;
   
   onMount(async () => {
     mounted = true;
-    
-    // Use sample data for demo
-    recentItems = sampleData.slice(0, 6); // Show first 6 items
-    
-    // Calculate stats from sample data
-    const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
-    const allTags = new Set();
-    let todayCount = 0;
-    
-    sampleData.forEach(item => {
+    await loadData();
+  });
+  
+  async function loadData() {
+    try {
+      isLoading = true;
+      error = null;
+      
+      // Fetch recent items from timeline
+      const timelineResponse = await getTimeline(1);
+      recentItems = timelineResponse.items?.slice(0, 6) || [];
+      
+      // Calculate stats
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      let todayCount = 0;
+      
       // Count today's items
-      const itemDate = new Date(item.createdAt);
-      if (itemDate >= todayStart) {
-        todayCount++;
+      if (timelineResponse.items) {
+        timelineResponse.items.forEach((item: Item) => {
+          const itemDate = new Date(item.createdAt);
+          if (itemDate >= todayStart) {
+            todayCount++;
+          }
+        });
       }
       
-      // Collect all unique tags
-      item.tags.forEach(tag => allTags.add(tag));
-    });
-    
-    stats = {
-      totalItems: sampleData.length,
-      todayItems: todayCount,
-      totalTags: allTags.size
-    };
-  });
+      // Get tags
+      const tagsResponse = await getTags();
+      const tagsCount = tagsResponse?.tags?.length || 0;
+      
+      stats = {
+        totalItems: timelineResponse.total || 0,
+        todayItems: todayCount,
+        totalTags: tagsCount
+      };
+    } catch (err) {
+      console.error('Error loading data:', err);
+      error = err instanceof Error ? err : new Error(String(err));
+    } finally {
+      isLoading = false;
+    }
+  }
 </script>
 
 <div class="container animate-in">
@@ -81,13 +111,26 @@
   </div>
   
   <div class="stats-section">
+    {#if error}
+      <ErrorMessage 
+        message="Failed to load data" 
+        details={error.message} 
+        retry={() => { loadData(); }} 
+        dismiss={() => { error = null; }} 
+      />
+    {/if}
+
     <div class="stats-grid">
       <div class="stat-card {mounted ? 'animate-slide' : ''}">
         <div class="stat-icon">
           <Icon name="link" size="medium" color="var(--accent)" />
         </div>
         <div class="stat-content">
-          <div class="stat-value">{stats.totalItems}</div>
+          {#if isLoading}
+            <div class="stat-value loading"><Spinner size="small" /></div>
+          {:else}
+            <div class="stat-value">{stats.totalItems}</div>
+          {/if}
           <div class="stat-label">Total Items</div>
         </div>
       </div>
@@ -97,7 +140,11 @@
           <Icon name="calendar" size="medium" color="var(--success)" />
         </div>
         <div class="stat-content">
-          <div class="stat-value">{stats.todayItems}</div>
+          {#if isLoading}
+            <div class="stat-value loading"><Spinner size="small" /></div>
+          {:else}
+            <div class="stat-value">{stats.todayItems}</div>
+          {/if}
           <div class="stat-label">Today</div>
         </div>
       </div>
@@ -107,7 +154,11 @@
           <Icon name="tag" size="medium" color="var(--warning)" />
         </div>
         <div class="stat-content">
-          <div class="stat-value">{stats.totalTags}</div>
+          {#if isLoading}
+            <div class="stat-value loading"><Spinner size="small" /></div>
+          {:else}
+            <div class="stat-value">{stats.totalTags}</div>
+          {/if}
           <div class="stat-label">Tags</div>
         </div>
       </div>
@@ -149,7 +200,7 @@
           <Icon name="capture" size="large" color="var(--text-muted)" />
         </div>
         <p>No items yet. Press <span class="keyboard-hint">⌘N</span> to capture your first item.</p>
-        <button class="btn-red" onclick="window.location.href='/capture'">
+        <button class="btn-red" on:click={() => window.location.href = '/capture'}>
           <Icon name="plus" size="small" />
           Start Capturing
         </button>

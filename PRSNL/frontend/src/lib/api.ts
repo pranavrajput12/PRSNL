@@ -4,7 +4,8 @@
  */
 
 // Get the API URL from environment variables or use default
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/api';
+// Use relative URL to leverage Vite's proxy configuration
+const API_BASE_URL = import.meta.env.PUBLIC_API_URL || '/api';
 
 /**
  * Custom error class for API errors
@@ -113,6 +114,13 @@ export async function getItem(id: string) {
  * Get recent tags for autocomplete
  */
 export async function getRecentTags() {
+  return fetchWithErrorHandling('/tags');
+}
+
+/**
+ * Get all tags
+ */
+export async function getTags() {
   return fetchWithErrorHandling('/tags');
 }
 

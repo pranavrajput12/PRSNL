@@ -150,8 +150,8 @@ async def seed_data():
         for item_data in sample_items:
             item_id = uuid.uuid4()
             await conn.execute(
-                "INSERT INTO items (id, url, title, raw_content) VALUES ($1, $2, $3, $4)",
-                item_id, item_data["url"], item_data["title"], item_data["content"]
+                "INSERT INTO items (id, url, title, raw_content, processed_content) VALUES ($1, $2, $3, $4, $5)",
+                item_id, item_data["url"], item_data["title"], item_data["content"], item_data["content"]
             )
             for tag_name in item_data.get("tags", []):
                 tag_id = tag_ids.get(tag_name)
