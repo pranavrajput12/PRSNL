@@ -157,15 +157,22 @@ git push
 ## File Structure Guidelines
 ```
 project-root/
+├── PRSNL/              # Main application
+│   ├── backend/        # FastAPI application
+│   ├── frontend/       # SvelteKit UI
+│   ├── extension/      # Browser extension
+│   ├── docker/         # Docker configs
+│   ├── scripts/        # Utility scripts
+│   └── tests/          # Test suites
+├── docs/               # Project documentation
+│   ├── ARCHITECTURE.md
+│   └── IMPLEMENTATION_PLAN.md
 ├── .github/
 │   ├── workflows/      # CI/CD pipelines
 │   └── ISSUE_TEMPLATE/ # Issue templates
-├── docs/               # Project documentation
-├── src/                # Source code
-├── tests/              # Test files
-├── .gitignore
-├── README.md
-└── AI_COLLABORATION_GUIDE.md
+├── AI_COLLABORATION_GUIDE.md
+├── PROGRESS_TRACKER.md
+└── README.md
 ```
 
 ## Prohibited Actions

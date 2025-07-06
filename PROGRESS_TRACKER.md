@@ -33,9 +33,10 @@ Each task entry must follow this structure:
 - **Started**: 2025-01-06 10:00
 - **Last Updated**: 2025-01-06 10:30
 - **Files Being Modified**:
-  - `/ARCHITECTURE.md` (status: complete)
-  - `/README.md` (status: pending)
-  - Project config files (status: pending)
+  - `/docs/ARCHITECTURE.md` (status: complete)
+  - `/docs/IMPLEMENTATION_PLAN.md` (status: complete)
+  - `/README.md` (status: complete)
+  - `/PRSNL/` directory structure (status: in progress)
 - **Sub-tasks**:
   - [x] Design local-first architecture (Owner: Claude Code)
   - [x] Document system components (Owner: Claude Code)

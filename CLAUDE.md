@@ -34,6 +34,8 @@ git branch -a
 - `/AI_COLLABORATION_GUIDE.md` - Primary rulebook for all AI collaboration
 - `/GIT_MERGE_STRATEGY.md` - Git-based conflict prevention and merge rules
 - `/PROGRESS_TRACKER.md` - Real-time work coordination
+- `/docs/ARCHITECTURE.md` - System design document
+- `/docs/IMPLEMENTATION_PLAN.md` - Development roadmap
 - `/.github/PULL_REQUEST_TEMPLATE.md` - Template for all PRs
 - `/.github/ISSUE_TEMPLATE/task_assignment.md` - Template for task assignments
 
@@ -65,11 +67,12 @@ git branch -a | grep -E "(ws-|gc-)"  # Check other AI branches
 
 ## Project-Specific Notes
 
-### Knowledge Vault Project
+### Knowledge Vault Project (PRSNL)
 - **Type**: Local-first personal knowledge management system
-- **Stack**: FastAPI + PostgreSQL + SvelteKit + Docker
+- **Stack**: FastAPI + PostgreSQL + SvelteKit + Docker + Ollama
 - **My Focus**: Architecture, API design, core capture/search logic
 - **Key Files**:
-  - `/ARCHITECTURE.md` - System design (I own this)
-  - `/backend/` - Core API implementation
-  - `/docker-compose.yml` - Local deployment config
+  - `/docs/ARCHITECTURE.md` - System design (I own this)
+  - `/docs/IMPLEMENTATION_PLAN.md` - Roadmap (I own this)
+  - `/PRSNL/backend/` - Core API implementation
+  - `/PRSNL/docker-compose.yml` - Local deployment config

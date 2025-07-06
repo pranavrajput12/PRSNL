@@ -12,6 +12,10 @@
 - **Windsurf**: [`/WINDSURF.md`](/WINDSURF.md)
 - **Gemini CLI**: [`/GEMINI.md`](/GEMINI.md)
 
+### Project Documentation (PRSNL):
+- [`/docs/ARCHITECTURE.md`](/docs/ARCHITECTURE.md) - System design
+- [`/docs/IMPLEMENTATION_PLAN.md`](/docs/IMPLEMENTATION_PLAN.md) - Development roadmap
+
 ---
 
 ## Claude Code SOP Checklist
@@ -153,6 +157,29 @@
 | Typo Fixes | Gemini CLI | "Fix typo in README.md" |
 | Config Updates | Gemini CLI | "Update version in package.json" |
 | Small Bug Fixes | Gemini CLI | "Fix missing import in auth.js" |
+
+## PRSNL Project Specific Tasks
+
+### Claude Code (Lead):
+- [ ] Core capture API (`/PRSNL/backend/api/capture.py`)
+- [ ] Search engine (`/PRSNL/backend/core/search_engine.py`)
+- [ ] LLM processor (`/PRSNL/backend/services/llm_processor.py`)
+- [ ] Database models (`/PRSNL/backend/models/`)
+- [ ] Docker compose configuration
+
+### Windsurf (Scaffolding):
+- [ ] FastAPI project structure
+- [ ] SvelteKit frontend boilerplate
+- [ ] Browser extension structure (Manifest V3)
+- [ ] Test suite setup
+- [ ] Docker configurations
+
+### Gemini CLI (Minor Fixes):
+- [ ] Fix import paths after scaffolding
+- [ ] Update requirements.txt
+- [ ] Fix linting errors
+- [ ] Update .env templates
+- [ ] Correct documentation typos
 
 ## Progress Tracker States
 

@@ -52,23 +52,20 @@ docker-compose up -d
 
 ```
 .
-├── backend/              # FastAPI backend application
-│   ├── api/             # API endpoints
-│   ├── core/            # Core business logic
-│   ├── models/          # Database models
-│   └── services/        # External services
-├── frontend/            # SvelteKit web interface
-│   ├── src/            # Frontend source
-│   └── static/         # Static assets
-├── extension/          # Browser extension
-│   ├── manifest.json   # Extension config
-│   └── src/           # Extension source
-├── docker/            # Docker configurations
-├── scripts/           # Utility scripts
-├── docs/              # Project documentation
-│   ├── ARCHITECTURE.md # System design
-│   └── AI_GUIDES/     # AI collaboration docs
-└── docker-compose.yml # Local development setup
+├── PRSNL/                # Main application code
+│   ├── backend/         # FastAPI backend
+│   ├── frontend/        # SvelteKit web interface
+│   ├── extension/       # Browser extension
+│   ├── docker/          # Docker configurations
+│   ├── scripts/         # Utility scripts
+│   └── tests/           # Test suites
+├── docs/                 # Documentation
+│   ├── ARCHITECTURE.md  # System design
+│   ├── IMPLEMENTATION_PLAN.md
+│   └── AI_GUIDES/       # AI collaboration docs
+├── AI_COLLABORATION_GUIDE.md
+├── PROGRESS_TRACKER.md
+└── [Other AI config files]
 ```
 
 ## 💻 Tech Stack

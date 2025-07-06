@@ -68,7 +68,7 @@ git branch -a | grep -E "(cc-|ws-)"  # Check other AI branches
 
 ## Project-Specific Notes
 
-### Knowledge Vault Project
+### Knowledge Vault Project (PRSNL)
 - **Your Minor Fix Tasks**:
   - Fix linting errors after scaffolding
   - Update configuration files
@@ -77,7 +77,11 @@ git branch -a | grep -E "(cc-|ws-)"  # Check other AI branches
   - Add missing type hints
   - Update package.json dependencies
 - **Files You'll Likely Touch**:
-  - Configuration files (`.env`, `config.py`)
-  - Documentation files (README, API docs)
-  - Package manifests (`package.json`, `requirements.txt`)
-  - Docker configs (small tweaks only)
+  - `/PRSNL/backend/config.py` - Configuration
+  - `/PRSNL/backend/requirements.txt` - Dependencies
+  - `/PRSNL/frontend/package.json` - Frontend deps
+  - `/PRSNL/docker-compose.yml` - Small tweaks
+  - `/docs/` - Documentation typos
+- **Reference These Docs**:
+  - `/docs/ARCHITECTURE.md` - Understand the system
+  - `/docs/IMPLEMENTATION_PLAN.md` - See what's being built

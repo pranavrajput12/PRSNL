@@ -117,17 +117,17 @@ Windsurf: Also trying to modify /src/auth/login.js
 
 ## 🚦 Task Assignment Examples
 
-### Example 1: Building a New Feature
+### Example 1: Building a New Feature (PRSNL Example)
 ```
-You: "Build a blog system with posts, comments, and tags"
+You: "Build the capture API for PRSNL"
 
 1. Tell Claude Code the requirement
 2. Claude Code creates:
-   - Architecture design
+   - Capture API design in /PRSNL/backend/api/capture.py
    - Updates PROGRESS_TRACKER.md
-   - Issue #1: Scaffold blog module (→ Windsurf)
-   - Issue #2: Implement business logic (→ Claude Code)
-   - Issue #3: Fix any linting issues (→ Gemini CLI)
+   - Issue #1: Scaffold FastAPI structure (→ Windsurf)
+   - Issue #2: Implement capture engine (→ Claude Code)
+   - Issue #3: Fix import paths and configs (→ Gemini CLI)
 ```
 
 ### Example 2: Refactoring Existing Code

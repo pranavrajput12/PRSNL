@@ -56,7 +56,7 @@ git branch -a | grep -E "(cc-|gc-)"  # Check other AI branches
 
 ## Project-Specific Notes
 
-### Knowledge Vault Project
+### Knowledge Vault Project (PRSNL)
 - **Your Scaffolding Tasks**:
   - Create full project directory structure
   - Generate FastAPI backend boilerplate
@@ -65,8 +65,11 @@ git branch -a | grep -E "(cc-|gc-)"  # Check other AI branches
   - Generate Docker and docker-compose configs
   - Set up testing frameworks
 - **Key Directories You'll Create**:
-  - `/backend/` - FastAPI application
-  - `/frontend/` - SvelteKit application  
-  - `/extension/` - Browser extension
-  - `/scripts/` - Utility scripts
-  - `/tests/` - Test suites
+  - `/PRSNL/backend/` - FastAPI application
+  - `/PRSNL/frontend/` - SvelteKit application  
+  - `/PRSNL/extension/` - Browser extension
+  - `/PRSNL/scripts/` - Utility scripts
+  - `/PRSNL/tests/` - Test suites
+- **Documentation to Reference**:
+  - `/docs/ARCHITECTURE.md` - System design
+  - `/docs/IMPLEMENTATION_PLAN.md` - What to scaffold
