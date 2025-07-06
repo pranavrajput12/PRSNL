@@ -12,6 +12,9 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte",
     "format": "prettier --write ."
   },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/kit": "^2.0.0",

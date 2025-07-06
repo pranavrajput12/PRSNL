@@ -1,5 +1,5 @@
-<script lang="ts">
-  export let size: 'small' | 'medium' | 'large' = 'medium';
+<script>
+  export let size = 'medium';
   export let center = false;
   export let fullPage = false;
   export let message = '';

@@ -23,15 +23,18 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "css": ["content.css"]
     }
   ],
+  "options_page": "options.html",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
     "tabs",
-    "notifications"
+    "notifications",
+    "contextMenus"
   ],
   "host_permissions": [
     "http://localhost:8000/*"
@@ -43,6 +46,13 @@
         "mac": "Command+Shift+S"
       },
       "description": "Capture current page to PRSNL"
+    },
+    "capture-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Capture selected text to PRSNL"
     }
   }
 }

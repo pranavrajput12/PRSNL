@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import { notifications, removeNotification } from '$lib/stores/app';
   import { fly } from 'svelte/transition';
   import { flip } from 'svelte/animate';

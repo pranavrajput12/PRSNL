@@ -1,8 +1,8 @@
-<script lang="ts">
+<script>
   export let message = 'An error occurred';
   export let details = '';
-  export let retry: (() => void) | null = null;
-  export let dismiss: (() => void) | null = null;
+  export let retry = null;
+  export let dismiss = null;
 </script>
 
 <div class="error-container">

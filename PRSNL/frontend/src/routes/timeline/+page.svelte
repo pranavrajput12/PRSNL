@@ -1,285 +1,727 @@
-<script lang="ts">
+<script>
   import { onMount } from 'svelte';
   import { getTimeline } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
-  
-  interface TimelineItem {
-    id: string;
-    title: string;
-    url?: string;
-    snippet: string;
-    created_at: string;
-    tags: string[];
-  }
-  
-  interface TimelineGroup {
-    date: string;
-    items: TimelineItem[];
-  }
-  
-  let groups: TimelineGroup[] = [];
-  let isLoading = true;
-  let currentPage = 1;
+  import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
+  import Icon from '$lib/components/Icon.svelte';
+
+  // TimelineItem type
+  // id: string
+  // title: string
+  // url?: string
+  // summary: string
+  // created_at: string
+  // tags: string[]
+
+  let groups = [];
+  let isLoading = false;
   let hasMore = true;
-  let error: Error | null = null;
-  
+  let page = 1;
+  let error = null;
+  let viewMode = 'card'; // card, compact, detailed
+  let showFilters = false;
+  let dateFilter = '';
+  let typeFilter = '';
+  let tagsFilter = '';
+  let scrollContainer;
+
   onMount(() => {
     loadTimeline();
+    setupInfiniteScroll();
   });
-  
-  async function loadTimeline() {
+
+  async function loadTimeline(reset = false) {
+    if (isLoading) return;
+
     try {
+      isLoading = true;
       error = null;
-      const data = await getTimeline(currentPage);
-      
+
+      if (reset) {
+        page = 1;
+        groups = [];
+      }
+
+      const response = await getTimeline(page);
+      const items = response.items || [];
+
+      if (items.length === 0) {
+        hasMore = false;
+        return;
+      }
+
       // Group items by date
-      const grouped = data.items.reduce((acc: any, item: TimelineItem) => {
-        const date = new Date(item.created_at).toLocaleDateString();
-        if (!acc[date]) {
-          acc[date] = [];
-        }
-        acc[date].push(item);
-        return acc;
-      }, {});
+      const grouped = groupByDate(items);
       
-      // Convert to array format
-      const newGroups = Object.entries(grouped).map(([date, items]) => ({
-        date,
-        items: items as TimelineItem[]
-      }));
-      
-      if (currentPage === 1) {
-        groups = newGroups;
+      if (reset) {
+        groups = grouped;
       } else {
-        groups = [...groups, ...newGroups];
+        // Merge with existing groups
+        groups = mergeGroups(groups, grouped);
+      }
+
+      page++;
+      hasMore = response.hasMore || false;
+    } catch (err) {
+      error = err;
+      console.error('Timeline error:', err);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  function groupByDate(items) {
+    const grouped = {};
+    
+    items.forEach(item => {
+      const date = new Date(item.created_at);
+      const dateKey = date.toDateString();
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: dateKey,
+          items: []
+        };
       }
       
-      hasMore = data.hasMore;
-      isLoading = false;
-    } catch (err) {
-      console.error('Timeline error:', err);
-      error = err as Error;
-      isLoading = false;
+      grouped[dateKey].items.push(item);
+    });
+
+    return Object.values(grouped);
+  }
+
+  function mergeGroups(existing, newGroups) {
+    const merged = [...existing];
+    
+    newGroups.forEach(newGroup => {
+      const existingIndex = merged.findIndex(g => g.date === newGroup.date);
+      if (existingIndex >= 0) {
+        merged[existingIndex].items.push(...newGroup.items);
+      } else {
+        merged.push(newGroup);
+      }
+    });
+
+    return merged;
+  }
+
+  function setupInfiniteScroll() {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadTimeline();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    // Observe sentinel element
+    const sentinel = document.createElement('div');
+    sentinel.id = 'scroll-sentinel';
+    document.body.appendChild(sentinel);
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+      document.getElementById('scroll-sentinel')?.remove();
+    };
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
     }
   }
-  
-  function loadMore() {
-    if (!hasMore || isLoading) return;
-    currentPage++;
-    loadTimeline();
-  }
-  
-  // Infinite scroll
-  function handleScroll(e: Event) {
-    const element = e.target as HTMLElement;
-    if (element.scrollHeight - element.scrollTop <= element.clientHeight + 100) {
-      loadMore();
+
+  function getRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+
+    if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
     }
+  }
+
+  function handleFilter() {
+    // Reload with filters
+    loadTimeline(true);
+  }
+
+  function clearFilters() {
+    dateFilter = '';
+    typeFilter = '';
+    tagsFilter = '';
+    loadTimeline(true);
+  }
+
+  function deleteItem(itemId) {
+    // Remove item from timeline
+    groups = groups.map(group => ({
+      ...group,
+      items: group.items.filter(item => item.id !== itemId)
+    })).filter(group => group.items.length > 0);
   }
 </script>
 
-<div class="container">
-  <h1>Timeline</h1>
-  <p class="subtitle">Your knowledge vault over time</p>
-  
-  <div class="timeline" on:scroll={handleScroll}>
+<div class="container animate-in">
+  <div class="timeline-container">
+    <div class="timeline-header">
+      <div class="header-content">
+        <h1 class="gradient-text">Timeline</h1>
+        <p class="subtitle">Browse your captured knowledge chronologically</p>
+      </div>
+      
+      <div class="header-actions">
+        <div class="view-modes">
+          <button 
+            class="view-mode {viewMode === 'compact' ? 'active' : ''}"
+            on:click={() => viewMode = 'compact'}
+            title="Compact view"
+          >
+            <Icon name="timeline" size="small" />
+          </button>
+          <button 
+            class="view-mode {viewMode === 'card' ? 'active' : ''}"
+            on:click={() => viewMode = 'card'}
+            title="Card view"
+          >
+            <Icon name="search" size="small" />
+          </button>
+        </div>
+        
+        <button 
+          class="filter-toggle {showFilters ? 'active' : ''}"
+          on:click={() => showFilters = !showFilters}
+          title="Toggle filters"
+        >
+          <Icon name="filter" size="small" />
+          Filters
+        </button>
+      </div>
+    </div>
+
     {#if error}
       <ErrorMessage 
         message="Failed to load timeline" 
         details={error.message} 
-        retry={loadTimeline} 
+        retry={() => loadTimeline(true)} 
         dismiss={() => error = null} 
       />
-    {:else if isLoading && currentPage === 1}
-      <div class="loading">
-        <Spinner size="medium" center message="Loading timeline..." />
-      </div>
-    {:else if groups.length === 0}
-      <div class="empty-state">
-        <p>No items in your vault yet</p>
-        <a href="/capture" class="cta">Capture your first item</a>
-      </div>
-    {:else}
-      {#each groups as group}
-        <div class="timeline-group">
-          <h2 class="date-header">{group.date}</h2>
-          <div class="timeline-items">
-            {#each group.items as item}
-              <a href="/item/{item.id}" class="timeline-item">
-                <div class="time">
-                  {new Date(item.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </div>
-                <div class="content">
-                  <h3>{item.title}</h3>
-                  {#if item.url}
-                    <div class="url">{new URL(item.url).hostname}</div>
-                  {/if}
-                  <p>{item.snippet}</p>
-                  {#if item.tags.length > 0}
-                    <div class="tags">
-                      {#each item.tags as tag}
-                        <span class="tag">#{tag}</span>
-                      {/each}
-                    </div>
-                  {/if}
-                </div>
-              </a>
-            {/each}
-          </div>
+    {/if}
+
+    {#if showFilters}
+      <div class="filters animate-slide">
+        <div class="filter-group">
+          <label for="date-filter">
+            <Icon name="calendar" size="small" />
+            Date
+          </label>
+          <select id="date-filter" bind:value={dateFilter} on:change={handleFilter}>
+            <option value="">All time</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+            <option value="year">This year</option>
+          </select>
         </div>
-      {/each}
-      
-      {#if hasMore}
-        <div class="load-more">
-          <button on:click={loadMore} disabled={isLoading}>
-            {#if isLoading}
-              <Spinner size="small" />
-              <span>Loading...</span>
-            {:else}
-              Load more
-            {/if}
+
+        <div class="filter-group">
+          <label for="type-filter">
+            <Icon name="link" size="small" />
+            Type
+          </label>
+          <select id="type-filter" bind:value={typeFilter} on:change={handleFilter}>
+            <option value="">All types</option>
+            <option value="url">URLs</option>
+            <option value="text">Text</option>
+            <option value="file">Files</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="tags-filter">
+            <Icon name="tag" size="small" />
+            Tags
+          </label>
+          <input
+            id="tags-filter"
+            bind:value={tagsFilter}
+            on:input={handleFilter}
+            type="text"
+            placeholder="Filter by tags..."
+            class="tag-filter"
+          />
+        </div>
+
+        <button class="btn-ghost" on:click={clearFilters}>
+          <Icon name="close" size="small" />
+          Clear filters
+        </button>
+      </div>
+    {/if}
+
+    <div class="timeline-content" class:compact={viewMode === 'compact'}>
+      {#if groups.length === 0 && !isLoading}
+        <div class="empty-state">
+          <div class="empty-icon animate-pulse">
+            <Icon name="timeline" size="large" color="var(--text-muted)" />
+          </div>
+          <h3>No items yet</h3>
+          <p>Start capturing content to build your timeline</p>
+          <button class="btn-red" on:click={() => window.location.href = '/capture'}>
+            <Icon name="plus" size="small" />
+            Capture your first item
           </button>
         </div>
+      {:else}
+        {#each groups as group, groupIndex}
+          <div class="timeline-group" style="animation-delay: {groupIndex * 100}ms">
+            <div class="date-separator">
+              <h2>{formatDate(group.date)}</h2>
+              <div class="separator-line"></div>
+            </div>
+            
+            <div class="timeline-items">
+              {#each group.items as item, itemIndex}
+                <div 
+                  class="timeline-item {viewMode}" 
+                  style="animation-delay: {(groupIndex * 100) + (itemIndex * 50)}ms"
+                >
+                  <div class="item-time">
+                    {getRelativeTime(item.created_at)}
+                  </div>
+                  
+                  <div class="item-content">
+                    <div class="item-header">
+                      <a href="/item/{item.id}" class="item-title">
+                        {item.title}
+                      </a>
+                      
+                      <div class="item-actions">
+                        <button class="action-btn" title="Edit">
+                          <Icon name="edit" size="small" />
+                        </button>
+                        <button class="action-btn delete" title="Delete" on:click={() => deleteItem(item.id)}>
+                          <Icon name="close" size="small" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {#if item.url}
+                      <div class="item-url">
+                        <Icon name="external-link" size="small" />
+                        <a href={item.url} target="_blank" rel="noopener">
+                          {new URL(item.url).hostname}
+                        </a>
+                      </div>
+                    {/if}
+                    
+                    {#if viewMode !== 'compact'}
+                      <p class="item-summary">{item.summary}</p>
+                    {/if}
+                    
+                    {#if item.tags?.length > 0}
+                      <div class="item-tags">
+                        {#each item.tags as tag}
+                          <span class="tag">
+                            <Icon name="tag" size="small" />
+                            {tag}
+                          </span>
+                        {/each}
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/each}
       {/if}
-    {/if}
+
+      {#if isLoading}
+        <SkeletonLoader type="timeline" count={3} />
+      {/if}
+    </div>
+
+    <!-- Infinite scroll sentinel -->
+    <div id="scroll-sentinel" style="height: 1px;"></div>
   </div>
 </div>
 
 <style>
-  .container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-    height: calc(100vh - 100px);
-    display: flex;
-    flex-direction: column;
+  .timeline-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
   }
   
-  h1 {
-    text-align: center;
+  .timeline-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .header-content h1 {
+    font-size: 3rem;
     margin-bottom: 0.5rem;
+    font-weight: 800;
   }
   
   .subtitle {
-    text-align: center;
     color: var(--text-secondary);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .view-modes {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+  }
+  
+  .view-mode {
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: all var(--transition-base);
+  }
+  
+  .view-mode:hover,
+  .view-mode.active {
+    background: var(--accent);
+    color: white;
+  }
+  
+  .filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all var(--transition-base);
+  }
+  
+  .filter-toggle:hover,
+  .filter-toggle.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     margin-bottom: 2rem;
   }
   
-  .timeline {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-  }
-  
-  .timeline-group {
-    margin-bottom: 2rem;
-  }
-  
-  .date-header {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-  
-  .timeline-items {
+  .filter-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
   
+  .filter-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  
+  .filter-group select,
+  .tag-filter {
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+  }
+  
+  .timeline-group {
+    margin-bottom: 3rem;
+    animation: fadeIn var(--transition-slow) ease-out forwards;
+    opacity: 0;
+  }
+  
+  .date-separator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .date-separator h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  
+  .separator-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+  
+  .timeline-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
   .timeline-item {
     display: flex;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 1.5rem;
+    padding: 1.5rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    transition: all 0.2s;
+    transition: all var(--transition-base);
+    animation: fadeIn var(--transition-slow) ease-out forwards;
+    opacity: 0;
   }
   
   .timeline-item:hover {
-    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
     border-color: var(--accent);
   }
   
-  .time {
-    flex-shrink: 0;
+  .timeline-item.compact {
+    padding: 1rem 1.5rem;
+  }
+  
+  .item-time {
     color: var(--text-muted);
     font-size: 0.875rem;
-    font-family: var(--font-mono);
-    padding-top: 0.125rem;
+    font-weight: 600;
+    min-width: 60px;
+    flex-shrink: 0;
   }
   
-  .content {
+  .item-content {
     flex: 1;
-    min-width: 0;
   }
   
-  .content h3 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-  
-  .url {
-    font-size: 0.75rem;
-    color: var(--accent);
+  .item-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
     margin-bottom: 0.5rem;
   }
   
-  .content p {
-    margin: 0 0 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    line-height: 1.5;
+  .item-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
   }
   
-  .tags {
+  .item-title:hover {
+    color: var(--accent);
+  }
+  
+  .item-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+  
+  .timeline-item:hover .item-actions {
+    opacity: 1;
+  }
+  
+  .action-btn {
+    padding: 0.25rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+  }
+  
+  .action-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  
+  .action-btn.delete:hover {
+    background: var(--man-united-red);
+    color: white;
+    border-color: var(--man-united-red);
+  }
+  
+  .item-url {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .item-url a {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  
+  .item-url a:hover {
+    color: var(--accent);
+  }
+  
+  .item-summary {
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+  }
+  
+  .item-tags {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
   }
   
   .tag {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 100px;
     font-size: 0.75rem;
-    color: var(--text-muted);
-  }
-  
-  .loading,
-  .empty-state {
-    text-align: center;
-    padding: 3rem;
     color: var(--text-secondary);
+    font-weight: 600;
+    transition: all var(--transition-fast);
   }
   
-  .cta {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.75rem 1.5rem;
+  .tag:hover {
     background: var(--accent);
     color: white;
-    border-radius: var(--radius);
-    transition: background 0.2s;
   }
   
-  .cta:hover {
-    background: var(--accent-hover);
-  }
-  
-  .load-more {
+  .empty-state {
     text-align: center;
-    padding: 2rem;
+    padding: 4rem 2rem;
   }
   
-  .load-more button {
-    padding: 0.75rem 2rem;
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+  }
+  
+  .empty-state h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+  
+  .empty-state p {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+  }
+  
+  .btn-red {
+    background: var(--man-united-red);
+    color: white;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    padding: 1rem 2rem;
+    border-radius: var(--radius);
+    transition: all var(--transition-base);
+  }
+  
+  .btn-red:hover {
+    background: var(--accent-red-hover);
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  @media (max-width: 768px) {
+    .timeline-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .header-actions {
+      justify-content: space-between;
+    }
+    
+    .timeline-item {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .item-time {
+      min-width: auto;
+    }
+    
+    .filters {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
