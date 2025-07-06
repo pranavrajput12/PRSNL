@@ -12,15 +12,15 @@ PRSNL_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 dev:
 	@echo "$(GREEN)Starting all services...$(NC)"
-	@cd $(PRSNL_DIR) && docker-compose up -d --build
+	@cd $(PRSNL_DIR) && docker compose up -d --build
 	@echo "$(YELLOW)Waiting for PostgreSQL to be ready...$(NC)"
-	@until docker-compose -f $(PRSNL_DIR)/docker-compose.yml exec db pg_isready -U postgres -d prsnl > /dev/null 2>&1; do \
+	@until docker compose -f $(PRSNL_DIR)/docker compose.yml exec db pg_isready -U postgres -d prsnl > /dev/null 2>&1; do \
 	  echo "$(YELLOW)PostgreSQL is unavailable - sleeping$(NC)"; \
 	  sleep 2; \
 	done
 	@echo "$(GREEN)PostgreSQL is up and running.$(NC)"
 	@echo "$(YELLOW)Applying database schema...$(NC)"
-	@docker-compose -f $(PRSNL_DIR)/docker-compose.yml exec -T db psql -U postgres -d prsnl -f /app/db/schema.sql
+	@docker compose -f $(PRSNL_DIR)/docker compose.yml exec -T db psql -U postgres -d prsnl -f /app/db/schema.sql
 	@echo "$(YELLOW)Waiting for Ollama to be ready...$(NC)"
 	@until curl -s http://localhost:11434/api/tags > /dev/null 2>&1; do \
 	  echo "$(YELLOW)Ollama is unavailable - sleeping$(NC)"; \
@@ -33,12 +33,12 @@ dev:
 
 stop:
 	@echo "$(YELLOW)Stopping all services...$(NC)"
-	@cd $(PRSNL_DIR) && docker-compose down
+	@cd $(PRSNL_DIR) && docker compose down
 	@echo "$(GREEN)All services stopped.$(NC)"
 
 reset:
 	@echo "$(YELLOW)Resetting database...$(NC)"
-	@cd $(PRSNL_DIR) && docker-compose down -v
+	@cd $(PRSNL_DIR) && docker compose down -v
 	@echo "$(GREEN)Database reset. Run 'make dev' to re-initialize.$(NC)"
 
 seed:
@@ -48,4 +48,4 @@ seed:
 
 logs:
 	@echo "$(YELLOW)Showing all service logs (Ctrl+C to exit)...$(NC)"
-	@cd $(PRSNL_DIR) && docker-compose logs -f
+	@cd $(PRSNL_DIR) && docker compose logs -f

@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Main items table
 CREATE TABLE IF NOT EXISTS items (

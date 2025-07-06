@@ -12,6 +12,8 @@ sqlalchemy==2.0.25
 beautifulsoup4==4.12.3
 httpx==0.26.0
 readability-lxml==0.8.1
+lxml_html_clean
+lxml_html_clean
 
 # Development
 black==24.1.1

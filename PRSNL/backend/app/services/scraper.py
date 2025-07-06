@@ -1,7 +1,7 @@
 """Web scraping service"""
 import httpx
 from bs4 import BeautifulSoup
-from readability import Readability
+from readability.readability import Document
 from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass
@@ -45,7 +45,7 @@ class WebScraper:
             html = response.text
             
             # Use readability for content extraction
-            doc = Readability(html)
+            doc = Document(html)
             article = doc.summary()
             title = doc.title()
             

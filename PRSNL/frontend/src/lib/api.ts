@@ -87,7 +87,7 @@ export async function searchItems(
 ) {
   const params = new URLSearchParams();
   
-  if (query) params.append('q', query);
+  if (query) params.append('query', query);
   if (filters.date) params.append('date', filters.date);
   if (filters.type) params.append('type', filters.type);
   if (filters.tags) params.append('tags', filters.tags);
@@ -113,7 +113,7 @@ export async function getItem(id: string) {
  * Get recent tags for autocomplete
  */
 export async function getRecentTags() {
-  return fetchWithErrorHandling('/tags/recent');
+  return fetchWithErrorHandling('/tags');
 }
 
 /**
