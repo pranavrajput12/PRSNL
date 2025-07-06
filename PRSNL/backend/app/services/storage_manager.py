@@ -8,6 +8,7 @@ import asyncio
 
 from app.config import settings
 from app.db.database import get_db_pool
+from app.monitoring.metrics import STORAGE_USAGE_BYTES, ORPHANED_FILE_CLEANUP_TOTAL, TEMP_FILE_CLEANUP_TOTAL
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,10 @@ class StorageManager:
         thumbnails_size = sum(f.stat().st_size for f in self.thumbnails_dir.rglob('*') if f.is_file())
         temp_size = sum(f.stat().st_size for f in self.temp_dir.rglob('*') if f.is_file())
 
+        STORAGE_USAGE_BYTES.labels(type='videos').set(videos_size)
+        STORAGE_USAGE_BYTES.labels(type='thumbnails').set(thumbnails_size)
+        STORAGE_USAGE_BYTES.labels(type='temp').set(temp_size)
+
         return {
             "total_disk_space": total_bytes,
             "used_disk_space": used_bytes,
@@ -61,112 +66,84 @@ class StorageManager:
         Removes video and thumbnail files that are no longer referenced in the database.
         """
         logger.info("Starting orphaned file cleanup...")
-        pool = await get_db_pool()
-        async with pool.acquire() as conn:
-            # Get all file_paths from the database
-            db_file_paths = set()
-            rows = await conn.fetch("SELECT file_path FROM items WHERE file_path IS NOT NULL")
-            for row in rows:
-                db_file_paths.add(row['file_path'])
-            
-            rows = await conn.fetch("SELECT file_path FROM attachments WHERE file_path IS NOT NULL")
-            for row in rows:
-                db_file_paths.add(row['file_path'])
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as conn:
+                # Get all file_paths from the database
+                db_file_paths = set()
+                rows = await conn.fetch("SELECT file_path FROM items WHERE file_path IS NOT NULL")
+                for row in rows:
+                    db_file_paths.add(row['file_path'])
+                
+                rows = await conn.fetch("SELECT file_path FROM attachments WHERE file_path IS NOT NULL")
+                for row in rows:
+                    db_file_paths.add(row['file_path'])
 
-        deleted_count = 0
-        deleted_size = 0
+            deleted_count = 0
+            deleted_size = 0
 
-        # Check video files
-        for video_file in self.videos_dir.rglob('*.mp4'): # Assuming all videos are converted to mp4
-            if str(video_file) not in db_file_paths:
-                try:
-                    file_size = video_file.stat().st_size
-                    os.remove(video_file)
-                    deleted_count += 1
-                    deleted_size += file_size
-                    logger.info(f"Deleted orphaned video file: {video_file}")
-                except OSError as e:
-                    logger.error(f"Error deleting orphaned video file {video_file}: {e}")
-        
-        # Check thumbnail directories (each video has its own thumbnail directory)
-        for thumbnail_dir in self.thumbnails_dir.iterdir():
-            if thumbnail_dir.is_dir():
-                # Extract video_id from directory name
-                video_id = thumbnail_dir.name
-                # Check if any item or attachment references this video_id's path
-                # This is a simplified check. A more robust check would involve querying for item_id directly.
-                # For now, we assume if the video_id is not in any file_path, its thumbnails are orphaned.
-                # This needs to be improved if item_id is not directly part of file_path string.
-                
-                # A better approach: get all item_ids from DB and check if thumbnail_dir.name is in that set
-                # For now, we'll rely on the video_path check above. If the video is deleted, its thumbnails should be too.
-                # This part needs a more direct link to item_id from the database.
-                
-                # For now, let's just check if the corresponding video file exists
-                # This is a temporary solution until a proper item_id to thumbnail_dir mapping is implemented.
-                video_exists = False
-                for path in db_file_paths:
-                    if video_id in path: # Simple substring match
-                        video_exists = True
-                        break
-                
-                if not video_exists:
+            # Check video files
+            for video_file in self.videos_dir.rglob('*.mp4'): # Assuming all videos are converted to mp4
+                if str(video_file) not in db_file_paths:
                     try:
-                        dir_size = sum(f.stat().st_size for f in thumbnail_dir.rglob('*') if f.is_file())
-                        shutil.rmtree(thumbnail_dir)
+                        file_size = video_file.stat().st_size
+                        os.remove(video_file)
                         deleted_count += 1
-                        deleted_size += dir_size
-                        logger.info(f"Deleted orphaned thumbnail directory: {thumbnail_dir}")
+                        deleted_size += file_size
+                        logger.info(f"Deleted orphaned video file: {video_file}")
                     except OSError as e:
-                        logger.error(f"Error deleting orphaned thumbnail directory {thumbnail_dir}: {e}")
+                        logger.error(f"Error deleting orphaned video file {video_file}: {e}")
+            
+            # Check thumbnail directories (each video has its own thumbnail directory)
+            for thumbnail_dir in self.thumbnails_dir.iterdir():
+                if thumbnail_dir.is_dir():
+                    video_exists = False
+                    for path in db_file_paths:
+                        if thumbnail_dir.name in path: # Simple substring match
+                            video_exists = True
+                            break
+                    
+                    if not video_exists:
+                        try:
+                            dir_size = sum(f.stat().st_size for f in thumbnail_dir.rglob('*') if f.is_file())
+                            shutil.rmtree(thumbnail_dir)
+                            deleted_count += 1
+                            deleted_size += dir_size
+                            logger.info(f"Deleted orphaned thumbnail directory: {thumbnail_dir}")
+                        except OSError as e:
+                            logger.error(f"Error deleting orphaned thumbnail directory {thumbnail_dir}: {e}")
 
-        logger.info(f"Orphaned file cleanup complete. Deleted {deleted_count} files/directories, total size {deleted_size} bytes.")
+            logger.info(f"Orphaned file cleanup complete. Deleted {deleted_count} files/directories, total size {deleted_size} bytes.")
+            ORPHANED_FILE_CLEANUP_TOTAL.labels(status='success').inc()
+        except Exception as e:
+            logger.error(f"Error during orphaned file cleanup: {e}")
+            ORPHANED_FILE_CLEANUP_TOTAL.labels(status='failed').inc()
 
     async def cleanup_temp_files(self, older_than_hours: int = 24):
         """
         Removes temporary files older than a specified duration.
         """
         logger.info(f"Starting temporary file cleanup (older than {older_than_hours} hours)...")
-        cutoff_time = datetime.now() - timedelta(hours=older_than_hours)
-        deleted_count = 0
-        deleted_size = 0
+        try:
+            cutoff_time = datetime.now() - timedelta(hours=older_than_hours)
+            deleted_count = 0
+            deleted_size = 0
 
-        for temp_file in self.temp_dir.rglob('*'):
-            if temp_file.is_file():
-                try:
-                    modified_time = datetime.fromtimestamp(temp_file.stat().st_mtime)
-                    if modified_time < cutoff_time:
-                        file_size = temp_file.stat().st_size
-                        os.remove(temp_file)
-                        deleted_count += 1
-                        deleted_size += file_size
-                        logger.info(f"Deleted old temp file: {temp_file}")
-                except OSError as e:
-                    logger.error(f"Error deleting old temp file {temp_file}: {e}")
+            for temp_file in self.temp_dir.rglob('*'):
+                if temp_file.is_file():
+                    try:
+                        modified_time = datetime.fromtimestamp(temp_file.stat().st_mtime)
+                        if modified_time < cutoff_time:
+                            file_size = temp_file.stat().st_size
+                            os.remove(temp_file)
+                            deleted_count += 1
+                            deleted_size += file_size
+                            logger.info(f"Deleted old temp file: {temp_file}")
+                    except OSError as e:
+                        logger.error(f"Error deleting old temp file {temp_file}: {e}")
 
-        logger.info(f"Temporary file cleanup complete. Deleted {deleted_count} files, total size {deleted_size} bytes.")
-
-    # Placeholder for user quota management (future-proofing)
-    async def check_user_quota(self, user_id: str) -> Dict:
-        """
-        Checks storage quota for a specific user.
-        (Placeholder - requires user-specific storage tracking)
-        """
-        return {"user_id": user_id, "quota_mb": 0, "used_mb": 0, "exceeded": False}
-
-    # Placeholder for backup strategy (future-proofing)
-    async def backup_media_files(self, destination_path: str):
-        """
-        Initiates a backup of all media files to a specified destination.
-        (Placeholder - requires external backup mechanism)
-        """
-        logger.info(f"Initiating media backup to {destination_path}...")
-        # Example: rsync command or cloud storage upload
-        await asyncio.sleep(5) # Simulate backup process
-        logger.info("Media backup simulated.")
-
-    # Placeholder for CDN-ready file structure (already handled by pathing)
-    # The current structure /app/media/videos/YYYY/MM/{uuid}.mp4 is already CDN-friendly
-    # No specific method needed here, but kept for documentation of requirement.
-
-storage_manager = StorageManager()
+            logger.info(f"Temporary file cleanup complete. Deleted {deleted_count} files, total size {deleted_size} bytes.")
+            TEMP_FILE_CLEANUP_TOTAL.labels(status='success').inc()
+        except Exception as e:
+            logger.error(f"Error during temporary file cleanup: {e}")
+            TEMP_FILE_CLEANUP_TOTAL.labels(status='failed').inc()

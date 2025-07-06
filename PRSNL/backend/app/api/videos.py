@@ -4,12 +4,14 @@ from typing import List, Optional
 from uuid import UUID
 import os
 import logging
+import time
 
 from app.core.exceptions import ItemNotFound, InternalServerError, InvalidInput
 from app.db.database import get_db_pool
 from app.models.video import VideoItem, VideoMetadata, VideoTranscodeRequest, VideoTranscodeResponse, VideoDeleteResponse
 from app.services.video_processor import VideoProcessor
 from app.core.background_tasks import background_tasks
+from app.monitoring.metrics import VIDEO_PROCESSING_DURATION_SECONDS
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ async def get_video_metadata(item_id: UUID):
 async def _transcode_video_task(item_id: UUID, quality: str):
     """Background task for video transcoding."""
     pool = await get_db_pool()
+    start_time = time.time()
     async with pool.acquire() as conn:
         try:
             await conn.execute("UPDATE items SET status = 'transcoding' WHERE id = $1", item_id)
@@ -72,9 +75,11 @@ async def _transcode_video_task(item_id: UUID, quality: str):
             # Update status and metadata
             await conn.execute("UPDATE items SET status = 'completed', metadata = jsonb_set(COALESCE(metadata, '{}'), '{transcoded_quality}', to_jsonb($2::text), true) WHERE id = $1", item_id, quality)
             logger.info(f"Finished transcoding for video {item_id}")
+            VIDEO_PROCESSING_DURATION_SECONDS.labels(outcome='success').observe(time.time() - start_time)
         except Exception as e:
             logger.error(f"Error during transcoding for video {item_id}: {e}", exc_info=True)
             await conn.execute("UPDATE items SET status = 'failed', metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text), true) WHERE id = $1", item_id, str(e))
+            VIDEO_PROCESSING_DURATION_SECONDS.labels(outcome='failed').observe(time.time() - start_time)
 
 @router.post("/videos/{item_id}/transcode", response_model=VideoTranscodeResponse)
 async def request_video_transcode(item_id: UUID, request: VideoTranscodeRequest, background_tasks: BackgroundTasks):

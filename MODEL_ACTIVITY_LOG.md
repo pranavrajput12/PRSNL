@@ -42,5 +42,51 @@
 - Included the `admin` router in `PRSNL/backend/app/main.py`.
 - Integrated periodic calls to `cleanup_orphaned_files()` and `cleanup_temp_files()` as background tasks in `PRSNL/backend/app/main.py`.
 
+### Task GEMINI-2025-07-06-003 (Video API Endpoints)
+
+**Description:** Created dedicated video management endpoints.
+
+**Changes Made:**
+- Created `PRSNL/backend/app/models/video.py` with Pydantic models for video data, transcoding requests/responses, and delete responses.
+- Created `PRSNL/backend/app/api/videos.py` with the following endpoints:
+    - `GET /videos/{item_id}/stream`: Video streaming endpoint.
+    - `GET /videos/{item_id}/metadata`: Video metadata retrieval.
+    - `POST /videos/{item_id}/transcode`: Requests video transcoding as a background task.
+    - `DELETE /videos/{item_id}`: Initiates video and associated file deletion as a background task.
+- Included the `videos` router in `PRSNL/backend/app/main.py`.
+
+### Task GEMINI-2025-07-06-004 (Platform Support Extension)
+
+**Description:** Extended video support beyond Instagram.
+
+**Changes Made:**
+- Created `PRSNL/backend/app/services/platforms/` directory.
+- Created `PRSNL/backend/app/services/platforms/__init__.py` with a base `PlatformProcessor` abstract class.
+- Created platform-specific processor files:
+    - `PRSNL/backend/app/services/platforms/instagram.py`
+    - `PRSNL/backend/app/services/platforms/youtube.py`
+    - `PRSNL/backend/app/services/platforms/twitter.py`
+    - `PRSNL/backend/app/services/platforms/tiktok.py`
+- Modified `PRSNL/backend/app/services/video_processor.py` to utilize these new modular platform processors for `validate_video_url` and `download_video`.
+
+### Task GEMINI-2025-07-06-005 (Performance Monitoring)
+
+**Description:** Added comprehensive monitoring for video operations.
+
+**Changes Made:**
+- Created `PRSNL/backend/app/monitoring/metrics.py` to define Prometheus metrics for:
+    - Video capture requests (total, status).
+    - Video download duration (platform).
+    - Video download outcomes (platform, outcome).
+    - Video processing duration (outcome).
+    - Storage usage (type).
+    - Orphaned file cleanup operations (status).
+    - Temporary file cleanup operations (status).
+    - Video processing queue size.
+- Integrated metrics into `PRSNL/backend/app/api/capture.py` to track video capture requests and download outcomes.
+- Integrated metrics into `PRSNL/backend/app/services/video_processor.py` to track video download and processing durations and outcomes.
+- Integrated metrics into `PRSNL/backend/app/services/storage_manager.py` to track storage usage and cleanup operations.
+- Integrated metrics into `PRSNL/backend/app/api/admin.py` to expose storage metrics.
+
 **Next Steps:**
-- Proceed with Task GEMINI-2025-07-06-003 (Video API Endpoints) as per `GEMINI_TASKS.md`.
+- All tasks from `GEMINI_TASKS.md` have been addressed. The next step would be to perform comprehensive testing of the implemented features, especially the video processing pipeline, and to set up a Prometheus server to visualize the collected metrics.

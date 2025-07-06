@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PRSNL"
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3002", "http://localhost:5173"]
     
     # LLM
     OLLAMA_BASE_URL: str = "http://localhost:11434"

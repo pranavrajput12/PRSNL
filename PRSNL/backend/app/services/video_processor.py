@@ -4,35 +4,7 @@ import os
 import asyncio
 import httpx
 from pathlib import Path
-from typing import Optional, Dict
-from dataclasses import dataclass
-from PIL import Image
-import logging
-import json
-from datetime import datetime
-
-logger = logging.getLogger(__name__)
-
-
-@dataclass
-class VideoData:
-    """Container for video metadata and file paths"""
-    url: str
-    title: str
-    description: Optional[str]
-    author: Optional[str]
-    duration: Optional[int]  # in seconds
-    video_path: str
-    thumbnail_path: Optional[str]
-    platform: str
-    metadata: Dict
-    downloaded_at: datetime
-
-
-class VideoProcessor:
-    """Process and download videos from Instagram and other platforms"""
-    
-    from typing import List, Optional, Dict, Callable, Any
+from typing import List, Optional, Dict, Callable, Any
 from datetime import datetime, timedelta
 import asyncio
 import httpx
@@ -47,6 +19,11 @@ import yt_dlp
 from PIL import Image
 
 from app.config import settings
+from app.services.platforms import PlatformProcessor
+from app.services.platforms.instagram import InstagramProcessor
+from app.services.platforms.youtube import YouTubeProcessor
+from app.services.platforms.twitter import TwitterProcessor
+from app.services.platforms.tiktok import TikTokProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -80,49 +57,39 @@ class VideoProcessor:
         self.thumbnails_dir.mkdir(exist_ok=True)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         
-        self.ydl_opts = {
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-            'outtmpl': str(self.temp_dir / '%(id)s.%(ext)s'),
-            'quiet': True,
-            'no_warnings': True,
-            'extract_flat': False,
-            'cookiefile': None,
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            },
-            'retries': 5,
-            'fragment_retries': 5,
-            'extractor_retries': 5,
-            'progress_hooks': [self._progress_hook],
-            'concurrent_fragment_downloads': 5,
-            'buffer_size': '10M',
-            'continuedl': True,
-            'nopart': True,
-            'trim_filenames': 200,
-            'throttled_rate': '10M', # Limit download speed to 10MB/s
-        }
+        self.platform_processors: List[PlatformProcessor] = [
+            InstagramProcessor(),
+            YouTubeProcessor(),
+            TwitterProcessor(),
+            TikTokProcessor(),
+        ]
         self._progress_callback: Optional[Callable[[Dict], Coroutine[Any, Any, None]]] = None
 
     def set_progress_callback(self, callback: Callable[[Dict], Coroutine[Any, Any, None]]):
         self._progress_callback = callback
 
-    def _progress_hook(self, d: Dict):
-        if self._progress_callback:
-            asyncio.create_task(self._progress_callback(d))
+    def _get_platform_processor(self, url: str) -> Optional[PlatformProcessor]:
+        for processor in self.platform_processors:
+            if processor.can_process(url):
+                return processor
+        return None
 
     async def validate_video_url(self, url: str) -> Dict:
         """
         Validates a video URL and returns basic info without downloading.
         Raises ValueError if validation fails or video exceeds size limits.
         """
+        processor = self._get_platform_processor(url)
+        if not processor:
+            raise ValueError(f"Unsupported video platform for URL: {url}")
+
         try:
-            info = await asyncio.to_thread(lambda: yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'skip_download': True}).extract_info(url, download=False))
+            info = await processor.get_info(url)
             
             if not info:
                 raise ValueError("Could not extract video information.")
 
             # Check file size limit
-            # yt-dlp provides 'filesize' or 'filesize_approx' in bytes
             file_size_bytes = info.get('filesize') or info.get('filesize_approx')
             if file_size_bytes and file_size_bytes > settings.MAX_VIDEO_SIZE_MB * 1024 * 1024:
                 raise ValueError(f"Video size ({file_size_bytes / (1024*1024):.2f} MB) exceeds maximum allowed size of {settings.MAX_VIDEO_SIZE_MB} MB.")
@@ -138,7 +105,7 @@ class VideoProcessor:
                 'duration': info.get('duration'),
                 'author': info.get('uploader', info.get('channel')),
                 'thumbnail': info.get('thumbnail'),
-                'platform': self._detect_platform(url),
+                'platform': processor.get_platform_name(),
                 'filesize': file_size_bytes,
                 'width': info.get('width'),
                 'height': info.get('height'),
@@ -152,36 +119,37 @@ class VideoProcessor:
         """
         Download video from URL, compress, and generate thumbnails.
         """
+        processor = self._get_platform_processor(url)
+        if not processor:
+            raise ValueError(f"Unsupported video platform for URL: {url}")
+
         temp_video_path = None
         try:
             # Validate first
             video_info_pre_download = await self.validate_video_url(url)
             
             # Ensure temp directory is clean for this download
-            # This is crucial for retry logic and preventing partial files from affecting new downloads
             for f in self.temp_dir.iterdir():
                 if f.is_file() and f.name.startswith(video_info_pre_download.get('id', '')):
                     os.remove(f)
                     logger.info(f"Removed old temp file: {f}")
 
-            # Download video using yt-dlp
-            ydl = yt_dlp.YoutubeDL(self.ydl_opts)
-            video_info = await asyncio.to_thread(ydl.extract_info, url, download=True)
+            # Define output template for yt-dlp
+            video_id = video_info_pre_download.get('id', 'unknown')
+            original_ext = video_info_pre_download.get('ext', 'mp4')
+            output_template = str(self.temp_dir / f"{video_id}.%(ext)s")
+
+            # Download video using the specific processor
+            video_info = await processor.download(url, output_template, self._progress_hook)
             
             if not video_info:
                 raise ValueError("Failed to download video information.")
 
-            video_id = video_info.get('id', 'unknown')
-            original_ext = video_info.get('ext', 'mp4')
             temp_video_path = self.temp_dir / f"{video_id}.{original_ext}"
 
             if not temp_video_path.exists():
-                # Sometimes yt-dlp might rename or use a different ID, try to find it
                 found_files = list(self.temp_dir.glob(f"{video_id}.*"))
                 if not found_files:
-                    # Fallback: search for any file downloaded by yt-dlp in temp_dir
-                    # This is less precise but might catch cases where ID changes or is missing
-                    # A more robust solution would involve parsing yt-dlp's output for the final filename
                     all_temp_files = sorted(self.temp_dir.iterdir(), key=os.path.getmtime, reverse=True)
                     found_files = [f for f in all_temp_files if f.is_file() and f.suffix in ['.mp4', '.webm', '.mkv', '.mov']]
                 
@@ -208,9 +176,6 @@ class VideoProcessor:
             # Generate thumbnails
             thumbnail_path = await self._generate_thumbnails(final_video_path, video_id)
             
-            # Detect platform
-            platform = self._detect_platform(url)
-            
             return VideoData(
                 url=url,
                 title=video_info.get('title', 'Untitled'),
@@ -219,7 +184,7 @@ class VideoProcessor:
                 duration=video_info.get('duration'),
                 video_path=str(final_video_path),
                 thumbnail_path=str(thumbnail_path) if thumbnail_path else None,
-                platform=platform,
+                platform=processor.get_platform_name(),
                 metadata={
                     'width': video_info.get('width'),
                     'height': video_info.get('height'),

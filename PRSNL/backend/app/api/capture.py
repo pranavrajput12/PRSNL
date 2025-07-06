@@ -10,6 +10,7 @@ from app.services.video_processor import VideoProcessor
 from app.db.database import get_db_pool, get_db_connection
 import logging
 import asyncpg
+from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
 async def capture_item(request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Capture a new item (web page, note, etc.)."""
     if not request.url and not request.content:
+        VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
         raise InvalidInput("Either URL or content must be provided.")
     
     item_id = uuid4()
@@ -51,6 +53,7 @@ async def capture_item(request: CaptureRequest, background_tasks: BackgroundTask
                 try:
                     await video_processor.validate_video_url(str(request.url))
                 except ValueError as e:
+                    VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
                     raise InvalidInput(f"Video validation failed: {e}")
         
         # Insert initial item record
@@ -67,6 +70,7 @@ async def capture_item(request: CaptureRequest, background_tasks: BackgroundTask
             capture_engine = CaptureEngine()
             background_tasks.add_task(capture_engine.process_item, item_id, str(request.url) if request.url else None, request.content)
         
+        VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
         return {
             "message": "Item capture initiated",
             "item_id": str(item_id),
@@ -84,6 +88,7 @@ async def capture_item(request: CaptureRequest, background_tasks: BackgroundTask
                     metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
                 WHERE id = $1
             """, item_id, str(e))
+        VIDEO_CAPTURE_REQUESTS.labels(status='internal_error').inc()
         raise InternalServerError(f"Failed to capture item: {e}")
 
 
@@ -134,6 +139,7 @@ async def process_video_item(item_id: uuid4, url: str):
             )
             
         logger.info(f"Successfully processed video item {item_id}")
+        VIDEO_DOWNLOAD_OUTCOMES.labels(platform=video_data.platform, outcome='success').inc()
         
     except Exception as e:
         logger.error(f"Error processing video item {item_id}: {str(e)}", exc_info=True)
@@ -144,3 +150,4 @@ async def process_video_item(item_id: uuid4, url: str):
                     metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
                 WHERE id = $1
             """, item_id, str(e))
+        VIDEO_DOWNLOAD_OUTCOMES.labels(platform='unknown', outcome='failed').inc() # Platform might be unknown on failure
