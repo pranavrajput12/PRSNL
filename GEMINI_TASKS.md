@@ -108,9 +108,33 @@ The PRSNL project has just added Instagram video download support using yt-dlp. 
   - `twitter.py`
   - `tiktok.py`
 
-## Task 5: Performance Monitoring
-**Priority**: LOW  
+## Task 5: Telegram Bot Integration
+**Priority**: HIGH  
 **Task ID**: GEMINI-2025-07-06-005  
+**Description**: Implement Telegram bot for capturing links and videos
+
+**Requirements**:
+1. Create Telegram bot service
+2. Add webhook endpoint for Telegram updates
+3. Process text messages with URLs
+4. Handle video/image messages
+5. Integrate with existing capture engine
+6. Add user authentication/whitelist
+
+**Files to Create/Modify**:
+- `/PRSNL/backend/app/services/telegram_bot.py` (create)
+- `/PRSNL/backend/app/api/telegram.py` (create)
+- `/PRSNL/backend/app/config.py` (add Telegram settings)
+- `/PRSNL/backend/requirements.txt` (add python-telegram-bot)
+
+**Implementation Guide**:
+- See `/TELEGRAM_BOT_INTEGRATION.md` for detailed implementation
+- This is 100% FREE - no API costs
+- Can use polling for local dev, webhook for production
+
+## Task 6: Performance Monitoring
+**Priority**: LOW  
+**Task ID**: GEMINI-2025-07-06-006  
 **Description**: Add comprehensive monitoring for video operations
 
 **Requirements**:

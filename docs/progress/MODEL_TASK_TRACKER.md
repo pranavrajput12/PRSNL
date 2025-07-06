@@ -35,7 +35,8 @@
 | GEMINI-2025-07-06-002 | Storage management system | 📋 PLANNED | - | - |
 | GEMINI-2025-07-06-003 | Video API endpoints | 📋 PLANNED | - | - |
 | GEMINI-2025-07-06-004 | Platform support extension | 📋 PLANNED | - | - |
-| GEMINI-2025-07-06-005 | Performance monitoring | 📋 PLANNED | - | - |
+| GEMINI-2025-07-06-005 | Telegram bot integration | 📋 PLANNED | - | - |
+| GEMINI-2025-07-06-006 | Performance monitoring | 📋 PLANNED | - | - |
 
 ---
 
@@ -105,6 +106,7 @@ graph TD
 ### High Priority
 1. **Windsurf**: Capture page video support
 2. **Gemini**: Storage management system
+3. **Gemini**: Telegram bot integration (FREE solution for link capture)
 
 ### Medium Priority
 1. **Windsurf**: Search results video support

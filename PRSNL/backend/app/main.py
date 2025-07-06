@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 from app.db.database import create_db_pool, close_db_pool
+from app.core.background_tasks import background_tasks
 
 # Placeholder for worker task
 worker_task = None
@@ -49,6 +50,7 @@ async def shutdown_event():
             print("Worker task cancelled successfully.")
     print("Worker stopped.")
     await close_db_pool()
+    await background_tasks.shutdown()
 
 from app.api import capture, search, timeline, items
 

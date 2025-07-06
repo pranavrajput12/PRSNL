@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # Processing
     MAX_CONTENT_LENGTH: int = 50000  # Max chars to process
     PROCESSING_TIMEOUT: int = 30  # seconds
+    MAX_VIDEO_SIZE_MB: int = 500 # Max video size for processing
     
     # Search
     SEARCH_RESULTS_LIMIT: int = 50
