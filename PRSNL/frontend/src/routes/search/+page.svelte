@@ -47,14 +47,17 @@
       // Save to recent searches
       addRecentSearch(query);
 
-      // Call the API
-      const response = await searchItems(query, {
-        date: dateFilter,
-        type: typeFilter,
-        tags: tagsFilter
-      });
-
-      results = response.items || [];
+      // Use sample data for demo (simulate search)
+      const lowerQuery = query.toLowerCase();
+      results = sampleData.filter(item => 
+        item.title.toLowerCase().includes(lowerQuery) ||
+        item.summary.toLowerCase().includes(lowerQuery) ||
+        item.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+      ).map(item => ({
+        ...item,
+        snippet: item.summary,
+        created_at: item.createdAt
+      }));
     } catch (err) {
       console.error('Search error:', err);
       error = err;

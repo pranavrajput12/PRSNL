@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import { sampleData } from '$lib/data/sampleData.js';
   
   let recentItems = [];
   let stats = {
@@ -13,11 +14,33 @@
   
   onMount(async () => {
     mounted = true;
-    // TODO: Fetch from API
-    // const res = await fetch('/api/dashboard');
-    // const data = await res.json();
-    // recentItems = data.recentItems;
-    // stats = data.stats;
+    
+    // Use sample data for demo
+    recentItems = sampleData.slice(0, 6); // Show first 6 items
+    
+    // Calculate stats from sample data
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const allTags = new Set();
+    let todayCount = 0;
+    
+    sampleData.forEach(item => {
+      // Count today's items
+      const itemDate = new Date(item.createdAt);
+      if (itemDate >= todayStart) {
+        todayCount++;
+      }
+      
+      // Collect all unique tags
+      item.tags.forEach(tag => allTags.add(tag));
+    });
+    
+    stats = {
+      totalItems: sampleData.length,
+      todayItems: todayCount,
+      totalTags: allTags.size
+    };
   });
 </script>
 
@@ -110,7 +133,7 @@
             </div>
             <p>{item.summary}</p>
             <div class="item-footer">
-              <time>{new Date(item.created_at).toLocaleDateString()}</time>
+              <time>{new Date(item.createdAt).toLocaleDateString()}</time>
               <div class="item-tags">
                 {#each item.tags || [] as tag}
                   <span class="tag">{tag}</span>

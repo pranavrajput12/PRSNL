@@ -5,6 +5,7 @@
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import { sampleData } from '$lib/data/sampleData.js';
 
   // TimelineItem type
   // id: string
@@ -27,8 +28,13 @@
   let scrollContainer;
 
   onMount(() => {
-    loadTimeline();
-    setupInfiniteScroll();
+    // Use sample data for demo
+    const sortedData = [...sampleData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const grouped = groupByDate(sortedData);
+    groups = grouped;
+    
+    // loadTimeline();
+    // setupInfiniteScroll();
   });
 
   async function loadTimeline(reset = false) {
@@ -75,7 +81,7 @@
     const grouped = {};
     
     items.forEach(item => {
-      const date = new Date(item.created_at);
+      const date = new Date(item.createdAt);
       const dateKey = date.toDateString();
       
       if (!grouped[dateKey]) {
@@ -314,7 +320,7 @@
                   style="animation-delay: {(groupIndex * 100) + (itemIndex * 50)}ms"
                 >
                   <div class="item-time">
-                    {getRelativeTime(item.created_at)}
+                    {getRelativeTime(item.createdAt)}
                   </div>
                   
                   <div class="item-content">
