@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   export let name = '';
-  export let size = 'medium';
+  export let size: 'small' | 'medium' | 'large' | string = 'medium';
   export let color = 'currentColor';
   export let strokeWidth = 2;
 
-  const sizeMap = {
+  const sizeMap: Record<string, number> = {
     small: 16,
     medium: 20,
     large: 24
@@ -94,6 +94,11 @@
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
     <polyline points="15 3 21 3 21 9" />
     <line x1="10" y1="14" x2="21" y2="3" />
+  </svg>
+{:else if name === 'video'}
+  <svg {width} {height} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+    <polygon points="10 8 16 12 10 16 10 8" />
   </svg>
 {/if}
 

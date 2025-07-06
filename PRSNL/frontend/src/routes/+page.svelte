@@ -4,6 +4,7 @@
   import { getTimeline, getTags } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
+  import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   
   type Item = {
     id: string;
@@ -13,6 +14,11 @@
     tags: string[];
     createdAt: string;
     type?: string;
+    item_type?: string;
+    file_path?: string;
+    thumbnail_url?: string;
+    duration?: number;
+    platform?: string;
   };
   
   let recentItems: Item[] = [];
@@ -180,9 +186,21 @@
           <div class="item-card" style="animation-delay: {300 + i * 50}ms">
             <div class="item-header">
               <h4>{item.title}</h4>
-              <Icon name="external-link" size="small" color="var(--text-muted)" />
+              <Icon name={item.item_type === 'video' ? 'video' : 'external-link'} size="small" color="var(--text-muted)" />
             </div>
-            <p>{item.summary}</p>
+            
+            {#if item.item_type === 'video' && item.file_path}
+              <div class="item-video">
+                <VideoPlayer 
+                  src={item.file_path}
+                  thumbnail={item.thumbnail_url}
+                  title={item.title}
+                  duration={item.duration}
+                />
+              </div>
+            {:else}
+              <p>{item.summary}</p>
+            {/if}
             <div class="item-footer">
               <time>{new Date(item.createdAt).toLocaleDateString()}</time>
               <div class="item-tags">
@@ -477,6 +495,13 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     margin: 0 0 1rem;
+  }
+  
+  .item-video {
+    margin: 0.5rem 0 1rem;
+    max-width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
   }
   
   .item-footer {

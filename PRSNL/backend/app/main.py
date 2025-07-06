@@ -40,6 +40,11 @@ async def startup_event():
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     print("Worker started in background.")
 
+    # Schedule periodic cleanup tasks
+    from app.services.storage_manager import StorageManager
+    storage_manager = StorageManager()
+    background_tasks.add_task(run_periodic_cleanup, storage_manager)
+
 @app.on_event("shutdown")
 async def shutdown_event():
     if worker_task:
@@ -52,12 +57,24 @@ async def shutdown_event():
     await close_db_pool()
     await background_tasks.shutdown()
 
-from app.api import capture, search, timeline, items
+async def run_periodic_cleanup(storage_manager: StorageManager):
+    """Runs periodic cleanup tasks."""
+    while True:
+        try:
+            await storage_manager.cleanup_orphaned_files()
+            await storage_manager.cleanup_temp_files()
+        except Exception as e:
+            print(f"Error during periodic cleanup: {e}")
+        await asyncio.sleep(3600) # Run every hour (3600 seconds)
+
+from app.api import capture, search, timeline, items, admin, videos
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 app.include_router(search.router, prefix=settings.API_V1_STR)
 app.include_router(timeline.router, prefix=settings.API_V1_STR)
 app.include_router(items.router, prefix=settings.API_V1_STR)
+app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(videos.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", summary="Health Check", response_description="API health status")
 async def health_check():
