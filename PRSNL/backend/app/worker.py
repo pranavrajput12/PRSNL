@@ -1,0 +1,62 @@
+import asyncio
+import logging
+import asyncpg
+import json
+
+from app.core.capture_engine import CaptureEngine
+from uuid import UUID
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+async def listen_for_notifications(db_url: str):
+    """
+    Connects to PostgreSQL and listens for 'item_created' notifications.
+    """
+    conn = None
+    try:
+        conn = await asyncpg.connect(db_url)
+        await conn.add_listener('item_created', handle_notification)
+        logger.info("Listening for 'item_created' notifications...")
+        while True:
+            await asyncio.sleep(1) # Keep the listener alive
+    except Exception as e:
+        logger.error(f"Error in worker: {e}")
+    finally:
+        if conn:
+            await conn.close()
+            logger.info("Database connection closed.")
+
+async def handle_notification(connection, pid, channel, payload):
+    """
+    Callback function to handle incoming PostgreSQL notifications.
+    """
+    logger.info(f"Received notification on channel '{channel}': {payload}")
+    try:
+        # Payload should be the item ID
+        item_id = UUID(payload)
+        capture_engine = CaptureEngine()
+        
+        # Get item details from database to process
+        pool = await asyncpg.create_pool(connection.get_dsn())
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT url FROM items WHERE id = $1", item_id)
+            if row:
+                url = row['url']
+                # Process item in background
+                asyncio.create_task(capture_engine.process_item(item_id, url))
+            else:
+                logger.error(f"Item not found: {item_id}")
+        await pool.close()
+        
+    except ValueError as e:
+        logger.error(f"Invalid UUID payload: {payload} - {e}")
+    except Exception as e:
+        logger.error(f"Error handling notification: {e}")
+
+# Example usage (for testing worker.py directly)
+if __name__ == "__main__":
+    # This should ideally come from environment variables or a config file
+    # For local testing, ensure your DB is running and accessible
+    DB_URL = "postgresql://user:password@localhost:5432/prsnl"
+    asyncio.run(listen_for_notifications(DB_URL))
