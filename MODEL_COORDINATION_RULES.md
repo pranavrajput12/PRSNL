@@ -2,11 +2,15 @@
 
 ## 🚨 CRITICAL: PORT ALLOCATION
 
-### Fixed Port Assignments
-- **Frontend (Vite/SvelteKit)**: PORT 3002 ONLY
-- **Backend (FastAPI)**: PORT 8000 (in Docker)
-- **PostgreSQL**: PORT 5432 (in Docker)
-- **Ollama**: PORT 11434 (in Docker)
+### ⚠️ PORT MANAGEMENT HAS MOVED
+**See `/PRSNL/PORT_ALLOCATION.md` for the complete port allocation guide**
+
+This document now focuses on model coordination rules only. For all port assignments, conflict prevention, and troubleshooting, refer to the centralized port allocation document.
+
+### Quick Reference
+- **Frontend**: Port 3002 (FIXED)
+- **Backend**: Port 8000
+- **Full Details**: `/PRSNL/PORT_ALLOCATION.md`
 
 ### Port Conflict Resolution Protocol
 1. **BEFORE STARTING ANY SERVICE**:

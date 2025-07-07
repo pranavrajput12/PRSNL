@@ -544,12 +544,14 @@ docker-compose exec backend python -c "from app.db.database import get_db_pool; 
 ```
 
 #### Port Conflicts
-```bash
-# Find process using port
-lsof -i :8000
+**See `/PRSNL/PORT_ALLOCATION.md` for complete port management guide**
 
-# Kill process
-kill -9 <PID>
+```bash
+# Quick reference - Check port availability
+lsof -i :8000  # Backend
+lsof -i :3002  # Frontend
+
+# See PORT_ALLOCATION.md for full troubleshooting
 ```
 
 #### Module Import Errors

@@ -248,11 +248,13 @@ Search Query → API Endpoint → Query Parser
 ### Development
 ```yaml
 services:
-  - PostgreSQL (Docker)
-  - Ollama (Docker)
-  - Backend (Local)
-  - Frontend (Local)
+  - PostgreSQL (Docker) - Port 5432
+  - Ollama (Docker) - Port 11434
+  - Backend (Local) - Port 8000
+  - Frontend (Local) - Port 3002
 ```
+
+**Note**: See `/PRSNL/PORT_ALLOCATION.md` for complete port assignments and conflict prevention.
 
 ### Production
 ```yaml

@@ -181,6 +181,8 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 ## 🚀 QUICK START COMMANDS
 
+**⚠️ IMPORTANT**: Check port availability first - see `/PRSNL/PORT_ALLOCATION.md`
+
 ```bash
 # Backend
 cd PRSNL/backend

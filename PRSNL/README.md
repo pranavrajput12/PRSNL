@@ -172,6 +172,7 @@ The frontend includes 25 realistic sample items covering:
 - [Design Language](./DESIGN_LANGUAGE.md) - UI/UX guidelines
 - [Developer Guide](./DEVELOPER_GUIDE.md) - Development setup and workflow
 - [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment instructions
+- [Port Allocation](./PORT_ALLOCATION.md) - Port assignments & conflict prevention
 
 ### AI Model Guides
 - [GEMINI Guide](./GEMINI.md) - Backend AI infrastructure specialist guide

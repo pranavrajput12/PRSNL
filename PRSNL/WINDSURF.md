@@ -17,7 +17,8 @@ MUST READ FIRST:
 ```
 UNDERSTAND THE UI/UX:
 /PRSNL/DESIGN_LANGUAGE.md        # Manchester United theme
-/PRSNL/MODEL_COORDINATION_RULES.md   # PORT 3002 ONLY!!!
+/PRSNL/PORT_ALLOCATION.md        # CRITICAL: Port 3002 ONLY - Read this!
+/PRSNL/MODEL_COORDINATION_RULES.md   # Coordination rules
 /PRSNL/frontend/src/lib/types/api.ts # TypeScript interfaces
 /docs/CLAUDE.md                  # General development guidelines
 ```
@@ -47,6 +48,12 @@ REVIEW YOUR IMPLEMENTATIONS:
 
 3. **Setup Environment**
    ```bash
+   # FIRST: Check port 3002 availability (see /PRSNL/PORT_ALLOCATION.md)
+   lsof -i :3002  # Frontend MUST use this port
+   
+   # If port 3002 is occupied, STOP and resolve conflict
+   # DO NOT use a different port!
+   
    cd /PRSNL/frontend
    npm install
    npm run dev -- --port 3002  # ALWAYS USE PORT 3002!

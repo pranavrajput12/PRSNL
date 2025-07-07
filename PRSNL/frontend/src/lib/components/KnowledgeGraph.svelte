@@ -93,8 +93,8 @@
       .enter()
       .append("line")
       .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", d => Math.sqrt(d.value || 1));
+      .attr("stroke-opacity", "0.6")
+      .attr("stroke-width", d => String(Math.sqrt(d.value || 1)));
     
     // Create nodes
     const nodes = g.append("g")
@@ -124,8 +124,8 @@
     
     // Add circles to nodes
     nodes.append("circle")
-      .attr("r", d => size(d.importance || 1).toString())
-      .attr("fill", d => color(d.type || 'default'))
+      .attr("r", (d: KnowledgeGraphNode) => String(size(d.importance || 1)))
+      .attr("fill", (d: KnowledgeGraphNode) => color(d.type || 'default'))
       .attr("stroke", "#fff")
       .attr("stroke-width", "1.5");
     
@@ -276,20 +276,21 @@
     d3.select(svg).selectAll(`.node[data-cluster="${clusterId}"]`)
       .style("opacity", "1");
     
-    // Highlight links connected to the cluster
-    const nodeIds = data.nodes
-      .filter(node => node.cluster === clusterId)
-      .map(node => node.id);
-    
+    // Highlight links within the cluster
     d3.select(svg).selectAll("line")
-      .filter((link: KnowledgeGraphLink) => {
+      .each(function(datum: unknown) {
+        const link = datum as KnowledgeGraphLink;
         const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
         const targetId = typeof link.target === 'string' ? link.target : link.target.id;
-        return nodeIds.includes(sourceId) || nodeIds.includes(targetId);
-      })
-      .style("opacity", "0.8")
-      .style("stroke", "var(--accent)")
-      .style("stroke-width", "2");
+        const sourceNode = data.nodes.find(n => n.id === sourceId);
+        const targetNode = data.nodes.find(n => n.id === targetId);
+        if ((sourceNode?.cluster === clusterId) && (targetNode?.cluster === clusterId)) {
+          d3.select(this)
+            .style("opacity", "0.8")
+            .style("stroke", "var(--accent)")
+            .style("stroke-width", "2");
+        }
+      });
     
     // Zoom to the cluster
     const clusterNodes = data.nodes.filter(node => node.cluster === clusterId);
@@ -333,14 +334,17 @@
     
     // Highlight connected links
     d3.select(svg).selectAll("line")
-      .filter((link: KnowledgeGraphLink) => {
+      .each(function(datum: unknown) {
+        const link = datum as KnowledgeGraphLink;
         const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
         const targetId = typeof link.target === 'string' ? link.target : link.target.id;
-        return sourceId === nodeId || targetId === nodeId;
-      })
-      .style("opacity", "0.8")
-      .style("stroke", "var(--accent)")
-      .style("stroke-width", "2");
+        if (sourceId === nodeId || targetId === nodeId) {
+          d3.select(this)
+            .style("opacity", "0.8")
+            .style("stroke", "var(--accent)")
+            .style("stroke-width", "2");
+        }
+      });
     
     // Zoom to the connected nodes
     const nodesToZoom = data.nodes.filter(node => connectedNodeIds.has(node.id));
@@ -396,7 +400,10 @@
     d3.select(svg).selectAll("line")
       .style("opacity", "0.6")
       .style("stroke", "#999")
-      .style("stroke-width", (d: KnowledgeGraphLink) => `${Math.sqrt(d.value || 1)}`);
+      .style("stroke-width", function(this: SVGLineElement, datum: unknown) {
+        const link = datum as KnowledgeGraphLink;
+        return String(Math.sqrt(link.value || 1));
+      });
     
     // Reset zoom
     d3.select(svg)

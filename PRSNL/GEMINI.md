@@ -18,7 +18,8 @@ MUST READ FIRST:
 UNDERSTAND THE SYSTEM:
 /PRSNL/ARCHITECTURE.md           # System design
 /PRSNL/backend/API_DOCUMENTATION.md  # API patterns
-/PRSNL/MODEL_COORDINATION_RULES.md   # Port assignments (Backend: 8000)
+/PRSNL/PORT_ALLOCATION.md        # CRITICAL: Port assignments & conflict prevention
+/PRSNL/MODEL_COORDINATION_RULES.md   # Coordination rules
 /docs/CLAUDE.md                  # General development guidelines
 ```
 
@@ -47,6 +48,11 @@ REVIEW YOUR IMPLEMENTATIONS:
 
 3. **Setup Environment**
    ```bash
+   # FIRST: Check port availability (see /PRSNL/PORT_ALLOCATION.md)
+   lsof -i :8000  # Backend port
+   lsof -i :5432  # PostgreSQL port
+   lsof -i :11434 # Ollama port
+   
    cd /PRSNL/backend
    source venv/bin/activate
    pip install -r requirements.txt
