@@ -34,19 +34,29 @@ REVIEW YOUR IMPLEMENTATIONS:
 ## 🔧 DEVELOPMENT WORKFLOW
 
 ### Before Starting Any Task:
-1. **Check Active Work**
+1. **Read Coordination Rules**
+   ```bash
+   # CRITICAL: Understand model coordination protocols
+   cat /PRSNL/MODEL_COORDINATION_RULES.md
+   ```
+
+2. **Check Active Work**
    ```bash
    cat /PRSNL/PROJECT_STATUS.md
    cat /PRSNL/WINDSURF_TASKS.md
+   cat /PRSNL/MODEL_ACTIVITY_LOG.md  # Check for locked files
    ```
 
-2. **Update Progress**
+3. **Update Progress**
    ```markdown
    # In CONSOLIDATED_TASK_TRACKER.md
    - [ ] **WINDSURF-XXX**: Task Name - IN PROGRESS
+   
+   # In MODEL_ACTIVITY_LOG.md (if locking files)
+   🔒 LOCKED by WINDSURF: /frontend/src/routes/insights/+page.svelte (10:00-11:00)
    ```
 
-3. **Setup Environment**
+4. **Setup Environment**
    ```bash
    # FIRST: Check port 3002 availability (see /PRSNL/PORT_ALLOCATION.md)
    lsof -i :3002  # Frontend MUST use this port
@@ -104,6 +114,26 @@ export interface SearchMode {
   threshold?: number;
 }
 ```
+
+## 🤝 COORDINATION WITH OTHER MODELS
+
+### Key Rules from MODEL_COORDINATION_RULES.md:
+1. **File Locking**: Always check MODEL_ACTIVITY_LOG.md before editing files
+2. **Port Usage**: Frontend MUST use port 3002 - NO EXCEPTIONS!
+3. **Task Handoff**: Update status in CONSOLIDATED_TASK_TRACKER.md
+4. **Specialization**: You handle frontend UI/UX and TypeScript
+5. **Communication**: Log all activities in MODEL_ACTIVITY_LOG.md
+
+### When Working with Others:
+- **Gemini**: They handle backend (port 8000) - coordinate on API contracts
+- **Claude**: They handle architecture and integration - follow their UI patterns
+- **Conflicts**: If port 3002 is occupied, STOP and coordinate via user
+
+### Critical Reminders:
+- NEVER change from port 3002
+- ALWAYS use Manchester United red theme (#dc143c)
+- FOLLOW TypeScript strict mode
+- UPDATE type definitions when API changes
 
 ## 🎯 CURRENT PRIORITIES
 

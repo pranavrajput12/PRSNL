@@ -34,19 +34,29 @@ REVIEW YOUR IMPLEMENTATIONS:
 ## 🔧 DEVELOPMENT WORKFLOW
 
 ### Before Starting Any Task:
-1. **Check Active Work**
+1. **Read Coordination Rules**
+   ```bash
+   # CRITICAL: Understand model coordination protocols
+   cat /PRSNL/MODEL_COORDINATION_RULES.md
+   ```
+
+2. **Check Active Work**
    ```bash
    cat /PRSNL/PROJECT_STATUS.md
    cat /PRSNL/GEMINI_TASKS.md
+   cat /PRSNL/MODEL_ACTIVITY_LOG.md  # Check for locked files
    ```
 
-2. **Update Progress**
+3. **Update Progress**
    ```markdown
    # In CONSOLIDATED_TASK_TRACKER.md
    - [ ] **GEMINI-XXX**: Task Name - IN PROGRESS
+   
+   # In MODEL_ACTIVITY_LOG.md (if locking files)
+   🔒 LOCKED by GEMINI: /backend/app/api/analytics.py (10:00-11:00)
    ```
 
-3. **Setup Environment**
+4. **Setup Environment**
    ```bash
    # FIRST: Check port availability (see /PRSNL/PORT_ALLOCATION.md)
    lsof -i :8000  # Backend port
@@ -105,6 +115,20 @@ backend/
 - GET /api/analytics/trends
 - GET /api/analytics/topics
 ```
+
+## 🤝 COORDINATION WITH OTHER MODELS
+
+### Key Rules from MODEL_COORDINATION_RULES.md:
+1. **File Locking**: Always check MODEL_ACTIVITY_LOG.md before editing files
+2. **Port Usage**: Backend MUST use port 8000 (see PORT_ALLOCATION.md)
+3. **Task Handoff**: Update status in CONSOLIDATED_TASK_TRACKER.md
+4. **Specialization**: You handle backend, infrastructure, and performance
+5. **Communication**: Log all activities in MODEL_ACTIVITY_LOG.md
+
+### When Working with Others:
+- **Windsurf**: They handle frontend (port 3002) - coordinate on API contracts
+- **Claude**: They handle architecture and integration - follow their patterns
+- **Conflicts**: If ports/files are locked, wait or coordinate via user
 
 ## 🎯 CURRENT PRIORITIES
 
