@@ -239,17 +239,31 @@
     
     // Helper function to get appropriate x-axis based on timeRange
     function getXAxis() {
+      // Create a properly typed formatter that handles both Date and NumberValue
+      const dateFormatter = (domainValue: d3.NumberValue | Date, index: number): string => {
+        // Ensure we're working with a Date object
+        const date = domainValue instanceof Date ? domainValue : new Date(+domainValue);
+        
+        switch (timeRange) {
+          case 'day': return d3.timeFormat('%H:%M')(date);
+          case 'week': return d3.timeFormat('%a')(date);
+          case 'month': return d3.timeFormat('%d')(date);
+          case 'year': return d3.timeFormat('%b')(date);
+          default: return d3.timeFormat('%b %Y')(date);
+        }
+      };
+      
       switch (timeRange) {
         case 'day':
-          return d3.axisBottom(x).ticks(24).tickFormat(d3.timeFormat('%H:%M'));
+          return d3.axisBottom(x).ticks(24).tickFormat(dateFormatter);
         case 'week':
-          return d3.axisBottom(x).ticks(7).tickFormat(d3.timeFormat('%a'));
+          return d3.axisBottom(x).ticks(7).tickFormat(dateFormatter);
         case 'month':
-          return d3.axisBottom(x).ticks(d3.timeDay.every(2)).tickFormat(d3.timeFormat('%d'));
+          return d3.axisBottom(x).ticks(d3.timeDay.every(2)).tickFormat(dateFormatter);
         case 'year':
-          return d3.axisBottom(x).ticks(12).tickFormat(d3.timeFormat('%b'));
+          return d3.axisBottom(x).ticks(12).tickFormat(dateFormatter);
         default:
-          return d3.axisBottom(x).ticks(10).tickFormat(d3.timeFormat('%b %Y'));
+          return d3.axisBottom(x).ticks(10).tickFormat(dateFormatter);
       }
     }
   }

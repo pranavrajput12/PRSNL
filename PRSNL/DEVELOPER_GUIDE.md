@@ -561,6 +561,38 @@ which python
 pip install -r requirements.txt --force-reinstall
 ```
 
+#### Apple Silicon (M1/M2) Architecture Issues
+If you encounter errors like `mach-o file, but is an incompatible architecture (have 'x86_64', need 'arm64')`:
+
+```bash
+# Check your Python architecture
+python3 -c "import platform; print(platform.machine())"  # Should show 'arm64'
+
+# Common problematic packages
+pip uninstall -y pydantic pydantic-core asyncpg pandas
+
+# Reinstall with ARM64 binaries
+pip install --no-cache-dir pydantic asyncpg pandas
+
+# If issues persist, use Rosetta emulation (not recommended)
+arch -x86_64 pip install package-name
+
+# Better solution: Use native ARM64 Python
+brew install python@3.11  # Install ARM64 Python via Homebrew
+```
+
+**Common ARM64 Issues:**
+- `pydantic_core`: Binary incompatibility
+- `asyncpg`: PostgreSQL connection library
+- `pandas`: Data processing library
+- `msgpack`: Serialization library
+- `cffi`: Foreign function interface
+
+**Prevention:**
+1. Always use `--no-cache-dir` when installing packages
+2. Create fresh virtual environments for ARM64
+3. Use Docker for consistent environment across architectures
+
 ### Getting Help
 - Check existing issues on GitHub
 - Search documentation

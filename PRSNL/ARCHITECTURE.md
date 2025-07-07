@@ -126,6 +126,31 @@ Processes content with Large Language Models:
   - Tag extraction
   - Content cleaning
   - Knowledge extraction
+- **Streaming Support**:
+  - Real-time response streaming
+  - WebSocket integration
+  - Multi-provider streaming
+
+### Vision Processor Service
+Analyzes images and screenshots:
+- **Providers**: Azure OpenAI GPT-4V, Tesseract OCR
+- **Features**:
+  - Text extraction (OCR)
+  - Object detection
+  - Scene description
+  - UI element recognition
+
+### Analytics Service
+Provides insights into knowledge base:
+- **Endpoints**:
+  - Content trends over time
+  - Topic clustering
+  - Usage patterns
+  - AI-generated insights
+- **Features**:
+  - Real-time analytics
+  - Historical data analysis
+  - Pattern recognition
 
 ## Data Flow
 

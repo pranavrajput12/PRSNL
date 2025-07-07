@@ -23,10 +23,11 @@ PRSNL can be deployed in various environments:
 ## Prerequisites
 
 ### System Requirements
-- **CPU**: 2+ cores (4+ recommended)
-- **RAM**: 4GB minimum (8GB recommended)
+- **CPU**: 2+ cores (4+ recommended, 8+ for vision AI)
+- **RAM**: 4GB minimum (8GB recommended, 16GB for vision AI)
 - **Storage**: 50GB+ (depends on media storage needs)
 - **OS**: Linux (Ubuntu 20.04+ recommended), macOS, Windows with WSL2
+- **GPU**: Optional - NVIDIA GPU for accelerated vision processing
 
 ### Software Requirements
 - Docker 20.10+
@@ -378,7 +379,16 @@ OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 AZURE_OPENAI_API_KEY=...
 AZURE_OPENAI_ENDPOINT=https://...
+AZURE_OPENAI_DEPLOYMENT=gpt-4-vision
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
 OLLAMA_BASE_URL=http://ollama:11434
+OLLAMA_MODEL=llama2
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+
+# Vision AI
+ENABLE_VISION_AI=true
+TESSERACT_LANG=eng
+VISION_PROVIDER=azure  # or 'tesseract'
 
 # Storage
 MEDIA_ROOT=/app/media

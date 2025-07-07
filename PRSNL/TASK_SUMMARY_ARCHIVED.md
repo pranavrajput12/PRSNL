@@ -1,3 +1,14 @@
+# ARCHIVED: Task Summary
+
+**This file has been archived. Please refer to:**
+- **Current Status**: `/PRSNL/PROJECT_STATUS.md`
+- **Task Tracking**: `/PRSNL/CONSOLIDATED_TASK_TRACKER.md`
+- **AI Model Tasks**: `/PRSNL/GEMINI_TASKS.md` and `/PRSNL/WINDSURF_TASKS.md`
+
+---
+
+[Original content preserved for reference]
+
 # Task Summary
 
 ## Current Status (2025-07-07)
