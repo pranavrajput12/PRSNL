@@ -27,7 +27,7 @@ class SuggestionResponse(BaseModel):
     category: Optional[str] = None
 
 
-@router.post("/ai/suggest", response_model=SuggestionResponse)
+@router.post("/suggest", response_model=SuggestionResponse)
 async def get_ai_suggestions(request: SuggestionRequest):
     """
     Get AI-powered suggestions for title, summary, and tags based on URL content

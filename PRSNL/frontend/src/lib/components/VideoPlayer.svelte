@@ -210,12 +210,14 @@
           
           // Retry logic for common network errors
           if (retryCount < maxRetries && 
-              (err.name === 'NetworkError' || err.name === 'AbortError')) {
+              (err instanceof Error && (err.name === 'NetworkError' || err.name === 'AbortError'))) {
             retryCount++;
             setTimeout(() => {
               isError = false;
-              videoElement.load();
-              videoElement.play().catch(e => console.error('Retry failed:', e));
+              if (videoElement) {
+                videoElement.load();
+                videoElement.play().catch(e => console.error('Retry failed:', e));
+              }
             }, 1000 * retryCount); // Exponential backoff
           }
         });
@@ -263,7 +265,7 @@
   }
   
   function updateProgress() {
-    if (videoElement) {
+    if (videoElement && videoElement.duration) {
       progress = (videoElement.currentTime / videoElement.duration) * 100;
       
       // Update buffered
@@ -324,8 +326,10 @@
     const progressBar = e.currentTarget as HTMLDivElement;
     const rect = progressBar.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
-    videoElement.currentTime = pos * videoElement.duration;
+    videoElement.currentTime = pos * (videoElement.duration || 0);
   }
+  
+  // handleProgressClick is now merged with handleSeek
 </script>
 
 <div class="video-player" bind:this={videoContainer}>

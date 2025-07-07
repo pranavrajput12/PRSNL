@@ -247,7 +247,7 @@ export async function getAISuggestions(url: string): Promise<{
   tags: string[];
   category?: string;
 }> {
-  return fetchWithErrorHandling('/ai/suggest', {
+  return fetchWithErrorHandling('/suggest', {
     method: 'POST',
     body: JSON.stringify({ url }),
   });

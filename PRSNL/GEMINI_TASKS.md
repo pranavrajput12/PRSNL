@@ -17,6 +17,33 @@ Always review these files before starting work:
 
 ---
 
+## 🆕 NEW HIGH PRIORITY TASKS - 2025-07-07
+
+### Task GEMINI-005: Fix AI Suggestions Endpoint
+**Priority**: CRITICAL - User reported it's not working!
+**Status**: TODO
+**File**: `/PRSNL/backend/app/api/ai_suggest.py`
+
+**Issue**: AI suggestions fail silently when URL is added in capture page
+**Requirements**:
+1. Add proper Azure OpenAI fallback to Ollama
+2. Use AI Router service pattern (see `/PRSNL/backend/app/services/ai_router.py`)
+3. Better error handling and logging
+4. Test with the URL: https://x.com/cline/status/1939716967012946141
+
+### Task GEMINI-006: Implement Missing Analytics Endpoints
+**Priority**: HIGH - Frontend needs these
+**Status**: TODO
+**File to Update**: `/PRSNL/backend/app/api/analytics.py`
+
+**Missing Endpoints**:
+- `GET /api/analytics/usage_patterns` - Usage statistics
+- `GET /api/analytics/ai_insights` - AI-generated insights about knowledge base
+
+**See**: `/PRSNL/GEMINI_NEXT_TASKS.md` for detailed requirements
+
+---
+
 ## 🎯 ACTIVE TASKS
 
 ### Task GEMINI-001: Analytics API Endpoints
