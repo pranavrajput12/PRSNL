@@ -173,6 +173,11 @@ The frontend includes 25 realistic sample items covering:
 - [Developer Guide](./DEVELOPER_GUIDE.md) - Development setup and workflow
 - [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment instructions
 
+### AI Model Guides
+- [GEMINI Guide](./GEMINI.md) - Backend AI infrastructure specialist guide
+- [WINDSURF Guide](./WINDSURF.md) - Frontend AI features specialist guide
+- [Project Status](./PROJECT_STATUS.md) - Single source of truth for current state
+
 ### Project Management
 - [Model Activity Log](./MODEL_ACTIVITY_LOG.md) - Detailed work tracking
 - [Task Summary](./TASK_SUMMARY.md) - Current progress

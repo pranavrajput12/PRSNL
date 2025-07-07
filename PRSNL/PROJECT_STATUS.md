@@ -41,6 +41,7 @@ This document consolidates all project status, context, and task assignments. Ot
 
 ### 🤖 CLAUDE (Orchestration & Integration)
 **Current Focus**: Documentation consolidation, system integration, testing
+**Guide**: See /PRSNL/CLAUDE.md (if exists) for detailed instructions
 
 **Key Files to Work With**:
 ```
@@ -61,6 +62,7 @@ frontend/
 
 ### 🧠 GEMINI (Backend AI Infrastructure)
 **Current Focus**: Analytics API, performance optimization
+**Guide**: See /PRSNL/GEMINI.md for detailed instructions
 
 **Key Files to Work With**:
 ```
@@ -81,6 +83,7 @@ SQL Files:
 
 ### 🚀 WINDSURF (Frontend AI Features)
 **Current Focus**: AI Insights Dashboard UI
+**Guide**: See /PRSNL/WINDSURF.md for detailed instructions
 
 **Key Files to Work With**:
 ```

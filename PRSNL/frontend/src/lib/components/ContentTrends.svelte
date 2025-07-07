@@ -114,8 +114,8 @@
       .append("text")
       .attr("fill", "var(--text-secondary)")
       .attr("transform", "rotate(-90)")
-      .attr("y", -40)
-      .attr("x", -innerHeight / 2)
+      .attr("y", "-40")
+      .attr("x", `${-innerHeight / 2}`)
       .attr("text-anchor", "middle")
       .text("Item Count");
     
