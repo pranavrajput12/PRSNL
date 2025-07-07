@@ -1,33 +1,25 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, status, Query
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
 from app.core.exceptions import ItemNotFound, InternalServerError
 from app.db.database import get_db_pool
+from app.models.schemas import Item, ItemUpdate, ItemStatus
+from app.services.cache import cache_service, CacheKeys
+from app.config import settings
 
 router = APIRouter()
 
-class ItemDetail(BaseModel):
-    id: str
-    url: Optional[str] = None
-    title: str
-    content: Optional[str] = None
-    summary: Optional[str] = None
-    item_type: str = "article"
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-    tags: List[str] = []
-
-class ItemUpdate(BaseModel):
-    title: Optional[str] = None
-    summary: Optional[str] = None
-    tags: Optional[List[str]] = None
-
-@router.get("/items/{item_id}")
-async def get_item_detail(item_id: str):
+@router.get("/items/{item_id}", response_model=Item)
+async def get_item_detail(item_id: UUID):
     """Retrieve details of a specific item by ID."""
+    # Try cache first
+    cache_key = cache_service.make_key(CacheKeys.ITEM, str(item_id))
+    cached = await cache_service.get(cache_key)
+    if cached:
+        return cached
+    
     try:
         pool = await get_db_pool()
         async with pool.acquire() as conn:
@@ -53,29 +45,37 @@ async def get_item_detail(item_id: str):
                 GROUP BY i.id
             """
             
-            row = await conn.fetchrow(query, UUID(item_id))
+            row = await conn.fetchrow(query, item_id)
             
             if not row:
                 raise ItemNotFound(item_id)
             
-            return {
+            result = {
                 "id": str(row["id"]),
                 "title": row["title"],
                 "url": row["url"],
                 "content": row["content"],
                 "summary": row["summary"],
                 "item_type": row["item_type"],
-                "createdAt": row["created_at"].isoformat(),
-                "updatedAt": row["updated_at"].isoformat() if row["updated_at"] else None,
-                "tags": row["tags"]
+                "created_at": row["created_at"].isoformat(),
+                "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                "tags": row["tags"],
+                "status": ItemStatus.COMPLETED,
+                "access_count": 0,
+                "accessed_at": row["created_at"].isoformat()
             }
+            
+            # Cache the result
+            await cache_service.set(cache_key, result, settings.CACHE_TTL_ITEM)
+            
+            return result
     except ItemNotFound:
         raise
     except Exception as e:
         raise InternalServerError(f"Failed to retrieve item {item_id}: {e}")
 
-@router.patch("/items/{item_id}")
-async def update_item(item_id: str, item_update: ItemUpdate):
+@router.patch("/items/{item_id}", response_model=Item)
+async def update_item(item_id: UUID, item_update: ItemUpdate):
     """Update an existing item."""
     try:
         pool = await get_db_pool()
@@ -93,7 +93,7 @@ async def update_item(item_id: str, item_update: ItemUpdate):
                 
                 # Update item fields if provided
                 update_fields = []
-                params = [UUID(item_id)]
+                params = [item_id]
                 param_count = 2
                 
                 if item_update.title is not None:
@@ -138,10 +138,19 @@ async def update_item(item_id: str, item_update: ItemUpdate):
                         # Link tag to item
                         await conn.execute(
                             "INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)",
-                            UUID(item_id), tag_id
+                            item_id, tag_id
                         )
                 
-                return {"message": "Item updated successfully", "id": item_id}
+                # Invalidate cache for this item
+                cache_key = cache_service.make_key(CacheKeys.ITEM, str(item_id))
+                await cache_service.delete(cache_key)
+                
+                # Also invalidate search and timeline caches
+                await cache_service.clear_pattern(f"{CacheKeys.SEARCH}:*")
+                await cache_service.clear_pattern(f"{CacheKeys.TIMELINE}:*")
+                
+                # Return the updated item
+                return await get_item_detail(item_id)
                 
     except ItemNotFound:
         raise

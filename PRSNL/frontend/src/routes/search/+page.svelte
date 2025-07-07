@@ -1,36 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import { fade } from 'svelte/transition';
   import { searchItems, getSimilarItems } from '$lib/api';
   import Icon from '$lib/components/Icon.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
-  import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-  import StreamingText from '$lib/components/StreamingText.svelte';
-  import { websocketStore } from '$lib/stores/websocket';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
-  import StreamingText from '$lib/components/StreamingText.svelte';
-  import { searchItems, getSimilarItems } from '$lib/api';
+  import AsyncBoundary from '$lib/components/AsyncBoundary.svelte';
   import { mediaSettings, recordMemoryUsage } from '$lib/stores/media';
-  import { websocketStore, MessageType } from '$lib/stores/websocket';
-
-  type SearchResult = {
-    id: string;
-    title: string;
-    url?: string;
-    snippet: string;
-    tags: string[];
-    created_at: string;
-    type?: string;
-    isVideo?: boolean;
-    videoPlatform?: string;
-    thumbnailUrl?: string;
-    similarity_score?: number;
-    match_type?: 'semantic' | 'keyword' | 'both';
-    highlights?: string[];
-  };
+  import type { SearchResult, Item } from '$lib/types/api';
 
   let query = '';
   let results: SearchResult[] = [];
@@ -51,7 +28,7 @@
   let searchMode: 'keyword' | 'semantic' | 'hybrid' = 'keyword';
   let showSimilarItems = false;
   let similarItemsFor: SearchResult | null = null;
-  let similarItems: SearchResult[] = [];
+  let similarItems: Item[] = [];
   let loadingSimilar = false;
 
   // Video performance optimization variables

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Response, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import asyncio
 import os
 import asyncpg
@@ -10,6 +11,8 @@ import logging
 from app.config import settings
 from app.worker import listen_for_notifications
 from app.api.middleware import RequestIDMiddleware, LoggingMiddleware, ExceptionHandlerMiddleware
+from app.middleware.auth import AuthMiddleware
+from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
 
 app = FastAPI(
@@ -17,8 +20,13 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
 # Add custom middleware
 app.add_middleware(ExceptionHandlerMiddleware)
+app.add_middleware(AuthMiddleware)  # Add auth middleware after exception handler
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
@@ -29,9 +37,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.db.database import create_db_pool, close_db_pool
+from app.db.database import create_db_pool, close_db_pool, apply_migrations
 from app.core.background_tasks import background_tasks
 from app.services.storage_manager import StorageManager
+from app.services.cache import cache_service
 
 # Placeholder for worker task
 worker_task = None
@@ -40,6 +49,11 @@ worker_task = None
 async def startup_event():
     await create_db_pool()
     await apply_migrations()
+    
+    # Initialize cache
+    if settings.CACHE_ENABLED:
+        await cache_service.connect()
+    
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     print("Worker started in background.")
@@ -58,6 +72,11 @@ async def shutdown_event():
         except asyncio.CancelledError:
             print("Worker task cancelled successfully.")
     print("Worker stopped.")
+    
+    # Close cache connection
+    if settings.CACHE_ENABLED:
+        await cache_service.disconnect()
+    
     await close_db_pool()
     await background_tasks.shutdown()
 
@@ -85,7 +104,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
         await asyncio.sleep(600) # Update every 10 minutes (600 seconds)
 
 from fastapi.staticfiles import StaticFiles
-from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, embeddings, semantic_search, ws
+from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug, analytics
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 app.include_router(search.router, prefix=settings.API_V1_STR)
@@ -96,8 +115,9 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(videos.router, prefix=settings.API_V1_STR)
 app.include_router(telegram.router, prefix=settings.API_V1_STR)
 app.include_router(vision.router, prefix=settings.API_V1_STR)
-app.include_router(embeddings.router, prefix=settings.API_V1_STR)
-app.include_router(semantic_search.router, prefix=settings.API_V1_STR)
+app.include_router(ai_suggest.router, prefix=settings.API_V1_STR)
+app.include_router(debug.router, prefix=settings.API_V1_STR)
+app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # Mount static files for media

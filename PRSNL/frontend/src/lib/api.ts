@@ -3,6 +3,20 @@
  * Handles all communication with the backend API
  */
 
+import type {
+  CaptureRequest,
+  CaptureResponse,
+  SearchRequest,
+  SearchResponse,
+  TimelineResponse,
+  Item,
+  Tag,
+  UpdateItemRequest,
+  APIError,
+  TimelineItem,
+  InsightsResponse
+} from './types/api';
+
 // Get the API URL from environment variables or use default
 // Use relative URL to leverage Vite's proxy configuration
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || '/api';
@@ -23,10 +37,10 @@ export class ApiError extends Error {
 /**
  * Base fetch function with error handling
  */
-async function fetchWithErrorHandling(
+async function fetchWithErrorHandling<T>(
   endpoint: string, 
   options: RequestInit = {}
-): Promise<any> {
+): Promise<T> {
   const fullUrl = `${API_BASE_URL}${endpoint}`;
   console.log('🔵 API Request:', {
     url: fullUrl,
@@ -91,14 +105,9 @@ async function fetchWithErrorHandling(
  * Capture a new item in the knowledge vault
  */
 export async function captureItem(
-  data: {
-    url?: string;
-    title?: string;
-    highlight?: string;
-    tags?: string[];
-  }
-) {
-  return fetchWithErrorHandling('/capture', {
+  data: CaptureRequest
+): Promise<CaptureResponse> {
+  return fetchWithErrorHandling<CaptureResponse>('/capture', {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -116,7 +125,7 @@ export async function searchItems(
     mode?: 'keyword' | 'semantic' | 'hybrid';
     limit?: number;
   } = {}
-) {
+): Promise<SearchResponse> {
   const params = new URLSearchParams();
   
   if (query) params.append('query', query);
@@ -131,46 +140,46 @@ export async function searchItems(
     ? '/search/semantic' 
     : '/search';
   
-  return fetchWithErrorHandling(`${endpoint}?${params.toString()}`);
+  return fetchWithErrorHandling<SearchResponse>(`${endpoint}?${params.toString()}`);
 }
 
 /**
  * Get similar items to a specific item
  */
-export async function getSimilarItems(id: string, limit: number = 5) {
-  return fetchWithErrorHandling(`/items/${id}/similar?limit=${limit}`);
+export async function getSimilarItems(id: string, limit: number = 5): Promise<Item[]> {
+  return fetchWithErrorHandling<Item[]>(`/items/${id}/similar?limit=${limit}`);
 }
 
 /**
  * Transform snake_case to camelCase for a single item
  */
-function transformItem(item: any) {
+function transformItem(item: any): Item | TimelineItem {
   // If already has camelCase fields, return as is
-  if (item.createdAt) {
+  if ('createdAt' in item && item.createdAt) {
     return item;
   }
   
   return {
     ...item,
-    createdAt: item.createdAt || item.created_at,
-    updatedAt: item.updatedAt || item.updated_at,
-    itemType: item.itemType || item.item_type,
-    thumbnailUrl: item.thumbnailUrl || item.thumbnail_url,
-    filePath: item.filePath || item.file_path
+    createdAt: item.created_at || item.createdAt,
+    updatedAt: item.updated_at || item.updatedAt,
+    itemType: item.item_type || item.itemType,
+    thumbnailUrl: item.thumbnail_url || item.thumbnailUrl,
+    filePath: item.file_path || item.filePath
   };
 }
 
 /**
  * Get timeline items with pagination
  */
-export async function getTimeline(page: number = 1) {
-  const response = await fetchWithErrorHandling(`/timeline?page=${page}`);
+export async function getTimeline(page: number = 1): Promise<TimelineResponse> {
+  const response = await fetchWithErrorHandling<TimelineResponse>(`/timeline?page=${page}`);
   
   console.log('Raw timeline response before transform:', response);
   
   // Transform snake_case to camelCase for frontend compatibility
   if (response && response.items) {
-    response.items = response.items.map(transformItem);
+    response.items = response.items.map(item => transformItem(item) as TimelineItem);
   }
   
   console.log('Timeline response after transform:', response);
@@ -181,22 +190,27 @@ export async function getTimeline(page: number = 1) {
 /**
  * Get a single item by ID
  */
-export async function getItem(id: string) {
-  return fetchWithErrorHandling(`/items/${id}`);
+export async function getItem(id: string): Promise<Item> {
+  return fetchWithErrorHandling<Item>(`/items/${id}`);
 }
 
 /**
  * Get recent tags for autocomplete
  */
-export async function getRecentTags() {
-  return fetchWithErrorHandling('/tags');
+export async function getRecentTags(): Promise<Tag[]> {
+  try {
+    return await fetchWithErrorHandling<Tag[]>('/tags');
+  } catch (error) {
+    console.error('Failed to fetch tags, returning empty array:', error);
+    return [];
+  }
 }
 
 /**
  * Get all tags
  */
-export async function getTags() {
-  const tags = await fetchWithErrorHandling('/tags');
+export async function getTags(): Promise<{ tags: Tag[] }> {
+  const tags = await fetchWithErrorHandling<Tag[]>('/tags');
   
   // Backend returns array directly, frontend expects object with tags array
   return { tags: Array.isArray(tags) ? tags : [] };
@@ -205,8 +219,8 @@ export async function getTags() {
 /**
  * Delete an item by ID
  */
-export async function deleteItem(id: string) {
-  return fetchWithErrorHandling(`/items/${id}`, {
+export async function deleteItem(id: string): Promise<void> {
+  return fetchWithErrorHandling<void>(`/items/${id}`, {
     method: 'DELETE',
   });
 }
@@ -216,14 +230,32 @@ export async function deleteItem(id: string) {
  */
 export async function updateItem(
   id: string,
-  data: {
-    title?: string;
-    tags?: string[];
-    notes?: string;
-  }
-) {
-  return fetchWithErrorHandling(`/items/${id}`, {
+  data: UpdateItemRequest
+): Promise<Item> {
+  return fetchWithErrorHandling<Item>(`/items/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+}
+
+/**
+ * Get AI suggestions for URL metadata
+ */
+export async function getAISuggestions(url: string): Promise<{
+  title: string;
+  summary: string;
+  tags: string[];
+  category?: string;
+}> {
+  return fetchWithErrorHandling('/ai/suggest', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  });
+}
+
+/**
+ * Get AI insights data for the dashboard
+ */
+export async function getInsights(timeRange: string = 'week'): Promise<InsightsResponse> {
+  return fetchWithErrorHandling<InsightsResponse>(`/insights?timeRange=${timeRange}`);
 }

@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
-from pydantic import BaseModel, HttpUrl
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends, Request
 from typing import Optional, Dict, List
 import asyncio
 import json
@@ -11,21 +10,18 @@ from app.services.video_processor import VideoProcessor
 from app.services.llm_processor import LLMProcessor
 from app.db.database import get_db_pool, get_db_connection, update_item_embedding
 from app.services.embedding_service import embedding_service
+from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
+from app.middleware.rate_limit import capture_limiter
 import logging
 import asyncpg
 from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS, VIDEO_DOWNLOAD_OUTCOMES, VIDEO_DOWNLOAD_DURATION_SECONDS, VIDEO_PROCESSING_DURATION_SECONDS
 import time
+from app.api.instagram_handler import process_instagram_bookmark
+from app.services.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-class CaptureRequest(BaseModel):
-    url: Optional[HttpUrl] = None
-    title: Optional[str] = None
-    content: Optional[str] = None
-    tags: Optional[List[str]] = []
-    type: Optional[str] = "page"  # "page" or "selection"
 
 async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict):
     """Updates the item's metadata with progress information."""
@@ -38,10 +34,11 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
         """, item_id, progress_data)
     logger.info(f"Item {item_id} progress: {progress_data.get('status')} {progress_data.get('percent', 0):.1f}%")
 
-@router.post("/capture", status_code=status.HTTP_201_CREATED, response_model=dict)
-async def capture_item(request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
+@router.post("/capture", status_code=status.HTTP_201_CREATED, response_model=CaptureResponse)
+@capture_limiter
+async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Capture a new item (web page, note, etc.)."""
-    if not request.url and not request.content:
+    if not capture_request.url and not capture_request.content:
         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
         raise InvalidInput("Either URL or content must be provided.")
     
@@ -49,29 +46,35 @@ async def capture_item(request: CaptureRequest, background_tasks: BackgroundTask
     item_type = 'article'
     
     try:
-        if request.url:
+        if capture_request.url:
             video_processor = VideoProcessor()
-            video_info = await video_processor.get_video_info(str(request.url))
+            video_info = await video_processor.get_video_info(str(capture_request.url))
             
             if video_info and video_info.get('platform') != 'unknown':
                 item_type = 'video'
-                # Perform video validation before inserting initial record
-                try:
-                    await video_processor.validate_video_url(str(request.url))
-                except ValueError as e:
-                    VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
-                    raise InvalidInput(f"Video validation failed: {e}")
+                # Skip validation for Instagram to allow bookmarking
+                if 'instagram.com' not in str(capture_request.url).lower():
+                    # Perform video validation before inserting initial record
+                    try:
+                        await video_processor.validate_video_url(str(capture_request.url))
+                    except ValueError as e:
+                        VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
+                        raise InvalidInput(f"Video validation failed: {e}")
         
         # Insert initial item record with metadata for capture type
-        metadata = {"capture_type": request.type}
+        metadata = {"capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page'}
+        logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
+        
         await db_connection.execute("""
             INSERT INTO items (id, url, title, status, item_type, metadata)
             VALUES ($1, $2, $3, 'pending', $4, $5::jsonb)
-        """, item_id, str(request.url) if request.url else None, request.title or 'Untitled', item_type, json.dumps(metadata))
+        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', item_type, json.dumps(metadata))
+        
+        logger.info(f"Successfully inserted item {item_id} into database")
         
         # Process tags if provided
-        if request.tags:
-            for tag_name in request.tags:
+        if capture_request.tags:
+            for tag_name in capture_request.tags:
                 # Get or create tag
                 tag_id = await db_connection.fetchval("""
                     INSERT INTO tags (name) VALUES ($1)
@@ -86,31 +89,40 @@ async def capture_item(request: CaptureRequest, background_tasks: BackgroundTask
                 """, item_id, tag_id)
         
         if item_type == 'video':
-            # Process video in background
-            background_tasks.add_task(process_video_item, item_id, str(request.url))
+            # Special handling for Instagram
+            if capture_request.url and 'instagram.com' in str(capture_request.url).lower():
+                background_tasks.add_task(process_instagram_bookmark, item_id, str(capture_request.url))
+            else:
+                # Process other videos normally
+                background_tasks.add_task(process_video_item, item_id, str(capture_request.url))
         else:
             # Process regular item in background
             capture_engine = CaptureEngine()
-            background_tasks.add_task(capture_engine.process_item, item_id, str(request.url) if request.url else None, request.content)
+            background_tasks.add_task(capture_engine.process_item, item_id, str(capture_request.url) if capture_request.url else None, capture_request.content)
         
         VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
-        return {
-            "message": "Item capture initiated",
-            "item_id": str(item_id),
-            "item_type": item_type
-        }
+        logger.info(f"Capture initiated successfully for item {item_id}")
+        
+        return CaptureResponse(
+            id=item_id,
+            status=ItemStatus.PENDING,
+            message="Item capture initiated"
+        )
         
     except Exception as e:
-        logger.error(f"Failed to capture item: {str(e)}")
+        logger.error(f"Failed to capture item: {str(e)}", exc_info=True)
         # Update item status to failed if initial insertion happened
-        pool = await get_db_pool()
-        async with pool.acquire() as conn:
-            await conn.execute("""
-                UPDATE items
-                SET status = 'failed',
-                    metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
-                WHERE id = $1
-            """, item_id, str(e))
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as conn:
+                await conn.execute("""
+                    UPDATE items
+                    SET status = 'failed',
+                        metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
+                    WHERE id = $1
+                """, item_id, str(e))
+        except Exception as update_error:
+            logger.error(f"Failed to update item status: {update_error}")
         VIDEO_CAPTURE_REQUESTS.labels(status='internal_error').inc()
         raise InternalServerError(f"Failed to capture item: {e}")
 
@@ -168,6 +180,11 @@ Full Description:
         enhanced_metadata['ai_analysis'] = {
             'summary': processed_content.summary,
             'tags': processed_content.tags,
+            'key_points': processed_content.key_points,
+            'sentiment': processed_content.sentiment,
+            'reading_time': processed_content.reading_time,
+            'entities': processed_content.entities,
+            'questions': processed_content.questions,
             'processed_at': time.time()
         }
         

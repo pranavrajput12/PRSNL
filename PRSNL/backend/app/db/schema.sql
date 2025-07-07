@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS items (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     accessed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    access_count INTEGER DEFAULT 0
+    access_count INTEGER DEFAULT 0,
+    embedding vector(1536)
 );
 
 -- Tags table

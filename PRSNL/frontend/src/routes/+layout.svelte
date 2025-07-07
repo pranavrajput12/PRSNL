@@ -5,6 +5,7 @@
   import Notifications from '$lib/components/Notifications.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import PerformanceMonitor from '$lib/components/PerformanceMonitor.svelte';
+  import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
   import { preferences } from '$lib/stores/app';
   import { mediaSettings } from '$lib/stores/media';
   
@@ -68,15 +69,17 @@
   </div>
 </nav>
 
-<main class="main-content">
-  <slot />
-</main>
+<ErrorBoundary fallback="full">
+  <main class="main-content">
+    <slot />
+  </main>
 
-<Notifications />
+  <Notifications />
 
-{#if $mediaSettings.logPerformanceMetrics}
-  <PerformanceMonitor position="bottom-right" />
-{/if}
+  {#if $mediaSettings.logPerformanceMetrics}
+    <PerformanceMonitor position="bottom-right" />
+  {/if}
+</ErrorBoundary>
 
 <style>
   nav {

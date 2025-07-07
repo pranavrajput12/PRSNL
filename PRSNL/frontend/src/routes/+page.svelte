@@ -6,6 +6,7 @@
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
+  import SmartFeed from '$lib/components/SmartFeed.svelte';
   
   type Item = {
     id: string;
@@ -20,6 +21,7 @@
     thumbnail_url?: string;
     duration?: number;
     platform?: string;
+    status?: string;
   };
   
   let recentItems: Item[] = [];
@@ -32,6 +34,7 @@
   let mounted = false;
   let isLoading = true;
   let error: Error | null = null;
+  let viewMode: 'smart' | 'classic' = 'smart';
   
   onMount(async () => {
     mounted = true;
@@ -184,22 +187,49 @@
   
   <div class="recent-section">
     <div class="section-header">
-      <h2>Recent Captures</h2>
-      <a href="/timeline" class="view-all">
-        View all
-        <Icon name="arrow-right" size="small" />
-      </a>
+      <h2>{viewMode === 'smart' ? 'Your Knowledge Feed' : 'Recent Captures'}</h2>
+      <div class="view-controls">
+        <button 
+          class="view-toggle"
+          class:active={viewMode === 'smart'}
+          on:click={() => viewMode = 'smart'}
+        >
+          <Icon name="sparkles" size="small" />
+          Smart Feed
+        </button>
+        <button 
+          class="view-toggle"
+          class:active={viewMode === 'classic'}
+          on:click={() => viewMode = 'classic'}
+        >
+          <Icon name="grid" size="small" />
+          Classic View
+        </button>
+        <a href="/timeline" class="view-all">
+          View all
+          <Icon name="arrow-right" size="small" />
+        </a>
+      </div>
     </div>
     
-    {#if isLoading}
+    {#if viewMode === 'smart'}
+      <SmartFeed mode="smart" />
+    {:else if isLoading}
       <SkeletonLoader type="card" count={6} />
     {:else if recentItems.length > 0}
       <div class="items-grid">
         {#each recentItems as item, i}
-          <div class="item-card" style="animation-delay: {300 + i * 50}ms">
+          <div class="item-card {item.status === 'pending' ? 'pending' : ''}" style="animation-delay: {300 + i * 50}ms">
             <div class="item-header">
               <h4>{item.title}</h4>
-              <Icon name={item.item_type === 'video' ? 'video' : 'external-link'} size="small" color="var(--text-muted)" />
+              <div class="item-header-icons">
+                {#if item.status === 'pending'}
+                  <div class="pending-indicator" title="Processing...">
+                    <Spinner size="small" />
+                  </div>
+                {/if}
+                <Icon name={item.item_type === 'video' ? 'video' : 'external-link'} size="small" color="var(--text-muted)" />
+              </div>
             </div>
             
             {#if item.item_type === 'video' && item.file_path}
@@ -211,6 +241,8 @@
                   duration={item.duration}
                 />
               </div>
+            {:else if item.status === 'pending'}
+              <p class="pending-message">Processing content...</p>
             {:else}
               <p>{item.summary}</p>
             {/if}
@@ -454,6 +486,38 @@
     margin: 0;
   }
   
+  .view-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .view-toggle {
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .view-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+  
+  .view-toggle.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  
   .view-all {
     display: flex;
     align-items: center;
@@ -461,6 +525,7 @@
     color: var(--accent);
     font-weight: 600;
     transition: all var(--transition-fast);
+    margin-left: auto;
   }
   
   .view-all:hover {
@@ -513,6 +578,27 @@
     align-items: start;
     justify-content: space-between;
     margin-bottom: 0.75rem;
+  }
+  
+  .item-header-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .pending-indicator {
+    display: flex;
+    align-items: center;
+  }
+  
+  .item-card.pending {
+    opacity: 0.8;
+    border-style: dashed;
+  }
+  
+  .pending-message {
+    color: var(--text-muted);
+    font-style: italic;
   }
   
   .item-header h4 {

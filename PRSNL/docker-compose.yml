@@ -20,6 +20,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: prsnl_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
     container_name: prsnl_backend
@@ -29,15 +43,19 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/media:/app/media
+      - /Users/pronav/Library/Application Support/Arc:/chrome-profile:ro
     depends_on:
       db:
         condition: service_healthy
       ollama:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: llama3
+      REDIS_URL: redis://redis:6379
 
   ollama:
     image: ollama/ollama:latest
@@ -64,3 +82,4 @@ services:
 volumes:
   postgres_data:
   ollama_data:
+  redis_data:

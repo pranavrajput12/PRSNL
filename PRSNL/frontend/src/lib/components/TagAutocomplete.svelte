@@ -24,10 +24,12 @@
     try {
       isLoading = true;
       const data = await getRecentTags();
-      suggestions = data.tags || [];
+      suggestions = Array.isArray(data) ? data : (data.tags || []);
     } catch (err) {
       error = err;
       console.error('Failed to load tags:', err);
+      // Set default suggestions on error to prevent breaking the component
+      suggestions = ['tutorial', 'article', 'video', 'resource', 'tool'];
     } finally {
       isLoading = false;
     }

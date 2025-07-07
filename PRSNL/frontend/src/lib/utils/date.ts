@@ -2,10 +2,10 @@
 
 /**
  * Formats a date for display (e.g., "Mar 15, 2024").
- * @param {Date | string} date - The date to format.
- * @returns {string} The formatted date string.
+ * @param date - The date to format.
+ * @returns The formatted date string.
  */
-export function formatDate(date) {
+export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '';
   const d = new Date(date);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -13,10 +13,10 @@ export function formatDate(date) {
 
 /**
  * Gets the relative time string (e.g., "2 hours ago", "3 days ago").
- * @param {Date | string} date - The date to compare.
- * @returns {string} The relative time string.
+ * @param date - The date to compare.
+ * @returns The relative time string.
  */
-export function getRelativeTime(date) {
+export function getRelativeTime(date: Date | string | null | undefined): string {
   if (!date) return '';
   const d = new Date(date);
   const now = new Date();
@@ -37,10 +37,10 @@ export function getRelativeTime(date) {
 
 /**
  * Checks if a given date is today.
- * @param {Date | string} date - The date to check.
- * @returns {boolean} True if the date is today, false otherwise.
+ * @param date - The date to check.
+ * @returns True if the date is today, false otherwise.
  */
-export function isToday(date) {
+export function isToday(date: Date | string | null | undefined): boolean {
   if (!date) return false;
   const d = new Date(date);
   const today = new Date();
@@ -51,24 +51,27 @@ export function isToday(date) {
 
 /**
  * Checks if a given date is within the current week.
- * @param {Date | string} date - The date to check.
- * @returns {boolean} True if the date is in the current week, false otherwise.
+ * @param date - The date to check.
+ * @returns True if the date is in the current week, false otherwise.
  */
-export function isThisWeek(date) {
+export function isThisWeek(date: Date | string | null | undefined): boolean {
   if (!date) return false;
   const d = new Date(date);
-  const today = new Date(); // Create a new Date object to avoid mutation
-  const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-  const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const firstDayOfWeek = new Date(today);
+  firstDayOfWeek.setDate(today.getDate() - dayOfWeek);
+  const lastDayOfWeek = new Date(today);
+  lastDayOfWeek.setDate(today.getDate() - dayOfWeek + 6);
   return d >= firstDayOfWeek && d <= lastDayOfWeek;
 }
 
 /**
  * Checks if a given date is within the current month.
- * @param {Date | string} date - The date to check.
- * @returns {boolean} True if the date is in the current month, false otherwise.
+ * @param date - The date to check.
+ * @returns True if the date is in the current month, false otherwise.
  */
-export function isThisMonth(date) {
+export function isThisMonth(date: Date | string | null | undefined): boolean {
   if (!date) return false;
   const d = new Date(date);
   const today = new Date();

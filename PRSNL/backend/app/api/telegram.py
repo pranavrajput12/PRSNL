@@ -21,9 +21,6 @@ async def telegram_webhook(update: TelegramUpdate):
     # Process the message
     success = await bot.process_message(update.message)
     
-    # Send confirmation back to user
-    if success:
-        chat_id = update.message['chat']['id']
-        await bot.send_message(chat_id, "✅ Captured successfully!")
+    
     
     return {"ok": True}

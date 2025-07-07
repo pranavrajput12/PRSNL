@@ -1,144 +1,223 @@
-# 🚀 WINDSURF - Frontend AI Enhancement Tasks
+# 🚀 WINDSURF - Frontend AI Features Tasks
 
-## Your Assigned Tasks:
+## 📚 REQUIRED READING BEFORE ANY TASK
+Always review these files before starting work:
 
-### Task 1: Semantic Search UI
-**Priority**: P0 - User-facing search enhancement
-**Files to create/modify**:
-1. `/frontend/src/routes/search/+page.svelte` - Enhance search page
-2. `/frontend/src/lib/components/SimilarItems.svelte` - New component
-3. `/frontend/src/lib/components/SearchFilters.svelte` - Enhanced filters
-4. `/frontend/src/lib/api.ts` - Add new API calls
+### Documentation to Read First:
+1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
+2. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 3002 ONLY!**
+3. `/PRSNL/DESIGN_LANGUAGE.md` - UI/UX guidelines (Manchester United theme)
+4. `/PRSNL/frontend/src/lib/types/api.ts` - TypeScript interfaces
 
-**Key Features to Implement**:
+### Files to Update After Each Task:
+1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
+2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
+3. `/PRSNL/PROJECT_STATUS.md` - Update progress section
 
-1. **"Find Similar" Button**:
-```svelte
-<!-- Add to each search result item -->
-<button on:click={() => findSimilar(item.id)} class="btn-ghost">
-  <Icon name="sparkles" size="small" />
-  Find similar
-</button>
+---
+
+## 🎯 ACTIVE TASKS
+
+### Task WINDSURF-001: Complete AI Insights Dashboard
+**Priority**: HIGH
+**Status**: IN PROGRESS
+
+**Files to Complete:**
+```
+/PRSNL/frontend/src/routes/insights/+page.svelte   # Main dashboard page
+/PRSNL/frontend/src/lib/components/ContentTrends.svelte  # Fix D3 types
+/PRSNL/frontend/src/lib/components/KnowledgeGraph.svelte # Complete implementation
 ```
 
-2. **Visual Similarity Indicators**:
-```svelte
-<!-- Show relevance score as visual indicator -->
-<div class="relevance-indicator">
-  <div class="relevance-bar" style="width: {item.score * 100}%"></div>
-  <span class="relevance-text">{Math.round(item.score * 100)}% match</span>
-</div>
+**Files to Create:**
+```
+/PRSNL/frontend/src/lib/components/TopicClusters.svelte
+/PRSNL/frontend/src/lib/components/InsightsSummary.svelte
+/PRSNL/frontend/src/lib/stores/insights.ts         # State management
 ```
 
-3. **Natural Language Search**:
-```svelte
-<!-- Update search input placeholder and add examples -->
-<input 
-  placeholder="Try: 'articles about AI from last week' or 'videos similar to machine learning'"
-  on:input={handleNaturalLanguageSearch}
-/>
+**Files to Reference:**
+```
+/PRSNL/frontend/src/lib/api.ts                     # API client patterns
+/PRSNL/frontend/src/lib/components/AsyncBoundary.svelte  # Loading states
+/PRSNL/frontend/src/lib/types/api.ts               # InsightsResponse type
 ```
 
-### Task 2: AI Insights Dashboard
-**Priority**: P1 - Content intelligence visualization
-**Files to create**:
-1. `/frontend/src/routes/insights/+page.svelte` - Main insights page
-2. `/frontend/src/lib/components/TopicClusters.svelte` - D3.js visualization
-3. `/frontend/src/lib/components/ContentTrends.svelte` - Trends chart
-4. `/frontend/src/lib/components/KnowledgeGraph.svelte` - Interactive graph
+**Requirements:**
+1. Complete dashboard components:
+   - Topic clusters with interactive D3.js visualization
+   - Insights summary cards with metrics
+   - Time range selector (day/week/month/year)
+   - Export functionality for reports
 
-**Dashboard Layout**:
-```svelte
-<!-- /frontend/src/routes/insights/+page.svelte -->
-<script>
-  import TopicClusters from '$lib/components/TopicClusters.svelte';
-  import ContentTrends from '$lib/components/ContentTrends.svelte';
-  import KnowledgeGraph from '$lib/components/KnowledgeGraph.svelte';
-  
-  let timeRange = 'week';
-  let selectedCluster = null;
-</script>
+2. Fix TypeScript issues:
+   ```typescript
+   // ContentTrends.svelte - proper typing
+   interface TrendDataPoint {
+     date: Date;
+     articles: number;
+     videos: number;
+     notes: number;
+     bookmarks: number;
+   }
+   ```
 
-<div class="insights-dashboard">
-  <h1>AI Insights</h1>
-  
-  <div class="insights-grid">
-    <div class="insight-card">
-      <h2>Topic Clusters</h2>
-      <TopicClusters bind:selectedCluster />
-    </div>
-    
-    <div class="insight-card">
-      <h2>Content Trends</h2>
-      <ContentTrends {timeRange} />
-    </div>
-    
-    <div class="insight-card full-width">
-      <h2>Knowledge Graph</h2>
-      <KnowledgeGraph {selectedCluster} />
-    </div>
-  </div>
-</div>
+3. Integrate with backend analytics API:
+   ```typescript
+   // In insights store
+   const trends = await api.get('/analytics/trends');
+   const topics = await api.get('/analytics/topics');
+   ```
+
+---
+
+### Task WINDSURF-002: Semantic Search UI
+**Priority**: HIGH
+**Status**: NOT STARTED
+
+**Files to Modify:**
+```
+/PRSNL/frontend/src/routes/search/+page.svelte     # Add semantic features
+/PRSNL/frontend/src/lib/api.ts                     # Add similarity endpoints
 ```
 
-### Task 3: Streaming UI Components
-**Priority**: P1 - Real-time AI feedback
-**Files to create**:
-1. `/frontend/src/lib/components/StreamingText.svelte` - Typewriter effect
-2. `/frontend/src/lib/components/LiveTags.svelte` - Real-time tag suggestions
-3. `/frontend/src/lib/stores/websocket.ts` - WebSocket store
-
-**Streaming Text Component**:
-```svelte
-<!-- StreamingText.svelte -->
-<script>
-  export let text = '';
-  export let speed = 30;
-  
-  let displayText = '';
-  let index = 0;
-  
-  $: if (text) {
-    animateText();
-  }
-  
-  function animateText() {
-    if (index < text.length) {
-      displayText += text[index];
-      index++;
-      setTimeout(animateText, speed);
-    }
-  }
-</script>
-
-<span class="streaming-text">{displayText}<span class="cursor">|</span></span>
-
-<style>
-  .cursor {
-    animation: blink 1s infinite;
-  }
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-</style>
+**Files to Create:**
+```
+/PRSNL/frontend/src/lib/components/SimilarItems.svelte
+/PRSNL/frontend/src/lib/components/SearchModeToggle.svelte
+/PRSNL/frontend/src/lib/components/RelevanceScore.svelte
 ```
 
-## Design Guidelines:
-- Use Manchester United red (#dc143c) for AI-powered features
-- Add subtle animations for AI interactions
-- Show loading states with skeleton loaders
-- Make features discoverable but not intrusive
+**Requirements:**
+1. Search mode toggle:
+   - Keyword search (default)
+   - Semantic search
+   - Hybrid search
 
-## Testing:
-1. Test similar items: Click "Find similar" on any search result
-2. Test insights: Navigate to `/insights` and interact with visualizations
-3. Test streaming: Type in capture form and watch live suggestions
+2. Similar items component:
+   - "Find similar" button on each result
+   - Similarity score visualization (0-100%)
+   - Preview cards for similar items
 
-## Success Criteria:
-- [ ] "Find similar" returns relevant items
-- [ ] Insights dashboard loads within 2 seconds
-- [ ] Streaming text feels natural and smooth
-- [ ] All visualizations are interactive
-- [ ] Mobile responsive design
+3. Natural language input:
+   - Placeholder: "Ask a question or describe what you're looking for..."
+   - Query understanding indicator
+   - Search suggestions based on intent
 
-Start with the semantic search UI as it directly improves the user experience!
+---
+
+### Task WINDSURF-003: Streaming UI Components
+**Priority**: MEDIUM
+**Status**: NOT STARTED
+
+**Files to Complete:**
+```
+/PRSNL/frontend/src/lib/components/StreamingText.svelte
+```
+
+**Files to Create:**
+```
+/PRSNL/frontend/src/lib/components/ProcessingProgress.svelte
+/PRSNL/frontend/src/lib/components/LiveTags.svelte
+/PRSNL/frontend/src/lib/stores/websocket.ts        # WebSocket management
+```
+
+**Files to Modify:**
+```
+/PRSNL/frontend/src/routes/capture/+page.svelte    # Add streaming
+/PRSNL/frontend/src/routes/item/[id]/+page.svelte  # Add AI insights
+```
+
+**Requirements:**
+1. WebSocket connection management:
+   ```typescript
+   // websocket.ts
+   export function connectWebSocket(endpoint: string) {
+     const ws = new WebSocket(`ws://localhost:8000/ws/${endpoint}`);
+     // Handle reconnection, heartbeat, etc.
+   }
+   ```
+
+2. Streaming text component:
+   - Typewriter effect for incoming text
+   - Loading indicator during streaming
+   - Error handling with retry
+
+3. Live features during capture:
+   - Real-time tag suggestions
+   - Content preview with AI insights
+   - Processing progress indicator
+
+---
+
+## 🛠️ DEVELOPMENT WORKFLOW
+
+### Before Starting:
+```bash
+cd /PRSNL/frontend
+npm install
+```
+
+### Running Frontend:
+```bash
+# MUST USE PORT 3002!
+npm run dev -- --port 3002
+
+# Run type checking
+npm run check
+
+# Run linting
+npm run lint
+```
+
+### Testing Components:
+```bash
+# Component testing
+npm run test
+
+# E2E testing
+npm run test:e2e
+```
+
+---
+
+## 🎨 UI/UX GUIDELINES
+
+### Manchester United Theme:
+- Primary: `#C70101` (Red)
+- Secondary: `#FBE122` (Yellow)
+- Background: Dark (`#0A0A0A`)
+- Text: High contrast white/gray
+
+### Component Patterns:
+1. **Loading States**: Use AsyncBoundary wrapper
+2. **Errors**: Use ErrorMessage component
+3. **Icons**: Use Icon component (Lucide icons)
+4. **Animations**: Subtle, < 300ms transitions
+
+### Responsive Design:
+- Mobile-first approach
+- Breakpoints: 640px, 768px, 1024px, 1280px
+- Touch-friendly: 44px minimum tap targets
+
+---
+
+## 📝 COMMIT MESSAGE FORMAT
+```
+feat(frontend): [WINDSURF-XXX] Brief description
+
+- Detailed change 1
+- Detailed change 2
+
+Updates: CONSOLIDATED_TASK_TRACKER.md, MODEL_ACTIVITY_LOG.md
+```
+
+---
+
+## ⚠️ CRITICAL REMINDERS
+1. **ALWAYS USE PORT 3002** - Never 3004 or any other port!
+2. **TypeScript Required** - No plain JavaScript files
+3. **Test Responsiveness** - Mobile, tablet, desktop
+4. **Maintain Theme** - Manchester United colors only
+5. **Update Logs** - Track all changes in required files
+6. **Check API Types** - Ensure frontend matches backend

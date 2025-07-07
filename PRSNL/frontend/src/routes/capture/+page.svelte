@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { captureItem, getRecentTags } from '$lib/api';
+  import { captureItem, getRecentTags, getAISuggestions } from '$lib/api';
   import { addNotification } from '$lib/stores/app';
   import { isVideoUrl, getVideoPlatform, estimateDownloadTime, formatTime } from '$lib/utils/url';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -25,6 +25,10 @@
   let progress = 0;
   let progressInterval: number | null = null;
   
+  // AI suggestions state
+  let isLoadingSuggestions = false;
+  let suggestionsError: string | null = null;
+  
   // Video-specific variables
   let isVideoDetected = false;
   let videoPlatform: string | null = null;
@@ -36,12 +40,21 @@
   let urlInput: HTMLInputElement;
   let dropZone: HTMLDivElement;
 
-  // Watch for URL changes to detect video URLs
+  // Debounced AI suggestions timeout
+  let aiSuggestionsTimeout: number | undefined;
+  
+  // Watch for URL changes to detect video URLs and get AI suggestions
   $: {
     if (url) {
       detectVideoUrl(url);
+      // Debounce AI suggestions
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        if (aiSuggestionsTimeout) clearTimeout(aiSuggestionsTimeout);
+        aiSuggestionsTimeout = setTimeout(() => loadAISuggestions(url), 500);
+      }
     } else {
       resetVideoDetection();
+      if (aiSuggestionsTimeout) clearTimeout(aiSuggestionsTimeout);
     }
   }
 
@@ -188,6 +201,43 @@
   function handleTagsUpdate(event: CustomEvent) {
     tags = event.detail.tags;
   }
+  
+  async function loadAISuggestions(urlToAnalyze: string) {
+    if (!urlToAnalyze || isLoadingSuggestions) return;
+    
+    try {
+      isLoadingSuggestions = true;
+      suggestionsError = null;
+      
+      const suggestions = await getAISuggestions(urlToAnalyze);
+      
+      // Only update if URL hasn't changed
+      if (url === urlToAnalyze) {
+        // Set title if empty
+        if (!title && suggestions.title) {
+          title = suggestions.title;
+        }
+        
+        // Set highlight/summary if empty
+        if (!highlight && suggestions.summary) {
+          highlight = suggestions.summary;
+        }
+        
+        // Add suggested tags that aren't already present
+        if (suggestions.tags && suggestions.tags.length > 0) {
+          const newTags = suggestions.tags.filter(tag => !tags.includes(tag));
+          tags = [...tags, ...newTags];
+        }
+      }
+    } catch (err) {
+      console.error('Failed to get AI suggestions:', err);
+      // Don't show error to user, just silently fail and let them enter manually
+      // This prevents the 500 error from breaking the UI
+      suggestionsError = null;
+    } finally {
+      isLoadingSuggestions = false;
+    }
+  }
 
   async function handleSubmit() {
     if (!url && !highlight) {
@@ -323,7 +373,12 @@
             placeholder="https://example.com" 
             disabled={isSubmitting}
           />
-          {#if isVideoDetected}
+          {#if isLoadingSuggestions}
+            <div class="ai-indicator loading">
+              <Spinner size="small" />
+              <span>AI analyzing...</span>
+            </div>
+          {:else if isVideoDetected}
             <div class="video-indicator">
               <Icon name="video" size="small" />
               <span>{videoPlatform} Video</span>
@@ -479,6 +534,25 @@
   }
   
   .video-indicator :global(svg) {
+    margin-right: 5px;
+  }
+  
+  .ai-indicator {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    background-color: var(--success);
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+  }
+  
+  .ai-indicator.loading {
+    background-color: var(--info);
+  }
+  
+  .ai-indicator :global(svg) {
     margin-right: 5px;
   }
   

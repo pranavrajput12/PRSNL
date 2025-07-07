@@ -1,105 +1,191 @@
-# 🧠 GEMINI - AI Enhancement Tasks
+# 🧠 GEMINI - Backend AI Infrastructure Tasks
 
-## Your Assigned Tasks:
+## 📚 REQUIRED READING BEFORE ANY TASK
+Always review these files before starting work:
 
-### Task 1: Implement Embedding Infrastructure
-**Priority**: P0 - Foundation for semantic search
-**Files to create/modify**:
-1. `/backend/app/services/embedding_service.py` - New service for embeddings
-2. `/backend/app/db/init_db.sql` - Add embedding column to items table
-3. `/backend/app/api/search.py` - Add semantic search endpoints
+### Documentation to Read First:
+1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
+2. `/PRSNL/MODEL_COORDINATION_RULES.md` - Port assignments and rules
+3. `/PRSNL/backend/API_DOCUMENTATION.md` - API structure and patterns
+4. `/PRSNL/ARCHITECTURE.md` - System design and data flow
 
-**Implementation Steps**:
+### Files to Update After Each Task:
+1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
+2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
+3. `/PRSNL/backend/API_DOCUMENTATION.md` - If you add/modify endpoints
+4. `/PRSNL/PROJECT_STATUS.md` - Update progress section
 
-1. **Create Embedding Service**:
-```python
-# /backend/app/services/embedding_service.py
-import numpy as np
-from typing import List, Optional
-import asyncio
-from app.services.llm_processor import LLMProcessor
+---
 
-class EmbeddingService:
-    def __init__(self):
-        self.llm = LLMProcessor()
-        self.cache = {}  # Simple in-memory cache
-        
-    async def generate_embedding(self, text: str) -> List[float]:
-        """Generate embedding for text using available AI provider"""
-        # Check cache first
-        if text in self.cache:
-            return self.cache[text]
-            
-        # Try Azure OpenAI first, then Ollama
-        embedding = await self._azure_embedding(text)
-        if not embedding:
-            embedding = await self._ollama_embedding(text)
-            
-        if embedding:
-            self.cache[text] = embedding
-        return embedding
-        
-    async def batch_generate(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts efficiently"""
-        tasks = [self.generate_embedding(text) for text in texts]
-        return await asyncio.gather(*tasks)
+## 🎯 ACTIVE TASKS
+
+### Task GEMINI-001: Analytics API Endpoints
+**Priority**: HIGH
+**Status**: COMPLETED
+
+**Files to Create:**
+```
+/PRSNL/backend/app/api/analytics.py
 ```
 
-2. **Database Schema Update**:
-```sql
--- Add to init_db.sql
-ALTER TABLE items ADD COLUMN IF NOT EXISTS embedding vector(1536);
-CREATE INDEX IF NOT EXISTS idx_items_embedding ON items USING ivfflat (embedding vector_cosine_ops);
+**Files to Modify:**
+```
+/PRSNL/backend/app/main.py              # Add router
+/PRSNL/backend/app/db/database.py       # Add analytics queries
+/PRSNL/backend/app/models/schemas.py    # Add response models
 ```
 
-3. **New API Endpoints**:
-```python
-# Add to /backend/app/api/search.py
-@router.get("/search/similar/{item_id}")
-async def find_similar_items(item_id: str, limit: int = 10):
-    """Find items similar to the given item using embeddings"""
-    
-@router.post("/search/semantic")
-async def semantic_search(query: str, limit: int = 20):
-    """Search using semantic similarity"""
+**Files to Reference:**
+```
+/PRSNL/backend/app/api/search.py        # Example API structure
+/PRSNL/backend/app/api/timeline.py      # Pagination pattern
+/PRSNL/backend/app/services/embedding_service.py  # For semantic analysis
 ```
 
-### Task 2: Streaming AI Response Infrastructure
-**Priority**: P1 - Better UX
-**Files to create/modify**:
-1. `/backend/app/core/websocket_manager.py` - WebSocket connection manager
-2. `/backend/app/api/ws.py` - WebSocket endpoints
-3. Update `/backend/app/main.py` to include WebSocket routes
+**Requirements:**
+1. Create endpoints:
+   - `GET /api/analytics/trends` - Content trends over time
+   - `GET /api/analytics/topics` - Topic clustering data
+   - `GET /api/analytics/insights` - AI-generated insights
+   - `GET /api/analytics/usage` - User activity patterns
 
-**WebSocket Implementation**:
-```python
-# /backend/app/api/ws.py
-from fastapi import WebSocket, WebSocketDisconnect
-from app.services.llm_processor import LLMProcessor
+2. Database queries to implement:
+   ```python
+   # In database.py
+   async def get_content_trends(conn, timeframe: str)
+   async def get_topic_clusters(conn, limit: int = 10)
+   async def get_usage_analytics(conn, start_date, end_date)
+   ```
 
-@router.websocket("/ws/ai-stream")
-async def ai_stream(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_json()
-            # Stream AI responses back
-            async for chunk in llm.stream_process(data["content"]):
-                await websocket.send_json({"chunk": chunk})
-    except WebSocketDisconnect:
-        pass
+3. Response schemas in schemas.py:
+   ```python
+   class TrendData(BaseModel):
+       date: datetime
+       articles: int
+       videos: int
+       notes: int
+       bookmarks: int
+   
+   class TopicCluster(BaseModel):
+       topic: str
+       count: int
+       items: List[UUID]
+       keywords: List[str]
+   ```
+
+---
+
+### Task GEMINI-002: Complete LLM Streaming
+**Priority**: HIGH
+**Status**: COMPLETED
+
+**Files to Complete:**
+```
+/PRSNL/backend/app/services/llm_processor.py  # Finish streaming methods
+/PRSNL/backend/app/api/ws.py                  # Add streaming endpoints
 ```
 
-## Testing Instructions:
-1. Test embedding generation: `curl -X POST http://localhost:8000/api/test-embedding -d '{"text": "test"}'`
-2. Test semantic search: `curl http://localhost:8000/api/search/semantic?query=machine+learning`
-3. Test WebSocket: Use the provided WebSocket test client in `/backend/tests/test_websocket.py`
+**Files to Reference:**
+```
+/PRSNL/backend/app/services/ai_router.py      # AI provider selection
+/PRSNL/backend/app/core/websocket_manager.py  # WebSocket handling
+```
 
-## Success Criteria:
-- [ ] Embeddings generated for all new items
-- [ ] Semantic search returns relevant results
-- [ ] WebSocket streaming works smoothly
-- [ ] < 500ms response time for embedding generation
-- [ ] Batch processing handles 100+ items efficiently
+**Requirements:**
+1. Complete streaming implementation in llm_processor.py:
+   - Finish `_stream_process_with_ollama()`
+   - Implement `_stream_process_with_azure()`
+   - Add proper error handling and reconnection
 
-Start with the embedding service first as it's the foundation for semantic search!
+2. WebSocket endpoints in ws.py:
+   - `/ws/ai/stream` - Stream AI responses
+   - `/ws/ai/suggestions` - Live tag suggestions
+   - Implement heartbeat/ping-pong
+
+---
+
+### Task GEMINI-003: Performance Optimization
+**Priority**: MEDIUM
+**Status**: COMPLETED
+
+**Files to Optimize:**
+```
+/PRSNL/backend/app/services/embedding_service.py  # Batch processing
+/PRSNL/backend/app/worker.py                      # Background tasks
+/PRSNL/backend/app/db/database.py                 # Query optimization
+```
+
+**Files to Create:**
+```
+/PRSNL/backend/app/services/cache.py              # Redis caching layer
+/PRSNL/backend/app/db/migrations/003_add_indexes.sql
+```
+
+**Requirements:**
+1. Implement Redis caching for:
+   - Embedding results
+   - AI responses
+   - Search results
+
+2. Database optimizations:
+   - Add indexes for common queries
+   - Implement connection pooling improvements
+   - Add query result caching
+
+3. Background task improvements:
+   - Batch embedding generation
+   - Async video processing
+   - Queue prioritization
+
+---
+
+## 🛠️ DEVELOPMENT WORKFLOW
+
+### Before Starting:
+```bash
+cd /PRSNL/backend
+source venv/bin/activate  # Or create: python3 -m venv venv
+pip install -r requirements.txt
+```
+
+### Testing Your Changes:
+```bash
+# Run backend
+uvicorn app.main:app --reload --port 8000
+
+# Run tests
+pytest tests/
+
+# Check API docs
+open http://localhost:8000/docs
+```
+
+### Environment Variables:
+```bash
+# Check .env file for required vars
+AZURE_OPENAI_API_KEY=xxx
+AZURE_OPENAI_ENDPOINT=xxx
+DATABASE_URL=postgresql://user:pass@localhost/prsnl
+REDIS_URL=redis://localhost:6379
+```
+
+---
+
+## 📝 COMMIT MESSAGE FORMAT
+```
+feat(backend): [GEMINI-XXX] Brief description
+
+- Detailed change 1
+- Detailed change 2
+
+Updates: CONSOLIDATED_TASK_TRACKER.md, MODEL_ACTIVITY_LOG.md
+```
+
+---
+
+## ⚠️ CRITICAL REMINDERS
+1. **NEVER** change port assignments (Backend = 8000)
+2. **ALWAYS** update tracking files after completing work
+3. **TEST** all endpoints before marking complete
+4. **DOCUMENT** new APIs in API_DOCUMENTATION.md
+5. **CHECK** for existing patterns before implementing new ones

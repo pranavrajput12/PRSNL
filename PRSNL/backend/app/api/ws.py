@@ -1,104 +1,59 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.services.websocket_manager import websocket_manager
-from app.services.ai_router import AIRouter, AITask, TaskType
 from app.services.llm_processor import LLMProcessor
+from app.core.websocket_manager import manager
 import logging
-import json
-import asyncio
-from typing import Dict, Any
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
-ai_router = AIRouter()
-llm_processor = LLMProcessor()
+logger = logging.getLogger(__name__)
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    await websocket_manager.connect(websocket, client_id)
+@router.websocket("/ws/ai-stream/{client_id}")
+async def ai_stream(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket, client_id)
+    llm_processor = LLMProcessor()
     try:
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_json()
+            content = data.get("content")
+            if not content:
+                await websocket.send_json({"error": "No content provided"})
+                continue
+
+            logger.info(f"Received content for AI stream from {client_id}: {content[:50]}...")
             
-            try:
-                # Parse the incoming message
-                message = json.loads(data)
-                message_type = message.get('type')
-                
-                if message_type == 'ai_request':
-                    # Handle AI request with streaming response
-                    await handle_ai_request(websocket, client_id, message.get('data', {}))
-                elif message_type == 'ping':
-                    # Handle ping/pong for connection keep-alive
-                    await websocket.send_json({"type": "pong"})
-                else:
-                    # Echo message back for backward compatibility
-                    await websocket_manager.send_personal_message(f"You said: {data}", client_id)
-                    
-            except json.JSONDecodeError:
-                # Handle non-JSON messages
-                await websocket_manager.send_personal_message(f"You said: {data}", client_id)
-                
+            # Stream AI responses back
+            async for chunk in llm_processor.stream_process(content):
+                await websocket.send_json({"chunk": chunk})
+
     except WebSocketDisconnect:
-        websocket_manager.disconnect(client_id)
-        logger.info(f"Client {client_id} disconnected.")
+        manager.disconnect(client_id)
+        logger.info(f"Client {client_id} disconnected from AI stream")
     except Exception as e:
-        logger.error(f"WebSocket error for client {client_id}: {e}")
-        websocket_manager.disconnect(client_id)
+        logger.error(f"Error in AI stream for client {client_id}: {e}")
+        await websocket.send_json({"error": str(e)})
+        manager.disconnect(client_id)
 
-
-async def handle_ai_request(websocket: WebSocket, client_id: str, data: Dict[str, Any]):
-    """Handle AI request with streaming response"""
-    task_type = data.get('task', 'analyze')
-    content = data.get('content', '')
-    item_id = data.get('item_id')
-    
-    # Send initial acknowledgment
-    await websocket.send_json({
-        "type": "ai_response_start",
-        "data": {"status": "processing"}
-    })
-    
+@router.websocket("/ws/ai-tag-stream/{client_id}")
+async def ai_tag_stream(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket, client_id)
+    llm_processor = LLMProcessor()
     try:
-        # Create AI task
-        task = AITask(
-            type=TaskType.CHAT if task_type == 'chat' else TaskType.SUMMARIZATION,
-            content=content,
-            priority=5
-        )
-        
-        # Stream the response
-        full_response = ""
-        async for chunk in ai_router.stream_task(task):
-            # Send each chunk as it arrives
-            await websocket.send_json({
-                "type": "ai_response",
-                "data": {
-                    "content": chunk,
-                    "is_complete": False
-                }
-            })
-            full_response += chunk
+        while True:
+            data = await websocket.receive_json()
+            content = data.get("content")
+            if not content:
+                await websocket.send_json({"error": "No content provided"})
+                continue
+
+            logger.info(f"Received content for AI tag stream from {client_id}: {content[:50]}...")
             
-            # Small delay to prevent overwhelming the client
-            await asyncio.sleep(0.01)
-        
-        # Send completion message
-        await websocket.send_json({
-            "type": "ai_response_complete",
-            "data": {
-                "content": full_response,
-                "is_complete": True,
-                "item_id": item_id
-            }
-        })
-        
+            # Stream AI tag suggestions back
+            async for chunk in llm_processor.stream_tag_suggestions(content):
+                await websocket.send_json({"chunk": chunk})
+
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+        logger.info(f"Client {client_id} disconnected from AI tag stream")
     except Exception as e:
-        logger.error(f"Error in AI streaming for client {client_id}: {e}")
-        await websocket.send_json({
-            "type": "ai_response_error",
-            "data": {
-                "error": str(e),
-                "message": "Failed to process AI request"
-            }
-        })
+        logger.error(f"Error in AI tag stream for client {client_id}: {e}")
+        await websocket.send_json({"error": str(e)})
+        manager.disconnect(client_id)

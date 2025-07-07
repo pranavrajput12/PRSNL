@@ -1,106 +1,145 @@
-import os
+import httpx
 import asyncio
-from openai import AzureOpenAI, OpenAI
-from typing import List, Optional
-import logging
-from app.db.database import get_db_pool
+from typing import List, Optional, Dict
 from app.config import settings
-from app.services.ai_router import AIRouter, AITask, TaskType, AIProvider
+import logging
 
 logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self):
-        self.ai_router = AIRouter()
-        # Configure Azure OpenAI client
-        if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
-            self.azure_client = AzureOpenAI(
-                api_key=settings.AZURE_OPENAI_API_KEY,
-                api_version=settings.AZURE_OPENAI_API_VERSION,
-                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT
+        self.ollama_client = httpx.AsyncClient(
+            base_url=settings.OLLAMA_BASE_URL,
+            timeout=60.0
+        )
+        self.azure_client = None
+        if settings.AZURE_OPENAI_API_KEY:
+            self.azure_client = httpx.AsyncClient(
+                timeout=60.0,
+                headers={
+                    "api-key": settings.AZURE_OPENAI_API_KEY,
+                    "Content-Type": "application/json"
+                }
             )
-            self.azure_deployment = "text-embedding-ada-002"  # Update with your deployment name
-        else:
-            self.azure_client = None
-            
-        # Fallback to standard OpenAI if available
-        if os.getenv("OPENAI_API_KEY"):
-            self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            self.model = "text-embedding-ada-002"
-        else:
-            self.openai_client = None
+        self.cache = {}  # Simple in-memory cache
 
-    async def get_embedding(self, text: str) -> Optional[List[float]]:
-        """Get embedding for text, with fallback support"""
-        text = text.replace("\n", " ")
-        
+    async def generate_embedding(self, text: str) -> Optional[List[float]]:
+        """Generate embedding for text using available AI provider"""
+        if not text:
+            return None
+
+        # Check cache first
+        if text in self.cache:
+            return self.cache[text]
+
+        embedding = None
+        # Try Azure OpenAI first
+        if self.azure_client:
+            try:
+                embedding = await self._azure_embedding(text)
+                if embedding:
+                    self.cache[text] = embedding
+                    return embedding
+            except Exception as e:
+                logger.warning(f"Azure OpenAI embedding failed: {str(e)}")
+
+        # Fallback to Ollama
         try:
-            # Try Azure OpenAI first
-            if self.azure_client:
-                try:
-                    response = await asyncio.to_thread(
-                        self.azure_client.embeddings.create,
-                        input=[text],
-                        model=self.azure_deployment
-                    )
-                    return response.data[0].embedding
-                except Exception as e:
-                    logger.warning(f"Azure OpenAI embedding failed: {e}")
-            
-            # Fallback to standard OpenAI
-            if self.openai_client:
-                response = await asyncio.to_thread(
-                    self.openai_client.embeddings.create,
-                    input=[text],
-                    model=self.model
-                )
-                return response.data[0].embedding
-            
-            logger.error("No embedding provider available")
-            return None
-            
+            embedding = await self._ollama_embedding(text)
+            if embedding:
+                self.cache[text] = embedding
+                return embedding
         except Exception as e:
-            logger.error(f"Failed to generate embedding: {e}")
-            return None
-    
-    def get_embedding_sync(self, text: str) -> Optional[List[float]]:
-        """Synchronous version for backward compatibility"""
-        return asyncio.run(self.get_embedding(text))
+            logger.warning(f"Ollama embedding failed: {str(e)}")
 
-    async def generate_embeddings_for_all_items(self):
-        """Generate embeddings for all items that don't have them"""
-        pool = await get_db_pool()
-        async with pool.acquire() as conn:
-            # Fetch items that do not have embeddings
-            items = await conn.fetch(
-                "SELECT id, summary, content FROM items WHERE embedding IS NULL AND status = 'completed'"
-            )
-            
-            generated = 0
-            failed = 0
-            
-            for item in items:
-                # Use summary if available, otherwise use content
-                text = item['summary'] or item['content']
-                if text:
-                    embedding = await self.get_embedding(text)
-                    if embedding:
-                        await conn.execute(
-                            "UPDATE items SET embedding = $1 WHERE id = $2",
-                            embedding,
-                            item['id']
-                        )
-                        generated += 1
-                        logger.info(f"Generated embedding for item {item['id']}")
-                    else:
-                        failed += 1
-                        logger.error(f"Failed to generate embedding for item {item['id']}")
-            
-            logger.info(f"Embedding generation complete: {generated} generated, {failed} failed")
-            return {"generated": generated, "failed": failed}
+        # Placeholder for Sentence Transformers or other local models
+        # if settings.USE_SENTENCE_TRANSFORMERS:
+        #     try:
+        #         embedding = await self._sentence_transformer_embedding(text)
+        #         if embedding:
+        #             self.cache[text] = embedding
+        #             return embedding
+        #     except Exception as e:
+        #         logger.warning(f"Sentence Transformer embedding failed: {str(e)}")
 
+        logger.error(f"Failed to generate embedding for text: {text[:50]}...")
+        return None
+
+    async def batch_generate(self, texts: List[str]) -> List[Optional[List[float]]]:
+        """Generate embeddings for multiple texts efficiently"""
+        if not texts:
+            return []
+
+        # Try Azure OpenAI batch processing first
+        if self.azure_client:
+            try:
+                embeddings = await self._azure_batch_embedding(texts)
+                if embeddings and len(embeddings) == len(texts):
+                    # Cache results from batch operation
+                    for i, text in enumerate(texts):
+                        self.cache[text] = embeddings[i]
+                    return embeddings
+            except Exception as e:
+                logger.warning(f"Azure OpenAI batch embedding failed, falling back to individual: {str(e)}")
+
+        # Fallback to individual generation for each text (concurrently)
+        tasks = [self.generate_embedding(text) for text in texts]
+        return await asyncio.gather(*tasks)
+
+    async def _ollama_embedding(self, text: str) -> Optional[List[float]]:
+        """Generate embedding using Ollama"""
+        response = await self.ollama_client.post(
+            "/api/embeddings",
+            json={
+                "model": settings.OLLAMA_EMBEDDING_MODEL,
+                "prompt": text
+            }
+        )
+        response.raise_for_status()
+        return response.json().get("embedding")
+
+    async def _azure_embedding(self, text: str) -> Optional[List[float]]:
+        """Generate embedding using Azure OpenAI for a single text"""
+        response = await self.azure_client.post(
+            f"{settings.AZURE_OPENAI_ENDPOINT}/openai/deployments/{settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT}/embeddings?api-version={settings.AZURE_OPENAI_API_VERSION}",
+            json={
+                "input": text
+            }
+        )
+        response.raise_for_status()
+        return response.json()["data"][0]["embedding"]
+
+    async def _azure_batch_embedding(self, texts: List[str]) -> Optional[List[List[float]]]:
+        """Generate embeddings using Azure OpenAI for a list of texts"""
+        if not texts:
+            return []
+        response = await self.azure_client.post(
+            f"{settings.AZURE_OPENAI_ENDPOINT}/openai/deployments/{settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT}/embeddings?api-version={settings.AZURE_OPENAI_API_VERSION}",
+            json={
+                "input": texts
+            }
+        )
+        response.raise_for_status()
+        # The API returns embeddings in the same order as the input texts
+        return [item["embedding"] for item in response.json()["data"]]
+
+    # async def _sentence_transformer_embedding(self, text: str) -> Optional[List[float]]:
+    #     """Generate embedding using a local Sentence Transformer model"""
+    #     # This would require a separate process or a way to load the model
+    #     # For now, it's a placeholder.
+    #     # Example:
+    #     # from sentence_transformers import SentenceTransformer
+    #     # model = SentenceTransformer('all-MiniLM-L6-v2')
+    #     # return model.encode(text).tolist()
+    #     raise NotImplementedError("Sentence Transformer integration not yet implemented.")
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.ollama_client.aclose()
+        if self.azure_client:
+            await self.azure_client.aclose()
 
 # Create singleton instance
 embedding_service = EmbeddingService()
-
-

@@ -4,6 +4,7 @@ import asyncpg
 import json
 
 from app.core.capture_engine import CaptureEngine
+from app.db.database import get_db_pool
 from uuid import UUID
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -38,7 +39,7 @@ async def handle_notification(connection, pid, channel, payload):
         capture_engine = CaptureEngine()
         
         # Get item details from database to process
-        pool = await asyncpg.create_pool(connection.get_dsn())
+        pool = await get_db_pool()
         async with pool.acquire() as conn:
             row = await conn.fetchrow("SELECT url FROM items WHERE id = $1", item_id)
             if row:
@@ -47,7 +48,6 @@ async def handle_notification(connection, pid, channel, payload):
                 asyncio.create_task(capture_engine.process_item(item_id, url))
             else:
                 logger.error(f"Item not found: {item_id}")
-        await pool.close()
         
     except ValueError as e:
         logger.error(f"Invalid UUID payload: {payload} - {e}")

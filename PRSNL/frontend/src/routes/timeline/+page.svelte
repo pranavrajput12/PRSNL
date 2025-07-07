@@ -22,6 +22,7 @@
     thumbnail_url?: string;
     duration?: number;
     platform?: string;
+    status?: string;
   };
 
   type TimelineGroup = {
@@ -620,6 +621,12 @@
                         <div class="item-header">
                           <a href="/item/{item.id}" class="item-title">
                             {item.title}
+                            {#if item.status === 'pending'}
+                              <span class="status-badge pending">
+                                <Spinner size="tiny" />
+                                Processing
+                              </span>
+                            {/if}
                           </a>
                           
                           <div class="item-actions">
@@ -656,7 +663,11 @@
                             />
                           </div>
                         {:else if viewMode !== 'compact'}
-                          <p class="item-summary">{item.summary}</p>
+                          {#if item.status === 'pending'}
+                            <p class="item-summary pending">Processing content...</p>
+                          {:else}
+                            <p class="item-summary">{item.summary || ''}</p>
+                          {/if}
                         {/if}
                         
                         {#if item.tags?.length > 0}
@@ -712,6 +723,12 @@
                       <div class="item-header">
                         <a href="/item/{item.id}" class="item-title">
                           {item.title}
+                          {#if item.status === 'pending'}
+                            <span class="status-badge pending">
+                              <Spinner size="tiny" />
+                              Processing
+                            </span>
+                          {/if}
                         </a>
                         
                         <div class="item-actions">
@@ -747,8 +764,12 @@
                             videoId={item.id}
                           />
                         </div>
-                      {:else if viewMode !== 'compact' && item.summary}
-                        <p class="item-summary">{item.summary}</p>
+                      {:else if viewMode !== 'compact'}
+                        {#if item.status === 'pending'}
+                          <p class="item-summary pending">Processing content...</p>
+                        {:else if item.summary}
+                          <p class="item-summary">{item.summary}</p>
+                        {/if}
                       {/if}
                       
                       {#if item.tags?.length > 0}
@@ -1070,6 +1091,28 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     margin: 0 0 1rem;
+  }
+  
+  .item-summary.pending {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 100px;
+    margin-left: 0.5rem;
+  }
+  
+  .status-badge.pending {
+    background: rgba(255, 170, 0, 0.1);
+    color: #ff9500;
+    border: 1px solid rgba(255, 170, 0, 0.3);
   }
   
   .item-video {

@@ -1,3 +1,11 @@
+# ⚠️ ARCHIVED - See PROJECT_STATUS.md
+This file has been archived. For current information, please see:
+- **Current Status & Context**: PROJECT_STATUS.md
+- **Task History**: CONSOLIDATED_TASK_TRACKER.md
+
+---
+[Original content below]
+
 # PRSNL Current State Summary
 
 ## Date: 2025-07-07

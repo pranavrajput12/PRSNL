@@ -359,6 +359,81 @@ Health check endpoint.
 }
 ```
 
+### 12. Analytics
+
+#### GET `/api/analytics/trends`
+Retrieves content trends over a specified timeframe.
+
+**Query Parameters:**
+- `timeframe` (optional): e.g., "7d", "30d", "90d", "1y" (default: "7d")
+
+**Response:**
+```json
+{
+  "trends": [
+    {
+      "date": "2025-07-01",
+      "count": 5
+    },
+    {
+      "date": "2025-07-02",
+      "count": 8
+    }
+  ]
+}
+```
+
+#### GET `/api/analytics/topics`
+Retrieves top topics or tags based on frequency.
+
+**Query Parameters:**
+- `limit` (optional): Number of topics to return (default: 10)
+
+**Response:**
+```json
+{
+  "topics": [
+    {
+      "topic": "technology",
+      "count": 42
+    },
+    {
+      "topic": "ai",
+      "count": 35
+    }
+  ]
+}
+```
+
+#### GET `/api/analytics/usage_patterns`
+Retrieves general usage patterns (e.g., total items, average items per day).
+
+**Response:**
+```json
+{
+  "total_items": 1234,
+  "average_items_per_day_last_30_days": 15.5
+}
+```
+
+#### GET `/api/analytics/ai_insights`
+Retrieves AI-generated insights (placeholder for future AI analysis results).
+
+**Query Parameters:**
+- `limit` (optional): Number of insights to return (default: 5)
+
+**Response:**
+```json
+{
+  "insights": [
+    {
+      "id": 1,
+      "insight": "AI suggests focusing on 'Productivity Hacks' based on recent captures."
+    }
+  ]
+}
+```
+
 ## Error Responses
 
 All endpoints return consistent error responses:
@@ -408,11 +483,6 @@ Static media files are served from:
 Sizes: small (150x150), medium (300x300), large (600x600)
 
 ## Future Endpoints
-
-### Insights Dashboard
-- `GET /api/insights/topics` - Topic clusters
-- `GET /api/insights/trends` - Content trends over time
-- `GET /api/insights/graph` - Knowledge graph data
 
 ### Collaboration
 - `POST /api/share/item/{id}` - Share an item

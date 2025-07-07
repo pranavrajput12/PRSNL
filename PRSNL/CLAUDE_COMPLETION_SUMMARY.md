@@ -1,3 +1,11 @@
+# ⚠️ ARCHIVED - See CONSOLIDATED_TASK_TRACKER.md
+This file has been archived. For current information, please see:
+- **Current Status & Context**: PROJECT_STATUS.md
+- **Task History**: CONSOLIDATED_TASK_TRACKER.md
+
+---
+[Original content below]
+
 # Claude's Completion Summary - 2025-07-06
 
 ## ✅ Completed Tasks

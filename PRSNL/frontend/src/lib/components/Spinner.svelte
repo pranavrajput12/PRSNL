@@ -1,11 +1,12 @@
-<script>
-  export let size = 'medium';
+<script lang="ts">
+  export let size: 'tiny' | 'small' | 'medium' | 'large' = 'medium';
   export let center = false;
   export let fullPage = false;
   export let message = '';
   
   // Size in pixels
   const sizeMap = {
+    tiny: 12,
     small: 16,
     medium: 24,
     large: 40

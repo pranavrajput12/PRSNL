@@ -17,9 +17,11 @@ class Settings(BaseSettings):
     # LLM
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     AZURE_OPENAI_API_KEY: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_DEPLOYMENT: str = "gpt-4o"
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = "text-embedding-ada-002"
     AZURE_OPENAI_API_VERSION: str = "2025-01-01-preview"
 
     # Telegram Bot
@@ -34,6 +36,13 @@ class Settings(BaseSettings):
     # Search
     SEARCH_RESULTS_LIMIT: int = 50
     SEARCH_MIN_SCORE: float = 0.1
+    
+    # Cache
+    REDIS_URL: str = "redis://localhost:6379"
+    CACHE_ENABLED: bool = True
+    CACHE_TTL_SECONDS: int = 3600  # 1 hour default
+    CACHE_TTL_SEARCH: int = 300  # 5 minutes for search results
+    CACHE_TTL_ITEM: int = 1800  # 30 minutes for items
     
     class Config:
         env_file = ".env"

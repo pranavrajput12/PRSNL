@@ -19,6 +19,7 @@ class TimelineItem(BaseModel):
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
     file_path: Optional[str] = None
+    status: str = "completed"  # Add status field
     createdAt: datetime  # Frontend expects camelCase
     updatedAt: Optional[datetime] = None  # Frontend expects camelCase
     tags: List[str] = []
@@ -56,6 +57,7 @@ async def get_timeline(
                     i.thumbnail_url,
                     i.duration,
                     i.file_path,
+                    i.status,
                     i.created_at,
                     i.updated_at,
                     COALESCE(
@@ -65,7 +67,7 @@ async def get_timeline(
                 FROM items i
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
-                WHERE i.status = 'completed'
+                WHERE i.status IN ('completed', 'bookmark', 'pending')
                 GROUP BY i.id
                 ORDER BY i.created_at DESC
                 LIMIT $1 OFFSET $2
@@ -90,6 +92,7 @@ async def get_timeline(
                     "thumbnail_url": thumbnail_url,
                     "duration": row["duration"],
                     "file_path": row["file_path"],
+                    "status": row["status"],
                     "createdAt": row["created_at"].isoformat() if row["created_at"] else None,  # Frontend expects camelCase
                     "updatedAt": row["updated_at"].isoformat() if row["updated_at"] else None,  # Frontend expects camelCase
                     "tags": row["tags"]
@@ -99,7 +102,7 @@ async def get_timeline(
             count_query = """
                 SELECT COUNT(*)
                 FROM items
-                WHERE status = 'completed'
+                WHERE status IN ('completed', 'bookmark', 'pending')
             """
             total_count = await conn.fetchval(count_query)
             

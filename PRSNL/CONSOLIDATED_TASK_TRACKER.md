@@ -1,8 +1,10 @@
 # 📊 PRSNL Project - Consolidated Task Tracker
-*Last Updated: 2025-07-06*
+*Last Updated: 2025-07-07 by Claude*
 
 ## 🎯 Project Overview
 PRSNL is a personal knowledge management system with video processing, AI-powered search, and content organization capabilities.
+
+⚠️ **IMPORTANT**: Use PROJECT_STATUS.md for current context. This file tracks detailed task history.
 
 ## 👥 Model Assignments & Status
 
@@ -28,6 +30,12 @@ PRSNL is a personal knowledge management system with video processing, AI-powere
   - Added intersection observer for lazy video loading
   - Note: Virtual scrolling currently disabled due to rendering issues
 
+- [x] **WINDSURF-2025-07-07-001**: TypeScript Migration & Fixes
+  - Fixed TypeScript errors in frontend components
+  - Added proper types to API interfaces
+  - Fixed AI Insights Dashboard integration
+  - Resolved D3.js type issues
+
 #### 📋 Pending Tasks
 - [ ] **WINDSURF-2025-07-06-005**: Semantic Search UI (P0)
   - Implement "Find Similar" button on search results
@@ -35,10 +43,10 @@ PRSNL is a personal knowledge management system with video processing, AI-powere
   - Natural language search input
   - Files: `/frontend/src/routes/search/+page.svelte`, `/frontend/src/lib/components/SimilarItems.svelte`
 
-- [ ] **WINDSURF-2025-07-06-006**: AI Insights Dashboard (P1)
-  - Create `/insights` route with visualizations
+- [ ] **WINDSURF-2025-07-06-006**: AI Insights Dashboard (P1) - IN PROGRESS
+  - Create `/insights` route with visualizations ✓ (partial)
   - Topic clusters using D3.js
-  - Content trends and knowledge graph
+  - Content trends and knowledge graph ✓ (components created)
   - Files: `/frontend/src/routes/insights/+page.svelte`
 
 - [ ] **WINDSURF-2025-07-06-007**: Streaming UI Components (P1)
@@ -61,18 +69,21 @@ PRSNL is a personal knowledge management system with video processing, AI-powere
 - [x] Telegram bot integration
 - [x] Performance optimizations
 
-#### 📋 Pending Tasks
-- [ ] **GEMINI-2025-07-06-001**: Embedding Infrastructure (P0)
-  - Implement embedding service for semantic search
+- [x] **GEMINI-2025-07-06-001**: Embedding Infrastructure (P0) - COMPLETED
+  - Implemented embedding service for semantic search
   - PostgreSQL pgvector integration
-  - Batch processing for existing items
+  - Support for OpenAI and Ollama embeddings
   - Files: `/backend/app/services/embedding_service.py`
 
-- [ ] **GEMINI-2025-07-06-002**: WebSocket Streaming (P1)
-  - Real-time AI response streaming
-  - Connection management
-  - Integration with LLM processor
+- [x] **GEMINI-2025-07-06-002**: WebSocket Base Infrastructure (P1) - COMPLETED
+  - Created WebSocket endpoint structure
+  - Basic connection management
   - Files: `/backend/app/api/ws.py`
+  - Completed LLM streaming implementation in `llm_processor.py`
+  - Added streaming endpoints in `ws.py` for AI responses and tag suggestions
+
+- [x] **GEMINI-2025-07-07-002**: Performance Optimization - Batch Embedding (P1) - COMPLETED
+  - Implemented batch processing for Azure OpenAI embeddings in `embedding_service.py`.
 
 ### 🤖 CLAUDE (Integration/Documentation)
 **Focus**: API Integration, AI Enhancement, Documentation
@@ -108,16 +119,34 @@ graph TD
     G --> C
 ```
 
+#### 📋 Recent Work (2025-07-07)
+- [x] **CLAUDE-2025-07-07-001**: Fixed Python Architecture Issues
+  - Resolved ARM64 compatibility for Python packages
+  - Fixed pydantic, asyncpg, pandas installation issues
+  - Backend now starts without import errors
+
+- [x] **CLAUDE-2025-07-07-002**: Frontend TypeScript Fixes
+  - Fixed top-level return error in capture page
+  - Fixed property name mismatches in API client
+  - Added d3 dependency for visualization components
+
+- [x] **CLAUDE-2025-07-07-003**: Documentation Consolidation
+  - Created unified PROJECT_STATUS.md
+  - Updated task tracking system
+  - Prepared for archiving redundant files
+
 ## 📈 Progress Summary
-- **Total Tasks**: 26
-- **Completed**: 18 (69%)
-- **In Progress**: 2 (8%)
-- **Pending**: 6 (23%)
+- **Total Tasks**: 32
+- **Completed**: 25 (78%)
+- **In Progress**: 2 (6%)
+- **Pending**: 5 (16%)
 
 ## 🚧 Current Blockers
-1. **aiofiles import error** in vision.py - needs Docker container rebuild
+1. ~~**aiofiles import error**~~ - RESOLVED with package reinstall
 2. **Virtual scrolling** interfering with timeline display - disabled temporarily
-3. **Embedding service** needed before semantic search UI can be fully implemented
+3. ~~**Embedding service**~~ - COMPLETED by Gemini
+4. **LLM streaming implementation** - Partially complete, needs finishing
+5. **D3.js TypeScript errors** - Some visualization components need type fixes
 
 ## 📝 Documentation Status
 - ✅ API Documentation (`API_DOCUMENTATION.md`)
