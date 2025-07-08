@@ -6,11 +6,11 @@
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
-  import SmartFeed from '$lib/components/SmartFeed.svelte';
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
   import GlassCard from '$lib/components/GlassCard.svelte';
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   import TagList from '$lib/components/TagList.svelte';
+  import Calendar3D from '$lib/components/Calendar3D.svelte';
   
   type Item = {
     id: string;
@@ -29,6 +29,7 @@
   };
   
   let recentItems: Item[] = [];
+  let timelineItems: Item[] = [];
   let stats = {
     totalItems: 0,
     todayItems: 0,
@@ -38,7 +39,6 @@
   let mounted = false;
   let isLoading = true;
   let error: Error | null = null;
-  let viewMode: 'smart' | 'classic' = 'smart';
   
   // Search state
   let searchQuery = '';
@@ -71,7 +71,11 @@
       const timelineResponse = await getTimeline(1);
       console.log('Timeline response:', timelineResponse);
       
+      // Get all items for the calendar
+      timelineItems = timelineResponse.items || [];
+      // Get recent items for display
       recentItems = timelineResponse.items?.slice(0, 6) || [];
+      console.log('Timeline items:', timelineItems.length);
       console.log('Recent items:', recentItems);
       console.log('First item detail:', recentItems[0]);
       
@@ -374,93 +378,25 @@
     </div>
   </div>
   
-  <div class="recent-section">
+  <div class="calendar-section">
     <div class="section-header">
-      <h2>{viewMode === 'smart' ? 'Your Knowledge Feed' : 'Recent Captures'}</h2>
-      <div class="view-controls">
-        <button 
-          class="view-toggle"
-          class:active={viewMode === 'smart'}
-          on:click={() => viewMode = 'smart'}
-        >
-          <Icon name="sparkles" size="small" />
-          Smart Feed
-        </button>
-        <button 
-          class="view-toggle"
-          class:active={viewMode === 'classic'}
-          on:click={() => viewMode = 'classic'}
-        >
-          <Icon name="grid" size="small" />
-          Classic View
-        </button>
-        <a href="/timeline" class="view-all">
-          View all
-          <Icon name="arrow-right" size="small" />
-        </a>
-      </div>
+      <h2>Your Knowledge Calendar</h2>
+      <a href="/timeline" class="view-all">
+        View Timeline
+        <Icon name="arrow-right" size="small" />
+      </a>
     </div>
     
-    {#if viewMode === 'smart'}
-      <SmartFeed mode="smart" />
-    {:else if isLoading}
-      <SkeletonLoader type="card" count={6} />
-    {:else if recentItems.length > 0}
-      <div class="items-grid">
-        {#each recentItems as item, i}
-          <PremiumInteractions variant="hover" intensity="subtle">
-            <GlassCard variant="default" interactive={true}>
-              <div class="item-card {item.status === 'pending' ? 'pending' : ''}" style="animation-delay: {300 + i * 50}ms">
-            <div class="item-header">
-              <h4>{item.title}</h4>
-              <div class="item-header-icons">
-                {#if item.status === 'pending'}
-                  <div class="pending-indicator" title="Processing...">
-                    <Spinner size="small" />
-                  </div>
-                {/if}
-                <Icon name={item.item_type === 'video' ? 'video' : 'external-link'} size="small" color="var(--text-muted)" />
-              </div>
-            </div>
-            
-            {#if item.item_type === 'video' && item.file_path}
-              <div class="item-video">
-                <VideoPlayer 
-                  src={`/api/videos/${item.id}/stream`}
-                  thumbnail={item.thumbnail_url}
-                  title={item.title}
-                  duration={item.duration}
-                />
-              </div>
-            {:else if item.status === 'pending'}
-              <p class="pending-message">Processing content...</p>
-            {:else}
-              <p>{item.summary}</p>
-            {/if}
-            <div class="item-footer">
-              <time>{new Date(item.createdAt).toLocaleDateString()}</time>
-              <TagList tags={item.tags} itemId={item.id} />
-            </div>
-              </div>
-            </GlassCard>
-          </PremiumInteractions>
-        {/each}
-      </div>
+    {#if isLoading}
+      <SkeletonLoader type="card" count={1} />
     {:else}
-      <div class="empty-state">
-        <div class="empty-icon animate-pulse">
-          <Icon name="capture" size="large" color="var(--text-muted)" />
-        </div>
-        <p>No items yet. Press <span class="keyboard-hint">⌘N</span> to capture your first item.</p>
-        <AnimatedButton 
-          variant="primary" 
-          size="large" 
-          icon="plus"
-          on:click={() => window.location.href = '/capture'}
-        >
-          Start Capturing
-        </AnimatedButton>
-      </div>
+      <Calendar3D 
+        items={timelineItems} 
+        onDateClick={(date, items) => {
+          const dateStr = date.toISOString().split('T')[0];
+          window.location.href = `/timeline?date=${dateStr}`;
+        }}
+      />
     {/if}
   </div>
 </div>
@@ -654,7 +590,7 @@
     margin-top: 0.25rem;
   }
   
-  .recent-section {
+  .calendar-section {
     margin: 4rem 0;
   }
   
@@ -667,38 +603,9 @@
   
   .section-header h2 {
     margin: 0;
-  }
-  
-  .view-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .view-toggle {
-    padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .view-toggle:hover {
-    background: var(--bg-hover);
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--text-primary);
-  }
-  
-  .view-toggle.active {
-    background: var(--accent);
-    color: var(--accent-text);
-    border-color: var(--accent);
   }
   
   .view-all {
@@ -708,7 +615,6 @@
     color: var(--accent);
     font-weight: 600;
     transition: all var(--transition-fast);
-    margin-left: auto;
   }
   
   .view-all:hover {

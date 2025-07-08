@@ -5,6 +5,7 @@
   import { cubicOut } from 'svelte/easing';
   import Icon from '$lib/components/Icon.svelte';
   import StreamingMessage from '$lib/components/StreamingMessage.svelte';
+  import ModeOnboarding from '$lib/components/ModeOnboarding.svelte';
   import { formatDate } from '$lib/utils/date';
   import { createStreamingConnection, type StreamingWebSocket } from '$lib/utils/websocket';
   
@@ -59,6 +60,8 @@
   let contextItems: string[] = [];
   let showModeSelector = false;
   let currentStreamingMessage: ChatMessage | null = null;
+  let showModeOnboarding = false;
+  let onboardingMode: ChatMode | null = null;
   
   // Visual effects
   const orbPositions = Array(5).fill(null).map(() => ({
@@ -366,6 +369,58 @@
   });
 </script>
 
+<!-- Mode Selector Popup - Outside of everything -->
+{#if showModeSelector}
+  <div class="mode-selector-overlay" on:click={() => showModeSelector = false}>
+    <div class="mode-selector" on:click|stopPropagation>
+      <h3>Choose your thinking mode</h3>
+      <div class="modes-grid">
+        {#each chatModes as mode}
+          <button
+            class="mode-card"
+            class:active={selectedMode === mode.id}
+            on:click={() => {
+              selectedMode = mode.id;
+              currentMode = mode;
+              showModeSelector = false;
+              
+              // Check if user has seen onboarding for this mode
+              const seenOnboarding = localStorage.getItem(`onboarding_${mode.id}_seen`);
+              if (!seenOnboarding) {
+                onboardingMode = mode;
+                showModeOnboarding = true;
+              }
+              
+              console.log('Mode selected:', mode.id);
+            }}
+            style="--mode-color: {mode.color}"
+          >
+            <div class="mode-icon">
+              <Icon name={mode.icon} size={24} />
+            </div>
+            <h4>{mode.name}</h4>
+            <p>{mode.description}</p>
+            <div class="mode-bg-gradient {mode.bgGradient}"></div>
+          </button>
+        {/each}
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Mode Onboarding -->
+{#if showModeOnboarding && onboardingMode}
+  <ModeOnboarding 
+    mode={onboardingMode}
+    onComplete={() => {
+      // Mark this mode's onboarding as seen
+      localStorage.setItem(`onboarding_${onboardingMode.id}_seen`, 'true');
+      showModeOnboarding = false;
+      onboardingMode = null;
+    }}
+  />
+{/if}
+
 <div class="chat-page" style="--mode-color: {currentMode.color}">
   <!-- Animated background -->
   <div class="background-animation">
@@ -437,33 +492,6 @@
         </button>
       </div>
       
-      {#if showModeSelector}
-        <div class="mode-selector-overlay" on:click={() => showModeSelector = false}>
-          <div class="mode-selector" on:click|stopPropagation>
-            <h3>Choose your thinking mode</h3>
-            <div class="modes-grid">
-              {#each chatModes as mode}
-                <button
-                  class="mode-card"
-                  class:active={selectedMode === mode.id}
-                  on:click={() => {
-                    selectedMode = mode.id;
-                    showModeSelector = false;
-                  }}
-                  style="--mode-color: {mode.color}"
-                >
-                  <div class="mode-icon">
-                    <Icon name={mode.icon} size={24} />
-                  </div>
-                  <h4>{mode.name}</h4>
-                  <p>{mode.description}</p>
-                  <div class="mode-bg-gradient {mode.bgGradient}"></div>
-                </button>
-              {/each}
-            </div>
-          </div>
-        </div>
-      {/if}
     </div>
   </div>
   
@@ -648,6 +676,7 @@
 <style>
   .chat-page {
     height: 100vh;
+    width: 100%;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
@@ -742,31 +771,39 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 2px solid var(--mode-color);
     border-radius: 2rem;
     color: white;
     cursor: pointer;
     transition: all 0.3s;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
   
   .mode-indicator:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--mode-color);
-    box-shadow: 0 0 20px rgba(var(--mode-color), 0.3);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4), 0 0 30px var(--mode-color);
   }
   
   /* Mode Selector */
   .mode-selector-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    z-index: 100;
+    z-index: 9999;
     backdrop-filter: blur(10px);
+    padding: 2rem;
+    padding-top: 10vh;
+    overflow-y: auto;
   }
   
   .mode-selector {
@@ -775,7 +812,42 @@
     padding: 2rem;
     max-width: 600px;
     width: 90%;
+    max-height: 70vh;
+    overflow-y: auto;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+    z-index: 10000;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .mode-selector::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .mode-selector::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  .mode-selector::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+  
+  .mode-selector::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
   
   .mode-selector h3 {
@@ -850,10 +922,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    max-width: 900px;
-    margin: 0 auto;
     width: 100%;
-    padding: 0 2rem;
+    height: calc(100vh - 80px);
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -862,8 +932,11 @@
   .messages-area {
     flex: 1;
     overflow-y: auto;
-    padding: 2rem 0;
+    padding: 2rem 4rem;
     scroll-behavior: smooth;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
   }
   
   /* Welcome Message */
@@ -1155,14 +1228,18 @@
   
   /* Input Area */
   .input-area {
-    padding: 1.5rem 0 2rem;
+    padding: 1.5rem 4rem 2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 10, 10, 0.8);
+    background: rgba(10, 10, 10, 0.95);
     backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 10;
   }
   
   .input-container {
-    max-width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
   }
   
   .input-wrapper {
