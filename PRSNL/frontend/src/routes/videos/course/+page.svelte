@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import { getItem } from '$lib/api';
   
   let course: any = null;
   let currentModuleIndex = 0;
@@ -43,15 +44,12 @@
     
     const module = course.modules[currentModuleIndex];
     try {
-      const response = await fetch(`/api/items/${module.video_id}`);
-      if (response.ok) {
-        const item = await response.json();
-        currentVideo = {
-          ...item,
-          ...item.metadata?.video,
-          ...module
-        };
-      }
+      const item = await getItem(module.video_id);
+      currentVideo = {
+        ...item,
+        ...item.metadata?.video,
+        ...module
+      };
     } catch (error) {
       console.error('Error loading video:', error);
     }

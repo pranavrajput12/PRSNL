@@ -28,9 +28,8 @@ type RequestInit = {
 };
 
 // Get the API URL from environment variables or use default
-// In production (Docker), use the full URL; in dev, use relative URL for Vite proxy
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 
-  (import.meta.env.MODE === 'production' ? 'http://localhost:8001/api' : '/api');
+// Always use relative URL so it works with proxies (nginx in prod, vite in dev)
+const API_BASE_URL = '/api';
 
 /**
  * Custom error class for API errors
@@ -146,22 +145,22 @@ export async function searchItems(
       offset: 0
     };
     
-    const results = await fetchWithErrorHandling<any[]>('/search/semantic', {
+    const response = await fetchWithErrorHandling<{items: any[]}>('/search/semantic', {
       method: 'POST',
       body: JSON.stringify(semanticRequest),
     });
     
     // Transform to match SearchResponse format
     return {
-      results: results.map(item => ({
+      results: (response.items || []).map(item => ({
         id: item.id,
         title: item.title,
         url: item.url,
         snippet: item.summary || '',
         tags: item.tags || [],
-        created_at: item.created_at,
-        type: item.item_type || 'article',
-        similarity_score: item.similarity
+        created_at: item.createdAt || item.created_at,
+        type: item.type || item.item_type || 'article',
+        similarity_score: item.similarity_score || item.similarity
       }))
     };
   }
@@ -293,8 +292,8 @@ export async function getAISuggestions(url: string): Promise<{
 /**
  * Get AI insights data for the dashboard
  */
-export async function getInsights(timeRange: string = 'week'): Promise<InsightsResponse> {
-  return fetchWithErrorHandling<InsightsResponse>(`/insights?timeRange=${timeRange}`);
+export async function getInsights(timeRange: string = '30d'): Promise<InsightsResponse> {
+  return fetchWithErrorHandling<InsightsResponse>(`/insights?time_range=${timeRange}`);
 }
 
 /**

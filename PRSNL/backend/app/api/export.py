@@ -35,9 +35,10 @@ async def export_json(
                    array_agg(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) as tags,
                    array_agg(DISTINCT jsonb_build_object(
                        'id', a.id,
-                       'type', a.type,
+                       'type', a.file_type,
                        'file_path', a.file_path,
-                       'file_name', a.file_name,
+                       'mime_type', a.mime_type,
+                       'file_size', a.file_size,
                        'metadata', a.metadata
                    )) FILTER (WHERE a.id IS NOT NULL) as attachments
             FROM items i

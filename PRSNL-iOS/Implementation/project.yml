@@ -10,8 +10,6 @@ settings:
     SWIFT_VERSION: 5.0
     DEVELOPMENT_TEAM: ABC12DEF34 # Replace with your actual Team ID
 
-# No external packages needed - all frameworks are system-provided
-
 targets:
   PRSNL:
     type: application
@@ -56,8 +54,15 @@ targets:
     dependencies:
       - sdk: CoreData.framework
       - sdk: SwiftUI.framework
-      - framework: Accelerate.framework
-      - framework: Security.framework
+      - sdk: UIKit.framework
+      - sdk: Foundation.framework
+      - sdk: Security.framework
+      - sdk: Accelerate.framework
+      - sdk: Combine.framework
+      - sdk: AVKit.framework
+      - sdk: AVFoundation.framework
+      - sdk: UserNotifications.framework
+      - sdk: CoreSpotlight.framework
 
   PRSNLWidgets:
     type: app-extension
@@ -120,6 +125,20 @@ targets:
       - target: PRSNL
       - sdk: SwiftUI.framework
       - sdk: CoreData.framework
+
+  PRSNLTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: 17.0
+    sources:
+      - path: PRSNLTests
+    dependencies:
+      - target: PRSNL
+      - sdk: XCTest.framework
+    settings:
+      base:
+        INFOPLIST_FILE: PRSNLTests/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: ai.prsnl.tests
 
 schemes:
   PRSNL:

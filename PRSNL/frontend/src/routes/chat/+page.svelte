@@ -240,6 +240,8 @@
         console.debug('[Chat] Message complete:', data);
         if (currentStreamingMessage) {
           currentStreamingMessage.isStreaming = false;
+          // Don't append the message content again - we already have it from chunks
+          // Only add the metadata
           currentStreamingMessage.citations = data.citations;
           currentStreamingMessage.suggestedItems = data.suggested_items;
           currentStreamingMessage.insights = data.insights;
@@ -535,12 +537,28 @@
       
       {#each messages as message}
         <div class="message-wrapper {message.type}">
-          <StreamingMessage
-            message={message.content}
-            isStreaming={message.isStreaming || false}
-            role={message.type}
-            onComplete={() => {}}
-          />
+          {#if message.isStreaming}
+            <!-- For streaming messages, show content directly without character animation -->
+            <div class="message-container {message.type}">
+              <div class="avatar">
+                <Icon name={message.type === 'user' ? 'user' : 'brain'} />
+              </div>
+              <div class="message-content">
+                <div class="message-bubble">
+                  <span class="text">{message.content}</span>
+                  <span class="cursor">|</span>
+                </div>
+              </div>
+            </div>
+          {:else}
+            <!-- For completed messages, use the StreamingMessage component without streaming -->
+            <StreamingMessage
+              message={message.content}
+              isStreaming={false}
+              role={message.type}
+              onComplete={() => {}}
+            />
+          {/if}
           
           {#if message.citations && message.citations.length > 0}
             <div class="message-metadata citations">
@@ -958,6 +976,80 @@
   .message-wrapper {
     margin-bottom: 2rem;
     animation: messageSlide 0.4s ease-out;
+  }
+  
+  /* Inline message styles for streaming */
+  .message-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .message-container.user {
+    flex-direction: row-reverse;
+  }
+  
+  .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .user .avatar {
+    background: var(--mode-color);
+    color: white;
+  }
+  
+  .message-content {
+    flex: 1;
+    max-width: 70%;
+  }
+  
+  .user .message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .message-bubble {
+    position: relative;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.25rem;
+    display: inline-block;
+  }
+  
+  .user .message-bubble {
+    background: var(--mode-color);
+    color: white;
+    border: none;
+  }
+  
+  .text {
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: var(--mode-color);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 1s infinite;
+  }
+  
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
   }
   
   @keyframes messageSlide {

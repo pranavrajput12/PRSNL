@@ -1,130 +1,97 @@
 import SwiftUI
 
-// Import the standalone ItemDetailView
-import Foundation
-
 struct TimelineView: View {
     @StateObject private var viewModel = TimelineViewModel()
-    @State private var showingTagFilter = false
-    
+    @State private var selectedItem: Item?
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Background
-                Color.prsnlBackground
-                    .ignoresSafeArea()
-                
-                // Content
                 if viewModel.items.isEmpty && !viewModel.isLoading {
-                    // Empty state
                     emptyStateView
                 } else {
-                    // Timeline list
-                    timelineListView
-                    
-                    // Offline banner
-                    if viewModel.isOfflineMode {
-                        offlineBanner
-                    }
-                    
-                    // Sync status banner
-                    if case .syncing = viewModel.syncStatus {
-                        syncingBanner
-                    }
-                    
-                    // Real-time updates disabled in minimal version
-                    // TODO: Re-enable when AppState is restored
+                    timelineList
                 }
                 
-                // Error banner
-                if let error = viewModel.error {
-                    VStack {
-                        Text(error)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(8)
-                            .padding()
-                        
-                        Spacer()
-                    }
+                if viewModel.isLoading && viewModel.items.isEmpty {
+                    ProgressView("Loading timeline...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color(.systemBackground))
                 }
             }
             .navigationTitle("Timeline")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        showingTagFilter.toggle()
+                        Task { await viewModel.refresh() }
                     }) {
-                        Image(systemName: "tag")
-                            .foregroundColor(viewModel.selectedTags.isEmpty ? .white : .red)
+                        Image(systemName: "arrow.clockwise")
                     }
+                    .disabled(viewModel.isLoading)
                 }
             }
-            .sheet(isPresented: $showingTagFilter) {
-                tagFilterView
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
             }
-            .task {
-                await viewModel.loadInitialTimeline()
-            }
-            // Real-time updates disabled in minimal version
-            // TODO: Re-enable when AppState is restored
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(item: $selectedItem) { item in
+            ItemDetailView(item: item)
         }
     }
-    
-    // MARK: - Subviews
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 64))
-                .foregroundColor(.prsnlTextSecondary)
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
             
-            Text("No items found")
+            Text("No items in timeline")
                 .font(.title2)
-                .foregroundColor(.prsnlText)
+                .fontWeight(.semibold)
             
-            if !viewModel.selectedTags.isEmpty {
-                Text("Try removing some tag filters")
-                    .foregroundColor(.prsnlTextSecondary)
-                
-                Button("Clear Filters") {
-                    viewModel.selectedTags = []
-                    Task {
-                        await viewModel.loadInitialTimeline()
-                    }
-                }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+            Text("Your captured knowledge will appear here")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.top)
             }
+            
+            Button("Retry") {
+                Task { await viewModel.refresh() }
+            }
+            .buttonStyle(.borderedProminent)
         }
+        .padding()
     }
     
-    private var timelineListView: some View {
+    private var timelineList: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 12) {
                 ForEach(viewModel.items) { item in
-                    NavigationLink(destination: ItemDetailView(itemId: item.id)) {
-                        TimelineItemView(item: item, viewModel: viewModel)
-                            .onAppear {
-                                // Load more when reaching end of list
-                                if item.id == viewModel.items.last?.id {
-                                    Task {
-                                        await viewModel.loadMoreItems()
-                                    }
-                                }
+                    TimelineItemCard(item: item)
+                        .onTapGesture {
+                            selectedItem = item
+                        }
+                        .onAppear {
+                            if item.id == viewModel.items.last?.id {
+                                Task { await viewModel.loadMore() }
                             }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                        }
                 }
                 
-                if viewModel.isLoading {
+                if viewModel.isLoading && !viewModel.items.isEmpty {
                     ProgressView()
                         .padding()
-                        .frame(maxWidth: .infinity)
                 }
             }
             .padding()
@@ -133,294 +100,98 @@ struct TimelineView: View {
             await viewModel.refresh()
         }
     }
-    
-    private var tagFilterView: some View {
-        NavigationView {
-            ZStack {
-                Color.prsnlBackground.ignoresSafeArea()
-                
-                VStack {
-                    Text("Filter by tags")
-                        .font(.headline)
-                        .foregroundColor(.prsnlText)
-                        .padding(.top)
-                    
-                    // Selected tags
-                    if !viewModel.selectedTags.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(viewModel.selectedTags, id: \.self) { tag in
-                                    HStack {
-                                        Text(tag)
-                                            .foregroundColor(.white)
-                                        
-                                        Button(action: {
-                                            viewModel.toggleTag(tag)
-                                        }) {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundColor(.white.opacity(0.7))
-                                        }
-                                    }
-                                    .padding(.vertical, 4)
-                                    .padding(.horizontal, 8)
-                                    .background(Color.red)
-                                    .cornerRadius(16)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    
-                    // Available tags
-                    List {
-                        ForEach(viewModel.availableTags, id: \.self) { tag in
-                            Button(action: {
-                                viewModel.toggleTag(tag)
-                            }) {
-                                HStack {
-                                    Text(tag)
-                                        .foregroundColor(.prsnlText)
-                                    
-                                    Spacer()
-                                    
-                                    if viewModel.selectedTags.contains(tag) {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.red)
-                                    }
-                                }
-                            }
-                            .listRowBackground(Color.prsnlSurface)
-                        }
-                    }
-                    .listStyle(PlainListStyle())
-                }
-            }
-            .navigationTitle("Tag Filter")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        showingTagFilter = false
-                    }
-                }
-            }
-        }
-    }
-    
-    // Real-time updates banner disabled in minimal version
-    // TODO: Re-enable when AppState is restored
 }
 
-struct TimelineItemView: View {
+struct TimelineItemCard: View {
     let item: Item
-    let viewModel: TimelineViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Title
+            HStack {
+                Label(item.itemType.displayName, systemImage: item.itemType.icon)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text(item.createdAt.relative)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
             Text(item.title)
                 .font(.headline)
-                .foregroundColor(.prsnlText)
                 .lineLimit(2)
             
-            // Content preview
-            Text(item.content)
-                .font(.body)
-                .foregroundColor(.prsnlTextSecondary)
-                .lineLimit(3)
-            
-            // Item type badge
-            HStack {
-                Text(item.itemType.rawValue.capitalized)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(itemTypeColor(for: item.itemType))
-                    .foregroundColor(.white)
-                    .cornerRadius(4)
-                
-                if item.status == .archived {
-                    Text("Archived")
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(4)
-                }
-                
-                Spacer()
-                
-                // Access count if more than 1
-                if item.accessCount > 1 {
-                    Text("\(item.accessCount) views")
-                        .font(.caption)
-                        .foregroundColor(.prsnlTextSecondary)
-                }
+            if let summary = item.summary {
+                Text(summary)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
+            } else {
+                Text(item.content)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
             }
             
-            HStack {
-                // Tags
-                if !item.tags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(item.tags.prefix(3), id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 2)
-                                    .padding(.horizontal, 6)
-                                    .background(Color.red)
-                                    .cornerRadius(4)
-                            }
-                            
-                            if item.tags.count > 3 {
-                                Text("+\(item.tags.count - 3)")
-                                    .font(.caption)
-                                    .foregroundColor(.prsnlTextSecondary)
-                            }
+            if !item.tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(item.tags, id: \.self) { tag in
+                            Text("#\(tag)")
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.1))
+                                .foregroundColor(.blue)
+                                .cornerRadius(8)
                         }
                     }
-                    .frame(height: 24)
                 }
-                
-                Spacer()
-                
-                // Timestamp
-                Text(item.formattedCreationDate)
-                    .font(.caption)
-                    .foregroundColor(.prsnlTextSecondary)
-                
-                // Attachment indicator
-                if item.hasAttachments {
-                    Image(systemName: attachmentIcon(for: item))
-                        .foregroundColor(.prsnlTextSecondary)
-                }
-            }
-            
-            // Summary if available
-            if let summary = item.summary, !summary.isEmpty {
-                Text("Summary: \(summary)")
-                    .font(.caption)
-                    .foregroundColor(.prsnlTextSecondary)
-                    .lineLimit(2)
-                    .padding(.top, 4)
             }
         }
         .padding()
-        .background(Color.prsnlSurface)
+        .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
     }
-    
-    // Helper to determine item type color
-    private func itemTypeColor(for type: ItemType) -> Color {
-        switch type {
-        case .note:
-            return Color.blue
-        case .article:
-            return Color.green
-        case .video:
-            return Color.red
-        case .audio:
-            return Color.purple
-        case .image:
-            return Color.orange
-        case .document:
-            return Color.cyan
-        case .other:
-            return Color.gray
+}
+
+// MARK: - Extensions
+extension Date {
+    var relative: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: self, relativeTo: Date())
+    }
+}
+
+extension ItemType {
+    var displayName: String {
+        switch self {
+        case .article: return "Article"
+        case .note: return "Note"
+        case .video: return "Video"
+        case .image: return "Image"
+        case .audio: return "Audio"
+        case .document: return "Document"
+        case .other: return "Other"
         }
     }
     
-    // Helper to determine attachment icon
-    private func attachmentIcon(for item: Item) -> String {
-        guard let attachments = item.attachments, !attachments.isEmpty else {
-            return "paperclip"
-        }
-        
-        // Get first attachment type to determine icon
-        let firstType = attachments[0].fileType.lowercased()
-        
-        if firstType.contains("image") {
-            return "photo"
-        } else if firstType.contains("video") {
-            return "video"
-        } else if firstType.contains("audio") {
-            return "music.note"
-        } else if firstType.contains("pdf") {
-            return "doc.text"
-        } else {
-            return "paperclip"
+    var icon: String {
+        switch self {
+        case .article: return "doc.text"
+        case .note: return "note.text"
+        case .video: return "play.rectangle"
+        case .image: return "photo"
+        case .audio: return "waveform"
+        case .document: return "doc"
+        case .other: return "questionmark.circle"
         }
     }
 }
 
-// ItemDetailView moved to its own file
-
-// MARK: - Status Banners
-
-extension TimelineView {
-    /// Banner shown when the app is in offline mode
-    var offlineBanner: some View {
-        VStack {
-            HStack {
-                Image(systemName: "wifi.slash")
-                    .foregroundColor(.white)
-                
-                Text("Offline Mode")
-                    .font(.caption.bold())
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Button(action: {
-                    Task {
-                        await viewModel.refresh()
-                    }
-                }) {
-                    Text("Try again")
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(Color.white.opacity(0.3))
-                        .cornerRadius(4)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color.orange)
-        }
-        .frame(maxWidth: .infinity)
-        .transition(.move(edge: .top))
-    }
-    
-    /// Banner shown when syncing is in progress
-    var syncingBanner: some View {
-        VStack {
-            HStack {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(0.7)
-                
-                Text("Syncing...")
-                    .font(.caption.bold())
-                    .foregroundColor(.white)
-                
-                Spacer()
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color.blue)
-        }
-        .frame(maxWidth: .infinity)
-        .transition(.move(edge: .top))
-    }
-}
-
-struct TimelineView_Previews: PreviewProvider {
-    static var previews: some View {
-        TimelineView()
-    }
+#Preview {
+    TimelineView()
 }

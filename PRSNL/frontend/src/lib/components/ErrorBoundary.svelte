@@ -32,6 +32,11 @@
   // Listen for unhandled errors
   onMount(() => {
     const handleUnhandledError = (event: ErrorEvent) => {
+      // Ignore ResizeObserver errors - they're harmless browser quirks
+      if (event.message.includes('ResizeObserver loop')) {
+        event.preventDefault();
+        return;
+      }
       handleError(new Error(event.message));
     };
     

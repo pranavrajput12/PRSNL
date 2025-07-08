@@ -1,9 +1,14 @@
 """Database connection and pooling"""
 import asyncpg
-from typing import Optional, List
+from typing import Optional, List, AsyncGenerator
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.config import settings
 
 _db_pool: Optional[asyncpg.Pool] = None
+
+# SQLAlchemy async engine and session
+_engine = None
+_async_session_maker = None
 
 
 async def create_db_pool():
@@ -39,8 +44,32 @@ async def get_db_connection() -> asyncpg.Connection:
         yield connection
 
 
-# Alias for compatibility
-get_db = get_db_connection
+# SQLAlchemy async session support
+async def init_sqlalchemy():
+    """Initialize SQLAlchemy async engine and session maker"""
+    global _engine, _async_session_maker
+    _engine = create_async_engine(
+        settings.DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://'),
+        echo=False,
+        pool_pre_ping=True
+    )
+    _async_session_maker = async_sessionmaker(
+        _engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Get SQLAlchemy async session"""
+    global _async_session_maker
+    if not _async_session_maker:
+        await init_sqlalchemy()
+    
+    async with _async_session_maker() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
 
 async def apply_migrations():
     """Apply database migrations"""

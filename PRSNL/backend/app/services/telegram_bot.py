@@ -229,7 +229,7 @@ class TelegramBot:
                     'thumbnail_path': video_data.thumbnail_path,
                     'duration': video_data.duration,
                     'platform': video_data.platform,
-                    'original_metadata': video_data.metadata
+                    'original_metadata': video_data.item_metadata
                 }
             })
             await self.send_message(chat_id, "✅ Video captured successfully!")

@@ -27,10 +27,15 @@
   // Global keyboard navigation
   onMount(() => {
     const handleKeydown = (e) => {
-      // CMD/CTRL + K for search
+      // CMD/CTRL + K for search (focus on dashboard search)
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        window.location.href = '/search';
+        window.location.href = '/';
+        // Focus on search input after navigation
+        setTimeout(() => {
+          const searchInput = document.querySelector('.search-input');
+          if (searchInput) searchInput.focus();
+        }, 100);
       }
       // CMD/CTRL + N for new capture
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
@@ -46,6 +51,11 @@
       if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
         e.preventDefault();
         window.location.href = '/';
+      }
+      // CMD/CTRL + I for insights
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+        e.preventDefault();
+        window.location.href = '/insights';
       }
     };
     
@@ -70,15 +80,15 @@
         <span class="keyboard-hint">⌘N</span>
       </a>
       
-      <a href="/search" class="nav-link {$page.url.pathname === '/search' ? 'active' : ''}">
-        <Icon name="search" size="small" />
-        <span>Search</span>
-        <span class="keyboard-hint">⌘K</span>
-      </a>
-      
       <a href="/timeline" class="nav-link {$page.url.pathname === '/timeline' ? 'active' : ''}">
         <Icon name="timeline" size="small" />
         <span>Timeline</span>
+      </a>
+      
+      <a href="/insights" class="nav-link {$page.url.pathname === '/insights' ? 'active' : ''}">
+        <Icon name="sparkles" size="small" />
+        <span>Insights</span>
+        <span class="keyboard-hint">⌘I</span>
       </a>
       
       <a href="/chat" class="nav-link {$page.url.pathname === '/chat' ? 'active' : ''}">

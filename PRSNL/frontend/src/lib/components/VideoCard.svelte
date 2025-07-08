@@ -10,9 +10,32 @@
     
     const videoIdMatch = url.match(/[?&]v=([^&]+)/);
     if (videoIdMatch && videoIdMatch[1]) {
-      return `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg`;
+      // Use hqdefault as it's more reliable than maxresdefault
+      return `https://img.youtube.com/vi/${videoIdMatch[1]}/hqdefault.jpg`;
     }
     return null;
+  }
+  
+  // Handle image loading errors with fallback
+  function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    const src = img.src;
+    
+    // If it's a YouTube thumbnail, try fallback qualities
+    if (src.includes('img.youtube.com')) {
+      if (src.includes('/hqdefault.jpg')) {
+        img.src = src.replace('/hqdefault.jpg', '/mqdefault.jpg');
+      } else if (src.includes('/mqdefault.jpg')) {
+        img.src = src.replace('/mqdefault.jpg', '/default.jpg');
+      } else {
+        // Final fallback - hide the image and show placeholder
+        img.style.display = 'none';
+        const placeholder = img.parentElement?.querySelector('.thumbnail-placeholder');
+        if (placeholder) {
+          placeholder.style.display = 'flex';
+        }
+      }
+    }
   }
   
   $: youtubeThumbnail = video.platform === 'youtube' ? getYouTubeThumbnail(video.url) : null;
@@ -43,12 +66,17 @@
 <a href="/videos/{video.id}" class="video-card">
   <div class="thumbnail-container">
     {#if displayThumbnail}
-      <img src={displayThumbnail} alt={video.title} class="thumbnail" loading="lazy" />
-    {:else}
-      <div class="thumbnail-placeholder">
-        <Icon name={getPlatformIcon(video.platform)} size={48} />
-      </div>
+      <img 
+        src={displayThumbnail} 
+        alt={video.title} 
+        class="thumbnail" 
+        loading="lazy"
+        on:error={handleImageError}
+      />
     {/if}
+    <div class="thumbnail-placeholder" style="display: {displayThumbnail ? 'none' : 'flex'}">
+      <Icon name={getPlatformIcon(video.platform)} size={48} />
+    </div>
     
     {#if video.duration}
       <div class="duration">{formatDuration(video.duration)}</div>

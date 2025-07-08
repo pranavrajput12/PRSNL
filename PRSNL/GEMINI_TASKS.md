@@ -5,14 +5,18 @@ Always review these files before starting work:
 
 ### Documentation to Read First:
 1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
-2. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 8000 ONLY!**
-3. `/PRSNL/API_DOCUMENTATION.md` - API structure and patterns
-4. `/PRSNL/DATABASE_SCHEMA.md` - Database field mappings
+2. `/CURRENT_STATE.md` - Real-time project status
+3. `/SESSION_CONTINUITY.md` - Last session context
+4. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 8000 ONLY!**
+5. `/PRSNL/API_DOCUMENTATION.md` - API structure and patterns
+6. `/PRSNL/DATABASE_SCHEMA.md` - Database field mappings
 
 ### Files to Update After Each Task:
 1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
 2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
 3. `/PRSNL/PROJECT_STATUS.md` - Update progress section
+4. `/CURRENT_STATE.md` - Update current status
+5. `/SESSION_CONTINUITY.md` - Update session context
 
 ---
 

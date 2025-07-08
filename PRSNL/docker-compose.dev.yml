@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: prsnl_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prsnl
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
+      - ./backend/app/db/migrations:/docker-entrypoint-initdb.d/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d prsnl"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: prsnl_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: prsnl_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
+      REDIS_URL: redis://redis:6379
+      AZURE_OPENAI_API_KEY: 1U6RGbb4XrVh4LUqG5qrNLHd1hvHeCDqseSThAayqhclju9nUCtTJQQJ99BAACHYHv6XJ3w3AAABACOG6tdK
+      AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
+      AZURE_OPENAI_DEPLOYMENT: gpt-4.1
+      AZURE_OPENAI_API_VERSION: 2025-01-01-preview
+      AZURE_OPENAI_EMBEDDING_DEPLOYMENT: text-embedding-ada-002
+      AZURE_OPENAI_WHISPER_DEPLOYMENT: whisper
+
+  # Frontend runs separately on host: cd frontend && npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:

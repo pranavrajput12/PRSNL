@@ -2,6 +2,14 @@ import Foundation
 import CoreData
 import Combine
 
+// Import SyncStatus enum
+enum SyncStatus: Int16 {
+    case synced = 0
+    case needsUpload = 1
+    case needsUpdate = 2
+    case deleted = 3
+}
+
 /// Manages all Core Data operations for the PRSNL app
 class CoreDataManager {
     /// Shared instance for app-wide access
@@ -66,7 +74,7 @@ class CoreDataManager {
     /// - Parameters:
     ///   - context: The context to use for fetching
     ///   - sortDescriptors: Optional sort descriptors
-    /// - Returns: Array of CDItem objects
+    /// - Returns: Array of Item objects
     /// - Throws: Core Data errors if the fetch fails
     func fetchAllItems(in context: NSManagedObjectContext, 
                       sortDescriptors: [NSSortDescriptor]? = nil) throws -> [NSManagedObject] {
@@ -79,7 +87,7 @@ class CoreDataManager {
     /// - Parameters:
     ///   - query: The search query
     ///   - context: The context to use for fetching
-    /// - Returns: Array of matching CDItem objects
+    /// - Returns: Array of matching Item objects
     /// - Throws: Core Data errors if the search fails
     func searchItems(query: String, in context: NSManagedObjectContext) throws -> [NSManagedObject] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
@@ -106,7 +114,7 @@ class CoreDataManager {
     /// - Throws: Core Data errors if the count fails
     func countItems(matching predicate: NSPredicate? = nil) throws -> Int {
         let context = viewContext
-        let fetchRequest: NSFetchRequest<CDItem> = CDItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
         fetchRequest.predicate = predicate
         return try context.count(for: fetchRequest)
     }
@@ -120,7 +128,7 @@ class CoreDataManager {
     /// - Returns: Array of matching Item models
     /// - Throws: Core Data errors if the search fails
     func searchItems(query: String, in context: NSManagedObjectContext, limit: Int = 50, offset: Int = 0) throws -> [Item] {
-        let fetchRequest: NSFetchRequest<CDItem> = CDItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
         
         // Create predicates for title, content, and tags
         let titlePredicate = NSPredicate(format: "title CONTAINS[cd] %@", query)
@@ -146,7 +154,7 @@ class CoreDataManager {
     /// Converts a Core Data item to a model item
     /// - Parameter cdItem: The Core Data item to convert
     /// - Returns: An Item model object
-    func convertToItem(from cdItem: NSManagedObject) -> Item {
+    private func convertToItem(_ cdItem: NSManagedObject) -> Item {
         let id = cdItem.value(forKey: "id") as? String ?? ""
         let title = cdItem.value(forKey: "title") as? String ?? ""
         let content = cdItem.value(forKey: "content") as? String ?? ""
@@ -270,7 +278,7 @@ class CoreDataManager {
         }
         
         // Update tags
-        updateTags(for: cdItem as! CDItem, with: item.tags, in: context)
+        updateTags(for: cdItem, with: item.tags, in: context)
         
         try context.save()
         return cdItem
@@ -367,6 +375,30 @@ class CoreDataManager {
         }
     }
     
+    /// Updates tags for a Core Data item
+    /// - Parameters:
+    ///   - cdItem: The Core Data item
+    ///   - tagNames: Array of tag names
+    ///   - context: The managed object context
+    private func updateTags(for cdItem: NSManagedObject, with tagNames: [String], in context: NSManagedObjectContext) {
+        // Clear existing tags
+        if cdItem.value(forKey: "tags") is NSSet {
+            cdItem.setValue(NSSet(), forKey: "tags")
+        }
+        
+        // Create new tags
+        let tagSet = NSMutableSet()
+        for tagName in tagNames {
+            let tagEntity = NSEntityDescription.entity(forEntityName: "Tag", in: context)!
+            let tag = NSManagedObject(entity: tagEntity, insertInto: context)
+            tag.setValue(tagName, forKey: "name")
+            tag.setValue(cdItem, forKey: "item")
+            tagSet.add(tag)
+        }
+        
+        cdItem.setValue(tagSet, forKey: "tags")
+    }
+    
     /// Creates a new item with individual parameters
     /// - Parameters:
     ///   - id: Item ID
@@ -412,11 +444,11 @@ class CoreDataManager {
     /// - Throws: Core Data errors if the fetch fails
     func fetchAllTags() throws -> [String] {
         let context = viewContext
-        let fetchRequest: NSFetchRequest<CDTag> = CDTag.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Tag")
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         
         let tags = try context.fetch(fetchRequest)
-        return tags.compactMap { $0.name }
+        return tags.compactMap { $0.value(forKey: "name") as? String }
     }
     
     /// Saves an Item model to Core Data
@@ -424,33 +456,34 @@ class CoreDataManager {
     /// - Throws: Core Data errors if the save fails
     func saveItem(_ item: Item) throws {
         let context = viewContext
-        let fetchRequest: NSFetchRequest<CDItem> = CDItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
         fetchRequest.predicate = NSPredicate(format: "id == %@", item.id)
         fetchRequest.fetchLimit = 1
         
         let existingItems = try context.fetch(fetchRequest)
         
-        let cdItem: CDItem
+        let cdItem: NSManagedObject
         if let existingItem = existingItems.first {
             // Update existing item
             cdItem = existingItem
         } else {
             // Create new item
-            cdItem = CDItem(context: context)
-            cdItem.id = item.id
+            let entity = NSEntityDescription.entity(forEntityName: "Item", in: context)!
+            cdItem = NSManagedObject(entity: entity, insertInto: context)
+            cdItem.setValue(item.id, forKey: "id")
         }
         
         // Update properties
-        cdItem.title = item.title
-        cdItem.content = item.content
-        cdItem.itemType = item.itemType.rawValue
-        cdItem.status = item.status.rawValue
-        cdItem.createdAt = item.createdAt
-        cdItem.updatedAt = item.updatedAt
-        cdItem.accessedAt = item.accessedAt
-        cdItem.accessCount = Int32(item.accessCount)
-        cdItem.url = item.url
-        cdItem.syncStatus = Int16(SyncStatus.synced.rawValue)
+        cdItem.setValue(item.title, forKey: "title")
+        cdItem.setValue(item.content, forKey: "content")
+        cdItem.setValue(item.itemType.rawValue, forKey: "itemType")
+        cdItem.setValue(item.status.rawValue, forKey: "status")
+        cdItem.setValue(item.createdAt, forKey: "createdAt")
+        cdItem.setValue(item.updatedAt, forKey: "updatedAt")
+        cdItem.setValue(item.accessedAt, forKey: "accessedAt")
+        cdItem.setValue(Int32(item.accessCount), forKey: "accessCount")
+        cdItem.setValue(item.url, forKey: "url")
+        cdItem.setValue(Int16(SyncStatus.synced.rawValue), forKey: "syncStatus")
         
         // Update tags
         updateTags(for: cdItem, with: item.tags, in: context)
@@ -469,7 +502,7 @@ class CoreDataManager {
                    sortDescriptors: [NSSortDescriptor]? = nil,
                    limit: Int? = nil) throws -> [Item] {
         let context = viewContext
-        let fetchRequest: NSFetchRequest<CDItem> = CDItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
         
         fetchRequest.predicate = predicate
         fetchRequest.sortDescriptors = sortDescriptors ?? [NSSortDescriptor(key: "updatedAt", ascending: false)]
@@ -488,7 +521,7 @@ class CoreDataManager {
     /// - Throws: Core Data errors if the fetch fails
     func fetchItem(byId id: String) throws -> Item? {
         let context = viewContext
-        let fetchRequest: NSFetchRequest<CDItem> = CDItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Item")
         fetchRequest.predicate = NSPredicate(format: "id == %@", id)
         fetchRequest.fetchLimit = 1
         
@@ -498,10 +531,11 @@ class CoreDataManager {
         return convertToItem(cdItem)
     }
     
-    /// Converts a CDItem to an Item model
+    /* Commented out - duplicate function with wrong types
+    /// Converts a Item to an Item model
     /// - Parameter cdItem: The Core Data item
     /// - Returns: The Item model
-    func convertToItem(_ cdItem: CDItem) -> Item {
+    func convertToItem(_ cdItem: Item) -> Item {
         let tags = (cdItem.tags as? Set<CDTag>)?.compactMap { $0.name } ?? []
         
         // Convert attachments if available
@@ -544,16 +578,17 @@ class CoreDataManager {
             content: cdItem.content ?? "",
             url: cdItem.url,
             summary: cdItem.summary,
-            status: ItemStatus(rawValue: cdItem.status ?? "") ?? .active,
+            status: ItemStatus(rawValue: cdItem.status ?? "active") ?? .active,
             createdAt: cdItem.createdAt ?? Date(),
             updatedAt: cdItem.updatedAt ?? Date(),
             accessCount: Int(cdItem.accessCount),
             accessedAt: cdItem.accessedAt,
             tags: tags,
-            itemType: ItemType(rawValue: cdItem.itemType ?? "") ?? .note,
+            itemType: ItemType(rawValue: cdItem.itemType ?? "note") ?? .note,
             attachments: attachments
         )
     }
+    */
     
     /// Gets the status of App Groups functionality
     /// - Returns: A string describing the current App Groups status

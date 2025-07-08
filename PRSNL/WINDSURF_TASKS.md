@@ -5,14 +5,18 @@ Always review these files before starting work:
 
 ### Documentation to Read First:
 1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
-2. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 3002 ONLY!**
-3. `/PRSNL/DESIGN_LANGUAGE.md` - UI/UX guidelines (Manchester United theme)
-4. `/PRSNL/frontend/src/lib/types/api.ts` - TypeScript interfaces
+2. `/CURRENT_STATE.md` - Real-time project status
+3. `/SESSION_CONTINUITY.md` - Last session context
+4. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 3002 ONLY!**
+5. `/PRSNL/DESIGN_LANGUAGE.md` - UI/UX guidelines (Manchester United theme)
+6. `/PRSNL/frontend/src/lib/types/api.ts` - TypeScript interfaces
 
 ### Files to Update After Each Task:
 1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
 2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
 3. `/PRSNL/PROJECT_STATUS.md` - Update progress section
+4. `/CURRENT_STATE.md` - Update current status
+5. `/SESSION_CONTINUITY.md` - Update session context
 
 ---
 

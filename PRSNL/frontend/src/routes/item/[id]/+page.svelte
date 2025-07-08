@@ -9,6 +9,7 @@
   import KnowledgeCard from '$lib/components/KnowledgeCard.svelte';
   import AsyncBoundary from '$lib/components/AsyncBoundary.svelte';
   import type { Item } from '$lib/types/api';
+  import { getItem } from '$lib/api';
   
   let item: Item | null = null;
   let isLoading = true;
@@ -16,12 +17,16 @@
   let activeTab = 'overview';
   let showQuickActions = false;
   let copiedNotification = false;
+  let transcriptLoading = false;
+  let transcriptError: string | null = null;
   
   $: itemId = $page.params.id;
   $: isBookmark = item?.status === 'bookmark';
   $: hasAIAnalysis = item?.metadata?.ai_analysis;
   $: readingTime = item?.metadata?.ai_analysis?.reading_time || 
                    Math.ceil((item?.content || '').split(/\s+/).length / 200);
+  $: isVideo = item?.item_type === 'video';
+  $: hasTranscript = item?.transcription && item.transcription.length > 0;
   
   onMount(() => {
     loadItem();
@@ -30,9 +35,7 @@
   async function loadItem() {
     try {
       isLoading = true;
-      const response = await fetch(`/api/items/${itemId}`);
-      if (!response.ok) throw new Error('Failed to load item');
-      item = await response.json();
+      item = await getItem(itemId);
     } catch (e) {
       error = e as Error;
     } finally {
@@ -73,6 +76,49 @@
       case 'intermediate': return 'warning';
       case 'advanced': return 'danger';
       default: return 'secondary';
+    }
+  }
+  
+  async function generateTranscript() {
+    if (!item) return;
+    
+    transcriptLoading = true;
+    transcriptError = null;
+    
+    try {
+      const response = await fetch(`/api/video-streaming/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ item_id: item.id })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Check for specific error messages
+        if (data.detail?.includes('Subtitles are disabled') || 
+            data.detail?.includes('No transcript available')) {
+          transcriptError = 'This video does not have captions available. Transcript generation is not possible.';
+        } else if (data.detail?.includes('YouTube is blocking') || 
+                   data.detail?.includes('too many requests')) {
+          transcriptError = 'YouTube is temporarily blocking transcript requests. Please try again later.';
+        } else if (data.detail?.includes('video is no longer available')) {
+          transcriptError = 'This video is no longer available on YouTube.';
+        } else {
+          transcriptError = data.detail || 'Failed to generate transcript. Please try again.';
+        }
+        return;
+      }
+      
+      // Success - reload the item to show the transcript
+      await loadItem();
+    } catch (err) {
+      console.error('Failed to generate transcript:', err);
+      transcriptError = 'Network error. Please check your connection and try again.';
+    } finally {
+      transcriptLoading = false;
     }
   }
 </script>
@@ -274,7 +320,41 @@
           
         {:else if activeTab === 'content'}
           <div class="content-tab">
-            {#if item.content || item.transcription}
+            {#if isVideo}
+              <KnowledgeCard title="Transcript" icon="file-text">
+                {#if hasTranscript}
+                  <div class="formatted-content">
+                    {@html formatContent(item.transcription || '')}
+                  </div>
+                {:else}
+                  <div class="transcript-placeholder">
+                    {#if transcriptError}
+                      <div class="transcript-error">
+                        <Icon name="alert" size="medium" />
+                        <p>{transcriptError}</p>
+                      </div>
+                    {:else}
+                      <Icon name="file-text" size="large" color="var(--text-muted)" />
+                      <p>No transcript available for this video</p>
+                    {/if}
+                    
+                    <button 
+                      class="generate-transcript-btn"
+                      on:click={generateTranscript}
+                      disabled={transcriptLoading}
+                    >
+                      {#if transcriptLoading}
+                        <Spinner size="small" />
+                        <span>Generating Transcript...</span>
+                      {:else}
+                        <Icon name="file-text" size="small" />
+                        <span>Generate Transcript</span>
+                      {/if}
+                    </button>
+                  </div>
+                {/if}
+              </KnowledgeCard>
+            {:else if item.content || item.transcription}
               <KnowledgeCard title="Full Content" icon="file-text">
                 <div class="formatted-content">
                   {@html formatContent(item.content || item.transcription || '')}
@@ -921,5 +1001,67 @@
     .knowledge-card {
       break-inside: avoid;
     }
+  }
+  
+  /* Transcript generation styles */
+  .transcript-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .transcript-placeholder p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+  }
+  
+  .transcript-error {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius);
+    color: var(--error);
+    text-align: left;
+    max-width: 500px;
+  }
+  
+  .transcript-error p {
+    margin: 0;
+    font-weight: 500;
+    color: var(--error);
+  }
+  
+  .generate-transcript-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: var(--accent-red, #dc1430);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .generate-transcript-btn:hover:not(:disabled) {
+    background: var(--accent-red-hover, #c01128);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 20, 48, 0.3);
+  }
+  
+  .generate-transcript-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 </style>

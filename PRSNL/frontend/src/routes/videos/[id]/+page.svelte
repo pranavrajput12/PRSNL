@@ -5,6 +5,7 @@
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import YouTubeEmbed from '$lib/components/YouTubeEmbed.svelte';
   import { formatDate } from '$lib/utils/date';
+  import { getItem } from '$lib/api';
   
   let video: any = null;
   let loading = true;
@@ -16,16 +17,10 @@
     try {
       loading = true;
       console.log('Loading video with ID:', $page.params.id);
-      const response = await fetch(`/api/items/${$page.params.id}`);
-      console.log('Response status:', response.status);
-      if (response.ok) {
-        const item = await response.json();
-        console.log('Item data:', item);
-        video = item;
-        console.log('Video object:', video);
-      } else {
-        console.error('Failed to load video:', response.status, response.statusText);
-      }
+      const item = await getItem($page.params.id);
+      console.log('Item data:', item);
+      video = item;
+      console.log('Video object:', video);
     } catch (error) {
       console.error('Error loading video:', error);
     } finally {

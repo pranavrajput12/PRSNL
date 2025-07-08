@@ -32,6 +32,7 @@ from app.worker import listen_for_notifications
 from app.api.middleware import RequestIDMiddleware, LoggingMiddleware, ExceptionHandlerMiddleware
 from app.middleware.auth import AuthMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
+from app.core.errors import StandardError, standard_error_handler, generic_error_handler
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
 
 from prometheus_client import generate_latest
@@ -50,6 +51,10 @@ app.add_route("/metrics", handle_metrics)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
+# Add standard error handlers
+app.add_exception_handler(StandardError, standard_error_handler)
+app.add_exception_handler(Exception, generic_error_handler)
+
 # Add custom middleware
 app.add_middleware(ExceptionHandlerMiddleware)
 app.add_middleware(AuthMiddleware)  # Add auth middleware after exception handler
@@ -63,7 +68,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.db.database import create_db_pool, close_db_pool, apply_migrations
+from app.db.database import create_db_pool, close_db_pool, apply_migrations, init_sqlalchemy
 from app.core.background_tasks import background_tasks
 from app.services.storage_manager import StorageManager
 from app.services.cache import cache_service
@@ -78,6 +83,7 @@ async def startup_event():
     logger.debug(f"Azure OpenAI configured: {settings.AZURE_OPENAI_API_KEY is not None}")
     
     await create_db_pool()
+    await init_sqlalchemy()
     await apply_migrations()
     
     # Initialize cache
@@ -136,9 +142,11 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
-from app.api import categorization, duplicates, summarization
+from app.api import categorization, duplicates, summarization, health
+from app.api import insights
+from app.api.v2 import items as v2_items
 # Still disabled - working on these next:
-# from app.api import knowledge_graph, second_brain, insights
+# from app.api import knowledge_graph, second_brain
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 app.include_router(search.router, prefix=settings.API_V1_STR)
@@ -157,10 +165,14 @@ app.include_router(video_streaming.router, prefix=settings.API_V1_STR)
 app.include_router(categorization.router, prefix=settings.API_V1_STR)
 app.include_router(duplicates.router, prefix=settings.API_V1_STR)
 app.include_router(summarization.router, prefix=settings.API_V1_STR)
+app.include_router(health.router, prefix=settings.API_V1_STR)  # New health endpoints
+app.include_router(insights.router, prefix=settings.API_V1_STR)
 # app.include_router(knowledge_graph.router, prefix=settings.API_V1_STR)
 # app.include_router(second_brain.router, prefix=settings.API_V1_STR)
-# app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
+
+# V2 API endpoints with improved standards
+app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])
 
 # Mount static files for media
 media_path = os.path.abspath(settings.MEDIA_DIR)

@@ -61,7 +61,7 @@ class CaptureEngine:
             
             # Process with LLM
             logger.info(f"Processing content with LLM for item {item_id}")
-            processed = await self.llm_processor.process(
+            processed = await self.llm_processor.process_content(
                 content=scraped_data.content,
                 url=url,
                 title=scraped_data.title

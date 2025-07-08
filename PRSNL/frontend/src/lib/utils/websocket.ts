@@ -196,9 +196,11 @@ export function createStreamingConnection(
           
         case 'complete':
           handlers.onComplete?.({
-            message: message.message,
             citations: message.citations,
-            context_count: message.context_count
+            context_count: message.context_count,
+            conversation_id: message.conversation_id,
+            suggested_items: message.suggested_items,
+            insights: message.insights
           });
           break;
           

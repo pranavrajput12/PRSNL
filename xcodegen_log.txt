@@ -1,0 +1,1 @@
+No project spec found at /Users/pronav/Personal Knowledge Base/project.yml

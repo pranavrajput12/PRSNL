@@ -29,6 +29,7 @@
   let categorizeLoading = false;
   let summarizeLoading = false;
   let findSimilarLoading = false;
+  let transcriptLoading = false;
   
   function handleClick() {
     goto(`/item/${item.id}`);
@@ -87,6 +88,35 @@
       findSimilarLoading = false;
     }
   }
+  
+  async function generateTranscript(e: MouseEvent) {
+    e.stopPropagation();
+    transcriptLoading = true;
+    try {
+      const response = await fetch(`/api/video-streaming/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ item_id: item.id })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate transcript');
+      }
+      
+      window.location.reload(); // Refresh to show transcript
+    } catch (err) {
+      console.error('Failed to generate transcript:', err);
+      alert('Failed to generate transcript. The video might not have captions available.');
+    } finally {
+      transcriptLoading = false;
+    }
+  }
+  
+  // Check if item is a video and doesn't have transcript
+  $: isVideo = itemType === 'video';
+  $: hasTranscript = item.transcription && item.transcription.length > 0;
 </script>
 
 <article 
@@ -206,6 +236,20 @@
             <Icon name="search" size="small" />
             <span>Find Similar</span>
             {#if findSimilarLoading}<span class="loading-spinner"></span>{/if}
+          </button>
+        {/if}
+        
+        {#if isVideo && !hasTranscript}
+          <button 
+            class="ai-action-btn transcript-btn" 
+            class:loading={transcriptLoading}
+            disabled={transcriptLoading} 
+            on:click={generateTranscript}
+            title="Generate transcript for this video"
+          >
+            <Icon name="file-text" size="small" />
+            <span>Generate Transcript</span>
+            {#if transcriptLoading}<span class="loading-spinner"></span>{/if}
           </button>
         {/if}
       </div>
@@ -471,5 +515,17 @@
       flex-direction: column;
       gap: 0.5rem;
     }
+  }
+  
+  .transcript-btn {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-red, #dc1430);
+    color: var(--accent-red, #dc1430);
+  }
+  
+  .transcript-btn:hover {
+    background-color: rgba(220, 20, 48, 0.1);
+    border-color: var(--accent-red, #dc1430);
+    color: var(--accent-red, #dc1430);
   }
 </style>

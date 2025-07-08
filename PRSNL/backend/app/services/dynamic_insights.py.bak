@@ -1,0 +1,930 @@
+"""
+Dynamic Insights Service - Generates intelligent insights about the user's knowledge base
+"""
+import json
+from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime, timedelta
+from collections import Counter, defaultdict
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_, text
+from app.db.database import get_db
+from app.db.models import Item, Tag, item_tags
+from app.services.llm_processor import LLMProcessor
+from app.services.embedding_service import EmbeddingService
+from app.services.knowledge_graph import KnowledgeGraphService
+import logging
+import numpy as np
+
+logger = logging.getLogger(__name__)
+
+class DynamicInsightsService:
+    def __init__(self):
+        self.llm_processor = LLMProcessor()
+        self.embedding_service = EmbeddingService()
+        self.knowledge_graph = KnowledgeGraphService()
+        
+        # Insight types
+        self.insight_types = {
+            "trending_topics": "Topics gaining momentum in your knowledge base",
+            "knowledge_evolution": "How your interests have evolved over time",
+            "content_patterns": "Patterns in the type of content you save",
+            "learning_velocity": "Your learning pace and focus areas",
+            "connection_opportunities": "Potential connections between disparate topics",
+            "knowledge_depth": "Areas where you've built deep expertise",
+            "exploration_suggestions": "New areas to explore based on your interests",
+            "time_patterns": "When you're most active in learning",
+            "content_diversity": "Diversity score of your knowledge base",
+            "emerging_themes": "New themes emerging from recent saves"
+        }
+    
+    async def generate_insights(
+        self,
+        user_id: Optional[str] = None,
+        time_range: str = "30d",
+        insight_types: Optional[List[str]] = None,
+        db: AsyncSession = None
+    ) -> Dict[str, Any]:
+        """
+        Generate comprehensive insights about the knowledge base
+        """
+        try:
+            # Parse time range
+            days = self._parse_time_range(time_range)
+            start_date = datetime.utcnow() - timedelta(days=days)
+            
+            # Get items within time range
+            query = select(Item).where(Item.created_at >= start_date)
+            if user_id:
+                query = query.where(Item.item_metadata['user_id'].astext == user_id)
+            
+            result = await db.execute(query.order_by(Item.created_at.desc()))
+            items = result.scalars().all()
+            
+            if not items:
+                return {
+                    "insights": [],
+                    "summary": "No items found in the specified time range",
+                    "time_range": time_range,
+                    "item_count": 0
+                }
+            
+            # Generate different types of insights
+            insights = []
+            
+            if not insight_types or "trending_topics" in insight_types:
+                trending = await self._analyze_trending_topics(items, db)
+                if trending:
+                    insights.append(trending)
+            
+            if not insight_types or "knowledge_evolution" in insight_types:
+                evolution = await self._analyze_knowledge_evolution(items, db)
+                if evolution:
+                    insights.append(evolution)
+            
+            if not insight_types or "content_patterns" in insight_types:
+                patterns = await self._analyze_content_patterns(items)
+                if patterns:
+                    insights.append(patterns)
+            
+            if not insight_types or "learning_velocity" in insight_types:
+                velocity = await self._analyze_learning_velocity(items, days)
+                if velocity:
+                    insights.append(velocity)
+            
+            if not insight_types or "connection_opportunities" in insight_types:
+                connections = await self._find_connection_opportunities(items, db)
+                if connections:
+                    insights.append(connections)
+            
+            if not insight_types or "knowledge_depth" in insight_types:
+                depth = await self._analyze_knowledge_depth(items, db)
+                if depth:
+                    insights.append(depth)
+            
+            if not insight_types or "exploration_suggestions" in insight_types:
+                suggestions = await self._generate_exploration_suggestions(items, db)
+                if suggestions:
+                    insights.append(suggestions)
+            
+            if not insight_types or "time_patterns" in insight_types:
+                time_patterns = self._analyze_time_patterns(items)
+                if time_patterns:
+                    insights.append(time_patterns)
+            
+            if not insight_types or "content_diversity" in insight_types:
+                diversity = await self._calculate_content_diversity(items)
+                if diversity:
+                    insights.append(diversity)
+            
+            if not insight_types or "emerging_themes" in insight_types:
+                themes = await self._detect_emerging_themes(items, db)
+                if themes:
+                    insights.append(themes)
+            
+            # Generate overall summary
+            summary = await self._generate_insights_summary(insights, len(items))
+            
+            return {
+                "insights": insights,
+                "summary": summary,
+                "time_range": time_range,
+                "item_count": len(items),
+                "generated_at": datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            import traceback
+            logger.error(f"Error generating insights: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
+    
+    def _parse_time_range(self, time_range: str) -> int:
+        """
+        Parse time range string to days
+        """
+        if time_range.endswith('d'):
+            return int(time_range[:-1])
+        elif time_range.endswith('w'):
+            return int(time_range[:-1]) * 7
+        elif time_range.endswith('m'):
+            return int(time_range[:-1]) * 30
+        elif time_range.endswith('y'):
+            return int(time_range[:-1]) * 365
+        else:
+            return 30  # Default to 30 days
+    
+    async def _analyze_trending_topics(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Analyze trending topics in recent saves
+        """
+        try:
+            # Get tags for recent items
+            recent_tags = defaultdict(int)
+            older_tags = defaultdict(int)
+            
+            cutoff_date = datetime.utcnow() - timedelta(days=7)
+            
+            for item in items:
+                # Get item tags
+                tag_query = select(Tag).join(item_tags).where(
+                    item_tags.c.item_id == item.id
+                )
+                result = await db.execute(tag_query)
+                tags = result.scalars().all()
+                
+                for tag in tags:
+                    if item.created_at >= cutoff_date:
+                        recent_tags[tag.name] += 1
+                    else:
+                        older_tags[tag.name] += 1
+            
+            # Calculate trending score
+            trending_topics = []
+            for tag, recent_count in recent_tags.items():
+                older_count = older_tags.get(tag, 0)
+                if older_count == 0:
+                    trend_score = recent_count * 2  # New topic
+                else:
+                    trend_score = (recent_count - older_count) / (older_count + 1)
+                
+                if trend_score > 0:
+                    trending_topics.append({
+                        "topic": tag,
+                        "recent_count": recent_count,
+                        "trend_score": round(trend_score, 2),
+                        "status": "rising" if trend_score > 0.5 else "stable"
+                    })
+            
+            # Sort by trend score
+            trending_topics.sort(key=lambda x: x['trend_score'], reverse=True)
+            
+            return {
+                "type": "trending_topics",
+                "title": "Trending Topics",
+                "description": self.insight_types["trending_topics"],
+                "data": {
+                    "topics": trending_topics[:10],
+                    "analysis": f"Found {len(trending_topics)} trending topics"
+                },
+                "visualization": "trend_chart"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing trending topics: {str(e)}")
+            return None
+    
+    async def _analyze_knowledge_evolution(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Analyze how knowledge interests have evolved
+        """
+        try:
+            # Group items by month
+            monthly_topics = defaultdict(lambda: defaultdict(int))
+            
+            for item in items:
+                month_key = item.created_at.strftime("%Y-%m")
+                
+                # Get item tags
+                tag_query = select(Tag).join(item_tags).where(
+                    item_tags.c.item_id == item.id
+                )
+                result = await db.execute(tag_query)
+                tags = result.scalars().all()
+                
+                for tag in tags:
+                    monthly_topics[month_key][tag.name] += 1
+            
+            # Analyze evolution
+            evolution_data = []
+            months = sorted(monthly_topics.keys())
+            
+            for i, month in enumerate(months):
+                top_topics = sorted(
+                    monthly_topics[month].items(), 
+                    key=lambda x: x[1], 
+                    reverse=True
+                )[:5]
+                
+                evolution_data.append({
+                    "month": month,
+                    "top_topics": [{"topic": t[0], "count": t[1]} for t in top_topics],
+                    "total_items": sum(monthly_topics[month].values())
+                })
+            
+            # Generate narrative
+            narrative = await self._generate_evolution_narrative(evolution_data)
+            
+            return {
+                "type": "knowledge_evolution",
+                "title": "Knowledge Evolution",
+                "description": self.insight_types["knowledge_evolution"],
+                "data": {
+                    "timeline": evolution_data,
+                    "narrative": narrative
+                },
+                "visualization": "evolution_timeline"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing knowledge evolution: {str(e)}")
+            return None
+    
+    async def _analyze_content_patterns(self, items: List[Item]) -> Dict[str, Any]:
+        """
+        Analyze patterns in content types and sources
+        """
+        try:
+            # Analyze content types
+            content_types = Counter()
+            sources = Counter()
+            content_length = []
+            
+            for item in items:
+                # Determine content type
+                if item.item_metadata.get('video'):
+                    content_types['video'] += 1
+                elif 'github.com' in item.url:
+                    content_types['code'] += 1
+                elif any(domain in item.url for domain in ['arxiv.org', 'scholar.google']):
+                    content_types['academic'] += 1
+                elif any(domain in item.url for domain in ['medium.com', 'substack.com']):
+                    content_types['article'] += 1
+                else:
+                    content_types['other'] += 1
+                
+                # Extract domain
+                from urllib.parse import urlparse
+                domain = urlparse(item.url).netloc
+                sources[domain] += 1
+                
+                # Content length
+                if item.processed_content:
+                    content_length.append(len(item.processed_content))
+            
+            # Calculate statistics
+            avg_length = np.mean(content_length) if content_length else 0
+            
+            return {
+                "type": "content_patterns",
+                "title": "Content Patterns",
+                "description": self.insight_types["content_patterns"],
+                "data": {
+                    "content_types": dict(content_types.most_common()),
+                    "top_sources": dict(sources.most_common(10)),
+                    "average_content_length": int(avg_length),
+                    "total_sources": len(sources)
+                },
+                "visualization": "content_breakdown"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing content patterns: {str(e)}")
+            return None
+    
+    async def _analyze_learning_velocity(
+        self, 
+        items: List[Item], 
+        days: int
+    ) -> Dict[str, Any]:
+        """
+        Analyze learning pace and intensity
+        """
+        try:
+            # Calculate daily saves
+            daily_saves = defaultdict(int)
+            for item in items:
+                day_key = item.created_at.strftime("%Y-%m-%d")
+                daily_saves[day_key] += 1
+            
+            # Calculate statistics
+            save_counts = list(daily_saves.values())
+            avg_daily = np.mean(save_counts) if save_counts else 0
+            max_daily = max(save_counts) if save_counts else 0
+            
+            # Identify peak learning days
+            peak_days = sorted(
+                daily_saves.items(), 
+                key=lambda x: x[1], 
+                reverse=True
+            )[:5]
+            
+            # Calculate momentum (recent vs overall average)
+            recent_days = 7
+            recent_items = [i for i in items if i.created_at >= datetime.utcnow() - timedelta(days=recent_days)]
+            recent_avg = len(recent_items) / recent_days
+            momentum = (recent_avg - avg_daily) / (avg_daily + 1) * 100
+            
+            return {
+                "type": "learning_velocity",
+                "title": "Learning Velocity",
+                "description": self.insight_types["learning_velocity"],
+                "data": {
+                    "average_daily_saves": round(avg_daily, 1),
+                    "peak_daily_saves": max_daily,
+                    "peak_learning_days": [{"date": d[0], "count": d[1]} for d in peak_days],
+                    "momentum": {
+                        "value": round(momentum, 1),
+                        "trend": "increasing" if momentum > 10 else "decreasing" if momentum < -10 else "stable"
+                    },
+                    "total_learning_days": len(daily_saves)
+                },
+                "visualization": "velocity_chart"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing learning velocity: {str(e)}")
+            return None
+    
+    async def _find_connection_opportunities(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Find potential connections between disparate topics
+        """
+        try:
+            # Get embeddings for recent items
+            item_embeddings = []
+            item_data = []
+            
+            for item in items[:50]:  # Limit to recent 50 items
+                if item.embedding:
+                    item_embeddings.append(item.embedding)
+                    item_data.append({
+                        "id": str(item.id),
+                        "title": item.title,
+                        "summary": item.summary
+                    })
+            
+            if len(item_embeddings) < 10:
+                return None
+            
+            # Find surprising connections (items that are similar but from different domains)
+            connections = []
+            embeddings_array = np.array(item_embeddings)
+            
+            for i in range(len(item_embeddings)):
+                # Calculate similarities
+                similarities = np.dot(embeddings_array, embeddings_array[i])
+                
+                # Find items with moderate similarity (not too similar, not too different)
+                for j in range(i + 1, len(similarities)):
+                    similarity = similarities[j]
+                    if 0.6 < similarity < 0.8:  # Moderate similarity range
+                        # Check if they're from different domains
+                        domain1 = self._extract_domain(items[i].url)
+                        domain2 = self._extract_domain(items[j].url)
+                        
+                        if domain1 != domain2:
+                            connections.append({
+                                "item1": item_data[i],
+                                "item2": item_data[j],
+                                "similarity": round(float(similarity), 3),
+                                "potential": "cross-domain insight"
+                            })
+            
+            # Sort by similarity and take top connections
+            connections.sort(key=lambda x: x['similarity'], reverse=True)
+            top_connections = connections[:5]
+            
+            # Generate connection insights
+            if top_connections:
+                insights = await self._generate_connection_insights(top_connections)
+            else:
+                insights = "No significant cross-domain connections found"
+            
+            return {
+                "type": "connection_opportunities",
+                "title": "Connection Opportunities",
+                "description": self.insight_types["connection_opportunities"],
+                "data": {
+                    "connections": top_connections,
+                    "insights": insights,
+                    "total_opportunities": len(connections)
+                },
+                "visualization": "connection_graph"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error finding connection opportunities: {str(e)}")
+            return None
+    
+    def _extract_domain(self, url: str) -> str:
+        """
+        Extract domain from URL
+        """
+        from urllib.parse import urlparse
+        return urlparse(url).netloc
+    
+    async def _analyze_knowledge_depth(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Analyze depth of knowledge in different areas
+        """
+        try:
+            # Count items per topic
+            topic_counts = defaultdict(int)
+            topic_items = defaultdict(list)
+            
+            for item in items:
+                # Get item tags
+                tag_query = select(Tag).join(item_tags).where(
+                    item_tags.c.item_id == item.id
+                )
+                result = await db.execute(tag_query)
+                tags = result.scalars().all()
+                
+                for tag in tags:
+                    topic_counts[tag.name] += 1
+                    topic_items[tag.name].append({
+                        "id": str(item.id),
+                        "title": item.title,
+                        "created_at": item.created_at.isoformat()
+                    })
+            
+            # Identify areas of deep knowledge
+            depth_analysis = []
+            for topic, count in topic_counts.items():
+                if count >= 5:  # Threshold for "deep" knowledge
+                    # Check time span
+                    items_for_topic = topic_items[topic]
+                    dates = [datetime.fromisoformat(i['created_at']) for i in items_for_topic]
+                    time_span = (max(dates) - min(dates)).days
+                    
+                    # Get related topics through knowledge graph
+                    related = await self._get_related_topics(topic, items, db)
+                    
+                    depth_analysis.append({
+                        "topic": topic,
+                        "item_count": count,
+                        "time_span_days": time_span,
+                        "consistency_score": min(count / (time_span / 30 + 1), 10),  # Items per month
+                        "related_topics": related[:3]
+                    })
+            
+            # Sort by depth (combination of count and consistency)
+            depth_analysis.sort(
+                key=lambda x: x['item_count'] * x['consistency_score'], 
+                reverse=True
+            )
+            
+            return {
+                "type": "knowledge_depth",
+                "title": "Knowledge Depth Analysis",
+                "description": self.insight_types["knowledge_depth"],
+                "data": {
+                    "deep_knowledge_areas": depth_analysis[:10],
+                    "total_topics": len(topic_counts),
+                    "expertise_level": self._calculate_expertise_level(depth_analysis)
+                },
+                "visualization": "depth_chart"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing knowledge depth: {str(e)}")
+            return None
+    
+    async def _get_related_topics(
+        self, 
+        topic: str, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> List[str]:
+        """
+        Get topics related to a given topic
+        """
+        related = set()
+        
+        # Find items with this topic
+        for item in items:
+            tag_query = select(Tag).join(item_tags).where(
+                item_tags.c.item_id == item.id
+            )
+            result = await db.execute(tag_query)
+            tags = result.scalars().all()
+            
+            tag_names = [t.name for t in tags]
+            if topic in tag_names:
+                # Add other tags from this item
+                for tag_name in tag_names:
+                    if tag_name != topic:
+                        related.add(tag_name)
+        
+        return list(related)
+    
+    def _calculate_expertise_level(self, depth_analysis: List[Dict]) -> str:
+        """
+        Calculate overall expertise level
+        """
+        if not depth_analysis:
+            return "beginner"
+        
+        total_items = sum(d['item_count'] for d in depth_analysis[:5])
+        
+        if total_items > 100:
+            return "expert"
+        elif total_items > 50:
+            return "advanced"
+        elif total_items > 20:
+            return "intermediate"
+        else:
+            return "beginner"
+    
+    async def _generate_exploration_suggestions(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Generate suggestions for new areas to explore
+        """
+        try:
+            # Get current topics
+            current_topics = set()
+            for item in items:
+                tag_query = select(Tag).join(ItemTag).where(
+                    ItemTag.item_id == item.id
+                )
+                result = await db.execute(tag_query)
+                tags = result.scalars().all()
+                current_topics.update(t.name for t in tags)
+            
+            # Use knowledge graph to find adjacent topics
+            adjacent_topics = set()
+            for topic in list(current_topics)[:10]:  # Limit to avoid too many queries
+                # This would use the knowledge graph to find related topics
+                # For now, we'll simulate with a simple approach
+                related = await self._get_related_topics(topic, items, db)
+                adjacent_topics.update(related)
+            
+            # Find topics that are adjacent but not current
+            exploration_candidates = adjacent_topics - current_topics
+            
+            # Generate AI suggestions if we have candidates
+            suggestions = []
+            if exploration_candidates:
+                prompt = f"""Based on someone interested in these topics: {', '.join(list(current_topics)[:10])},
+suggest 5 related topics they should explore next from: {', '.join(exploration_candidates)}.
+For each suggestion, provide a brief reason why it would be valuable.
+Format: Topic: Reason (one line each)"""
+
+                ai_response = await self.llm_processor.process_with_llm(
+                    prompt=prompt,
+                    temperature=0.7,
+                    max_tokens=300
+                )
+                
+                # Parse AI response
+                for line in ai_response.strip().split('\n'):
+                    if ':' in line:
+                        topic, reason = line.split(':', 1)
+                        suggestions.append({
+                            "topic": topic.strip(),
+                            "reason": reason.strip()
+                        })
+            
+            # Add some general suggestions based on patterns
+            if len(suggestions) < 3:
+                if "machine learning" in current_topics and "ethics" not in current_topics:
+                    suggestions.append({
+                        "topic": "AI Ethics",
+                        "reason": "Important complement to technical ML knowledge"
+                    })
+                if "programming" in current_topics and "system design" not in current_topics:
+                    suggestions.append({
+                        "topic": "System Design",
+                        "reason": "Next level for software development expertise"
+                    })
+            
+            return {
+                "type": "exploration_suggestions",
+                "title": "Exploration Suggestions",
+                "description": self.insight_types["exploration_suggestions"],
+                "data": {
+                    "suggestions": suggestions[:5],
+                    "based_on_topics": list(current_topics)[:10],
+                    "expansion_potential": len(exploration_candidates)
+                },
+                "visualization": "suggestion_cards"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating exploration suggestions: {str(e)}")
+            return None
+    
+    def _analyze_time_patterns(self, items: List[Item]) -> Dict[str, Any]:
+        """
+        Analyze when user is most active
+        """
+        try:
+            # Analyze by hour of day
+            hourly_activity = defaultdict(int)
+            daily_activity = defaultdict(int)
+            
+            for item in items:
+                hour = item.created_at.hour
+                day = item.created_at.strftime("%A")
+                
+                hourly_activity[hour] += 1
+                daily_activity[day] += 1
+            
+            # Find peak hours
+            peak_hours = sorted(
+                hourly_activity.items(), 
+                key=lambda x: x[1], 
+                reverse=True
+            )[:3]
+            
+            # Find most active days
+            day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            active_days = sorted(
+                daily_activity.items(),
+                key=lambda x: day_order.index(x[0])
+            )
+            
+            # Determine pattern type
+            weekend_activity = daily_activity["Saturday"] + daily_activity["Sunday"]
+            weekday_activity = sum(daily_activity[d] for d in day_order[:5])
+            
+            if weekend_activity > weekday_activity * 0.4:
+                pattern_type = "balanced"
+            elif weekend_activity > weekday_activity * 0.2:
+                pattern_type = "weekday-focused"
+            else:
+                pattern_type = "weekend-warrior"
+            
+            return {
+                "type": "time_patterns",
+                "title": "Activity Patterns",
+                "description": self.insight_types["time_patterns"],
+                "data": {
+                    "peak_hours": [{"hour": h[0], "count": h[1]} for h in peak_hours],
+                    "daily_distribution": [{"day": d[0], "count": d[1]} for d in active_days],
+                    "pattern_type": pattern_type,
+                    "most_active_time": f"{peak_hours[0][0]}:00" if peak_hours else "N/A"
+                },
+                "visualization": "activity_heatmap"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing time patterns: {str(e)}")
+            return None
+    
+    async def _calculate_content_diversity(self, items: List[Item]) -> Dict[str, Any]:
+        """
+        Calculate diversity score of knowledge base
+        """
+        try:
+            # Get all unique domains
+            domains = set()
+            content_types = set()
+            topics = set()
+            
+            for item in items:
+                domains.add(self._extract_domain(item.url))
+                
+                # Determine content type
+                if item.item_metadata.get('video'):
+                    content_types.add('video')
+                elif 'github.com' in item.url:
+                    content_types.add('code')
+                else:
+                    content_types.add('article')
+            
+            # Calculate diversity metrics
+            domain_diversity = len(domains) / max(len(items), 1)
+            type_diversity = len(content_types) / 5  # Assuming 5 main content types
+            
+            # Overall diversity score (0-100)
+            diversity_score = min(
+                (domain_diversity * 50 + type_diversity * 50) * 1.5, 
+                100
+            )
+            
+            return {
+                "type": "content_diversity",
+                "title": "Content Diversity",
+                "description": self.insight_types["content_diversity"],
+                "data": {
+                    "diversity_score": round(diversity_score),
+                    "unique_sources": len(domains),
+                    "content_types": list(content_types),
+                    "interpretation": self._interpret_diversity_score(diversity_score)
+                },
+                "visualization": "diversity_gauge"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating content diversity: {str(e)}")
+            return None
+    
+    def _interpret_diversity_score(self, score: float) -> str:
+        """
+        Interpret diversity score
+        """
+        if score >= 80:
+            return "Excellent diversity - you explore content from many different sources"
+        elif score >= 60:
+            return "Good diversity - you have a healthy mix of content sources"
+        elif score >= 40:
+            return "Moderate diversity - consider exploring new sources"
+        else:
+            return "Low diversity - try branching out to new content sources"
+    
+    async def _detect_emerging_themes(
+        self, 
+        items: List[Item], 
+        db: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Detect emerging themes from recent content
+        """
+        try:
+            # Focus on last 7 days
+            recent_date = datetime.utcnow() - timedelta(days=7)
+            recent_items = [i for i in items if i.created_at >= recent_date]
+            
+            if len(recent_items) < 3:
+                return None
+            
+            # Extract key phrases from recent content
+            content_texts = []
+            for item in recent_items[:20]:  # Limit to prevent token overflow
+                text = f"{item.title}. {item.summary or ''}"
+                content_texts.append(text)
+            
+            # Use AI to identify emerging themes
+            prompt = f"""Analyze these recent items and identify 3-5 emerging themes or patterns:
+
+{chr(10).join(content_texts)}
+
+For each theme, provide:
+1. Theme name (2-4 words)
+2. Brief description (1 sentence)
+3. Confidence level (high/medium/low)
+
+Format: Theme Name | Description | Confidence"""
+
+            ai_response = await self.llm_processor.process_with_llm(
+                prompt=prompt,
+                temperature=0.5,
+                max_tokens=400
+            )
+            
+            # Parse themes
+            themes = []
+            for line in ai_response.strip().split('\n'):
+                if '|' in line:
+                    parts = line.split('|')
+                    if len(parts) >= 3:
+                        themes.append({
+                            "name": parts[0].strip(),
+                            "description": parts[1].strip(),
+                            "confidence": parts[2].strip().lower()
+                        })
+            
+            return {
+                "type": "emerging_themes",
+                "title": "Emerging Themes",
+                "description": self.insight_types["emerging_themes"],
+                "data": {
+                    "themes": themes[:5],
+                    "based_on_items": len(recent_items),
+                    "time_window": "last 7 days"
+                },
+                "visualization": "theme_bubbles"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error detecting emerging themes: {str(e)}")
+            return None
+    
+    async def _generate_evolution_narrative(self, evolution_data: List[Dict]) -> str:
+        """
+        Generate a narrative description of knowledge evolution
+        """
+        if not evolution_data:
+            return "No evolution data available"
+        
+        # Identify major shifts
+        narratives = []
+        
+        for i in range(1, len(evolution_data)):
+            prev_topics = set(t['topic'] for t in evolution_data[i-1]['top_topics'])
+            curr_topics = set(t['topic'] for t in evolution_data[i]['top_topics'])
+            
+            new_topics = curr_topics - prev_topics
+            dropped_topics = prev_topics - curr_topics
+            
+            if new_topics:
+                narratives.append(f"In {evolution_data[i]['month']}, started exploring {', '.join(new_topics)}")
+            if dropped_topics:
+                narratives.append(f"Shifted focus away from {', '.join(dropped_topics)}")
+        
+        return " ".join(narratives[:3]) if narratives else "Consistent focus across the time period"
+    
+    async def _generate_connection_insights(self, connections: List[Dict]) -> str:
+        """
+        Generate insights about connections
+        """
+        if not connections:
+            return "No connections found"
+        
+        insights = []
+        for conn in connections[:3]:
+            insights.append(
+                f"'{conn['item1']['title']}' and '{conn['item2']['title']}' "
+                f"share conceptual similarities ({conn['similarity']:.1%} match)"
+            )
+        
+        return " | ".join(insights)
+    
+    async def _generate_insights_summary(
+        self, 
+        insights: List[Dict], 
+        item_count: int
+    ) -> str:
+        """
+        Generate overall summary of insights
+        """
+        try:
+            # Extract key findings
+            key_findings = []
+            
+            for insight in insights:
+                if insight['type'] == 'trending_topics' and insight['data']['topics']:
+                    top_topic = insight['data']['topics'][0]
+                    key_findings.append(f"'{top_topic['topic']}' is trending")
+                
+                elif insight['type'] == 'learning_velocity':
+                    momentum = insight['data']['momentum']['trend']
+                    key_findings.append(f"Learning pace is {momentum}")
+                
+                elif insight['type'] == 'content_diversity':
+                    score = insight['data']['diversity_score']
+                    key_findings.append(f"Content diversity score: {score}/100")
+            
+            # Create summary
+            summary = f"Analyzed {item_count} items. "
+            if key_findings:
+                summary += "Key findings: " + "; ".join(key_findings[:3])
+            else:
+                summary += "Generated comprehensive insights about your knowledge base."
+            
+            return summary
+            
+        except Exception as e:
+            logger.error(f"Error generating summary: {str(e)}")
+            return f"Analyzed {item_count} items and generated {len(insights)} insights"

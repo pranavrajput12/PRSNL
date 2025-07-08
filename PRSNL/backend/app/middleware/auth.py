@@ -126,3 +126,30 @@ def require_api_key(api_key_bearer: APIKeyBearer = APIKeyBearer()):
         return {"message": "This is protected"}
     """
     return api_key_bearer
+
+async def optional_auth(request: Request) -> Optional[dict]:
+    """
+    Optional authentication - returns user info if authenticated, None otherwise
+    This allows endpoints to work with or without authentication
+    """
+    try:
+        # Check for API key in header
+        api_key = request.headers.get("X-API-Key")
+        
+        if not api_key:
+            # Check Authorization header as fallback
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                api_key = auth_header.split(" ")[1]
+        
+        if api_key and API_KEY and api_key == API_KEY:
+            # Return basic user info (in real app, this would come from JWT or database)
+            return {
+                "authenticated": True,
+                "api_key": api_key[:8] + "...",  # Partial key for logging
+                "permissions": ["read", "write"]
+            }
+    except Exception as e:
+        logger.debug(f"Optional auth check failed: {e}")
+    
+    return None

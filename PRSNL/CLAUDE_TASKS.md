@@ -5,14 +5,18 @@ Always review these files before starting work:
 
 ### Documentation to Read First:
 1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
-2. `/PRSNL/MODEL_COORDINATION_RULES.md` - Coordination protocols
-3. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Task history
-4. `/PRSNL/API_DOCUMENTATION.md` - API contracts
+2. `/CURRENT_STATE.md` - Real-time project status
+3. `/SESSION_CONTINUITY.md` - Last session context
+4. `/PRSNL/MODEL_COORDINATION_RULES.md` - Coordination protocols
+5. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Task history
+6. `/PRSNL/API_DOCUMENTATION.md` - API contracts
 
 ### Files to Update After Each Task:
 1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
 2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
 3. `/PRSNL/PROJECT_STATUS.md` - Update progress section
+4. `/CURRENT_STATE.md` - Update current status
+5. `/SESSION_CONTINUITY.md` - Update session context
 
 ---
 

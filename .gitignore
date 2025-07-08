@@ -74,3 +74,10 @@ PRSNL/backend/static/
 PRSNL/frontend/build/
 PRSNL/extension/dist/
 Windsurf_Project_Execution.zip
+
+# iOS App (excluded from version control as requested)
+PRSNL-iOS/
+
+# Backup files
+backup_working_version_*.tar.gz
+*.tar.gz

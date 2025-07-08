@@ -199,13 +199,12 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                     })
                 
                 # Send completion message with citations
-                full_response = "".join(response_chunks)
+                # Don't send the message content again - frontend already has it from chunks
                 citations = [{"title": item["title"], "url": item["url"]} 
                            for item in context_items if item["url"]]
                 
                 await websocket.send_json({
                     "type": "complete",
-                    "message": full_response,
                     "citations": citations,
                     "context_count": len(relevant_items)
                 })

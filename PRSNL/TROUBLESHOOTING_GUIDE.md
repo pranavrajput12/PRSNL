@@ -1,6 +1,6 @@
 # 🔧 PRSNL Troubleshooting Guide
 
-*Last Updated: 2025-01-08*
+*Last Updated: 2025-07-08*
 
 This guide consolidates all known issues, errors, and their solutions from the PRSNL project.
 
@@ -17,6 +17,62 @@ This guide consolidates all known issues, errors, and their solutions from the P
 ---
 
 ## 🚨 Recent Critical Issues
+
+### 🔴 CRITICAL: Frontend API Calls to Wrong Port (PERMANENT FIX APPLIED)
+**Date**: 2025-07-08
+**Severity**: CRITICAL - Completely broke all API functionality
+**Status**: ✅ PERMANENTLY FIXED
+
+**Symptoms**:
+- All API calls failing with 500 errors
+- Frontend making requests to `:3002/api/...` instead of `:8000/api/...`
+- Error: "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+
+**Root Causes**:
+1. Frontend pages using direct `fetch('/api/...')` instead of API library
+2. Mixed dev/prod configurations with incorrect base URLs
+3. Docker container using pre-built code, not reflecting changes
+4. Vite server only listening on IPv6 (::1), not IPv4
+
+**PERMANENT FIX**:
+```javascript
+// frontend/src/lib/api.ts
+const API_BASE_URL = '/api'; // ALWAYS use relative URLs
+```
+
+```typescript
+// frontend/vite.config.ts
+server: {
+  host: '0.0.0.0', // Listen on all interfaces
+  proxy: {
+    '/api': {
+      target: process.env.VITE_API_URL || 'http://localhost:8000',
+      changeOrigin: true
+    }
+  }
+}
+```
+
+**Updated Files**:
+- `/routes/item/[id]/+page.svelte` - Use `getItem()` not fetch
+- `/routes/videos/[id]/+page.svelte` - Use `getItem()` not fetch
+- `/routes/videos/course/+page.svelte` - Use `getItem()` not fetch
+
+**CORRECT SETUP (NEVER DEVIATE)**:
+```bash
+# Development
+docker-compose -f docker-compose.dev.yml up    # Backend only
+cd frontend && npm run dev                      # Frontend with hot reload
+
+# Production
+docker-compose -f docker-compose.production.yml up
+```
+
+**Prevention**:
+- NEVER use direct fetch() for API calls
+- ALWAYS use relative URLs (/api/...)
+- ALWAYS test both dev and production setups
+- Run `grep -r "fetch.*api" frontend/src` to find violations
 
 ### Frontend Server Not Running (ERR_CONNECTION_REFUSED)
 **Symptoms**: 
