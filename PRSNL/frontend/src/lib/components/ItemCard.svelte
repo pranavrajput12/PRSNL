@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import Icon from './Icon.svelte';
   import VideoPlayer from './VideoPlayer.svelte';
+  import TagList from './TagList.svelte';
   import { aiApi } from '$lib/api';
   import type { Item, TimelineItem } from '$lib/types/api';
   
@@ -178,13 +179,7 @@
       <p class="summary">{item.summary}</p>
     {/if}
     
-    {#if item.tags && item.tags.length > 0}
-      <div class="tags">
-        {#each item.tags as tag}
-          <span class="tag">{tag}</span>
-        {/each}
-      </div>
-    {/if}
+    <TagList tags={item.tags} itemId={item.id} />
   </div>
   
   <footer class="item-footer">

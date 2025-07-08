@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.worker import listen_for_notifications
-from app.api.middleware import RequestIDMiddleware, LoggingMiddleware, ExceptionHandlerMiddleware
+from app.api.middleware import RequestIDMiddleware, ExceptionHandlerMiddleware
 from app.middleware.auth import AuthMiddleware
+from app.middleware.logging import APIResponseTimeMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
 from app.core.errors import StandardError, standard_error_handler, generic_error_handler
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
@@ -58,7 +59,7 @@ app.add_exception_handler(Exception, generic_error_handler)
 # Add custom middleware
 app.add_middleware(ExceptionHandlerMiddleware)
 app.add_middleware(AuthMiddleware)  # Add auth middleware after exception handler
-app.add_middleware(LoggingMiddleware)
+app.add_middleware(APIResponseTimeMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -92,7 +93,7 @@ async def startup_event():
     
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
-    print("Worker started in background.")
+    logger.info("Worker started in background.")
 
     # Schedule periodic cleanup tasks
     storage_manager = StorageManager()
@@ -106,8 +107,8 @@ async def shutdown_event():
         try:
             await worker_task # Await cancellation to ensure it's done
         except asyncio.CancelledError:
-            print("Worker task cancelled successfully.")
-    print("Worker stopped.")
+            logger.info("Worker task cancelled successfully.")
+    logger.info("Worker stopped.")
     
     # Close cache connection
     if settings.CACHE_ENABLED:
@@ -123,7 +124,7 @@ async def run_periodic_cleanup(storage_manager: StorageManager):
             await storage_manager.cleanup_orphaned_files()
             await storage_manager.cleanup_temp_files()
         except Exception as e:
-            print(f"Error during periodic cleanup: {e}")
+            logger.error(f"Error during periodic cleanup: {e}")
         await asyncio.sleep(3600) # Run every hour (3600 seconds)
 
 async def update_storage_metrics_periodically(storage_manager: StorageManager):
@@ -145,8 +146,6 @@ from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
 from app.api import insights
 from app.api.v2 import items as v2_items
-# Still disabled - working on these next:
-# from app.api import knowledge_graph, second_brain
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 app.include_router(search.router, prefix=settings.API_V1_STR)
@@ -165,10 +164,8 @@ app.include_router(video_streaming.router, prefix=settings.API_V1_STR)
 app.include_router(categorization.router, prefix=settings.API_V1_STR)
 app.include_router(duplicates.router, prefix=settings.API_V1_STR)
 app.include_router(summarization.router, prefix=settings.API_V1_STR)
-app.include_router(health.router, prefix=settings.API_V1_STR)  # New health endpoints
+app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
-# app.include_router(knowledge_graph.router, prefix=settings.API_V1_STR)
-# app.include_router(second_brain.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

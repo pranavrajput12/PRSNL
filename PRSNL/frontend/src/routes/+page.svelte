@@ -10,6 +10,7 @@
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
   import GlassCard from '$lib/components/GlassCard.svelte';
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
+  import TagList from '$lib/components/TagList.svelte';
   
   type Item = {
     id: string;
@@ -206,9 +207,7 @@
   
   <!-- Integrated Search Section -->
   <div class="search-section">
-    <PremiumInteractions variant="hover" intensity="medium">
-      <GlassCard variant="elevated" interactive={true} glowColor="#8b5cf6">
-        <div class="integrated-search">
+    <div class="integrated-search">
           <div class="search-header">
             <div class="search-title">
               <Icon name="search" size="medium" color="var(--accent)" />
@@ -306,8 +305,6 @@
             </div>
           {/if}
         </div>
-      </GlassCard>
-    </PremiumInteractions>
   </div>
   
   <div class="stats-section">
@@ -442,11 +439,7 @@
             {/if}
             <div class="item-footer">
               <time>{new Date(item.createdAt).toLocaleDateString()}</time>
-              <div class="item-tags">
-                {#each item.tags || [] as tag}
-                  <span class="tag">{tag}</span>
-                {/each}
-              </div>
+              <TagList tags={item.tags} itemId={item.id} />
             </div>
               </div>
             </GlassCard>
@@ -920,11 +913,17 @@
   
   /* Integrated Search Styles */
   .search-section {
-    margin: 4rem 0;
+    margin: 3rem auto;
+    max-width: 1200px;
+    padding: 0 2rem;
   }
   
   .integrated-search {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
     padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
   
   .search-header {

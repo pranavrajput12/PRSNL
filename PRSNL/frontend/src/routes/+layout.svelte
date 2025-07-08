@@ -4,11 +4,9 @@
   import { page } from '$app/stores';
   import Notifications from '$lib/components/Notifications.svelte';
   import Icon from '$lib/components/Icon.svelte';
-  import PerformanceMonitor from '$lib/components/PerformanceMonitor.svelte';
   import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
   import AnimatedToast from '$lib/components/AnimatedToast.svelte';
   import { preferences } from '$lib/stores/app';
-  import { mediaSettings } from '$lib/stores/media';
   import { goto } from '$app/navigation';
   
   let toasts = [];
@@ -110,10 +108,6 @@
   </main>
 
   <Notifications />
-
-  {#if $mediaSettings.logPerformanceMetrics}
-    <PerformanceMonitor position="bottom-right" />
-  {/if}
   
   <!-- Floating Action Button -->
   <!-- <FloatingActionButton actions={fabActions} /> -->

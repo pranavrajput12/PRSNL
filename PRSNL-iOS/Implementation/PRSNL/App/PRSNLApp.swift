@@ -29,8 +29,8 @@ class AppState: ObservableObject {
     
     func initializeApp() {
         Task {
-            // Show beautiful launch screen for 2 seconds
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            // Show launch screen for 1.5 seconds
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
             
             await MainActor.run {
                 self.isLaunching = false
@@ -42,80 +42,32 @@ class AppState: ObservableObject {
 struct ContentView: View {
     var body: some View {
         TabView {
-            // Timeline Tab
-            NavigationView {
-                VStack(spacing: 20) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 60))
-                        .foregroundColor(.red)
-                    
-                    Text("PRSNL")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Personal Knowledge Base")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                    
-                    Text("✅ App is working!")
-                        .font(.title2)
-                        .foregroundColor(.green)
-                        .padding()
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(10)
-                    
-                    Text("The app has successfully launched and is running without crashes.")
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .foregroundColor(.secondary)
+            // Dashboard Tab
+            DashboardView()
+                .tabItem {
+                    Label("Dashboard", systemImage: "square.grid.2x2")
                 }
-                .navigationTitle("Timeline")
-            }
-            .tabItem {
-                Label("Timeline", systemImage: "list.bullet")
-            }
+            
+            // Timeline Tab
+            TimelineView()
+                .tabItem {
+                    Label("Timeline", systemImage: "clock")
+                }
             
             // Search Tab
-            NavigationView {
-                VStack {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 50))
-                        .foregroundColor(.blue)
-                    Text("Search")
-                        .font(.title)
-                    Text("Search functionality will be implemented here")
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .padding()
+            SearchView()
+                .tabItem {
+                    Label("Search", systemImage: "magnifyingglass")
                 }
-                .navigationTitle("Search")
-            }
-            .tabItem {
-                Label("Search", systemImage: "magnifyingglass")
-            }
             
             // Settings Tab
-            NavigationView {
-                VStack {
-                    Image(systemName: "gear")
-                        .font(.system(size: 50))
-                        .foregroundColor(.gray)
-                    Text("Settings")
-                        .font(.title)
-                    Text("App settings will be configured here")
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                        .padding()
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
                 }
-                .navigationTitle("Settings")
-            }
-            .tabItem {
-                Label("Settings", systemImage: "gear")
-            }
         }
         .accentColor(.red)
         .background(Color(.systemBackground))
-        .preferredColorScheme(.light)
     }
 }
 

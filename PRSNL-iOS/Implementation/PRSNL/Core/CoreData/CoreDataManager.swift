@@ -224,7 +224,9 @@ class CoreDataManager {
             accessedAt: accessedAt,
             tags: tags,
             itemType: ItemType(rawValue: itemType) ?? .note,
-            attachments: attachments
+            attachments: attachments,
+            keyPoints: nil, // TODO: Add keyPoints to Core Data model
+            category: nil // TODO: Add category to Core Data model
         )
     }
     

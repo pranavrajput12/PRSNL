@@ -67,6 +67,42 @@
 - **Files Modified**:
     - `/PRSNL/backend/app/api/ai_suggest.py`
 
+#### Database Backup Scripts (GEMINI-SIMPLE-003)
+- **Enhancement**:
+    - Created `backup_database.sh` for daily pg_dump backups.
+    - Created `restore_database.sh` for restoring backups.
+    - Created `cleanup_old_backups.py` to manage old backup files.
+- **Files Created**:
+    - `/PRSNL/backend/scripts/backup_database.sh`
+    - `/PRSNL/backend/scripts/restore_database.sh`
+    - `/PRSNL/backend/scripts/cleanup_old_backups.py`
+
+#### Create Test Data Scripts (GEMINI-SIMPLE-001)
+- **Enhancement**:
+    - Created `populate_test_data.py` to add diverse test items.
+    - Created `generate_activity_data.py` to generate user and activity patterns.
+- **Files Created**:
+    - `/PRSNL/backend/scripts/populate_test_data.py`
+    - `/PRSNL/backend/scripts/generate_activity_data.py`
+
+### 2025-07-09 - Gemini
+#### Fix Chat Date-Based Queries (GEMINI-URGENT-001)
+- **Enhancement**:
+    - Implemented date parsing logic in `ws.py` to understand queries like "today", "yesterday", "this week", etc.
+    - Modified the SQL query in `ws.py` to include date filters when detected.
+- **Files Modified**:
+    - `/PRSNL/backend/app/api/ws.py`
+
+#### Chatbot Enhancements
+- **Enhancement**:
+    - Implemented chat history continuity by passing `conversation_history` to the LLM.
+    - Enhanced query pre-processing with improved keyword extraction and basic query expansion.
+    - Optimized knowledge retrieval using a hybrid search (full-text + semantic) with re-ranking.
+    - Improved context formulation by summarizing retrieved items and formatting them naturally for the LLM.
+- **Files Modified**:
+    - `/PRSNL/backend/app/api/ws.py`
+    - `/PRSNL/backend/app/services/unified_ai_service.py` (indirectly via `generate_summary` usage)
+
 ### 2025-01-08 - Claude
 #### Afternoon Session - Major System Fixes
 1. **Chat Feature Complete Fix** ✅

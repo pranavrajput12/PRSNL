@@ -1,11 +1,14 @@
 """Configuration settings for PRSNL"""
 from pydantic_settings import BaseSettings
 from typing import Optional
+import os
 
 
 class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/prsnl"
+    # Database - Railway provides DATABASE_URL automatically
+    _database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/prsnl")
+    # Fix Railway's postgres:// to postgresql:// for asyncpg
+    DATABASE_URL: str = _database_url.replace("postgres://", "postgresql://", 1) if _database_url.startswith("postgres://") else _database_url
     
     # API
     API_V1_STR: str = "/api"
@@ -38,9 +41,9 @@ class Settings(BaseSettings):
     SEARCH_RESULTS_LIMIT: int = 50
     SEARCH_MIN_SCORE: float = 0.1
     
-    # Cache
-    REDIS_URL: str = "redis://localhost:6379"
-    CACHE_ENABLED: bool = True
+    # Cache (Redis optional)
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL", None)
+    CACHE_ENABLED: bool = bool(os.getenv("REDIS_URL", False))
     CACHE_TTL_SECONDS: int = 3600  # 1 hour default
     CACHE_TTL_SEARCH: int = 300  # 5 minutes for search results
     CACHE_TTL_ITEM: int = 1800  # 30 minutes for items

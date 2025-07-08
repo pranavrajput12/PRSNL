@@ -1,68 +1,80 @@
-# PRSNL iOS App - Implementation Plan
+# PRSNL iOS App - Master Implementation Plan v2.0
 
-## 1. Project Overview
+## 🎯 Executive Summary
 
-The PRSNL iOS app is a native companion app for the PRSNL personal knowledge management system. This document outlines the implementation approach, timeline, and technical considerations.
+The PRSNL iOS app is a native companion to the PRSNL personal knowledge management system. This document serves as the definitive guide for implementing a feature-complete iOS application that matches and enhances the web experience with native capabilities.
 
-### Core Requirements
-- Native iOS companion app for PRSNL knowledge management system
-- Only work in `/PRSNL-iOS/` directory, no backend modifications
-- Backend running on port 8000 with API Key authentication
-- MVP features: Timeline, Search, Item Detail, Capture, Settings
+### Core Philosophy
+- **Feature parity** with web app plus iOS-specific enhancements
+- **Offline-first** architecture with seamless sync
+- **Native performance** targeting 60fps everywhere
+- **Five core sections**: Dashboard, Insights, Videos, Chat, Timeline
+- **AI-powered** features integrated throughout
 
-### Technical Stack
-- SwiftUI (iOS 17.0+)
-- MVVM with Combine
-- Core Data + SwiftData
-- URLSession with async/await
-- Keychain for API key storage
+### Critical Success Metrics
+- App launch time: < 0.5 seconds
+- Search response: < 200ms (local), < 500ms (remote)
+- Smooth 60fps scrolling everywhere
+- Offline capability for all read operations
+- Background sync every 15 minutes
 
-## 2. Backend Setup
+## 📱 The Five Pillars Architecture
 
-```bash
-# Navigate to the backend directory
-cd /Users/pronav/Personal Knowledge Base/PRSNL
+### 1. Dashboard (Home)
+The command center showing everything at a glance:
+- **Smart Feed**: Recent items with AI-suggested relevance
+- **Quick Stats**: Total items, today's captures, trending topics
+- **Quick Capture**: One-tap capture from clipboard/camera
+- **Global Search**: Unified search across all content
+- **AI Suggestions**: Proactive content recommendations
 
-# Start the backend services
-docker-compose up
+### 2. Insights
+AI-powered intelligence about your knowledge:
+- **Dynamic Insights**: Real-time generated insights
+- **Knowledge Graph**: Interactive visualization
+- **Topic Clusters**: Content organization by themes
+- **Learning Velocity**: Track knowledge growth
+- **Time Patterns**: When you learn best
 
-# The backend will be available at:
-# http://localhost:8000
+### 3. Videos
+Rich media knowledge management:
+- **Video Library**: All captured videos with transcripts
+- **Mini-Courses**: AI-generated learning paths
+- **Platform Filters**: YouTube, Twitter, Instagram, etc.
+- **Transcript Search**: Find moments in videos
+- **Watch Later**: Queue management
 
-# Verify it's running:
-curl http://localhost:8000/health
-# Should return: {"status":"healthy"}
+### 4. Chat
+Conversational interface to your knowledge:
+- **AI Assistant**: Chat with your knowledge base
+- **Multiple Modes**: General, Deep Dive, Creative, Learning
+- **Live Streaming**: Real-time responses
+- **Citations**: Sources from your knowledge base
+- **Suggested Questions**: Context-aware prompts
 
-# Test API Key:
-export PRSNL_API_KEY=test-api-key-for-development
+### 5. Timeline
+Chronological view of everything:
+- **Infinite Scroll**: Smooth pagination
+- **Rich Previews**: Images, summaries, tags
+- **Quick Actions**: Share, similar, delete
+- **Filter & Sort**: By type, date, platform
+- **Bulk Operations**: Multi-select actions
+
+## 🏗️ Technical Architecture
+
+### Core Stack
+```
+Language: Swift 5.9+
+UI Framework: SwiftUI
+Minimum iOS: 17.0
+Architecture: MVVM-C (Coordinator pattern)
+Async: Swift Concurrency (async/await)
+Storage: Core Data + CloudKit
+Networking: URLSession + WebSocket
+AI Features: CoreML + Azure OpenAI API
 ```
 
-## 3. Implementation Timeline
-
-```mermaid
-gantt
-    title PRSNL iOS Development Timeline
-    dateFormat  YYYY-MM-DD
-    section Week 1: Core Foundation
-    Project Setup & Environment      :a1, 2025-07-08, 1d
-    API Client & Models              :a2, after a1, 2d
-    Timeline View                    :a3, after a2, 2d
-    section Week 2: Main Features
-    Search (Keyword + Semantic)      :b1, 2025-07-15, 2d
-    Item Detail View                 :b2, after b1, 2d
-    Basic Capture                    :b3, after b2, 1d
-    Settings Screen                  :b4, after b3, 1d
-    section Week 3: Advanced Features
-    Core Data & Offline Support      :c1, 2025-07-22, 2d
-    Share Extension                  :c2, after c1, 3d
-    section Week 4: Polish & Finalize
-    WebSocket Integration            :d1, 2025-07-29, 2d
-    Performance Optimization         :d2, after d1, 2d
-    Final Testing & Fixes            :d3, after d2, 2d
-```
-
-## 4. Project Directory Structure
-
+### Project Structure
 ```
 PRSNL-iOS/
 ├── Implementation/
@@ -70,659 +82,509 @@ PRSNL-iOS/
 │   ├── PRSNL/
 │   │   ├── App/
 │   │   │   ├── PRSNLApp.swift
+│   │   │   ├── AppCoordinator.swift
 │   │   │   └── AppDelegate.swift
 │   │   ├── Core/
 │   │   │   ├── API/
 │   │   │   │   ├── APIClient.swift
-│   │   │   │   ├── APIEndpoints.swift
-│   │   │   │   └── APIError.swift
+│   │   │   │   ├── APIConfiguration.swift
+│   │   │   │   ├── WebSocketManager.swift
+│   │   │   │   └── Endpoints/
 │   │   │   ├── Models/
-│   │   │   │   ├── Models.swift
-│   │   │   │   └── CoreDataModels.xcdatamodeld
+│   │   │   │   ├── Item.swift
+│   │   │   │   ├── Insight.swift
+│   │   │   │   ├── Video.swift
+│   │   │   │   ├── ChatMessage.swift
+│   │   │   │   └── KnowledgeGraph.swift
+│   │   │   ├── CoreData/
+│   │   │   │   ├── PRSNLModel.xcdatamodeld
+│   │   │   │   ├── CoreDataManager.swift
+│   │   │   │   └── Entities/
 │   │   │   ├── Services/
 │   │   │   │   ├── AuthenticationService.swift
+│   │   │   │   ├── SyncManager.swift
 │   │   │   │   ├── CacheService.swift
-│   │   │   │   └── SyncService.swift
+│   │   │   │   ├── AIService.swift
+│   │   │   │   └── NotificationService.swift
 │   │   │   └── Extensions/
-│   │   │       ├── ColorExtensions.swift
-│   │   │       ├── DateExtensions.swift
-│   │   │       └── StringExtensions.swift
 │   │   ├── Features/
-│   │   │   ├── Timeline/
-│   │   │   │   ├── TimelineView.swift
-│   │   │   │   └── TimelineViewModel.swift
-│   │   │   ├── Search/
-│   │   │   │   ├── SearchView.swift
-│   │   │   │   └── SearchViewModel.swift
-│   │   │   ├── Capture/
-│   │   │   │   ├── CaptureView.swift
-│   │   │   │   └── CaptureViewModel.swift
-│   │   │   ├── ItemDetail/
-│   │   │   │   ├── ItemDetailView.swift
-│   │   │   │   └── ItemDetailViewModel.swift
-│   │   │   └── Settings/
-│   │   │       ├── SettingsView.swift
-│   │   │       └── SettingsViewModel.swift
-│   │   └── Shared/
-│   │       ├── Components/
-│   │       │   ├── ItemCard.swift
-│   │       │   ├── TagChip.swift
-│   │       │   ├── LoadingView.swift
-│   │       │   └── ErrorView.swift
-│   │       ├── Styles/
-│   │       │   ├── ButtonStyles.swift
-│   │       │   └── TextStyles.swift
-│   │       └── Utils/
-│   │           ├── ImageCache.swift
-│   │           └── Logger.swift
+│   │   │   ├── Dashboard/
+│   │   │   │   ├── DashboardCoordinator.swift
+│   │   │   │   ├── DashboardView.swift
+│   │   │   │   ├── DashboardViewModel.swift
+│   │   │   │   └── Components/
+│   │   │   ├── Insights/
+│   │   │   │   ├── InsightsCoordinator.swift
+│   │   │   │   ├── InsightsView.swift
+│   │   │   │   ├── InsightsViewModel.swift
+│   │   │   │   ├── KnowledgeGraphView.swift
+│   │   │   │   └── Components/
+│   │   │   ├── Videos/
+│   │   │   │   ├── VideosCoordinator.swift
+│   │   │   │   ├── VideoLibraryView.swift
+│   │   │   │   ├── VideoPlayerView.swift
+│   │   │   │   ├── MiniCourseView.swift
+│   │   │   │   └── Components/
+│   │   │   ├── Chat/
+│   │   │   │   ├── ChatCoordinator.swift
+│   │   │   │   ├── ChatView.swift
+│   │   │   │   ├── ChatViewModel.swift
+│   │   │   │   ├── MessageBubble.swift
+│   │   │   │   └── Components/
+│   │   │   └── Timeline/
+│   │   │       ├── TimelineCoordinator.swift
+│   │   │       ├── TimelineView.swift
+│   │   │       ├── TimelineViewModel.swift
+│   │   │       └── Components/
+│   │   ├── Shared/
+│   │   │   ├── UI/
+│   │   │   │   ├── DesignSystem.swift
+│   │   │   │   ├── GlassmorphismModifier.swift
+│   │   │   │   └── Components/
+│   │   │   ├── Navigation/
+│   │   │   │   ├── TabBarController.swift
+│   │   │   │   └── NavigationCoordinator.swift
+│   │   │   └── Utils/
+│   │   ├── Resources/
+│   │   │   ├── Assets.xcassets
+│   │   │   ├── Localizable.strings
+│   │   │   └── Info.plist
 │   ├── PRSNLTests/
-│   └── PRSNLShareExtension/ (Week 3)
-├── Coordination/
-│   ├── IMPLEMENTATION_STATUS.md
-│   ├── API_INTEGRATION_LOG.md
-│   └── DAILY_UPDATES.md
+│   ├── PRSNLUITests/
+│   ├── PRSNLShareExtension/
+│   └── PRSNLWidgets/
 ```
 
-## 5. Week-by-Week Implementation Details
+## 📅 Implementation Timeline (Revised - Building on Existing Code)
 
-### Week 1: Core Foundation
+### Current State Analysis
+✅ **Already Implemented:**
+- Complete networking layer (APIClient with all endpoints)
+- WebSocket infrastructure 
+- Core Data setup with models
+- Network monitoring
+- Basic tab navigation
+- Timeline view structure
+- Solid MVVM architecture
 
-#### Day 1: Project Setup & Environment
-1. **Create Xcode Project**
-   - Name: PRSNL
-   - Interface: SwiftUI
-   - Language: Swift
-   - Minimum iOS: 17.0
-   - Include Core Data: Yes
+❌ **Not Implemented:**
+- API connection to backend
+- Actual data display
+- Most views (Search, Settings, ItemDetail, Dashboard, Insights, Videos, Chat)
+- Capture functionality
+- Share extension & widgets
 
-2. **Configure Project**
-   - Setup Manchester United theme (#DC143C)
-   - Configure SwiftUI previews
-   - Setup project organization
+### Phase 1: Connect to Backend (Day 1-2)
+**Goal**: Get real data flowing into the app
 
-3. **Setup Coordination Documents**
-   - Initialize IMPLEMENTATION_STATUS.md
-   - Create API_INTEGRATION_LOG.md
-   - Setup DAILY_UPDATES.md
+#### Day 1: API Connection & Timeline
+- [x] ~~APIClient already implemented~~
+- [ ] Add API key configuration to Settings
+- [ ] Connect TimelineViewModel to real API
+- [ ] Test data flow and display
+- [ ] Add error handling UI
+- [ ] Implement pull-to-refresh with real data
 
-#### Days 2-3: API Client & Models
-1. **Create API Client**
-   ```swift
-   class APIClient {
-       static let shared = APIClient()
-       private let baseURL = "http://localhost:8000/api"
-       private var apiKey: String? {
-           KeychainService.shared.get(.apiKey)
-       }
-       
-       private var headers: [String: String] {
-           var headers = ["Content-Type": "application/json"]
-           if let apiKey = apiKey {
-               headers["X-API-Key"] = apiKey
-           }
-           return headers
-       }
-       
-       // MARK: - Request Methods
-       func request<T: Decodable>(_ endpoint: String, method: String = "GET", 
-                                 body: Encodable? = nil) async throws -> T {
-           // Implementation
-       }
-       
-       // MARK: - Specific Endpoints
-       func fetchTimeline(page: Int = 1) async throws -> TimelineResponse {
-           // Implementation
-       }
-       
-       // Additional endpoints...
-   }
-   ```
+#### Day 2: Core Views
+- [ ] Implement ItemDetailView (2-3 hours)
+- [ ] Create basic SearchView with existing APIClient search (2-3 hours)
+- [ ] Create SettingsView with backend URL config (1-2 hours)
+- [ ] Add loading states and error handling
 
-2. **Implement Models**
-   - Copy base models from SWIFT_MODELS.md
-   - Add Attachment model for the recent backend update
-   - Create extensions for validation
-   - Setup custom date encoder/decoder
+### Phase 2: Five Core Sections (3-4 Days)
+**Goal**: Implement all five main sections using existing infrastructure
 
-3. **Keychain Service**
-   ```swift
-   enum KeychainKey: String {
-       case apiKey
-       case serverURL
-   }
+#### Day 3: Dashboard & Enhanced Timeline
+- [ ] Create DashboardView as new home tab (3-4 hours)
+  - [ ] Quick stats using existing APIClient.getAnalytics()
+  - [ ] Recent items feed
+  - [ ] Quick capture button
+  - [ ] Search bar integration
+- [ ] Enhance Timeline with filtering (2 hours)
+  - [ ] Add date/type/platform filters
+  - [ ] Implement swipe actions
+  - [ ] Add image loading for previews
+
+#### Day 4: Chat Implementation
+- [ ] Create ChatView using existing WebSocketManager (3-4 hours)
+  - [ ] Message UI with bubbles
+  - [ ] Connect to `/ws/chat/{client_id}` endpoint
+  - [ ] Handle streaming responses
+  - [ ] Show citations from knowledge base
+- [ ] Add ChatViewModel (2 hours)
+  - [ ] Message history management
+  - [ ] WebSocket state handling
+
+#### Day 5: Videos & Insights
+- [ ] Create VideosView (3 hours)
+  - [ ] Grid/list layout toggle
+  - [ ] Use existing APIClient video endpoints
+  - [ ] Platform filtering UI
+  - [ ] Video player integration
+- [ ] Create InsightsView (3 hours)
+  - [ ] Connect to insights API endpoint
+  - [ ] Display dynamic insights
+  - [ ] Simple chart visualizations
+  - [ ] Topic clusters list
+
+### Phase 3: Capture & Enhancement (2-3 Days)
+**Goal**: Add content creation and polish existing features
+
+#### Day 6-7: Capture Implementation
+- [ ] Create CaptureView and CaptureViewModel (4 hours)
+  - [ ] URL/text input form
+  - [ ] Quick capture from clipboard
+  - [ ] Tag selection/creation
+  - [ ] Use existing APIClient.capture()
+- [ ] Enhance all views with proper loading/error states (3 hours)
+- [ ] Add pull-to-refresh everywhere (2 hours)
+- [ ] Implement proper image caching (2 hours)
+
+### Phase 4: Native iOS Features (3-4 Days)
+**Goal**: iOS-specific enhancements
+
+#### Day 8-9: Share Extension
+- [ ] Configure share extension target (2 hours)
+- [ ] Create mini capture UI (3 hours)
+- [ ] Use App Groups for data sharing (2 hours)
+- [ ] Background upload handling (2 hours)
+
+#### Day 10: Widgets & System Integration
+- [ ] Timeline widget using existing data (3 hours)
+- [ ] Quick stats widget (2 hours)
+- [ ] Spotlight search integration (2 hours)
+- [ ] Basic Siri shortcuts (1 hour)
+
+### Total Realistic Timeline: 10 Days (2 Weeks)
+
+## 🎯 Immediate Action Plan (TODAY)
+
+Since we need to show progress TODAY, here's what we can accomplish:
+
+### Today's Goals (Day 1)
+1. **Morning (2-3 hours)**
+   - [ ] Add backend URL configuration to UserDefaults
+   - [ ] Update TimelineViewModel to use real API
+   - [ ] Test Timeline with live data
    
-   class KeychainService {
-       static let shared = KeychainService()
-       
-       func save(_ key: KeychainKey, value: String) -> Bool {
-           // Implementation
-       }
-       
-       func get(_ key: KeychainKey) -> String? {
-           // Implementation
-       }
-       
-       func delete(_ key: KeychainKey) -> Bool {
-           // Implementation
-       }
-   }
-   ```
-
-#### Days 4-5: Timeline View
-1. **TimelineViewModel**
-   ```swift
-   class TimelineViewModel: ObservableObject {
-       @Published var items: [TimelineItem] = []
-       @Published var isLoading = false
-       @Published var error: Error?
-       @Published var page = 1
-       @Published var hasMorePages = true
-       
-       func loadInitialItems() async {
-           // Implementation with performance tracking
-       }
-       
-       func loadMoreItems() async {
-           // Implementation with pagination
-       }
-       
-       func refresh() async {
-           // Implementation
-       }
-   }
-   ```
-
-2. **TimelineView**
-   ```swift
-   struct TimelineView: View {
-       @StateObject private var viewModel = TimelineViewModel()
-       
-       var body: some View {
-           NavigationView {
-               ZStack {
-                   List {
-                       ForEach(viewModel.items) { item in
-                           ItemCard(item: item)
-                               .onAppear {
-                                   // Check if near end for pagination
-                               }
-                       }
-                       
-                       if viewModel.hasMorePages && !viewModel.isLoading {
-                           ProgressView()
-                               .onAppear {
-                                   // Load more items
-                               }
-                       }
-                   }
-                   .refreshable {
-                       // Pull to refresh
-                   }
-                   
-                   // Loading and error states
-               }
-               .navigationTitle("Timeline")
-           }
-           .task {
-               // Initial load
-           }
-       }
-   }
-   ```
-
-3. **ItemCard Component**
-   ```swift
-   struct ItemCard: View {
-       let item: TimelineItem
-       
-       var body: some View {
-           VStack(alignment: .leading) {
-               // Title
-               // Summary
-               // Thumbnail from attachments or thumbnailUrl
-               // Tags using TagChip
-               // Date
-           }
-           .padding()
-           .background(Color.prsnlSurface)
-           .cornerRadius(8)
-       }
-   }
-   ```
-
-### Week 2: Main Features
-
-#### Days 1-2: Search Implementation
-1. **SearchViewModel**
-   ```swift
-   enum SearchMode {
-       case keyword
-       case semantic
-   }
+2. **Afternoon (3-4 hours)**
+   - [ ] Create basic SettingsView with URL input
+   - [ ] Implement ItemDetailView
+   - [ ] Create basic SearchView
    
-   class SearchViewModel: ObservableObject {
-       @Published var query = ""
-       @Published var results: [SearchResult] = []
-       @Published var isLoading = false
-       @Published var error: Error?
-       @Published var searchMode: SearchMode = .keyword
-       @Published var recentSearches: [String] = []
-       
-       private var searchTask: Task<Void, Never>?
-       
-       func search() {
-           // Implement with debouncing (300ms)
-           // Cancel previous requests
-       }
-       
-       func performSearch() async {
-           // Implementation
-       }
-       
-       func addToRecentSearches(_ query: String) {
-           // Implementation
-       }
-   }
-   ```
+3. **Evening (2 hours)**
+   - [ ] Test end-to-end flow
+   - [ ] Fix any API connection issues
+   - [ ] Commit working version with real data
 
-2. **SearchView**
-   ```swift
-   struct SearchView: View {
-       @StateObject private var viewModel = SearchViewModel()
-       
-       var body: some View {
-           VStack {
-               // Search bar with debounce
-               // Mode toggle (keyword/semantic)
-               // Results list
-               // Recent searches
-               // Empty state
-           }
-       }
-   }
-   ```
+## 🔧 Implementation Details
 
-#### Days 3-4: Item Detail View
-1. **ItemDetailViewModel**
-   ```swift
-   class ItemDetailViewModel: ObservableObject {
-       @Published var item: Item?
-       @Published var isLoading = false
-       @Published var error: Error?
-       @Published var similarItems: [Item] = []
-       
-       func loadItem(id: UUID) async {
-           // Implementation
-       }
-       
-       func findSimilarItems() async {
-           // Implementation
-       }
-       
-       func updateTags(_ tags: [String]) async {
-           // Implementation
-       }
-   }
-   ```
-
-2. **ItemDetailView**
-   ```swift
-   struct ItemDetailView: View {
-       @StateObject private var viewModel = ItemDetailViewModel()
-       let itemId: UUID
-       
-       var body: some View {
-           ScrollView {
-               VStack(alignment: .leading) {
-                   // Title
-                   // Content
-                   // Attachments gallery
-                   // Tags with editing
-                   // Similar items
-                   // Share button
-               }
-           }
-           .navigationTitle(viewModel.item?.title ?? "")
-           .toolbar {
-               // Find similar button
-               // Share button
-           }
-           .task {
-               // Load item
-           }
-       }
-   }
-   ```
-
-3. **AttachmentsGallery Component**
-   ```swift
-   struct AttachmentsGallery: View {
-       let attachments: [Attachment]
-       let baseURL: String
-       
-       var body: some View {
-           // Image gallery with paging
-       }
-   }
-   ```
-
-#### Day 5: Basic Capture & Settings
-1. **CaptureViewModel**
-   ```swift
-   class CaptureViewModel: ObservableObject {
-       @Published var url = ""
-       @Published var title = ""
-       @Published var content = ""
-       @Published var tags: [String] = []
-       @Published var isLoading = false
-       @Published var error: Error?
-       @Published var recentTags: [String] = []
-       @Published var successMessage: String?
-       
-       func captureItem() async {
-           // Implementation
-       }
-       
-       func loadRecentTags() async {
-           // Implementation
-       }
-       
-       func validateInput() -> Bool {
-           // Implementation
-       }
-   }
-   ```
-
-2. **CaptureView**
-   ```swift
-   struct CaptureView: View {
-       @StateObject private var viewModel = CaptureViewModel()
-       
-       var body: some View {
-           Form {
-               // URL field
-               // Title field
-               // Content field
-               // Tags field with suggestions
-               // Save button
-           }
-           .navigationTitle("Capture")
-           .alert("Success", isPresented: $showSuccess) {
-               Button("OK") { }
-           } message: {
-               Text(viewModel.successMessage ?? "")
-           }
-       }
-   }
-   ```
-
-3. **SettingsViewModel & View**
-   ```swift
-   class SettingsViewModel: ObservableObject {
-       @Published var apiKey = ""
-       @Published var serverURL = "http://localhost:8000"
-       @Published var isSaving = false
-       @Published var error: Error?
-       
-       func saveSettings() {
-           // Implementation
-       }
-       
-       func loadSettings() {
-           // Implementation
-       }
-       
-       func clearCache() {
-           // Implementation
-       }
-   }
-   ```
-
-### Week 3: Advanced Features
-
-#### Days 1-2: Core Data & Offline Support
-1. **Core Data Models**
-   - Update schemas for all entities
-   - Include attachment support
-   - Create sync timestamp tracking
-
-2. **Sync Service**
-   ```swift
-   class SyncService {
-       static let shared = SyncService()
-       
-       func syncItems() async {
-           // Implementation
-       }
-       
-       func queueForSync(_ item: CaptureRequest) {
-           // Implementation
-       }
-       
-       func processQueue() async {
-           // Implementation
-       }
-   }
-   ```
-
-3. **Offline-First Data Manager**
-   ```swift
-   class DataManager {
-       static let shared = DataManager()
-       
-       func loadTimelineItems(page: Int) async -> [TimelineItem] {
-           // Try network, fall back to cache
-       }
-       
-       func cacheTimelineItems(_ items: [TimelineItem]) {
-           // Implementation
-       }
-       
-       // Additional methods for search, items, etc.
-   }
-   ```
-
-#### Days 3-5: Share Extension
-1. **Configure Share Extension Target**
-   - Add target to project
-   - Setup app groups
-   - Configure entitlements
-
-2. **Share Extension UI**
-   ```swift
-   struct ShareViewController: UIViewControllerRepresentable {
-       // Implementation
-   }
-   ```
-
-3. **Shared Data Layer**
-   ```swift
-   class SharedDataManager {
-       static let shared = SharedDataManager()
-       let appGroupIdentifier = "group.ai.prsnl.shared"
-       
-       func saveSharedItem(_ request: CaptureRequest) {
-           // Implementation
-       }
-       
-       func getQueuedItems() -> [CaptureRequest] {
-           // Implementation
-       }
-   }
-   ```
-
-### Week 4: Polish & Finalize
-
-#### Days 1-2: WebSocket Integration
-1. **WebSocketService**
-   ```swift
-   class WebSocketService {
-       static let shared = WebSocketService()
-       private var webSocketTask: URLSessionWebSocketTask?
-       private var isConnected = false
-       private var reconnectAttempts = 0
-       
-       func connect() {
-           // Implementation with reconnection strategy
-       }
-       
-       func disconnect() {
-           // Implementation
-       }
-       
-       func send(_ message: WebSocketMessage) {
-           // Implementation
-       }
-       
-       func receive() {
-           // Implementation
-       }
-   }
-   ```
-
-2. **Live Tag Suggestions**
-   ```swift
-   class LiveTagSuggestionsViewModel: ObservableObject {
-       @Published var suggestions: [String] = []
-       @Published var isConnected = false
-       
-       func startSuggestions(for text: String) {
-           // Implementation using WebSocketService
-       }
-   }
-   ```
-
-#### Days 3-4: Performance Optimization
-1. **Image Caching**
-   ```swift
-   class ImageCache {
-       static let shared = ImageCache()
-       private let cache = NSCache<NSString, UIImage>()
-       
-       func setImage(_ image: UIImage, forKey key: String) {
-           // Implementation
-       }
-       
-       func getImage(forKey key: String) -> UIImage? {
-           // Implementation
-       }
-   }
-   ```
-
-2. **Network Performance**
-   - Implement proper request cancellation
-   - Add caching headers
-   - Optimize batch operations
-
-3. **UI Performance**
-   - Use LazyVStack consistently
-   - Implement proper list recycling
-   - Optimize rendering paths
-
-#### Days 5-6: Final Testing & Fixes
-1. **Performance Testing**
-   - Verify app launch < 1 second
-   - Ensure search response < 500ms
-   - Test scrolling performance (60fps)
-   - Monitor memory usage (< 100MB target)
-
-2. **Cross-Feature Testing**
-   - Offline mode transitions
-   - Share extension integration
-   - WebSocket reconnection
-   - Error recovery
-
-3. **Final Fixes**
-   - Address any remaining issues
-   - Polish UI elements
-   - Final documentation
-
-## 6. Technical Specifications
-
-### Authentication & Security
-- API Key stored in Keychain
-- App Transport Security configuration
-- Proper error handling for auth failures
-- No user data tracking
-
-### Network Layer
-- URLSession with async/await
-- Proper error handling and retry logic
-- Timeout: 30 seconds
-- Caching strategy: Aggressive for thumbnails, moderate for content
-
-### Data Management
-- Core Data for persistent storage
-- MVVM architecture throughout
-- Combine for reactive updates
-- Proper input validation
-
-### UI/UX Guidelines
-- Manchester United theme (#DC143C)
-- Dark mode support
-- SF Pro fonts
-- Consistent loading/error states
-- Empty state handling
-
-## 7. Performance Requirements
-
-| Metric | Target | Implementation Strategy |
-|--------|--------|------------------------|
-| App Launch | < 1 second | Minimize startup work, defer non-critical tasks |
-| Search Response | < 500ms | Debounce, cancel previous requests, optimize rendering |
-| Timeline Scroll | 60fps | LazyVStack, image caching, optimized cells |
-| Memory Usage | < 100MB | Proper image sizing, memory purging, Core Data batching |
-| Network Efficiency | Minimize data | Pagination (20 items), optimized requests, caching |
-
-## 8. Reusable Components Library
-
-To maximize code reuse and maintain consistency, we'll build these components:
-
-1. **ItemCard** - For Timeline and Search results
-2. **TagChip** - Consistent tag display across the app
-3. **LoadingView** - Standardized loading indicator
-4. **ErrorView** - Consistent error presentation
-5. **AttachmentsGallery** - For displaying item images
-6. **NetworkImage** - Image loading with caching and placeholder
-
-## 9. Recent Backend Updates
-
-The backend now supports attachments (images) for articles:
+### API Integration
 
 ```swift
-// Add to your Item struct
-let attachments: [Attachment]?
-
-// New Attachment model
-struct Attachment: Codable {
-    let id: String
-    let fileType: String    // "image" or "video"
-    let filePath: String    // Relative path like /media/attachments/...
-    let mimeType: String    // e.g., "image/jpeg"
-    let metadata: AttachmentMetadata?
+// APIConfiguration.swift
+class APIConfiguration {
+    static let shared = APIConfiguration()
     
-    enum CodingKeys: String, CodingKey {
-        case id
-        case fileType = "file_type"
-        case filePath = "file_path"
-        case mimeType = "mime_type"
-        case metadata
+    @AppStorage("backendURL") var baseURL = "http://localhost:8000"
+    @KeychainStorage("apiKey") var apiKey: String?
+    
+    var headers: HTTPHeaders {
+        var headers = HTTPHeaders()
+        headers["Content-Type"] = "application/json"
+        if let apiKey = apiKey {
+            headers["X-API-Key"] = apiKey
+        }
+        return headers
     }
-}
-
-struct AttachmentMetadata: Codable {
-    let alt: String?        // Alt text for images
-    let title: String?      // Image title
-    let isRemote: Bool?     // If image is external
-    let index: Int?         // Order in article
+    
+    // Endpoints
+    var timelineURL: URL { baseURL.appendingPathComponent("/api/timeline") }
+    var insightsURL: URL { baseURL.appendingPathComponent("/api/insights") }
+    var videosURL: URL { baseURL.appendingPathComponent("/api/videos") }
+    var searchURL: URL { baseURL.appendingPathComponent("/api/search") }
+    var captureURL: URL { baseURL.appendingPathComponent("/api/capture") }
 }
 ```
 
-This needs to be implemented in the Item model and supported in the UI.
+### Core Data Schema
 
-## 10. Next Steps
+```swift
+// Item Entity
+@objc(CDItem)
+public class CDItem: NSManagedObject {
+    @NSManaged public var id: UUID
+    @NSManaged public var title: String
+    @NSManaged public var content: String
+    @NSManaged public var summary: String?
+    @NSManaged public var url: String?
+    @NSManaged public var createdAt: Date
+    @NSManaged public var updatedAt: Date
+    @NSManaged public var syncStatus: Int16
+    @NSManaged public var tags: NSSet
+    @NSManaged public var attachments: NSSet
+}
+```
 
-1. Set up the local development environment with the backend running
-2. Create the Xcode project structure
-3. Implement the API client and base models
-4. Start with the Timeline view
+### WebSocket Chat
+
+```swift
+// ChatViewModel.swift
+class ChatViewModel: ObservableObject {
+    @Published var messages: [ChatMessage] = []
+    @Published var isConnected = false
+    @Published var isTyping = false
+    
+    private var webSocketTask: URLSessionWebSocketTask?
+    
+    func connect() {
+        let url = URL(string: "ws://localhost:8000/ws/chat/\(UUID())")!
+        webSocketTask = URLSession.shared.webSocketTask(with: url)
+        webSocketTask?.resume()
+        receiveMessage()
+    }
+    
+    func sendMessage(_ text: String) {
+        let message = ChatMessage(text: text, isUser: true)
+        messages.append(message)
+        
+        let wsMessage = URLSessionWebSocketTask.Message.string(text)
+        webSocketTask?.send(wsMessage) { error in
+            if let error = error {
+                print("WebSocket send error: \(error)")
+            }
+        }
+    }
+    
+    private func receiveMessage() {
+        webSocketTask?.receive { [weak self] result in
+            switch result {
+            case .success(let message):
+                switch message {
+                case .string(let text):
+                    DispatchQueue.main.async {
+                        let chatMessage = ChatMessage(text: text, isUser: false)
+                        self?.messages.append(chatMessage)
+                    }
+                case .data(_):
+                    break
+                @unknown default:
+                    break
+                }
+                self?.receiveMessage() // Continue receiving
+            case .failure(let error):
+                print("WebSocket receive error: \(error)")
+            }
+        }
+    }
+}
+```
+
+### Offline Sync Strategy
+
+```swift
+// SyncManager.swift
+class SyncManager {
+    static let shared = SyncManager()
+    
+    private let queue = OperationQueue()
+    private var syncTimer: Timer?
+    
+    func startSync() {
+        // Initial sync
+        performSync()
+        
+        // Schedule periodic sync every 15 minutes
+        syncTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { _ in
+            self.performSync()
+        }
+    }
+    
+    private func performSync() {
+        Task {
+            // 1. Upload pending captures
+            await uploadPendingItems()
+            
+            // 2. Sync timeline updates
+            await syncTimelineUpdates()
+            
+            // 3. Update insights
+            await refreshInsights()
+            
+            // 4. Clean old cache
+            await cleanCache()
+        }
+    }
+}
+```
+
+## 🎨 Design System
+
+### Colors
+```swift
+extension Color {
+    // Primary
+    static let prsnlRed = Color(hex: "#DC143C")
+    static let prsnlRedGradient = LinearGradient(
+        colors: [Color(hex: "#FF0040"), Color(hex: "#DC143C")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    // Semantic
+    static let prsnlBackground = Color("Background")
+    static let prsnlSurface = Color("Surface")
+    static let prsnlText = Color("Text")
+    static let prsnlSecondaryText = Color("SecondaryText")
+    
+    // Glass morphism
+    static let prsnlGlass = Color.white.opacity(0.1)
+    static let prsnlGlassBorder = Color.white.opacity(0.2)
+}
+```
+
+### Typography
+```swift
+extension Font {
+    static let prsnlLargeTitle = Font.system(size: 34, weight: .bold)
+    static let prsnlTitle = Font.system(size: 28, weight: .semibold)
+    static let prsnlHeadline = Font.system(size: 20, weight: .semibold)
+    static let prsnlBody = Font.system(size: 17, weight: .regular)
+    static let prsnlCaption = Font.system(size: 15, weight: .regular)
+}
+```
+
+### Glass Morphism Effect
+```swift
+struct GlassmorphismModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(.ultraThinMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.prsnlGlassBorder, lineWidth: 1)
+            )
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+    }
+}
+```
+
+## 📊 Performance Requirements
+
+| Feature | Target | Strategy |
+|---------|--------|----------|
+| App Launch | < 0.5s | Lazy loading, minimal startup work |
+| Search Response | < 200ms local, < 500ms remote | Local index, debouncing |
+| Scroll FPS | 60fps | Cell reuse, image caching, async loading |
+| Memory Usage | < 150MB | Automatic cache purging, image optimization |
+| Offline Sync | < 30s | Incremental sync, background processing |
+| Chat Response | < 100ms first token | WebSocket streaming |
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+- Model serialization/deserialization
+- Core Data operations
+- Sync logic
+- AI response parsing
+- Cache management
+
+### UI Tests
+- User flows for all 5 sections
+- Offline mode transitions
+- Share extension
+- Widget functionality
+- Performance benchmarks
+
+### Integration Tests
+- API endpoint coverage
+- WebSocket reliability
+- Background sync
+- Push notifications
+- Deep linking
+
+## 🚀 Launch Checklist
+
+### Pre-Launch
+- [ ] All features implemented and tested
+- [ ] Performance targets met
+- [ ] Offline mode fully functional
+- [ ] Share extension working
+- [ ] Widgets configured
+- [ ] App Store assets prepared
+
+### Launch Day
+- [ ] Backend API deployed and stable
+- [ ] App submitted to App Store
+- [ ] TestFlight beta released
+- [ ] Documentation updated
+- [ ] Support channels ready
+
+### Post-Launch
+- [ ] Monitor crash reports
+- [ ] Track performance metrics
+- [ ] Gather user feedback
+- [ ] Plan feature updates
+- [ ] Regular sync improvements
+
+## 🔮 Future Enhancements
+
+### Version 1.1
+- Apple Watch companion app
+- iPad optimized UI
+- macOS Catalyst support
+- iCloud backup
+- Advanced shortcuts
+
+### Version 1.2
+- AR knowledge visualization
+- Voice capture with transcription
+- Collaborative features
+- Custom AI models
+- Export to Obsidian/Notion
+
+### Version 2.0
+- Multi-account support
+- End-to-end encryption
+- Plugin system
+- API for third-party apps
+- Advanced analytics
+
+## 📝 Team Coordination
+
+### Daily Sync Points
+- Morning: Review yesterday's progress
+- Midday: Share blockers and updates
+- Evening: Update implementation status
+
+### Documentation
+- Update IMPLEMENTATION_STATUS.md daily
+- Log all API changes in API_INTEGRATION_LOG.md
+- Track decisions in DECISION_LOG.md
+
+### Communication
+- Primary: Implementation folder docs
+- Async: Update tracking files
+- Sync: Only for critical blockers
+
+## ✅ Success Criteria
+
+The iOS app will be considered complete when:
+
+1. **All 5 sections** fully implemented with feature parity
+2. **Performance targets** consistently met
+3. **Offline mode** seamless and reliable
+4. **Native features** (widgets, share, shortcuts) working
+5. **Sync** reliable with < 1% failure rate
+6. **UI/UX** smooth, consistent, and delightful
+7. **Crash rate** < 0.1%
+8. **User satisfaction** > 4.5 stars
+
+---
+
+*This document is the single source of truth for the PRSNL iOS implementation. All decisions and changes should be reflected here.*
+
+**Last Updated**: 2025-07-09
+**Version**: 2.0
+**Author**: Claude (Orchestrator)

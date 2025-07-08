@@ -199,6 +199,16 @@ PRSNL is a personal knowledge management system with video processing, AI-powere
 **Focus**: Backend Services, Video Processing, Infrastructure
 
 #### ✅ Completed Tasks (11 total)
+- [x] **GEMINI-URGENT-001**: Fix Chat Date-Based Queries
+  - Implemented date parsing logic in `ws.py`
+  - Modified SQL query to include date filters
+- [x] **GEMINI-SIMPLE-001**: Create Test Data Scripts
+  - Created `populate_test_data.py` for diverse item types.
+  - Created `generate_activity_data.py` for user and activity patterns.
+- [x] **GEMINI-SIMPLE-002**: API Response Time Logging
+  - Implemented `APIResponseTimeMiddleware` in `app.main.py`.
+  - Created `app/middleware/logging.py` for the middleware.
+  - Created `app/utils/logger.py` for structured logging.
 - [x] Video download service with yt-dlp
 - [x] Storage manager with thumbnail generation
 - [x] Background task processing
@@ -265,6 +275,13 @@ PRSNL is a personal knowledge management system with video processing, AI-powere
   - Integrated Prometheus middleware in `app.main.py` to expose metrics.
   - Identified existing Prometheus metrics definitions and in-app metrics service.
   - Files: `/PRSNL/backend/app/main.py`, `/PRSNL/backend/app/monitoring/metrics.py`, `/PRSNL/backend/app/services/metrics_service.py`
+
+- [x] **GEMINI-CHATBOT-IMPROVEMENTS**: Chatbot Enhancements
+  - Implemented chat history continuity by passing `conversation_history` to the LLM.
+  - Enhanced query pre-processing with improved keyword extraction and basic query expansion.
+  - Optimized knowledge retrieval using a hybrid search (full-text + semantic) with re-ranking.
+  - Improved context formulation by summarizing retrieved items and formatting them naturally for the LLM.
+  - Files: `/PRSNL/backend/app/api/ws.py`, `/PRSNL/backend/app/services/unified_ai_service.py` (indirectly via `generate_summary` usage)
 
 ### 🤖 CLAUDE (Integration/Documentation)
 **Focus**: API Integration, AI Enhancement, Documentation

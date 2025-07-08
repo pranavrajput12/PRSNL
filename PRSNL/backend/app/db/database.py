@@ -2,6 +2,7 @@
 import asyncpg
 from typing import Optional, List, AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from pgvector.asyncpg import register_vector
 from app.config import settings
 
 _db_pool: Optional[asyncpg.Pool] = None
@@ -18,7 +19,8 @@ async def create_db_pool():
         settings.DATABASE_URL,
         min_size=10,
         max_size=20,
-        command_timeout=60
+        command_timeout=60,
+        init=register_vector
     )
 
 

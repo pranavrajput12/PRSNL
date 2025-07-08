@@ -79,7 +79,31 @@ This document consolidates all project status, context, and task assignments. Ot
 ## 🔧 RECENT FIXES (2025-01-08)
 
 ### Fixed Issues:
-1. **Frontend Connection Refused Error**
+1. **Chat Date-Based Queries**
+   - Issue: Chat endpoint did not understand date-based queries (e.g., "yesterday", "this week").
+   - Root Cause: Missing date parsing logic and SQL query modification.
+   - Fix: Implemented date parsing in `ws.py` and integrated date filters into the SQL query.
+   - Status: ✅ RESOLVED
+
+2. **Test Data Scripts Created**
+   - Issue: Lack of comprehensive test data for development and testing.
+   - Root Cause: No dedicated scripts for populating diverse test items and activity patterns.
+   - Fix: Created `populate_test_data.py` and `generate_activity_data.py`.
+   - Status: ✅ RESOLVED
+
+3. **Database Backup Scripts Created**
+   - Issue: No automated solution for backing up and restoring the database.
+   - Root Cause: Missing scripts for pg_dump, restore, and cleanup.
+   - Fix: Created `backup_database.sh`, `restore_database.sh`, and `cleanup_old_backups.py`.
+   - Status: ✅ RESOLVED
+
+4. **Chatbot Enhancements**
+   - Issue: Limited conversational continuity, basic query understanding, and suboptimal knowledge retrieval.
+   - Root Cause: Chat history not fully utilized, simple keyword extraction, and lack of hybrid search/context summarization.
+   - Fix: Implemented chat history continuity, enhanced query pre-processing with expansion, optimized RAG with hybrid search and re-ranking, and improved context formulation with item summarization.
+   - Status: ✅ RESOLVED
+
+5. **Frontend Connection Refused Error**
    - Issue: localhost refused to connect, ERR_CONNECTION_REFUSED
    - Root Cause: Frontend dev server was not running
    - Fix: Started Vite dev server with `npm run dev`

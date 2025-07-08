@@ -889,8 +889,8 @@
   }
   
   .brain-visualization {
-    width: 200px;
-    height: 200px;
+    width: 120px;
+    height: 120px;
     margin: 0 auto;
   }
   

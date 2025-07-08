@@ -6,6 +6,7 @@
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import TagList from '$lib/components/TagList.svelte';
   import { browser } from '$app/environment';
   import { mediaSettings, recordMemoryUsage } from '$lib/stores/media';
 
@@ -670,16 +671,7 @@
                           {/if}
                         {/if}
                         
-                        {#if item.tags?.length > 0}
-                          <div class="item-tags">
-                            {#each item.tags as tag}
-                              <span class="tag">
-                                <Icon name="tag" size="small" />
-                                {tag}
-                              </span>
-                            {/each}
-                          </div>
-                        {/if}
+                        <TagList tags={item.tags} itemId={item.id} />
                       </div>
                     </div>
                   {/each}
@@ -691,11 +683,6 @@
           <!-- Regular rendering without virtual scrolling -->
           {#each groups as group, groupIndex}
             <div class="timeline-group" style="animation-delay: {groupIndex * 100}ms">
-              <!-- Debug info for each group -->
-              <div style="background: lightblue; padding: 5px; margin-bottom: 5px;">
-                Group {groupIndex}: {group.date} - {group.items.length} items
-              </div>
-              
               <div class="date-separator">
                 <h2>{formatDate(group.date)}</h2>
                 <div class="separator-line"></div>
@@ -772,16 +759,7 @@
                         {/if}
                       {/if}
                       
-                      {#if item.tags?.length > 0}
-                        <div class="item-tags">
-                          {#each item.tags as tag}
-                            <span class="tag">
-                              <Icon name="tag" size="small" />
-                              {tag}
-                            </span>
-                          {/each}
-                        </div>
-                      {/if}
+                      <TagList tags={item.tags} itemId={item.id} />
                     </div>
                   </div>
                 {/each}

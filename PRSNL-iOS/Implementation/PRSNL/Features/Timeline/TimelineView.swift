@@ -5,7 +5,7 @@ struct TimelineView: View {
     @State private var selectedItem: Item?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.items.isEmpty && !viewModel.isLoading {
                     emptyStateView
@@ -32,7 +32,10 @@ struct TimelineView: View {
                 }
             }
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+        .alert("Error", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { _ in viewModel.errorMessage = nil }
+        )) {
             Button("OK") {
                 viewModel.errorMessage = nil
             }
@@ -66,7 +69,7 @@ struct TimelineView: View {
                     .padding(.top)
             }
             
-            Button("Retry") {
+            Button("Load Timeline") {
                 Task { await viewModel.refresh() }
             }
             .buttonStyle(.borderedProminent)
@@ -175,6 +178,7 @@ extension ItemType {
         case .image: return "Image"
         case .audio: return "Audio"
         case .document: return "Document"
+        case .link: return "Link"
         case .other: return "Other"
         }
     }
@@ -187,6 +191,7 @@ extension ItemType {
         case .image: return "photo"
         case .audio: return "waveform"
         case .document: return "doc"
+        case .link: return "link"
         case .other: return "questionmark.circle"
         }
     }
