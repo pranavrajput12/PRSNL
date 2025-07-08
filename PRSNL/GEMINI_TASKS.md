@@ -25,6 +25,37 @@ Complex backend tasks have been reassigned to Claude. Gemini should focus on sim
 
 ## 🎯 NEW SIMPLE TASKS
 
+### Task GEMINI-URGENT-001: Fix Chat Date-Based Queries
+**Priority**: HIGH
+**Status**: TODO
+**Estimated Time**: 2-3 hours
+
+**Task**: Improve chat endpoint to handle date-based queries properly
+- Update `/ws/chat/{client_id}` endpoint in `backend/app/api/ws.py`
+- Add date parsing logic to understand queries like:
+  - "what did I save yesterday"
+  - "what did I save today"
+  - "what did I save this week"
+  - "show me items from last month"
+- Modify the SQL query to include date filters when detected
+- Test with various date-related questions
+
+**Files to Update:**
+- `/PRSNL/backend/app/api/ws.py` - Add date parsing and filtering logic
+
+**Example Implementation:**
+```python
+# Detect date keywords
+date_keywords = {
+    'today': "DATE(created_at) = CURRENT_DATE",
+    'yesterday': "DATE(created_at) = CURRENT_DATE - INTERVAL '1 day'",
+    'this week': "created_at >= date_trunc('week', CURRENT_DATE)",
+    'last week': "created_at >= date_trunc('week', CURRENT_DATE - INTERVAL '1 week') AND created_at < date_trunc('week', CURRENT_DATE)",
+    'this month': "created_at >= date_trunc('month', CURRENT_DATE)",
+    'last month': "created_at >= date_trunc('month', CURRENT_DATE - INTERVAL '1 month') AND created_at < date_trunc('month', CURRENT_DATE)"
+}
+```
+
 ### Task GEMINI-SIMPLE-001: Create Test Data Scripts
 **Priority**: MEDIUM
 **Status**: TODO
