@@ -8,12 +8,9 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self):
-        self.ollama_client = httpx.AsyncClient(
-            base_url=settings.OLLAMA_BASE_URL,
-            timeout=60.0
-        )
-        self.azure_client = None
-        if settings.AZURE_OPENAI_API_KEY:
+        self.enabled = bool(settings.AZURE_OPENAI_API_KEY)
+        
+        if self.enabled:
             self.azure_client = httpx.AsyncClient(
                 timeout=60.0,
                 headers={
@@ -21,36 +18,32 @@ class EmbeddingService:
                     "Content-Type": "application/json"
                 }
             )
+        else:
+            self.azure_client = None
+            logger.warning("Azure OpenAI API key not configured. Embedding generation disabled.")
+            
         self.cache = {}  # Simple in-memory cache
 
     async def generate_embedding(self, text: str) -> Optional[List[float]]:
         """Generate embedding for text using available AI provider"""
         if not text:
             return None
+            
+        if not self.enabled:
+            return None
 
         # Check cache first
         if text in self.cache:
             return self.cache[text]
 
-        embedding = None
-        # Try Azure OpenAI first
-        if self.azure_client:
-            try:
-                embedding = await self._azure_embedding(text)
-                if embedding:
-                    self.cache[text] = embedding
-                    return embedding
-            except Exception as e:
-                logger.warning(f"Azure OpenAI embedding failed: {str(e)}")
-
-        # Fallback to Ollama
+        # Use Azure OpenAI
         try:
-            embedding = await self._ollama_embedding(text)
+            embedding = await self._azure_embedding(text)
             if embedding:
                 self.cache[text] = embedding
                 return embedding
         except Exception as e:
-            logger.warning(f"Ollama embedding failed: {str(e)}")
+            logger.error(f"Azure OpenAI embedding failed: {str(e)}")
 
         # Placeholder for Sentence Transformers or other local models
         # if settings.USE_SENTENCE_TRANSFORMERS:
@@ -69,6 +62,9 @@ class EmbeddingService:
         """Generate embeddings for multiple texts efficiently"""
         if not texts:
             return []
+            
+        if not self.enabled:
+            return [None] * len(texts)
 
         # Try Azure OpenAI batch processing first
         if self.azure_client:
@@ -86,17 +82,6 @@ class EmbeddingService:
         tasks = [self.generate_embedding(text) for text in texts]
         return await asyncio.gather(*tasks)
 
-    async def _ollama_embedding(self, text: str) -> Optional[List[float]]:
-        """Generate embedding using Ollama"""
-        response = await self.ollama_client.post(
-            "/api/embeddings",
-            json={
-                "model": settings.OLLAMA_EMBEDDING_MODEL,
-                "prompt": text
-            }
-        )
-        response.raise_for_status()
-        return response.json().get("embedding")
 
     async def _azure_embedding(self, text: str) -> Optional[List[float]]:
         """Generate embedding using Azure OpenAI for a single text"""
@@ -137,7 +122,6 @@ class EmbeddingService:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.ollama_client.aclose()
         if self.azure_client:
             await self.azure_client.aclose()
 

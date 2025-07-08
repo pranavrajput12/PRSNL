@@ -47,33 +47,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      ollama:
-        condition: service_started
       redis:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: llama3
       REDIS_URL: redis://redis:6379
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: prsnl_ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        limits:
-          memory: 4G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      AZURE_OPENAI_API_KEY: 1U6RGbb4XrVh4LUqG5qrNLHd1hvHeCDqseSThAayqhclju9nUCtTJQQJ99BAACHYHv6XJ3w3AAABACOG6tdK
+      AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
+      AZURE_OPENAI_DEPLOYMENT: gpt-4.1
+      AZURE_OPENAI_API_VERSION: 2025-01-01-preview
 
   # Frontend runs separately on the host for development
   # To run: cd frontend && npm install && npm run dev
@@ -81,5 +63,4 @@ services:
 
 volumes:
   postgres_data:
-  ollama_data:
   redis_data:

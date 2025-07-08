@@ -169,8 +169,8 @@
       const data = await searchItems(query, searchFilters);
       console.log('Search results:', data);
 
-      if (data && Array.isArray(data.results)) {
-        results = data.results.map((item: any) => ({
+      if (data && Array.isArray(data.items)) {
+        results = data.items.map((item: any) => ({
           id: item.id,
           title: item.title,
           url: item.url,
@@ -527,7 +527,11 @@
                 {/if}
 
                 <!-- Find Similar button -->
-                <button class="btn-find-similar" on:click={() => findSimilar(result)}>
+                <button 
+                  class="btn-find-similar" 
+                  on:click|preventDefault|stopPropagation={() => findSimilar(result)}
+                  type="button"
+                >
                   <Icon name="brain" size="small" />
                   Find Similar
                 </button>

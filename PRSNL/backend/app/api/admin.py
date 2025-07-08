@@ -3,6 +3,7 @@ from app.services.storage_manager import StorageManager
 from app.db.database import get_db_connection
 import asyncpg
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,14 @@ async def debug_items(db_connection: asyncpg.Connection = Depends(get_db_connect
         
         # Get the last 10 items with their details
         recent_items = await db_connection.fetch("""
-            SELECT id, title, url, status, item_type, created_at, updated_at
+            SELECT id, title, url, status, 
+                CASE 
+                    WHEN url LIKE '%youtube.com%' OR url LIKE '%youtu.be%' THEN 'video'
+                    WHEN url LIKE '%.pdf' THEN 'pdf'
+                    WHEN metadata->>'type' IS NOT NULL THEN metadata->>'type'
+                    ELSE 'article'
+                END as item_type, 
+                created_at, updated_at
             FROM items
             ORDER BY created_at DESC
             LIMIT 10
@@ -85,10 +93,10 @@ async def create_test_item(db_connection: asyncpg.Connection = Depends(get_db_co
         # Create a test item
         await db_connection.execute("""
             INSERT INTO items (
-                id, title, url, summary, status, item_type, 
+                id, title, url, summary, status, metadata,
                 created_at, updated_at
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8
+                $1, $2, $3, $4, $5, $6::jsonb, $7, $8
             )
         """, 
             item_id,
@@ -96,7 +104,7 @@ async def create_test_item(db_connection: asyncpg.Connection = Depends(get_db_co
             "https://example.com/test",
             "This is a test item created for debugging the timeline display.",
             "completed",
-            "article",
+            json.dumps({"type": "article"}),
             datetime.now(),
             datetime.now()
         )

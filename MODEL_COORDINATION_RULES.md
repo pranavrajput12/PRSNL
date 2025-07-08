@@ -27,10 +27,27 @@ This document now focuses on model coordination rules only. For all port assignm
 
 ## 📋 TASK ALLOCATION
 
-### Model Specialization
-- **🎨 CLAUDE**: Backend, Integration, Documentation
-- **🚀 WINDSURF**: Frontend UI/UX, Components, Styling
-- **🧠 GEMINI**: Performance, Monitoring, Infrastructure
+### Model Specialization (Updated 2025-01-08)
+- **🎨 CLAUDE**: Frontend, Backend, Integration, Complex Features
+  - All critical path development
+  - Complex AI integrations
+  - System architecture decisions
+  - Bug fixes and debugging
+  - API design and implementation
+  
+- **🚀 WINDSURF**: Simple Frontend Tasks
+  - CSS styling adjustments
+  - Simple component creation
+  - Icon/asset management
+  - UI polish tasks
+  - Documentation formatting
+  
+- **🧠 GEMINI**: Simple Backend Tasks
+  - Test writing
+  - Data migration scripts
+  - Log analysis
+  - Performance metrics collection
+  - Simple CRUD endpoints
 
 ### Task Handoff Protocol
 1. Update MODEL_ACTIVITY_LOG.md with:

@@ -73,8 +73,6 @@ class VisionProcessor:
         
         if provider == AIProvider.AZURE_OPENAI:
             return await self._azure_vision_analysis(task.content)
-        elif provider == AIProvider.OLLAMA:
-            return await self._ollama_vision_analysis(task.content)
         else:
             return await self._fallback_ocr(task.content["image_path"])
     
@@ -92,13 +90,43 @@ class VisionProcessor:
         # Prepare vision request
         messages = [{
             "role": "system",
-            "content": "You are a vision AI that analyzes images. Extract text, describe the image, identify key objects and concepts, and suggest relevant tags."
+            "content": """You are an advanced vision AI system specialized in extracting actionable information from images. Your analysis should focus on:
+1. Accurate text extraction (OCR) - capture ALL visible text
+2. Content understanding - identify the purpose and context
+3. Knowledge extraction - recognize tools, concepts, and skills shown
+4. Searchability - generate tags that help users find this content later"""
         }, {
             "role": "user",
             "content": [
                 {
                     "type": "text",
-                    "text": "Analyze this image and provide: 1) All text found (OCR), 2) A description of what you see, 3) Key objects/concepts, 4) 5-10 relevant tags"
+                    "text": """Analyze this image comprehensively and provide structured output:
+
+1. TEXT EXTRACTION (OCR):
+   - Extract ALL visible text from the image
+   - Preserve formatting and structure where possible
+   - Include code snippets, commands, URLs, etc.
+
+2. DESCRIPTION:
+   - Provide a clear, concise description of what the image shows
+   - Focus on the main subject and purpose
+   - Mention UI elements, diagrams, or visual structure
+
+3. KEY OBJECTS/CONCEPTS:
+   - List specific tools, technologies, or concepts visible
+   - Identify UI elements, buttons, menus if present
+   - Note any diagrams, charts, or visual representations
+
+4. TAGS (5-10):
+   - Generate specific, searchable tags
+   - Include: tools, technologies, concepts, actions, domains
+   - Make tags granular (e.g., "vscode-debugging" not just "ide")
+
+Format your response as:
+TEXT: [all extracted text]
+DESCRIPTION: [concise description]
+OBJECTS: [bullet list of key objects/concepts]
+TAGS: [comma-separated tags]"""
                 },
                 {
                     "type": "image_url",
@@ -117,7 +145,7 @@ class VisionProcessor:
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                f"{self.azure_endpoint}/openai/deployments/gpt-4o/chat/completions?api-version=2024-01-01-preview",
+                f"{self.azure_endpoint}/openai/deployments/{settings.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version={settings.AZURE_OPENAI_API_VERSION}",
                 headers=headers,
                 json=payload
             )
@@ -129,17 +157,6 @@ class VisionProcessor:
         # Parse structured response
         return self._parse_vision_response(analysis_text)
     
-    async def _ollama_vision_analysis(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """Use Ollama with vision model (if available)"""
-        
-        # Check if Ollama has vision model (like llava)
-        try:
-            # For now, fall back to OCR since most Ollama models don't support vision
-            # This could be enhanced when Ollama adds vision support
-            return await self._fallback_ocr(content["image_path"])
-        except Exception as e:
-            logger.error(f"Ollama vision failed: {e}")
-            raise
     
     async def _fallback_ocr(self, image_path: str) -> Dict[str, Any]:
         """Basic OCR fallback using Tesseract"""
@@ -169,9 +186,6 @@ class VisionProcessor:
     def _parse_vision_response(self, response_text: str) -> Dict[str, Any]:
         """Parse structured response from vision AI"""
         
-        # Simple parsing - could be enhanced with better prompting
-        lines = response_text.strip().split('\n')
-        
         result = {
             "text": "",
             "description": "",
@@ -180,40 +194,49 @@ class VisionProcessor:
             "provider": "azure_openai"
         }
         
+        # Parse the structured response
+        lines = response_text.strip().split('\n')
         current_section = None
         
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-                
-            if "text" in line.lower() and "ocr" in line.lower():
+            
+            # Check for section headers
+            if line.startswith("TEXT:"):
+                result["text"] = line[5:].strip()
                 current_section = "text"
-            elif "description" in line.lower():
+            elif line.startswith("DESCRIPTION:"):
+                result["description"] = line[12:].strip()
                 current_section = "description"
-            elif "object" in line.lower() or "concept" in line.lower():
+            elif line.startswith("OBJECTS:"):
                 current_section = "objects"
-            elif "tag" in line.lower():
+                objects_text = line[8:].strip()
+                if objects_text:
+                    result["objects"].append(objects_text)
+            elif line.startswith("TAGS:"):
+                tags_text = line[5:].strip()
+                if tags_text:
+                    result["tags"] = [t.strip() for t in tags_text.split(",") if t.strip()]
                 current_section = "tags"
             else:
-                # Add content to current section
-                if current_section == "text":
-                    result["text"] += line + " "
-                elif current_section == "description":
-                    result["description"] += line + " "
+                # Continue adding to current section
+                if current_section == "text" and not line.startswith(("DESCRIPTION:", "OBJECTS:", "TAGS:")):
+                    result["text"] += " " + line
+                elif current_section == "description" and not line.startswith(("OBJECTS:", "TAGS:")):
+                    result["description"] += " " + line
                 elif current_section == "objects":
-                    if line.startswith("-") or line.startswith("•"):
+                    if line.startswith(("-", "•", "*")):
                         result["objects"].append(line[1:].strip())
-                elif current_section == "tags":
-                    if line.startswith("-") or line.startswith("•"):
-                        result["tags"].append(line[1:].strip())
-                    elif "," in line:
-                        result["tags"].extend([t.strip() for t in line.split(",")])
+                    elif not line.startswith("TAGS:"):
+                        result["objects"].append(line)
         
-        # Clean up
+        # Clean up and limit results
         result["text"] = result["text"].strip()
         result["description"] = result["description"].strip()
-        result["tags"] = [t for t in result["tags"] if t][:10]  # Max 10 tags
+        result["objects"] = [obj.strip() for obj in result["objects"] if obj.strip()][:20]
+        result["tags"] = result["tags"][:10]  # Max 10 tags
         
         return result
     

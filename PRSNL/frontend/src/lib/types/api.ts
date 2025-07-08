@@ -14,7 +14,8 @@ export enum ItemType {
   ARTICLE = 'article',
   VIDEO = 'video',
   NOTE = 'note',
-  BOOKMARK = 'bookmark'
+  BOOKMARK = 'bookmark',
+  IMAGE = 'image'
 }
 
 // Base types

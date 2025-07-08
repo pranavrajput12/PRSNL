@@ -1,0 +1,309 @@
+"""
+Dynamic Insights API endpoints
+"""
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
+from app.db.database import get_db
+from app.services.dynamic_insights import DynamicInsightsService
+from app.core.auth import get_current_user_optional
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+insights_service = DynamicInsightsService()
+
+# Response models
+class InsightData(BaseModel):
+    type: str
+    title: str
+    description: str
+    data: Dict[str, Any]
+    visualization: str
+
+class InsightsResponse(BaseModel):
+    insights: List[InsightData]
+    summary: str
+    time_range: str
+    item_count: int
+    generated_at: str
+
+class InsightTypeInfo(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+
+# Endpoints
+@router.get("/insights", response_model=InsightsResponse)
+async def get_insights(
+    time_range: str = Query("30d", description="Time range (e.g., 7d, 30d, 3m, 1y)"),
+    insight_types: Optional[str] = Query(None, description="Comma-separated insight types"),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
+    """
+    Generate dynamic insights about the knowledge base
+    """
+    try:
+        # Parse insight types
+        types_list = None
+        if insight_types:
+            types_list = [t.strip() for t in insight_types.split(',')]
+        
+        # Generate insights
+        result = await insights_service.generate_insights(
+            user_id=current_user.id if current_user else None,
+            time_range=time_range,
+            insight_types=types_list,
+            db=db
+        )
+        
+        return InsightsResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error generating insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/insights/types", response_model=List[InsightTypeInfo])
+async def get_insight_types():
+    """
+    Get available insight types
+    """
+    types = [
+        {
+            "id": "trending_topics",
+            "name": "Trending Topics",
+            "description": "Topics gaining momentum in your knowledge base",
+            "icon": "trending-up"
+        },
+        {
+            "id": "knowledge_evolution",
+            "name": "Knowledge Evolution",
+            "description": "How your interests have evolved over time",
+            "icon": "git-branch"
+        },
+        {
+            "id": "content_patterns",
+            "name": "Content Patterns",
+            "description": "Patterns in the type of content you save",
+            "icon": "pie-chart"
+        },
+        {
+            "id": "learning_velocity",
+            "name": "Learning Velocity",
+            "description": "Your learning pace and focus areas",
+            "icon": "activity"
+        },
+        {
+            "id": "connection_opportunities",
+            "name": "Connection Opportunities",
+            "description": "Potential connections between disparate topics",
+            "icon": "link"
+        },
+        {
+            "id": "knowledge_depth",
+            "name": "Knowledge Depth",
+            "description": "Areas where you've built deep expertise",
+            "icon": "layers"
+        },
+        {
+            "id": "exploration_suggestions",
+            "name": "Exploration Suggestions",
+            "description": "New areas to explore based on your interests",
+            "icon": "compass"
+        },
+        {
+            "id": "time_patterns",
+            "name": "Time Patterns",
+            "description": "When you're most active in learning",
+            "icon": "clock"
+        },
+        {
+            "id": "content_diversity",
+            "name": "Content Diversity",
+            "description": "Diversity score of your knowledge base",
+            "icon": "shuffle"
+        },
+        {
+            "id": "emerging_themes",
+            "name": "Emerging Themes",
+            "description": "New themes emerging from recent saves",
+            "icon": "sparkles"
+        }
+    ]
+    
+    return [InsightTypeInfo(**t) for t in types]
+
+@router.get("/insights/trending")
+async def get_trending_insights(
+    days: int = Query(7, description="Number of days to analyze"),
+    limit: int = Query(10, description="Maximum number of trending topics"),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
+    """
+    Get just trending topics (lightweight endpoint)
+    """
+    try:
+        result = await insights_service.generate_insights(
+            user_id=current_user.id if current_user else None,
+            time_range=f"{days}d",
+            insight_types=["trending_topics"],
+            db=db
+        )
+        
+        if result['insights']:
+            trending_data = result['insights'][0]['data']
+            return {
+                "topics": trending_data['topics'][:limit],
+                "analysis": trending_data['analysis'],
+                "time_range": f"{days} days",
+                "generated_at": datetime.utcnow().isoformat()
+            }
+        else:
+            return {
+                "topics": [],
+                "analysis": "No trending topics found",
+                "time_range": f"{days} days",
+                "generated_at": datetime.utcnow().isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Error getting trending insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/insights/learning-velocity")
+async def get_learning_velocity(
+    time_range: str = Query("30d", description="Time range"),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
+    """
+    Get learning velocity metrics
+    """
+    try:
+        result = await insights_service.generate_insights(
+            user_id=current_user.id if current_user else None,
+            time_range=time_range,
+            insight_types=["learning_velocity"],
+            db=db
+        )
+        
+        if result['insights']:
+            return result['insights'][0]['data']
+        else:
+            return {
+                "average_daily_saves": 0,
+                "peak_daily_saves": 0,
+                "momentum": {"value": 0, "trend": "stable"},
+                "message": "Not enough data for analysis"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error getting learning velocity: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/insights/exploration-suggestions")
+async def get_exploration_suggestions(
+    limit: int = Query(5, description="Number of suggestions"),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
+    """
+    Get personalized exploration suggestions
+    """
+    try:
+        result = await insights_service.generate_insights(
+            user_id=current_user.id if current_user else None,
+            time_range="30d",
+            insight_types=["exploration_suggestions"],
+            db=db
+        )
+        
+        if result['insights']:
+            suggestions_data = result['insights'][0]['data']
+            return {
+                "suggestions": suggestions_data['suggestions'][:limit],
+                "based_on_topics": suggestions_data['based_on_topics'],
+                "expansion_potential": suggestions_data['expansion_potential']
+            }
+        else:
+            return {
+                "suggestions": [],
+                "based_on_topics": [],
+                "expansion_potential": 0
+            }
+            
+    except Exception as e:
+        logger.error(f"Error getting exploration suggestions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/insights/dashboard")
+async def get_dashboard_insights(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
+    """
+    Get insights optimized for dashboard display
+    """
+    try:
+        # Generate a curated set of insights for the dashboard
+        result = await insights_service.generate_insights(
+            user_id=current_user.id if current_user else None,
+            time_range="30d",
+            insight_types=[
+                "trending_topics",
+                "learning_velocity", 
+                "content_diversity",
+                "emerging_themes"
+            ],
+            db=db
+        )
+        
+        # Format for dashboard
+        dashboard_data = {
+            "summary": result['summary'],
+            "metrics": {
+                "total_items": result['item_count'],
+                "time_range": result['time_range']
+            },
+            "widgets": []
+        }
+        
+        # Convert insights to dashboard widgets
+        for insight in result['insights']:
+            widget = {
+                "id": insight['type'],
+                "title": insight['title'],
+                "type": insight['visualization'],
+                "data": insight['data'],
+                "priority": self._get_widget_priority(insight['type'])
+            }
+            dashboard_data['widgets'].append(widget)
+        
+        # Sort by priority
+        dashboard_data['widgets'].sort(key=lambda x: x['priority'])
+        
+        return dashboard_data
+        
+    except Exception as e:
+        logger.error(f"Error getting dashboard insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def _get_widget_priority(insight_type: str) -> int:
+    """
+    Get display priority for dashboard widgets
+    """
+    priorities = {
+        "trending_topics": 1,
+        "learning_velocity": 2,
+        "emerging_themes": 3,
+        "content_diversity": 4,
+        "knowledge_evolution": 5,
+        "connection_opportunities": 6
+    }
+    return priorities.get(insight_type, 99)

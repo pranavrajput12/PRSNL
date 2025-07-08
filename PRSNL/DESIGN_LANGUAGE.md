@@ -33,7 +33,8 @@ PRSNL's design language emphasizes clarity, efficiency, and a modern aesthetic t
 
 ### Primary Colors
 ```css
---primary-blue: #2563EB;      /* Primary actions, links */
+--primary-red: #dc143c;       /* Manchester United red - Primary brand color */
+--primary-dark: #b91c1c;      /* Darker red for hover states */
 --primary-purple: #7C3AED;    /* AI/intelligent features */
 --primary-green: #10B981;     /* Success states */
 ```
@@ -137,7 +138,7 @@ PRSNL's design language emphasizes clarity, efficiency, and a modern aesthetic t
 ```css
 /* Primary Button */
 .btn-primary {
-  background: var(--primary-blue);
+  background: var(--primary-red);
   color: white;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
@@ -145,10 +146,14 @@ PRSNL's design language emphasizes clarity, efficiency, and a modern aesthetic t
   transition: all var(--transition-fast);
 }
 
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: var(--primary-blue);
+  color: var(--primary-red);
   border: 1px solid var(--gray-300);
 }
 
@@ -172,8 +177,8 @@ PRSNL's design language emphasizes clarity, efficiency, and a modern aesthetic t
 
 .input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary-red);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
 }
 ```
 

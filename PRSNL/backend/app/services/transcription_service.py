@@ -1,23 +1,26 @@
 import os
-import openai
+import httpx
 from typing import Optional
 import logging
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class TranscriptionService:
     def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        if api_key:
-            self.client = openai.OpenAI(api_key=api_key)
+        if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
+            self.azure_endpoint = settings.AZURE_OPENAI_ENDPOINT
+            self.azure_key = settings.AZURE_OPENAI_API_KEY
+            self.api_version = settings.AZURE_OPENAI_API_VERSION
+            self.enabled = True
         else:
-            self.client = None
-            logger.warning("OPENAI_API_KEY not set - transcription service will be disabled")
+            self.enabled = False
+            logger.warning("Azure OpenAI not configured - transcription service will be disabled")
 
     async def transcribe_audio(self, audio_file_path: str) -> Optional[str]:
-        """Transcribes an audio file using OpenAI Whisper."""
-        if not self.client:
-            logger.warning("Transcription service is disabled - OPENAI_API_KEY not set")
+        """Transcribes an audio file using Azure OpenAI Whisper."""
+        if not self.enabled:
+            logger.warning("Transcription service is disabled - Azure OpenAI not configured")
             return None
             
         if not os.path.exists(audio_file_path):
@@ -25,12 +28,32 @@ class TranscriptionService:
             return None
 
         try:
-            with open(audio_file_path, "rb") as audio_file:
-                transcript = self.client.audio.transcriptions.create(
-                    model="whisper-1", 
-                    file=audio_file
-                )
-            return transcript.text
+            # Azure OpenAI Whisper endpoint
+            url = f"{self.azure_endpoint}/openai/deployments/{settings.AZURE_OPENAI_WHISPER_DEPLOYMENT}/audio/transcriptions?api-version={self.api_version}"
+            
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                with open(audio_file_path, "rb") as audio_file:
+                    files = {"file": (os.path.basename(audio_file_path), audio_file, "audio/mpeg")}
+                    headers = {"api-key": self.azure_key}
+                    data = {"model": settings.AZURE_OPENAI_WHISPER_DEPLOYMENT}
+                    
+                    response = await client.post(
+                        url,
+                        headers=headers,
+                        files=files,
+                        data=data
+                    )
+                    response.raise_for_status()
+                    
+                result = response.json()
+                return result.get("text", "")
+                
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.error("Whisper deployment not found in Azure OpenAI. Please deploy a Whisper model.")
+            else:
+                logger.error(f"Azure OpenAI API error: {e.response.status_code} - {e.response.text}")
+            return None
         except Exception as e:
             logger.error(f"Error transcribing audio file {audio_file_path}: {e}")
             return None

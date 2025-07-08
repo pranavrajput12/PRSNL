@@ -9,7 +9,7 @@ The frontend runs separately from Docker for development purposes to enable:
 
 ## How to Run
 
-1. **Start Docker services** (backend, database, ollama):
+1. **Start Docker services** (backend, database):
    ```bash
    docker-compose up -d
    ```
@@ -24,7 +24,6 @@ The frontend runs separately from Docker for development purposes to enable:
 3. **Access the application**:
    - Frontend: http://localhost:3002
    - Backend API: http://localhost:8000
-   - Ollama: http://localhost:11434
 
 ## Port Configuration
 

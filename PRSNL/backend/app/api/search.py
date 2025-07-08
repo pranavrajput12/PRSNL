@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import timedelta
 
 from app.core.exceptions import InvalidInput, InternalServerError
 from app.core.search_engine import SearchEngine
 from app.db.database import get_db_connection, find_similar_items_by_embedding
 from app.services.embedding_service import EmbeddingService
-from app.services.cache import cache_service, CacheKeys
+from app.services.cache import cache_service, CacheKeys, cache_result
 from app.config import settings
 import asyncpg
 
@@ -36,36 +37,46 @@ async def search_items(
     cache_key = cache_service.make_key(CacheKeys.SEARCH, query, limit=limit, offset=offset)
     cached = await cache_service.get(cache_key)
     if cached:
+        print(f"DEBUG: Returning cached response for key: {cache_key}")
         return cached
+    else:
+        print(f"DEBUG: No cache found for key: {cache_key}")
     
     try:
         search_engine = SearchEngine(db_connection)
-        results = await search_engine.search(query, limit, offset)
+        # Pass parameters correctly with offset support
+        results = await search_engine.search(query, limit=limit, offset=offset)
         
-        # Frontend expects object with items array
+        # Frontend expects SearchResponse format with results array
+        print(f"DEBUG: Found {len(results)} results from search engine")
         response = {
-            "items": [
+            "results": [
                 {
                     "id": str(item.id),
                     "title": item.title,
                     "url": item.url,
-                    "summary": item.snippet,
+                    "snippet": item.snippet,  # Frontend expects 'snippet' not 'summary'
                     "tags": item.tags,
-                    "createdAt": item.created_at.isoformat(),
-                    "type": "article"  # TODO: Get actual type from DB
+                    "created_at": item.created_at.isoformat(),  # Frontend expects snake_case
+                    "score": item.score if hasattr(item, 'score') else None
                 } for item in results
             ],
-            "total": len(results)
+            "total": len(results),
+            "took_ms": 0  # TODO: Add actual timing
         }
         
         # Cache the result
         await cache_service.set(cache_key, response, settings.CACHE_TTL_SEARCH)
         
+        print(f"DEBUG: Returning response with keys: {list(response.keys())}")
         return response
     except Exception as e:
         raise InternalServerError(f"Failed to perform search: {e}")
 
+from app.services.cache import cache_service, CacheKeys, cache_result
+
 @router.get("/search/similar/{item_id}")
+@cache_result(prefix=CacheKeys.SIMILAR, expire=timedelta(days=1))
 async def find_similar_items(
     item_id: str,
     limit: int = 10,
@@ -100,6 +111,7 @@ async def find_similar_items(
         raise InternalServerError(f"Failed to find similar items: {e}")
 
 @router.post("/search/semantic")
+@cache_result(prefix=CacheKeys.SEARCH, expire=timedelta(days=1))
 async def semantic_search(
     query_data: SemanticSearchQuery,
     limit: int = 20,

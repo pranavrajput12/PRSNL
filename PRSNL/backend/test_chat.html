@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRSNL Chat Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #chat-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #f3e5f5;
+        }
+        .status-message {
+            background-color: #fff3cd;
+            font-style: italic;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #connection-status {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #debug-log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PRSNL Chat Debug</h1>
+    
+    <div id="connection-status" class="disconnected">
+        Status: Disconnected
+    </div>
+    
+    <div id="chat-container"></div>
+    
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message..." />
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="connectWebSocket()">Connect</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+    </div>
+    
+    <h3>Debug Log</h3>
+    <div id="debug-log"></div>
+
+    <script>
+        let ws = null;
+        let clientId = Math.random().toString(36).substring(7);
+        
+        function log(message, type = 'info') {
+            const debugLog = document.getElementById('debug-log');
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}\n`;
+            debugLog.textContent += logEntry;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(`[${type}]`, message);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connection-status');
+            if (connected) {
+                statusEl.className = 'connected';
+                statusEl.textContent = `Status: Connected (Client ID: ${clientId})`;
+            } else {
+                statusEl.className = 'disconnected';
+                statusEl.textContent = 'Status: Disconnected';
+            }
+        }
+        
+        function addMessage(content, type = 'bot') {
+            const chatContainer = document.getElementById('chat-container');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}-message`;
+            messageEl.textContent = content;
+            chatContainer.appendChild(messageEl);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('Already connected', 'warn');
+                return;
+            }
+            
+            const wsUrl = `ws://localhost:8001/ws/chat/${clientId}`;
+            log(`Connecting to ${wsUrl}`, 'info');
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    log('WebSocket connected', 'success');
+                    updateConnectionStatus(true);
+                };
+                
+                ws.onmessage = (event) => {
+                    log(`Received: ${event.data}`, 'info');
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        switch (data.type) {
+                            case 'connection':
+                                addMessage(`Connected: ${data.message}`, 'status');
+                                break;
+                                
+                            case 'status':
+                                addMessage(data.message, 'status');
+                                break;
+                                
+                            case 'chunk':
+                                // For chunks, append to the last bot message
+                                const messages = document.querySelectorAll('.bot-message');
+                                if (messages.length > 0 && !messages[messages.length - 1].dataset.complete) {
+                                    messages[messages.length - 1].textContent += data.content;
+                                } else {
+                                    const newMessage = document.createElement('div');
+                                    newMessage.className = 'message bot-message';
+                                    newMessage.textContent = data.content;
+                                    document.getElementById('chat-container').appendChild(newMessage);
+                                }
+                                break;
+                                
+                            case 'complete':
+                                const lastMessage = document.querySelector('.bot-message:last-child');
+                                if (lastMessage) {
+                                    lastMessage.dataset.complete = 'true';
+                                }
+                                if (data.citations && data.citations.length > 0) {
+                                    addMessage(`Sources: ${data.citations.map(c => c.title).join(', ')}`, 'status');
+                                }
+                                break;
+                                
+                            case 'error':
+                                addMessage(`Error: ${data.message}`, 'error');
+                                break;
+                        }
+                    } catch (e) {
+                        log(`Error parsing message: ${e}`, 'error');
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log(`WebSocket error: ${error}`, 'error');
+                    updateConnectionStatus(false);
+                };
+                
+                ws.onclose = () => {
+                    log('WebSocket closed', 'info');
+                    updateConnectionStatus(false);
+                };
+                
+            } catch (error) {
+                log(`Failed to create WebSocket: ${error}`, 'error');
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (ws) {
+                log('Closing WebSocket connection', 'info');
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) {
+                log('Empty message', 'warn');
+                return;
+            }
+            
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('WebSocket not connected', 'error');
+                alert('Please connect first!');
+                return;
+            }
+            
+            addMessage(message, 'user');
+            
+            const payload = {
+                message: message,
+                history: [],
+                chat_mode: 'general'
+            };
+            
+            log(`Sending: ${JSON.stringify(payload)}`, 'info');
+            ws.send(JSON.stringify(payload));
+            
+            input.value = '';
+        }
+        
+        // Enter key to send
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Auto-connect on load
+        window.onload = () => {
+            log('Page loaded, auto-connecting...', 'info');
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>

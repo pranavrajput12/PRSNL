@@ -3,6 +3,7 @@ from fastapi import WebSocket
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class ConnectionManager:
     def __init__(self):

@@ -8,12 +8,13 @@ from typing import Dict, List, Optional, Any, Literal
 from enum import Enum
 from dataclasses import dataclass
 import time
+import json
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class AIProvider(Enum):
     AZURE_OPENAI = "azure_openai"
-    OLLAMA = "ollama"
     FALLBACK = "fallback"
 
 class TaskType(Enum):
@@ -54,21 +55,12 @@ class AIRouter:
         return {
             AIProvider.AZURE_OPENAI: ProviderConfig(
                 name=AIProvider.AZURE_OPENAI,
-                cost_per_1k_tokens=0.03,  # GPT-4 pricing
+                cost_per_1k_tokens=0.03,  # GPT-4.1 pricing
                 max_tokens_per_request=8192,
                 supports_streaming=True,
-                supports_vision=True,
+                supports_vision=True,  # Confirmed: GPT-4.1 supports vision
                 supports_embeddings=True,
                 avg_response_time_ms=500
-            ),
-            AIProvider.OLLAMA: ProviderConfig(
-                name=AIProvider.OLLAMA,
-                cost_per_1k_tokens=0.0,  # Free local
-                max_tokens_per_request=4096,
-                supports_streaming=True,
-                supports_vision=False,
-                supports_embeddings=True,  # With llama3
-                avg_response_time_ms=1000
             ),
             AIProvider.FALLBACK: ProviderConfig(
                 name=AIProvider.FALLBACK,
@@ -157,11 +149,9 @@ class AIRouter:
     
     async def execute_with_fallback(self, task: AITask, execute_fn) -> Any:
         """Execute task with automatic fallback on failure"""
-        providers = [self.route_task(task)]
+        providers = [await self.route_task(task)]
         
         # Add fallback chain
-        if providers[0] != AIProvider.OLLAMA:
-            providers.append(AIProvider.OLLAMA)
         if providers[-1] != AIProvider.FALLBACK:
             providers.append(AIProvider.FALLBACK)
             
@@ -256,7 +246,7 @@ class AIRouter:
                 )
                 
                 stream = client.chat.completions.create(
-                    model="gpt-4",  # Update with your deployment name
+                    model=settings.AZURE_OPENAI_DEPLOYMENT,
                     messages=[{"role": "user", "content": task.content}],
                     stream=True
                 )
@@ -265,24 +255,6 @@ class AIRouter:
                     if chunk.choices[0].delta.content:
                         yield chunk.choices[0].delta.content
                         
-            elif provider == AIProvider.OLLAMA:
-                # Stream from Ollama
-                import httpx
-                async with httpx.AsyncClient() as client:
-                    async with client.stream(
-                        "POST",
-                        f"{settings.OLLAMA_BASE_URL}/api/generate",
-                        json={
-                            "model": "llama2",
-                            "prompt": task.content,
-                            "stream": True
-                        }
-                    ) as response:
-                        async for line in response.aiter_lines():
-                            if line:
-                                data = json.loads(line)
-                                if "response" in data:
-                                    yield data["response"]
                                     
         except Exception as e:
             logger.error(f"Streaming error with {provider.value}: {e}")
@@ -296,9 +268,9 @@ class AIRouter:
         azure_usage = self.usage_stats[AIProvider.AZURE_OPENAI]["requests"]
         total_usage = sum(stats["requests"] for stats in self.usage_stats.values())
         
-        if total_usage > 0 and azure_usage / total_usage > 0.5:
+        if total_usage > 0 and azure_usage / total_usage > 0.8:
             recommendations.append(
-                "Consider using Ollama more for non-critical tasks to reduce costs"
+                "High Azure OpenAI usage detected. Consider implementing caching to reduce costs"
             )
             
         # Check error rates

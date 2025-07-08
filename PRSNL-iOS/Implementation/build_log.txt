@@ -1,0 +1,804 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PRSNL.xcodeproj -scheme PRSNL -destination platform=iOS,id=00008120-0000795C3A58201E build
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'PRSNLWidgets' in project 'PRSNL'
+        ➜ Explicit dependency on target 'PRSNL' in project 'PRSNL'
+    Target 'PRSNLShareExtension' in project 'PRSNL'
+        ➜ Explicit dependency on target 'PRSNL' in project 'PRSNL'
+    Target 'PRSNL' in project 'PRSNL' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/momc --dry-run --action generate --swift-version 5.0 --sdkroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk --iphoneos-deployment-target 17.0 --module PRSNL /Users/pronav/Personal Knowledge Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/PRSNLModel.xcdatamodeld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 35a3787d97e05daf580694335ab2f2c7
+Build description path: /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/XCBuildData/35a3787d97e05daf580694335ab2f2c7.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -o /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache
+
+CreateBuildDirectory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    builtin-create-build-directory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex
+
+CreateBuildDirectory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    builtin-create-build-directory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products
+
+CreateBuildDirectory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    builtin-create-build-directory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos
+
+CreateBuildDirectory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    builtin-create-build-directory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL-1a800d7684a9601c87b7352d569606a7-VFS-iphoneos/all-product-headers.yaml
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL.xcodeproj
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL-1a800d7684a9601c87b7352d569606a7-VFS-iphoneos/all-product-headers.yaml
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-project-headers.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-project-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-own-target-headers.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-generated-files.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-generated-files.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-target-headers.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-non-framework-target-headers.hmap (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.DependencyStaticMetadataFileList (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.DependencyMetadataFileList (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugEntryPoint-normal-arm64.txt (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugEntryPoint-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugDylibPath-normal-arm64.txt (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugDylibInstallName-normal-arm64.txt (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_const_extract_protocols.json (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftFileList (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftConstValuesFileList (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.LinkFileList (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.LinkFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-OutputFileMap.json (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/Entitlements.plist (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/Entitlements.plist
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.DependencyStaticMetadataFileList (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.DependencyMetadataFileList (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-project-headers.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-project-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-own-target-headers.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-generated-files.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-generated-files.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-target-headers.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-non-framework-target-headers.hmap (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugEntryPoint-normal-arm64.txt (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugEntryPoint-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugDylibPath-normal-arm64.txt (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugDylibInstallName-normal-arm64.txt (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension_const_extract_protocols.json (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftFileList (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftConstValuesFileList (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.LinkFileList (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.LinkFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-OutputFileMap.json (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/Entitlements.plist (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/Entitlements.plist
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyStaticMetadataFileList (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyMetadataFileList (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-project-headers.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-project-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-own-target-headers.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-generated-files.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-generated-files.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-target-headers.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-non-framework-target-headers.hmap (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibPath-normal-arm64.txt (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibInstallName-normal-arm64.txt (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_const_extract_protocols.json (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftConstValuesFileList (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.LinkFileList (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.LinkFileList
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-OutputFileMap.json (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-OutputFileMap.json
+
+MkDir /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /bin/mkdir -p /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex
+
+WriteAuxiliaryFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/Entitlements.plist (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    write-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/Entitlements.plist
+
+MkDir /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /bin/mkdir -p /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+MkDir /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /bin/mkdir -p /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex
+
+ProcessProductPackaging /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/38f10a21-b88c-4015-8158-2f8b956d7796.mobileprovision /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/embedded.mobileprovision (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-productPackagingUtility /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/38f10a21-b88c-4015-8158-2f8b956d7796.mobileprovision -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/embedded.mobileprovision
+
+ProcessProductPackaging /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/PRSNL.entitlements /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "J6BXNUX326.ai.prsnl";
+    "com.apple.developer.team-identifier" = J6BXNUX326;
+    "com.apple.security.application-groups" =     (
+    );
+    "get-task-allow" = 1;
+}
+    
+    builtin-productPackagingUtility /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/PRSNL.entitlements -entitlements -format xml -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent
+
+ProcessProductPackagingDER /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent.der (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /usr/bin/derq query -f xml -i /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent.der --raw
+
+DataModelCompile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/ /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/PRSNLModel.xcdatamodeld (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/usr/bin/momc --sdkroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk --iphoneos-deployment-target 17.0 --module PRSNL /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/PRSNLModel.xcdatamodeld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/
+PRSNLModel.xcdatamodel: note: Model PRSNLModel version checksum: 65jlPn2s6M/LbcjO3xyngb1mzQTNWZErwtoHinRFl/A=
+
+Ld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/__preview.dylib normal (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -O0 -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F. -install_name @rpath/PRSNL.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_dependency_info.dat -Xlinker -no_adhoc_codesign -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/__preview.dylib
+
+CpResource /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PrivacyInfo.xcprivacy /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/PrivacyInfo.xcprivacy (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/PrivacyInfo.xcprivacy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+CpResource /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/APP_ICON_SETUP.md /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Assets/APP_ICON_SETUP.md (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Assets/APP_ICON_SETUP.md /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+ProcessInfoPlistFile /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Info.plist /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Info.plist (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-infoPlistUtility /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Info.plist
+
+DataModelCodegen /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/PRSNLModel.xcdatamodeld (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/usr/bin/momc --action generate --swift-version 5.0 --sdkroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk --iphoneos-deployment-target 17.0 --module PRSNL /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/PRSNLModel.xcdatamodeld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel
+
+SwiftDriver PRSNL normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNL -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F . -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PRSNL (in target 'PRSNL' from project 'PRSNL')
+
+EmitSwiftModule normal arm64 (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ ItemModel.swift,\ KeychainService.swift,\ LaunchScreenView.swift,\ LiveTagService.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Models/ItemModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/KeychainService.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Launch/LaunchScreenView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/LiveTagService.swift (in target 'PRSNL' from project 'PRSNL')
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Models/ItemModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/KeychainService.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Launch/LaunchScreenView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/LiveTagService.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ ColorExtensions.swift,\ ConditionalCoreDataSetup.swift,\ CoreDataManager.swift,\ ItemDetailView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Extensions/ColorExtensions.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/ConditionalCoreDataSetup.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/CoreDataManager.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/ItemDetail/ItemDetailView.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Extensions/ColorExtensions.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/ConditionalCoreDataSetup.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/CoreData/CoreDataManager.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/ItemDetail/ItemDetailView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ CDTag+CoreDataClass.swift,\ CDTag+CoreDataProperties.swift,\ PRSNLModel+CoreDataModel.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDTag+CoreDataClass.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDTag+CoreDataProperties.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/PRSNLModel+CoreDataModel.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDTag+CoreDataClass.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDTag+CoreDataProperties.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/PRSNLModel+CoreDataModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ SearchViewModel.swift,\ SettingsView.swift,\ SettingsViewModel.swift,\ SyncManager.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Search/SearchViewModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Settings/SettingsView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Settings/SettingsViewModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/SyncManager.swift (in target 'PRSNL' from project 'PRSNL')
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Search/SearchViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Settings/SettingsView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Settings/SettingsViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/SyncManager.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ APIClient.swift,\ AppIconView.swift,\ CaptureView.swift,\ CaptureViewModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Networking/APIClient.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Shared/Components/AppIconView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Capture/CaptureView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Capture/CaptureViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Networking/APIClient.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Shared/Components/AppIconView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Capture/CaptureView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Capture/CaptureViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ CDItem+CoreDataClass.swift,\ CDItem+CoreDataProperties.swift,\ CDAttachment+CoreDataClass.swift,\ CDAttachment+CoreDataProperties.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDItem+CoreDataClass.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDItem+CoreDataProperties.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDAttachment+CoreDataClass.swift /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDAttachment+CoreDataProperties.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDItem+CoreDataClass.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDItem+CoreDataProperties.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDAttachment+CoreDataClass.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/CoreDataGenerated/PRSNLModel/CDAttachment+CoreDataProperties.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ TimelineView.swift,\ TimelineViewModel.swift,\ WebSocketManager.swift,\ WidgetRefreshService.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Timeline/TimelineView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Timeline/TimelineViewModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/WebSocketManager.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/WidgetRefreshService.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Timeline/TimelineView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Timeline/TimelineViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/WebSocketManager.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/WidgetRefreshService.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ NetworkMonitor.swift,\ PRSNLApp.swift,\ RealtimeUpdateService.swift,\ SearchView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/NetworkMonitor.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/App/PRSNLApp.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/RealtimeUpdateService.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Search/SearchView.swift (in target 'PRSNL' from project 'PRSNL')
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/NetworkMonitor.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/App/PRSNLApp.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Core/Services/RealtimeUpdateService.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNL/Features/Search/SearchView.swift (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for PRSNL (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CDItem+CoreDataClass.swift, CDItem+CoreDataProperties.swift, CDAttachment+CoreDataClass.swift, CDAttachment+CoreDataProperties.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CDTag+CoreDataClass.swift, CDTag+CoreDataProperties.swift, PRSNLModel+CoreDataModel.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriver\ Compilation\ Requirements PRSNL normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNL -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F . -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/PRSNL-Swift.h /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-Swift.h (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-swiftHeaderTool -arch arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-Swift.h -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/PRSNL-Swift.h
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftdoc (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.abi.json (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftsourceinfo (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+ProcessProductPackaging /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/94c7a7c3-bfaf-470e-91f7-110481903b8b.mobileprovision /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex/embedded.mobileprovision (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-productPackagingUtility /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/94c7a7c3-bfaf-470e-91f7-110481903b8b.mobileprovision -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex/embedded.mobileprovision
+
+ProcessProductPackaging /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/PRSNLWidgets.entitlements /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "J6BXNUX326.ai.prsnl.widgets";
+    "com.apple.developer.team-identifier" = J6BXNUX326;
+    "com.apple.security.application-groups" =     (
+        "group.ai.prsnl.shared"
+    );
+    "get-task-allow" = 1;
+}
+    
+    builtin-productPackagingUtility /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/PRSNLWidgets.entitlements -entitlements -format xml -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent
+
+ProcessProductPackaging /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/PRSNLShareExtension.entitlements /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "J6BXNUX326.ai.prsnl.shareextension";
+    "com.apple.developer.team-identifier" = J6BXNUX326;
+    "com.apple.security.application-groups" =     (
+        "group.ai.prsnl.shared"
+    );
+    "get-task-allow" = 1;
+}
+    
+    builtin-productPackagingUtility /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/PRSNLShareExtension.entitlements -entitlements -format xml -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent
+
+ProcessProductPackaging /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/f4f28f3d-fd32-4a1f-82fa-eed8d1e82989.mobileprovision /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex/embedded.mobileprovision (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-productPackagingUtility /Users/pronav/Library/Developer/Xcode/UserData/Provisioning\ Profiles/f4f28f3d-fd32-4a1f-82fa-eed8d1e82989.mobileprovision -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex/embedded.mobileprovision
+
+ProcessProductPackagingDER /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent.der (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /usr/bin/derq query -f xml -i /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets.appex.xcent.der --raw
+
+ProcessProductPackagingDER /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent.der (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /usr/bin/derq query -f xml -i /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension.appex.xcent.der --raw
+
+SwiftDriver PRSNLWidgets normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLWidgets -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftDriver PRSNLShareExtension normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLShareExtension -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PRSNLWidgets (in target 'PRSNLWidgets' from project 'PRSNL')
+
+EmitSwiftModule normal arm64 (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PRSNLShareExtension (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+EmitSwiftModule normal arm64 (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ WidgetDataProvider.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/WidgetDataProvider.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/WidgetDataProvider.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ColorExtensions.swift, ConditionalCoreDataSetup.swift, CoreDataManager.swift, ItemDetailView.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 Compiling\ StatsWidget.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/StatsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/StatsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ItemModel.swift, KeychainService.swift, LaunchScreenView.swift, LiveTagService.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 Compiling\ PRSNLWidgets.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/PRSNLWidgets.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/PRSNLWidgets.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ QuickActionsWidget.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/QuickActionsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/QuickActionsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for PRSNLWidgets (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for PRSNLShareExtension (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftDriver\ Compilation\ Requirements PRSNLWidgets normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLWidgets -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling PRSNLWidgets.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftDriver\ Compilation\ Requirements PRSNLShareExtension normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLShareExtension -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ WidgetModels.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/WidgetModels.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/WidgetModels.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftMergeGeneratedHeaders /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/PRSNLWidgets-Swift.h /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-Swift.h (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-swiftHeaderTool -arch arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-Swift.h -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/PRSNLWidgets-Swift.h
+
+SwiftDriverJobDiscovery normal arm64 Compiling QuickActionsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftdoc (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.swiftdoc
+
+SwiftDriverJobDiscovery normal arm64 Compiling StatsWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.abi.json (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftsourceinfo (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftMergeGeneratedHeaders /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/PRSNLShareExtension-Swift.h /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-Swift.h (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-swiftHeaderTool -arch arm64 /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-Swift.h -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/PRSNLShareExtension-Swift.h
+
+SwiftDriverJobDiscovery normal arm64 Compiling WidgetDataProvider.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftmodule (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftmodule /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftdoc (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftdoc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.abi.json (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.abi.json /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftsourceinfo (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftsourceinfo /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftCompile normal arm64 Compiling\ TimelineWidget.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/TimelineWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLWidgets/TimelineWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ ShareViewModel.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareViewModel.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareViewModel.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ ShareViewController.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareViewController.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareViewController.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftCompile normal arm64 Compiling\ ColorExtensions.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ColorExtensions.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ColorExtensions.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling TimelineView.swift, TimelineViewModel.swift, WebSocketManager.swift, WidgetRefreshService.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftCompile normal arm64 Compiling\ ShareView.swift /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareView.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftCompile normal arm64 /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/ShareView.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling SearchViewModel.swift, SettingsView.swift, SettingsViewModel.swift, SyncManager.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TimelineWidget.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ColorExtensions.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WidgetModels.swift (in target 'PRSNLWidgets' from project 'PRSNL')
+
+SwiftDriver\ Compilation PRSNLWidgets normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLWidgets -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/PRSNLWidgets-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling APIClient.swift, AppIconView.swift, CaptureView.swift, CaptureViewModel.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ShareViewController.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling NetworkMonitor.swift, PRSNLApp.swift, RealtimeUpdateService.swift, SearchView.swift (in target 'PRSNL' from project 'PRSNL')
+
+SwiftDriver\ Compilation PRSNL normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNL -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F . -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib normal (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -O0 -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F. -filelist /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.LinkFileList -install_name @rpath/PRSNL.debug.dylib -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework CoreData -framework SwiftUI -framework Accelerate -framework Security -Xlinker -no_adhoc_codesign -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib
+
+SwiftDriverJobDiscovery normal arm64 Compiling ShareView.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ShareViewModel.swift (in target 'PRSNLShareExtension' from project 'PRSNL')
+
+SwiftDriver\ Compilation PRSNLShareExtension normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PRSNLShareExtension -Onone -enforce-exclusivity\=checked @/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -application-extension -enable-testing -index-store-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Index.noindex/DataStore -swift-version 5 -I /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos18.5-22F76-7fa4eea80a99bbfdc046826b63ec4baf.sdkstatcache -output-file-map /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/pronav/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension_const_extract_protocols.json -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-generated-files.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-own-target-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-all-target-headers.hmap -Xcc -iquote -Xcc /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/PRSNLShareExtension-project-headers.hmap -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/include -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources-normal/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources/arm64 -Xcc -I/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/Objects-normal/arm64/PRSNLShareExtension-Swift.h -working-directory /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation -experimental-emit-module-separately -disable-cmo
+
+ConstructStubExecutorLinkFileList /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-ExecutorLinkFileList-normal-arm64.txt (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    construct-stub-executor-link-file-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'PRSNL' from project 'PRSNL')
+
+Ld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL normal (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -O0 -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F. -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL-ExecutorLinkFileList-normal-arm64.txt /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL
+
+CopySwiftLibs /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-swiftStdLibTool --copy --verbose --sign 41790C0F85EDB4254E6C9811023D1EF60510E94A --scan-executable /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib --scan-folder /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Frameworks --scan-folder /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PlugIns --scan-folder /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/SystemExtensions --scan-folder /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreData.framework --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/SwiftUI.framework --scan-folder /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/Accelerate.framework --scan-folder /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/Security.framework --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name PRSNL --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk --xcode-version 16F6 --platform-family iOS --deployment-target 17.0 --bundle-identifier ai.prsnl --output /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app --target-triple arm64-apple-ios17.0 --binary-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL --dependency-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL_dependency_info.dat --stringsdata-file /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftFileList --metadata-file-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyMetadataFileList --static-metadata-file-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyStaticMetadataFileList --swift-const-vals-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/Objects-normal/arm64/PRSNL.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2025-07-08 03:45:55.297 appintentsmetadataprocessor[97965:3697203] Starting appintentsmetadataprocessor export
+2025-07-08 03:45:55.511 appintentsmetadataprocessor[97965:3697203] Extracted no relevant App Intents symbols, skipping writing output
+
+AppIntentsSSUTraining (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Info.plist --temp-dir-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/ssu --bundle-id ai.prsnl --product-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app --extracted-metadata-path /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/Metadata.appintents --metadata-file-list /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.DependencyMetadataFileList --archive-ssu-assets
+2025-07-08 03:45:55.603 appintentsnltrainingprocessor[98005:3697480] Parsing options for appintentsnltrainingprocessor
+2025-07-08 03:45:55.605 appintentsnltrainingprocessor[98005:3697480] No AppShortcuts found - Skipping.
+
+CodeSign /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Signing Identity:     "Apple Development: slathiap@gmail.com (Y9V4WK39KK)"
+    Provisioning Profile: "iOS Team Provisioning Profile: ai.prsnl"
+                          (38f10a21-b88c-4015-8158-2f8b956d7796)
+    
+    /usr/bin/codesign --force --sign 41790C0F85EDB4254E6C9811023D1EF60510E94A --timestamp\=none --generate-entitlement-der /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/PRSNL.debug.dylib
+
+CodeSign /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/__preview.dylib (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Signing Identity:     "Apple Development: slathiap@gmail.com (Y9V4WK39KK)"
+    Provisioning Profile: "iOS Team Provisioning Profile: ai.prsnl"
+                          (38f10a21-b88c-4015-8158-2f8b956d7796)
+    
+    /usr/bin/codesign --force --sign 41790C0F85EDB4254E6C9811023D1EF60510E94A --timestamp\=none --generate-entitlement-der /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app/__preview.dylib
+
+CodeSign /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    
+    Signing Identity:     "Apple Development: slathiap@gmail.com (Y9V4WK39KK)"
+    Provisioning Profile: "iOS Team Provisioning Profile: ai.prsnl"
+                          (38f10a21-b88c-4015-8158-2f8b956d7796)
+    
+    /usr/bin/codesign --force --sign 41790C0F85EDB4254E6C9811023D1EF60510E94A --entitlements /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNL.build/PRSNL.app.xcent --timestamp\=none --generate-entitlement-der /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+RegisterExecutionPolicyException /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-RegisterExecutionPolicyException /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+Validate /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-validationUtility /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app -infoplist-subpath Info.plist
+
+Touch /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app (in target 'PRSNL' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /usr/bin/touch -c /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNL.app
+
+CpResource /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex/GetURL.js /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/GetURL.js (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/GetURL.js /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex
+
+CpResource /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex/README.md /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/README.md (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/README.md /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLShareExtension.appex
+
+Ld /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex/PRSNLWidgets.debug.dylib normal (in target 'PRSNLWidgets' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -O0 -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos -filelist /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.LinkFileList -install_name @rpath/PRSNLWidgets.debug.dylib -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/../../Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets_dependency_info.dat -fapplication-extension -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLWidgets.build/Objects-normal/arm64/PRSNLWidgets.swiftmodule -Xlinker -alias -Xlinker _NSExtensionMain -Xlinker ___debug_main_executable_dylib_entry_point -framework WidgetKit -framework SwiftUI -framework CoreData -Xlinker -no_adhoc_codesign -o /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Products/Debug-iphoneos/PRSNLWidgets.appex/PRSNLWidgets.debug.dylib
+
+CompileStoryboard /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/MainInterface.storyboard (in target 'PRSNLShareExtension' from project 'PRSNL')
+    cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation
+    /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --errors --warnings --notices --module PRSNLShareExtension --output-partial-info-plist /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build/MainInterface-SBPartialInfo.plist --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 17.0 --output-format human-readable-text /Users/pronav/Personal\ Knowledge\ Base/PRSNL-iOS/Implementation/PRSNLShareExtension/MainInterface.storyboard --compilation-directory /Users/pronav/Library/Developer/Xcode/DerivedData/PRSNL-ecxwkbioclobawfxlvfvwiihkgak/Build/Intermediates.noindex/PRSNL.build/Debug-iphoneos/PRSNLShareExtension.build

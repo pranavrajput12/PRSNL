@@ -5,6 +5,27 @@
 ### Overview
 This document provides comprehensive guidance for AI assistants (Claude, GPT, Gemini, etc.) working on the PRSNL project. It covers architecture understanding, development workflows, coding standards, and collaboration protocols for effective AI-human partnership in local-first knowledge management system development.
 
+## Critical Project Documents
+
+### 📊 Centralized Task Management
+- **CENTRALIZED_TASK_MANAGEMENT.md** - Complete guide to task tracking system
+- **PROJECT_STATUS.md** - Current project state and priorities
+- **CONSOLIDATED_TASK_TRACKER.md** - All task history and tracking
+- **MODEL_ACTIVITY_LOG.md** - Real-time activity updates
+- **MODEL_COORDINATION_RULES.md** - Multi-agent collaboration rules
+
+### 📋 Model-Specific Tasks
+- **CLAUDE_TASKS.md** - Complex features and integration work
+- **WINDSURF_TASKS.md** - Simple frontend UI tasks
+- **GEMINI_TASKS.md** - Simple backend scripts and tests
+
+### 🔧 Technical References
+- **TROUBLESHOOTING_GUIDE.md** - All known issues and solutions
+- **AZURE_MODELS_CONTEXT.md** - Azure OpenAI integration status
+- **PORT_ALLOCATION.md** - Service port assignments
+- **DATABASE_SCHEMA.md** - Database structure and mappings
+- **API_DOCUMENTATION.md** - All API endpoints
+
 ## Project Understanding for AI Assistants
 
 ### 1. Core Project Identity
@@ -79,24 +100,37 @@ PRSNL/
 
 ### 1. Before Starting Any Task
 
-#### Read Current State
+#### Read Current State (Updated Process)
 ```bash
-# Always check these files first
-1. Read PROGRESS_TRACKER.md - See active work and conflicts
-2. Read TASK_SUMMARY.md - Understand recent changes
-3. Check relevant component documentation
-4. Scan recent commit messages for context
+# Follow the centralized task management system
+1. Read CENTRALIZED_TASK_MANAGEMENT.md - Understand the process
+2. Read PROJECT_STATUS.md - Current system state
+3. Read MODEL_ACTIVITY_LOG.md - Check for active work
+4. Read your task file (CLAUDE_TASKS.md, etc.) - Get your assignments
+5. Check CONSOLIDATED_TASK_TRACKER.md - See task history
 ```
 
-#### Update Progress Tracker
+#### Claim Your Task
 ```markdown
-### [TASK-ID] Task Description
-- **Status**: PLANNING
-- **Assigned to**: Claude Code/GPT/Gemini
-- **Started**: YYYY-MM-DD HH:MM
-- **Files Being Modified**: 
-  - /path/to/file1.ext (status: planning)
-- **Blockers**: None
+# In CONSOLIDATED_TASK_TRACKER.md:
+### Task CLAUDE-2025-01-08-001: Implement Feature X
+**Status**: IN PROGRESS
+**Started**: 2025-01-08 14:30
+**Assigned**: Claude
+**Files**: 
+  - /backend/app/api/feature.py
+  - /frontend/src/routes/feature/+page.svelte
+```
+
+#### Log Your Activity
+```markdown
+# In MODEL_ACTIVITY_LOG.md:
+### 2025-01-08 - Claude
+#### Implement Feature X (CLAUDE-2025-01-08-001)
+- **14:30**: Started implementation
+- **14:45**: Created API endpoint
+- **15:00**: Added frontend component
+- **15:15**: Completed with tests
 ```
 
 ### Key Commands to Run
@@ -486,20 +520,22 @@ class ItemRepository:
 
 ## AI Integration Guidelines
 
-### 1. Ollama Local AI Integration
+### 1. Azure OpenAI Integration (Updated 2025-01-08)
 ```python
-# Standard pattern for AI integration
+# Standard pattern for AI integration - Azure OpenAI with optional fallback
 import httpx
 import asyncio
 from typing import Optional, List
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434"):
-        self.base_url = base_url
-        self.client = httpx.AsyncClient(timeout=30.0)
+class AzureOpenAIClient:
+    def __init__(self):
+        self.api_key = os.getenv("AZURE_OPENAI_API_KEY")
+        self.endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        self.client = httpx.AsyncClient(timeout=30.0) if self.api_key else None
     
     async def is_available(self) -> bool:
         """Check if Ollama is running and available."""
@@ -658,19 +694,34 @@ Solution: Check for client/server differences, use browser check
 
 Problem: "Component not updating"
 Solution: Check reactivity, ensure proper binding, use $: for computed values
+
+Problem: "Type 'X' is not assignable to type 'Y'"
+Solution: Check frontend/backend type consistency, update TypeScript interfaces
+
+Problem: "Property does not exist on type"
+Solution: Verify API response matches frontend expectations, update types
 ```
 
 #### Backend Issues
 ```bash
 # FastAPI common issues
 Problem: "Database connection failed"
-Solution: Check PostgreSQL is running, verify connection string
+Solution: Check PostgreSQL is running, verify connection string, check port (5432 vs 5433)
 
 Problem: "Import error in Python modules"
 Solution: Check PYTHONPATH, verify virtual environment is active
 
 Problem: "CORS errors from frontend"
 Solution: Update CORS settings in FastAPI middleware
+
+Problem: "Pydantic validation error"
+Solution: Ensure all required fields are in model, check JSONB field handling
+
+Problem: "Redis connection refused"
+Solution: Check Redis is running, verify connection URL uses service name in Docker
+
+Problem: "JSONB field returns as string"
+Solution: Parse with json.loads() when asyncpg returns string instead of dict
 ```
 
 #### Extension Issues
@@ -950,6 +1001,58 @@ function sanitizeCapturData(data) {
 - [ ] Supports keyboard-centric workflow
 ```
 
+## Lessons Learned and Troubleshooting Guide
+
+### Common Integration Issues
+
+#### 1. Frontend/Backend Type Mismatches
+**Problem**: API returns different field names or types than frontend expects
+**Solutions**:
+- Generate TypeScript types from Pydantic models
+- Use consistent naming (camelCase vs snake_case)
+- Validate API responses match documented schemas
+- Add runtime type checking in development
+
+#### 2. Container Networking with Rancher Desktop
+**Problem**: Frontend can't connect to backend using localhost
+**Solutions**:
+- Use service names (backend:8000) instead of localhost
+- Add nginx proxy for external access
+- Configure proper Docker networks
+- Map ports correctly in docker-compose
+
+#### 3. Database Schema Evolution
+**Problem**: Adding new fields breaks existing queries
+**Solutions**:
+- Always create proper migrations
+- Use CASE statements for computed fields
+- Handle NULL values gracefully
+- Test with existing data before deploying
+
+#### 4. JSONB Field Handling
+**Problem**: PostgreSQL JSONB fields not parsing correctly
+**Solutions**:
+```python
+# Handle both dict and string returns from asyncpg
+metadata = row["metadata"] if isinstance(row.get("metadata"), dict) else (
+    json.loads(row["metadata"]) if row.get("metadata") else {}
+)
+```
+
+#### 5. Missing Enum Values
+**Problem**: Backend defines enum values frontend doesn't recognize
+**Solutions**:
+- Keep enums synchronized between frontend and backend
+- Add validation for unknown enum values
+- Use string unions instead of enums for flexibility
+
+### Performance Optimization Lessons
+
+1. **Cursor-based Pagination**: More efficient than offset-based for large datasets
+2. **Embedding Service**: Make optional to avoid blocking on missing Azure credentials
+3. **Docker Build Cache**: Use multi-stage builds and proper layer caching
+4. **Frontend Bundle Size**: Lazy load heavy components, use dynamic imports
+
 ## Testing Strategies for AI Development
 
 ### 1. Automated Testing
@@ -1094,7 +1197,17 @@ This document provides the foundation for effective AI-assisted development of P
 5. **Update documentation and progress tracking consistently**
 6. **Test thoroughly across all components**
 7. **Coordinate effectively with other AI assistants**
+8. **Keep frontend and backend types synchronized**
+9. **Handle container networking properly with Rancher Desktop**
+10. **Always test with real data before declaring features complete**
 
-The PRSNL project represents a sophisticated multi-component system that requires careful attention to integration points, user experience, and performance. By following these guidelines, AI assistants can contribute effectively to building a world-class local-first knowledge management system.
+The PRSNL project represents a sophisticated multi-component system that requires careful attention to integration points, user experience, and performance. Common pitfalls include:
+- Type mismatches between frontend and backend
+- Container networking issues
+- JSONB serialization problems
+- Missing database migrations
+- Incomplete error handling
+
+By following these guidelines and learning from past issues, AI assistants can contribute effectively to building a world-class local-first knowledge management system.
 
 For questions or clarifications, refer to the comprehensive documentation in the `/docs` folder or examine existing code patterns in the respective component directories.

@@ -2,41 +2,59 @@
 
 Your AI-powered personal knowledge base. Capture anything from the web, process it with AI, and find it instantly.
 
-## 🎯 Current Status (2025-07-07)
+## 🎯 Current Status (2025-01-07)
 
-✅ **PRODUCTION READY**
+✅ **PRODUCTION READY + ADVANCED AI FEATURES**
 - **Full Stack Application**: Complete with all core features working
 - **Backend APIs**: All endpoints implemented with proper database integration
 - **Frontend UI**: Complete with Manchester United red design (#dc143c)
-- **Video Support**: Instagram, YouTube, Twitter, TikTok video capture & processing
-- **AI Processing**: Multi-provider support (OpenAI, Azure, Anthropic, Ollama)
-- **Vision AI**: Image analysis and OCR capabilities
-- **Real-time Search**: Full-text search with PostgreSQL
+- **Video Support**: Instagram, YouTube, Twitter video streaming & analysis
+- **AI Processing**: Azure OpenAI exclusive integration
+- **Vision AI**: Image analysis and OCR capabilities with GPT-4V
+- **Semantic Search**: Find similar content using embeddings
 - **Chrome Extension**: Full implementation with context menus & shortcuts
-- **Development Environment**: Docker setup with PostgreSQL, Ollama, and all services
+- **Development Environment**: Docker setup with PostgreSQL and all services
 - **Production Config**: Docker production setup with monitoring
 
 ✅ **WORKING FEATURES**
-- **AI-Powered Capture**: Automatic summarization and tagging with LLMs
-- **Multi-Provider AI Router**: Intelligent routing between AI providers
-- **Universal Video Support**: Download from YouTube, Instagram, Twitter, TikTok
+- **AI-Powered Capture**: Automatic summarization and tagging with Azure OpenAI
+- **Smart Categorization**: AI-powered auto-organization with clustering
+- **Duplicate Detection**: Find and merge duplicates (URL, content, semantic)
+- **Content Summarization**: Generate digests (daily/weekly/monthly)
+- **Knowledge Graph**: Discover relationships and learning paths
+- **Video Streaming**: Stream videos with transcript extraction & analysis
+- **Mini-Course Generation**: Auto-create courses from saved videos
 - **Timeline View**: Browse captured content chronologically
-- **Smart Search**: Full-text search across all content
+- **Smart Search**: Full-text and semantic search
 - **Individual Item Pages**: View, edit, and manage each item
 - **Tag Management**: AI-generated and manual tags
 - **Vision Processing**: Extract text and analyze images
 - **Modern UI**: Dark theme with smooth animations
 - **Storage Management**: Automatic cleanup and optimization
 - **Health Monitoring**: Service status and metrics
-- **Telegram Bot**: Capture content via Telegram (API ready)
+- **Telegram Bot**: Capture content via Telegram
 
-✅ **RECENTLY COMPLETED**
-- **Semantic Search**: Find similar content using embeddings (Backend: Gemini, UI: Windsurf)
-- **WebSocket Streaming**: Real-time AI responses (Backend: Claude)
-- **Video Transcription**: Speech-to-text for searchable transcripts (Gemini)
+✅ **RECENTLY COMPLETED** (2025-01-07)
+- **Smart Categorization Service**: Auto-categorize and reorganize content
+- **Duplicate Detection**: Multiple detection methods with merge capability
+- **Content Summarization**: Item summaries, periodic digests, topic summaries
+- **Knowledge Graph**: Relationship discovery, learning paths, gap detection
+- **Video Streaming**: Platform detection, transcript extraction, mini-courses
+- **Frontend AI Features**: Semantic Search UI, AI Insights Dashboard
 
 🚧 **IN DEVELOPMENT**
-- **AI Insights Dashboard**: Visualize knowledge patterns (Not started)
+- **Video Timeline UI**: Dedicated interface for video content
+- **Mini-Course Interface**: Visual course builder and player
+- **Streaming UI Components**: Real-time AI responses
+- **Second Brain Chat**: Conversational interface for knowledge
+
+## 📚 Key Documentation
+
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Complete file organization and architecture
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Database tables and field mappings
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - All API endpoints and examples
+- **[PORT_ALLOCATION.md](PORT_ALLOCATION.md)** - Service port assignments
+- **[MODEL_COORDINATION_RULES.md](MODEL_COORDINATION_RULES.md)** - AI model task assignments
 
 ## 🚀 Quick Start
 
@@ -48,7 +66,7 @@ cd PRSNL
 
 ### 2. Start all services with Docker
 ```bash
-# Start PostgreSQL, Ollama, and other services
+# Start PostgreSQL and other services
 docker compose up -d
 
 # Check service health
@@ -108,7 +126,7 @@ PRSNL/
 ## 🧠 Architecture
 
 - **Local-First**: Everything runs on your machine
-- **Multi-AI Support**: OpenAI, Azure OpenAI, Anthropic, and Ollama
+- **Multi-AI Support**: OpenAI, Azure OpenAI, and Anthropic
 - **Privacy**: Your data stays under your control
 - **Speed**: Sub-second search on 100k+ items
 - **Scalable**: Microservices architecture with Docker

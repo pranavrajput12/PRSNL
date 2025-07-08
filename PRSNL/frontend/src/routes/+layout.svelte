@@ -6,8 +6,23 @@
   import Icon from '$lib/components/Icon.svelte';
   import PerformanceMonitor from '$lib/components/PerformanceMonitor.svelte';
   import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+  import AnimatedToast from '$lib/components/AnimatedToast.svelte';
   import { preferences } from '$lib/stores/app';
   import { mediaSettings } from '$lib/stores/media';
+  import { goto } from '$app/navigation';
+  
+  let toasts = [];
+  let toastId = 0;
+  
+  function showToast(type, message) {
+    const id = toastId++;
+    toasts = [...toasts, { id, type, message }];
+  }
+  
+  function removeToast(id) {
+    toasts = toasts.filter(t => t.id !== id);
+  }
+  
   
   // Global keyboard navigation
   onMount(() => {
@@ -65,6 +80,16 @@
         <Icon name="timeline" size="small" />
         <span>Timeline</span>
       </a>
+      
+      <a href="/chat" class="nav-link {$page.url.pathname === '/chat' ? 'active' : ''}">
+        <Icon name="brain" size="small" />
+        <span>Chat</span>
+      </a>
+      
+      <a href="/videos" class="nav-link {$page.url.pathname === '/videos' ? 'active' : ''}">
+        <Icon name="video" size="small" />
+        <span>Videos</span>
+      </a>
     </div>
   </div>
 </nav>
@@ -79,6 +104,18 @@
   {#if $mediaSettings.logPerformanceMetrics}
     <PerformanceMonitor position="bottom-right" />
   {/if}
+  
+  <!-- Floating Action Button -->
+  <!-- <FloatingActionButton actions={fabActions} /> -->
+  
+  <!-- Toast notifications -->
+  {#each toasts as toast (toast.id)}
+    <AnimatedToast
+      type={toast.type}
+      message={toast.message}
+      onClose={() => removeToast(toast.id)}
+    />
+  {/each}
 </ErrorBoundary>
 
 <style>

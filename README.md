@@ -1,6 +1,6 @@
-# PRSNL - Personal Knowledge Vault
+# PRSNL - Personal Knowledge Management System
 
-A keyboard-first, zero-friction vault that captures any digital artifact with one shortcut and resurfaces it in < 1s. Built using AI-collaborative development.
+A powerful personal knowledge management system with AI-powered search, video processing, and intelligent content organization. Built using AI-collaborative development.
 
 ## 🚀 Quick Start
 
@@ -9,11 +9,16 @@ A keyboard-first, zero-friction vault that captures any digital artifact with on
 git clone https://github.com/pranavrajput12/PRSNL.git
 cd PRSNL
 
-# Start everything with one command
-make dev
+# Start backend with Docker
+docker-compose up -d
 
-# Open frontend
-open http://localhost:3000
+# Start frontend
+cd frontend
+npm install
+npm run dev
+
+# Open application
+open http://localhost:3002
 
 # API docs
 open http://localhost:8000/docs
@@ -21,78 +26,98 @@ open http://localhost:8000/docs
 
 ## 🎯 Features
 
-- **One-Key Capture**: Press `Cmd+Shift+S` to capture any webpage
-- **Instant Search**: Press `Cmd+Shift+Space` for global search overlay
-- **Smart Processing**: Automatic summarization and tagging with Ollama
-- **Local-First**: Everything runs on your machine, no cloud dependencies
-- **Zero-Friction**: Keyboard-driven interface for maximum speed
+- **Universal Capture**: Save articles, videos, tweets, GitHub repos, and more
+- **AI-Powered Search**: Semantic search with RAG-based knowledge chat
+- **Video Support**: YouTube, Twitter, Instagram video processing with transcripts
+- **Smart Organization**: AI categorization, duplicate detection, and summarization
+- **Knowledge Graph**: Discover relationships between your saved content
+- **Real-time Chat**: Chat with your knowledge base using Azure OpenAI
+- **Beautiful UI**: Manchester United themed interface with premium animations
 
 ## 🏗️ Architecture
 
-- **Frontend**: SvelteKit with TypeScript
-- **Backend**: FastAPI with PostgreSQL
-- **Extension**: Chrome extension for web capture
-- **Overlay**: Electron app for global search
-- **Processing**: Ollama (local) or Azure OpenAI (optional)
+- **Frontend**: SvelteKit with TypeScript, TailwindCSS
+- **Backend**: FastAPI with PostgreSQL, pgvector, Redis
+- **AI Processing**: Azure OpenAI (GPT-4.1) exclusive
+- **Media Storage**: Local file system with thumbnail generation
+- **Real-time**: WebSocket support for chat and streaming
 
 ## 📖 Documentation
 
-- **[Full Documentation](./docs/)** - All project documentation
-- **[Architecture](./docs/ARCHITECTURE.md)** - System design details
-- **[AI Collaboration](./docs/ai-collaboration/)** - How we build with AI
-- **[Progress Tracker](./PROGRESS_TRACKER.md)** - Current development status
+### Key References
+- **[PROJECT_STRUCTURE.md](./PRSNL/PROJECT_STRUCTURE.md)** - Complete file organization
+- **[DATABASE_SCHEMA.md](./PRSNL/DATABASE_SCHEMA.md)** - Database structure and mappings
+- **[API_DOCUMENTATION.md](./PRSNL/API_DOCUMENTATION.md)** - All API endpoints
+- **[PROJECT_STATUS.md](./PRSNL/PROJECT_STATUS.md)** - Current system status
+
+### Guides
+- **[DEVELOPER_GUIDE.md](./PRSNL/DEVELOPER_GUIDE.md)** - Development setup
+- **[DEPLOYMENT_GUIDE.md](./PRSNL/DEPLOYMENT_GUIDE.md)** - Production deployment
+- **[PORT_ALLOCATION.md](./PRSNL/PORT_ALLOCATION.md)** - Service port assignments
 
 ## 🤖 AI Development Team
 
-This project is built collaboratively by AI agents:
+This project is built collaboratively by AI agents (as of 2025-01-08):
 
-- **Claude Code**: Architecture and complex features
-- **Windsurf**: Frontend and UI implementation
-- **Gemini CLI**: Backend and infrastructure
+- **Claude**: All complex features, frontend, backend, and integration
+- **Windsurf**: Simple frontend tasks (styling, tooltips, UI polish)
+- **Gemini**: Simple backend tasks (tests, scripts, logging)
 
-See [AI Collaboration Guide](./docs/ai-collaboration/) for details.
+See [MODEL_COORDINATION_RULES.md](./PRSNL/MODEL_COORDINATION_RULES.md) for details.
 
 ## 🛠️ Development
 
 ```bash
-# Install dependencies
-cd PRSNL/frontend && npm install
-cd ../backend && pip install -r requirements.txt
+# Backend (Docker)
+cd PRSNL
+docker-compose up -d
 
-# Run tests
-make test
+# Frontend
+cd frontend
+npm install
+npm run dev
 
-# Format code
-make format
+# View logs
+docker logs prsnl_backend -f
 
 # Stop services
-make stop
+docker-compose down
 
 # Reset database
-make reset
+docker-compose down -v
+docker-compose up -d
 ```
 
 ## 📱 Usage
 
-### Capture
-- Browser: Click extension or press `Cmd+Shift+S`
-- Direct: Go to http://localhost:3000/capture
+### Main Features
+- **Timeline**: http://localhost:3002 - Browse all your saved content
+- **Capture**: http://localhost:3002/capture - Save new content with AI suggestions
+- **Search**: http://localhost:3002/search - Keyword and semantic search
+- **Chat**: http://localhost:3002/chat - Chat with your knowledge base
+- **Videos**: http://localhost:3002/videos - Video library with transcripts
+- **Insights**: http://localhost:3002/insights - AI-generated insights
 
-### Search
-- Global: Press `Cmd+Shift+Space` anywhere
-- Web: Go to http://localhost:3000/search
-
-### Browse
-- Timeline: http://localhost:3000/timeline
-- Tags: Coming soon
+### API Endpoints
+- **REST API**: http://localhost:8000/api
+- **API Docs**: http://localhost:8000/docs
+- **WebSocket**: ws://localhost:8000/ws/chat/{client_id}
 
 ## 🔧 Configuration
 
-Create `.env` file:
+### Backend (.env file in /PRSNL/backend)
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/prsnl
-OLLAMA_BASE_URL=http://localhost:11434
-AZURE_OPENAI_API_KEY=your_key_here (optional)
+DATABASE_URL=postgresql://postgres:postgres@db:5432/prsnl
+AZURE_OPENAI_API_KEY=your_key_here
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
+REDIS_URL=redis://redis:6379
+```
+
+### Frontend (.env file in /PRSNL/frontend)
+```env
+PUBLIC_API_URL=http://localhost:8000
 ```
 
 ## 📄 License

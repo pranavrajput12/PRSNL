@@ -1,5 +1,12 @@
 # PRSNL Deployment Guide
 
+## Important Documentation
+Before deploying, review these key documents:
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Current system state
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - API endpoints reference
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Database structure
+- **[PORT_ALLOCATION.md](PORT_ALLOCATION.md)** - Service port assignments
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
@@ -64,7 +71,6 @@ docker-compose logs -f
 # Access services
 # Frontend: http://localhost:3002
 # Backend API: http://localhost:8000
-# Ollama: http://localhost:11434
 ```
 
 ### Development Mode
@@ -203,10 +209,11 @@ services:
     image: prsnl-frontend:latest
     restart: always
     environment:
-      - PUBLIC_API_URL=https://your-domain.com/api
-      - PUBLIC_WS_URL=wss://your-domain.com/ws
+      - PUBLIC_API_URL=https://your-domain.com
+    ports:
+      - "3002:3002"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3002"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -374,21 +381,16 @@ REDIS_URL=redis://redis:6379
 SECRET_KEY=your-very-secure-secret-key
 CORS_ORIGINS=["https://your-domain.com"]
 
-# AI Services
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+# Azure OpenAI (Primary AI Provider)
 AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_ENDPOINT=https://...
-AZURE_OPENAI_DEPLOYMENT=gpt-4-vision
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-OLLAMA_BASE_URL=http://ollama:11434
-OLLAMA_MODEL=llama2
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
 
-# Vision AI
-ENABLE_VISION_AI=true
-TESSERACT_LANG=eng
-VISION_PROVIDER=azure  # or 'tesseract'
+# Optional Azure Models (if deployed)
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+AZURE_OPENAI_WHISPER_DEPLOYMENT=whisper
+AZURE_OPENAI_VISION_DEPLOYMENT=gpt-4-vision
 
 # Storage
 MEDIA_ROOT=/app/media
@@ -407,8 +409,7 @@ SENTRY_DSN=https://...@sentry.io/...
 #### Frontend Configuration
 ```bash
 # .env.production
-PUBLIC_API_URL=https://your-domain.com/api
-PUBLIC_WS_URL=wss://your-domain.com/ws
+PUBLIC_API_URL=https://your-domain.com
 PUBLIC_ANALYTICS_ID=G-XXXXXXXXXX
 ```
 

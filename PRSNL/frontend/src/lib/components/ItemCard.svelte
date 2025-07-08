@@ -2,10 +2,12 @@
   import { goto } from '$app/navigation';
   import Icon from './Icon.svelte';
   import VideoPlayer from './VideoPlayer.svelte';
+  import { aiApi } from '$lib/api';
   import type { Item, TimelineItem } from '$lib/types/api';
   
   export let item: Item | TimelineItem;
   export let view: 'feed' | 'grid' | 'list' = 'feed';
+  export let showAiActions: boolean = true;
   
   // Type guard to check if item has video properties
   function hasVideoProperties(item: any): item is TimelineItem {
@@ -17,6 +19,16 @@
   $: createdAt = item.createdAt || item.created_at;
   $: thumbnailUrl = item.thumbnailUrl || item.thumbnail_url;
   $: filePath = item.filePath || item.file_path;
+  $: category = item.category || (item.metadata?.category);
+  $: confidence = item.confidence || (item.metadata?.confidence) || 1;
+  $: aiProcessed = item.ai_processed || item.metadata?.ai_processed || false;
+  
+  // Track if embeddings are available for "Find Similar" feature
+  $: embeddingsAvailable = item.metadata?.embedding !== undefined;
+  
+  let categorizeLoading = false;
+  let summarizeLoading = false;
+  let findSimilarLoading = false;
   
   function handleClick() {
     goto(`/item/${item.id}`);
@@ -36,6 +48,44 @@
     if (days < 7) return `${days}d ago`;
     
     return date.toLocaleDateString();
+  }
+  
+  // AI Action handlers
+  async function categorize(e: MouseEvent) {
+    e.stopPropagation();
+    categorizeLoading = true;
+    try {
+      await aiApi.categorize.single(item.id);
+      window.location.reload(); // Refresh to show new category
+    } catch (err) {
+      console.error('Failed to categorize item:', err);
+    } finally {
+      categorizeLoading = false;
+    }
+  }
+  
+  async function summarize(e: MouseEvent) {
+    e.stopPropagation();
+    summarizeLoading = true;
+    try {
+      await aiApi.summarization.item(item.id, 'brief');
+      window.location.reload(); // Refresh to show summary
+    } catch (err) {
+      console.error('Failed to summarize item:', err);
+    } finally {
+      summarizeLoading = false;
+    }
+  }
+  
+  async function findSimilar(e: MouseEvent) {
+    e.stopPropagation();
+    findSimilarLoading = true;
+    try {
+      goto(`/similar/${item.id}`);
+    } catch (err) {
+      console.error('Failed to find similar items:', err);
+      findSimilarLoading = false;
+    }
   }
 </script>
 
@@ -57,7 +107,21 @@
       {#if item.platform}
         <span class="platform">{item.platform}</span>
       {/if}
+      
+      <!-- AI Processed Indicator -->
+      {#if aiProcessed}
+        <span class="ai-badge">✨ AI Enhanced</span>
+      {/if}
+      
+      <!-- Category with confidence indicator -->
+      {#if category}
+        <span class="category-badge" 
+              style="opacity: {confidence}; background-color: {confidence > 0.7 ? 'var(--ai-success)' : confidence > 0.4 ? 'var(--ai-warning)' : 'var(--ai-error)'}">
+          {category}
+        </span>
+      {/if}
     </div>
+    
     {#if item.status === 'pending'}
       <div class="status-badge pending">
         Processing
@@ -93,8 +157,8 @@
     {/if}
   </div>
   
-  {#if item.url}
-    <footer class="item-footer">
+  <footer class="item-footer">
+    {#if item.url}
       <a 
         href={item.url} 
         target="_blank" 
@@ -105,8 +169,48 @@
         <Icon name="external-link" size="small" />
         <span>View source</span>
       </a>
-    </footer>
-  {/if}
+    {/if}
+    
+    <!-- AI Action Buttons -->
+    {#if showAiActions}
+      <div class="ai-actions">
+        <button 
+          class="ai-action-btn" 
+          class:loading={categorizeLoading}
+          disabled={categorizeLoading} 
+          on:click={categorize}
+        >
+          <Icon name="tag" size="small" />
+          <span>Categorize</span>
+          {#if categorizeLoading}<span class="loading-spinner"></span>{/if}
+        </button>
+        
+        <button 
+          class="ai-action-btn" 
+          class:loading={summarizeLoading}
+          disabled={summarizeLoading} 
+          on:click={summarize}
+        >
+          <Icon name="file-text" size="small" />
+          <span>Summarize</span>
+          {#if summarizeLoading}<span class="loading-spinner"></span>{/if}
+        </button>
+        
+        {#if embeddingsAvailable}
+          <button 
+            class="ai-action-btn" 
+            class:loading={findSimilarLoading}
+            disabled={findSimilarLoading} 
+            on:click={findSimilar}
+          >
+            <Icon name="search" size="small" />
+            <span>Find Similar</span>
+            {#if findSimilarLoading}<span class="loading-spinner"></span>{/if}
+          </button>
+        {/if}
+      </div>
+    {/if}
+  </footer>
 </article>
 
 <style>
@@ -269,5 +373,103 @@
   
   .view-list .video-preview {
     display: none;
+  }
+  /* AI-specific styles */
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    background: var(--ai-accent-light, rgba(79, 70, 229, 0.1));
+    border: 1px solid var(--ai-accent, #4f46e5);
+    color: var(--ai-accent, #4f46e5);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .category-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    background-color: var(--ai-success-light, rgba(16, 185, 129, 0.1));
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ai-success, #10b981);
+    margin-left: 0.5rem;
+  }
+  
+  .ai-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .ai-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .ai-action-btn:hover {
+    background-color: var(--ai-accent-light, rgba(79, 70, 229, 0.1));
+    border-color: var(--ai-accent, #4f46e5);
+    color: var(--ai-accent, #4f46e5);
+  }
+  
+  .ai-action-btn:active {
+    transform: translateY(1px);
+  }
+  
+  .ai-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .loading-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--ai-accent, #4f46e5);
+    animation: spin 1s linear infinite;
+    margin-left: 0.375rem;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* View-specific styles for AI features */
+  .view-grid .ai-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .view-list .ai-actions {
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 0;
+    margin-left: auto;
+  }
+  
+  /* For mobile responsiveness */
+  @media (max-width: 640px) {
+    .ai-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
   }
 </style>

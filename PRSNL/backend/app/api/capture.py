@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends, Request
+from pydantic import BaseModel, HttpUrl
 from typing import Optional, Dict, List
 import asyncio
 import json
@@ -18,6 +19,7 @@ from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS, VIDEO_DOWNLOAD_OUTCOM
 import time
 from app.api.instagram_handler import process_instagram_bookmark
 from app.services.websocket_manager import websocket_manager
+from app.utils.media_detector import MediaDetector
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +36,11 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
         """, item_id, progress_data)
     logger.info(f"Item {item_id} progress: {progress_data.get('status')} {progress_data.get('percent', 0):.1f}%")
 
+from app.services.cache import invalidate_cache, CacheKeys
+
 @router.post("/capture", status_code=status.HTTP_201_CREATED, response_model=CaptureResponse)
 @capture_limiter
+@invalidate_cache(patterns=[f"{CacheKeys.STATS}:*", f"{CacheKeys.SEARCH}:*"])
 async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Capture a new item (web page, note, etc.)."""
     if not capture_request.url and not capture_request.content:
@@ -46,29 +51,54 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
     item_type = 'article'
     
     try:
+        # Check for duplicate URL if URL is provided
         if capture_request.url:
-            video_processor = VideoProcessor()
-            video_info = await video_processor.get_video_info(str(capture_request.url))
+            existing_item = await db_connection.fetchrow("""
+                SELECT id, title, created_at, status
+                FROM items
+                WHERE url = $1
+                LIMIT 1
+            """, str(capture_request.url))
             
-            if video_info and video_info.get('platform') != 'unknown':
+            if existing_item:
+                raise InvalidInput(
+                    f"This URL already exists in your knowledge base. "
+                    f"Item: '{existing_item['title']}' (created {existing_item['created_at'].strftime('%Y-%m-%d')})"
+                )
+        
+        # Detect media type
+        media_info = None
+        if capture_request.url:
+            media_info = MediaDetector.detect_media_type(str(capture_request.url))
+            
+            if media_info['type'] == 'video':
                 item_type = 'video'
+                video_processor = VideoProcessor()
+                video_info = await video_processor.get_video_info(str(capture_request.url))
+                
                 # Skip validation for Instagram to allow bookmarking
-                if 'instagram.com' not in str(capture_request.url).lower():
+                if media_info.get('platform') != 'instagram':
                     # Perform video validation before inserting initial record
                     try:
                         await video_processor.validate_video_url(str(capture_request.url))
                     except ValueError as e:
                         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
                         raise InvalidInput(f"Video validation failed: {e}")
+            elif media_info['type'] == 'image':
+                item_type = 'image'
         
         # Insert initial item record with metadata for capture type
-        metadata = {"capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page'}
+        metadata = {
+            "capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page',
+            "media_info": media_info,
+            "type": item_type  # Store item type in metadata
+        }
         logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
         
         await db_connection.execute("""
-            INSERT INTO items (id, url, title, status, item_type, metadata)
-            VALUES ($1, $2, $3, 'pending', $4, $5::jsonb)
-        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', item_type, json.dumps(metadata))
+            INSERT INTO items (id, url, title, status, metadata)
+            VALUES ($1, $2, $3, 'pending', $4::jsonb)
+        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', json.dumps(metadata))
         
         logger.info(f"Successfully inserted item {item_id} into database")
         
@@ -103,10 +133,31 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
         VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
         logger.info(f"Capture initiated successfully for item {item_id}")
         
+        # Check for content duplicates after capture (non-blocking)
+        duplicate_info = None
+        try:
+            from app.services.duplicate_detection import duplicate_detection
+            duplicate_check = await duplicate_detection.check_duplicate(
+                url=str(capture_request.url) if capture_request.url else None,
+                title=capture_request.title or "Untitled",
+                content=capture_request.content
+            )
+            
+            if duplicate_check["is_duplicate"] and duplicate_check["duplicates"]:
+                duplicate_info = {
+                    "has_duplicates": True,
+                    "count": len(duplicate_check["duplicates"]),
+                    "duplicates": duplicate_check["duplicates"],
+                    "recommendation": duplicate_check["recommendation"]
+                }
+        except Exception as e:
+            logger.warning(f"Failed to check for duplicates: {e}")
+        
         return CaptureResponse(
             id=item_id,
             status=ItemStatus.PENDING,
-            message="Item capture initiated"
+            message="Item capture initiated",
+            duplicate_info=duplicate_info
         )
         
     except Exception as e:
@@ -130,7 +181,14 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
 async def process_video_item(item_id: uuid4, url: str):
     """Process a video item in the background"""
     video_processor = VideoProcessor()
-    video_processor.set_progress_callback(lambda p: _update_video_processing_progress(item_id, p))
+    
+    # Create async wrapper for the callback
+    async def update_progress(progress):
+        await _update_video_processing_progress(item_id, progress)
+    
+    # Note: This might need adjustment based on how set_progress_callback works
+    # If it expects a sync function, we'll need a different approach
+    video_processor.set_progress_callback(lambda p: asyncio.create_task(update_progress(p)))
     pool = await get_db_pool()
     llm_processor = LLMProcessor()
     start_time = time.time()
@@ -214,12 +272,16 @@ Full Description:
                 json.dumps(enhanced_metadata)  # Include AI analysis in metadata
             )
             
-            # Generate and store embedding
+            # Generate and store embedding (optional - don't fail if embedding service is down)
             if processed_content.summary:
-                embedding = await embedding_service.get_embedding(processed_content.summary)
-                if embedding:
-                    await update_item_embedding(str(item_id), embedding)
-                    logger.info(f"Generated and stored embedding for video item {item_id}")
+                try:
+                    embedding = await embedding_service.generate_embedding(processed_content.summary)
+                    if embedding:
+                        await update_item_embedding(str(item_id), embedding)
+                        logger.info(f"Generated and stored embedding for video item {item_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to generate embedding for video {item_id}: {e}")
+                    # Continue processing - embeddings are optional
             
             # Add AI-generated tags
             if processed_content.tags:
@@ -262,3 +324,40 @@ Full Description:
                 WHERE id = $1
             """, item_id, str(e))
         VIDEO_DOWNLOAD_OUTCOMES.labels(platform='unknown', outcome='failed').inc() # Platform might be unknown on failure
+
+
+class CheckDuplicateRequest(BaseModel):
+    url: HttpUrl
+
+
+class CheckDuplicateResponse(BaseModel):
+    is_duplicate: bool
+    existing_item: Optional[Dict] = None
+
+
+@router.post("/capture/check-duplicate", response_model=CheckDuplicateResponse)
+async def check_duplicate_url(
+    request: CheckDuplicateRequest,
+    db_connection: asyncpg.Connection = Depends(get_db_connection)
+):
+    """Check if a URL already exists in the knowledge base before capture."""
+    existing_item = await db_connection.fetchrow("""
+        SELECT id, title, created_at, status, summary
+        FROM items
+        WHERE url = $1
+        LIMIT 1
+    """, str(request.url))
+    
+    if existing_item:
+        return CheckDuplicateResponse(
+            is_duplicate=True,
+            existing_item={
+                "id": str(existing_item['id']),
+                "title": existing_item['title'],
+                "created_at": existing_item['created_at'].isoformat(),
+                "status": existing_item['status'],
+                "summary": existing_item['summary']
+            }
+        )
+    
+    return CheckDuplicateResponse(is_duplicate=False)

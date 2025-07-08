@@ -120,6 +120,7 @@ class CaptureResponse(BaseModel):
     id: UUID
     status: ItemStatus
     message: str
+    duplicate_info: Optional[Dict[str, Any]] = None
 
 
 # Search schemas
@@ -223,6 +224,12 @@ class Item(ItemBase):
     accessed_at: datetime
     access_count: int = Field(ge=0)
     status: ItemStatus
+    item_type: Optional[str] = None
+    platform: Optional[str] = None
+    duration: Optional[int] = None
+    file_path: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
     
     class Config:
         from_attributes = True

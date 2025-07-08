@@ -15,18 +15,19 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3002", "http://localhost:5173"]
     
     # LLM
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3"
-    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     AZURE_OPENAI_API_KEY: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
-    AZURE_OPENAI_DEPLOYMENT: str = "gpt-4o"
-    AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = "text-embedding-ada-002"
+    AZURE_OPENAI_DEPLOYMENT: str = "gpt-4.1"  # Main GPT deployment with vision capability
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = "text-embedding-ada-002"  # Model version 2
+    AZURE_OPENAI_WHISPER_DEPLOYMENT: str = "whisper"  # Model version 001
     AZURE_OPENAI_API_VERSION: str = "2025-01-01-preview"
 
     # Telegram Bot
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_WEBHOOK_SECRET: str = ""
+    
+    # Storage
+    MEDIA_DIR: str = "./media"  # Media directory path
     
     # Processing
     MAX_CONTENT_LENGTH: int = 50000  # Max chars to process
@@ -43,6 +44,11 @@ class Settings(BaseSettings):
     CACHE_TTL_SECONDS: int = 3600  # 1 hour default
     CACHE_TTL_SEARCH: int = 300  # 5 minutes for search results
     CACHE_TTL_ITEM: int = 1800  # 30 minutes for items
+    
+    # Additional settings from .env
+    ENVIRONMENT: str = "development"
+    PRSNL_API_KEY: Optional[str] = None
+    RATE_LIMITING_ENABLED: bool = True
     
     class Config:
         env_file = ".env"

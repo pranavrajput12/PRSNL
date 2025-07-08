@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: prsnl_db_full
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prsnl
+      POSTGRES_USER: prsnl
+      POSTGRES_PASSWORD: prsnl123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/app/db/migrations/006_add_video_fields.sql:/docker-entrypoint-initdb.d/02-video-fields.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prsnl -d prsnl"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: prsnl_redis_full
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: prsnl_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://prsnl:prsnl123@db:5432/prsnl
+      REDIS_URL: redis://redis:6379
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+      AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT}
+
+  frontend:
+    build: ./frontend
+    container_name: prsnl_frontend
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    depends_on:
+      - backend
+    environment:
+      PUBLIC_API_BASE_URL: http://backend:8000
+      NODE_ENV: production
+
+volumes:
+  postgres_data:
+  redis_data:

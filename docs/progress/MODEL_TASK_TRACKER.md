@@ -1,6 +1,16 @@
-# MODEL TASK TRACKER - PRSNL Project
+# MODEL TASK TRACKER - PRSNL Project [ARCHIVED]
 
-> Centralized tracking for all AI model tasks across the project
+⚠️ **THIS FILE IS DEPRECATED AS OF 2025-01-08**
+
+Please use the centralized task management system:
+- **📚 Guide**: `/PRSNL/CENTRALIZED_TASK_MANAGEMENT.md`
+- **📊 Task History**: `/PRSNL/CONSOLIDATED_TASK_TRACKER.md`
+- **🎯 Current Status**: `/PRSNL/PROJECT_STATUS.md`
+- **📝 Activity Log**: `/PRSNL/MODEL_ACTIVITY_LOG.md`
+
+---
+
+> [ARCHIVED] Centralized tracking for all AI model tasks across the project
 
 ## Task Status Legend
 - 📋 **PLANNED**: Task defined, not started

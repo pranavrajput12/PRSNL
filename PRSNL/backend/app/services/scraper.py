@@ -4,7 +4,9 @@ from bs4 import BeautifulSoup
 from readability.readability import Document
 from datetime import datetime
 from typing import Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict
+from urllib.parse import urljoin
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,6 +21,7 @@ class ScrapedData:
     author: Optional[str]
     published_date: Optional[str]
     scraped_at: datetime
+    images: List[Dict[str, str]] = field(default_factory=list)
 
 
 class WebScraper:
@@ -52,6 +55,9 @@ class WebScraper:
             # Parse with BeautifulSoup for additional extraction
             soup = BeautifulSoup(html, 'html.parser')
             
+            # Extract images before stripping HTML
+            images = self._extract_images(soup, url)
+            
             # Extract text content
             article_soup = BeautifulSoup(article, 'html.parser')
             content = article_soup.get_text(separator='\n', strip=True)
@@ -69,7 +75,8 @@ class WebScraper:
                 html=html,
                 author=author,
                 published_date=published_date,
-                scraped_at=datetime.now()
+                scraped_at=datetime.now(),
+                images=images
             )
             
         except Exception as e:
@@ -83,6 +90,59 @@ class WebScraper:
                 published_date=None,
                 scraped_at=datetime.now()
             )
+    
+    def _extract_images(self, soup: BeautifulSoup, base_url: str) -> List[Dict[str, str]]:
+        """
+        Extract images from the page
+        """
+        images = []
+        seen_urls = set()
+        
+        # Find all img tags
+        for img in soup.find_all('img'):
+            img_url = img.get('src') or img.get('data-src') or img.get('data-lazy-src')
+            if not img_url:
+                continue
+                
+            # Make absolute URL if relative
+            if not img_url.startswith(('http://', 'https://', 'data:')):
+                img_url = urljoin(base_url, img_url)
+            
+            # Skip if already seen or if it's a data URL
+            if img_url in seen_urls or img_url.startswith('data:'):
+                continue
+                
+            seen_urls.add(img_url)
+            
+            # Extract image metadata
+            images.append({
+                'url': img_url,
+                'alt': img.get('alt', ''),
+                'title': img.get('title', ''),
+                'width': img.get('width', ''),
+                'height': img.get('height', '')
+            })
+            
+            # Limit to first 10 images
+            if len(images) >= 10:
+                break
+        
+        # Also check for Open Graph and Twitter Card images
+        og_image = soup.find('meta', property='og:image')
+        if og_image and og_image.get('content'):
+            img_url = og_image['content']
+            if not img_url.startswith(('http://', 'https://')):
+                img_url = urljoin(base_url, img_url)
+            if img_url not in seen_urls:
+                images.insert(0, {
+                    'url': img_url,
+                    'alt': 'Article preview image',
+                    'title': 'Open Graph image',
+                    'width': '',
+                    'height': ''
+                })
+        
+        return images
     
     def _extract_author(self, soup: BeautifulSoup) -> Optional[str]:
         """

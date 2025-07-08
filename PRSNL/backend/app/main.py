@@ -7,6 +7,25 @@ import asyncpg
 import httpx
 import shutil
 import logging
+import sys
+
+# Configure comprehensive logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('/tmp/prsnl_debug.log')
+    ]
+)
+
+# Set specific loggers to DEBUG
+logging.getLogger("app.api.ws").setLevel(logging.DEBUG)
+logging.getLogger("app.services.unified_ai_service").setLevel(logging.DEBUG)
+logging.getLogger("app.db.database").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.worker import listen_for_notifications
@@ -15,10 +34,17 @@ from app.middleware.auth import AuthMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
 
+from prometheus_client import generate_latest
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Add Prometheus middleware
+app.add_middleware(PrometheusMiddleware, app_name="prsnl_backend", group_paths=True)
+app.add_route("/metrics", handle_metrics)
 
 # Add rate limiting
 app.state.limiter = limiter
@@ -47,6 +73,10 @@ worker_task = None
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Starting PRSNL backend...")
+    logger.debug(f"Database URL: {settings.DATABASE_URL}")
+    logger.debug(f"Azure OpenAI configured: {settings.AZURE_OPENAI_API_KEY is not None}")
+    
     await create_db_pool()
     await apply_migrations()
     
@@ -104,7 +134,11 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
         await asyncio.sleep(600) # Update every 10 minutes (600 seconds)
 
 from fastapi.staticfiles import StaticFiles
-from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug, analytics
+from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug
+from app.api import analytics, questions, video_streaming
+from app.api import categorization, duplicates, summarization
+# Still disabled - working on these next:
+# from app.api import knowledge_graph, second_brain, insights
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 app.include_router(search.router, prefix=settings.API_V1_STR)
@@ -118,17 +152,30 @@ app.include_router(vision.router, prefix=settings.API_V1_STR)
 app.include_router(ai_suggest.router, prefix=settings.API_V1_STR)
 app.include_router(debug.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
+app.include_router(questions.router, prefix=settings.API_V1_STR)
+app.include_router(video_streaming.router, prefix=settings.API_V1_STR)
+app.include_router(categorization.router, prefix=settings.API_V1_STR)
+app.include_router(duplicates.router, prefix=settings.API_V1_STR)
+app.include_router(summarization.router, prefix=settings.API_V1_STR)
+# app.include_router(knowledge_graph.router, prefix=settings.API_V1_STR)
+# app.include_router(second_brain.router, prefix=settings.API_V1_STR)
+# app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # Mount static files for media
-if os.path.exists("/app/media"):
-    app.mount("/media", StaticFiles(directory="/app/media"), name="media")
+media_path = os.path.abspath(settings.MEDIA_DIR)
+if os.path.exists(media_path):
+    app.mount("/media", StaticFiles(directory=media_path), name="media")
+
+# Mount test files
+app_path = os.path.dirname(os.path.abspath(__file__))
+app.mount("/test", StaticFiles(directory=app_path, html=True), name="test")
 
 @app.get("/health", summary="Health Check", response_description="API health status")
 async def health_check():
     status_info = {
         "database": {"status": "DOWN", "details": ""},
-        "ollama": {"status": "DOWN", "details": ""},
+        "azure_openai": {"status": "DOWN", "details": ""},
         "disk_space": {"status": "UNKNOWN", "details": ""},
         "overall_status": "DOWN"
     }
@@ -141,18 +188,25 @@ async def health_check():
     except Exception as e:
         status_info["database"]["details"] = str(e)
 
-    # Check Ollama Availability
+    # Check Azure OpenAI Availability
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{settings.OLLAMA_BASE_URL}/api/tags", timeout=5)
-            response.raise_for_status()
-            status_info["ollama"]["status"] = "UP"
+        if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{settings.AZURE_OPENAI_ENDPOINT}/openai/models?api-version={settings.AZURE_OPENAI_API_VERSION}",
+                    headers={"api-key": settings.AZURE_OPENAI_API_KEY},
+                    timeout=5
+                )
+                response.raise_for_status()
+                status_info["azure_openai"]["status"] = "UP"
+        else:
+            status_info["azure_openai"]["details"] = "Not configured"
     except httpx.RequestError as e:
-        status_info["ollama"]["details"] = f"Request error: {e}"
+        status_info["azure_openai"]["details"] = f"Request error: {e}"
     except httpx.HTTPStatusError as e:
-        status_info["ollama"]["details"] = f"HTTP error: {e.response.status_code} - {e.response.text}"
+        status_info["azure_openai"]["details"] = f"HTTP error: {e.response.status_code}"
     except Exception as e:
-        status_info["ollama"]["details"] = str(e)
+        status_info["azure_openai"]["details"] = str(e)
 
     # Check Disk Space
     try:
@@ -170,7 +224,7 @@ async def health_check():
 
     # Determine overall status
     if (status_info["database"]["status"] == "UP" and
-            status_info["ollama"]["status"] == "UP" and
+            status_info["azure_openai"]["status"] == "UP" and
             status_info["disk_space"]["status"] == "UP"):
         status_info["overall_status"] = "UP"
         HEALTH_CHECK_STATUS.set(1)

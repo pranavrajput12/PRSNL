@@ -19,44 +19,45 @@ class TimelineItem(BaseModel):
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
     file_path: Optional[str] = None
-    status: str = "completed"  # Add status field
-    createdAt: datetime  # Frontend expects camelCase
-    updatedAt: Optional[datetime] = None  # Frontend expects camelCase
+    status: str = "completed"
+    createdAt: datetime
+    updatedAt: Optional[datetime] = None
     tags: List[str] = []
-    
+
     class Config:
-        # Allow both snake_case and camelCase
         populate_by_name = True
 
 class TimelineResponse(BaseModel):
     items: List[TimelineItem]
-    total: int
-    page: int
-    pageSize: int
+    next_cursor: Optional[str] = None
 
 @router.get("/timeline", response_model=TimelineResponse)
 async def get_timeline(
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    cursor: Optional[str] = None,
+    page: Optional[int] = Query(None, description="Page number (for backward compatibility)")
 ):
-    """Retrieve a chronological list of captured items."""
+    """Retrieve a chronological list of captured items using cursor-based pagination."""
     try:
-        offset = (page - 1) * limit
         pool = await get_db_pool()
         
         async with pool.acquire() as conn:
-            # Get items with their tags
             query = """
                 SELECT 
                     i.id,
                     i.title,
                     i.url,
                     i.summary,
-                    i.platform,
-                    i.item_type,
-                    i.thumbnail_url,
-                    i.duration,
-                    i.file_path,
+                    i.metadata->>'platform' as platform,
+                    CASE 
+                        WHEN i.url LIKE '%youtube.com%' OR i.url LIKE '%youtu.be%' THEN 'video'
+                        WHEN i.url LIKE '%.pdf' THEN 'pdf'
+                        WHEN i.metadata->>'type' IS NOT NULL THEN i.metadata->>'type'
+                        ELSE 'article'
+                    END as item_type,
+                    i.metadata->>'thumbnail_url' as thumbnail_url,
+                    (i.metadata->>'duration')::int as duration,
+                    i.metadata->>'file_path' as file_path,
                     i.status,
                     i.created_at,
                     i.updated_at,
@@ -68,16 +69,24 @@ async def get_timeline(
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.status IN ('completed', 'bookmark', 'pending')
-                GROUP BY i.id
-                ORDER BY i.created_at DESC
-                LIMIT $1 OFFSET $2
             """
-            
-            rows = await conn.fetch(query, limit, offset)
+            params = []
+            if cursor:
+                try:
+                    # The cursor is the created_at timestamp of the last item
+                    cursor_dt = datetime.fromisoformat(cursor.replace("Z", "+00:00"))
+                    query += " AND i.created_at < $1"
+                    params.append(cursor_dt)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid cursor format.")
+
+            query += f" GROUP BY i.id ORDER BY i.created_at DESC LIMIT ${len(params) + 1}"
+            params.append(limit)
+
+            rows = await conn.fetch(query, *params)
             
             items = []
             for row in rows:
-                # Convert container paths to accessible URLs
                 thumbnail_url = row["thumbnail_url"]
                 if thumbnail_url and thumbnail_url.startswith("/app/media/"):
                     thumbnail_url = thumbnail_url.replace("/app/media/", "/media/")
@@ -93,25 +102,18 @@ async def get_timeline(
                     "duration": row["duration"],
                     "file_path": row["file_path"],
                     "status": row["status"],
-                    "createdAt": row["created_at"].isoformat() if row["created_at"] else None,  # Frontend expects camelCase
-                    "updatedAt": row["updated_at"].isoformat() if row["updated_at"] else None,  # Frontend expects camelCase
+                    "createdAt": row["created_at"],
+                    "updatedAt": row["updated_at"],
                     "tags": row["tags"]
                 })
-            
-            # Get total count
-            count_query = """
-                SELECT COUNT(*)
-                FROM items
-                WHERE status IN ('completed', 'bookmark', 'pending')
-            """
-            total_count = await conn.fetchval(count_query)
-            
-            # Frontend expects object with items array, total count, etc.
+
+            next_cursor = None
+            if len(items) == limit:
+                next_cursor = items[-1]["createdAt"].isoformat()
+
             return {
                 "items": items,
-                "total": total_count,
-                "page": page,
-                "pageSize": limit
+                "next_cursor": next_cursor
             }
     except Exception as e:
         raise InternalServerError(f"Failed to retrieve timeline: {e}")

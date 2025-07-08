@@ -7,11 +7,16 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.PUBLIC_API_URL || 'http://localhost:8000',
         changeOrigin: true
       },
       '/media': {
-        target: 'http://localhost:8000',
+        target: process.env.PUBLIC_API_URL || 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/ws': {
+        target: process.env.PUBLIC_API_URL || 'ws://localhost:8000',
+        ws: true,
         changeOrigin: true
       }
     }

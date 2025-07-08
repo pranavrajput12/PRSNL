@@ -17,7 +17,8 @@ class SearchEngine:
         date_filter: str = "all",
         type_filter: str = "all",
         tags: List[str] = [],
-        limit: int = 20
+        limit: int = 20,
+        offset: int = 0
     ) -> List[SearchResult]:
         """
         Perform full-text search with filters
@@ -83,10 +84,11 @@ class SearchEngine:
             WHERE {where_clause}
             GROUP BY i.id, i.title, i.url, i.summary, i.processed_content, i.created_at, i.search_vector
             {order_clause}
-            LIMIT ${param_count}
+            LIMIT ${param_count} OFFSET ${param_count + 1}
         """
         
         params.append(limit)
+        params.append(offset)
         
         # Execute query
         rows = await self.conn.fetch(sql, *params)

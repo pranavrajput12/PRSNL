@@ -38,6 +38,10 @@ async def get_db_connection() -> asyncpg.Connection:
     async with pool.acquire() as connection:
         yield connection
 
+
+# Alias for compatibility
+get_db = get_db_connection
+
 async def apply_migrations():
     """Apply database migrations"""
     pool = await get_db_pool()

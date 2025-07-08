@@ -1,35 +1,40 @@
 FROM python:3.11-slim-bullseye
 
 # Set environment variables
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV POETRY_VERSION=1.7.1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     build-essential \
     gcc \
+    g++ \
     tesseract-ocr \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user and switch to it
-RUN adduser --system --group appuser
-USER appuser
+# Install Poetry
+RUN pip install --no-cache-dir poetry==$POETRY_VERSION
+
 WORKDIR /app
 
-# Copy requirements and install Python packages
-COPY --chown=appuser:appuser requirements.txt .
+# Copy only requirements first to leverage Docker cache
+COPY requirements.txt .
+
+# Install Python dependencies as root
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY --chown=appuser:appuser ./app /app/app
+COPY ./app /app/app
 
-# Add user's local bin to PATH
-ENV PATH="/home/appuser/.local/bin:${PATH}"
+# Create uploads directory
+RUN mkdir -p /app/uploads
 
 # Expose port
 EXPOSE 8000
 
 # Command to run the application
-CMD ["/home/appuser/.local/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

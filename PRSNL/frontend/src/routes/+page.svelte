@@ -7,6 +7,9 @@
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
   import SmartFeed from '$lib/components/SmartFeed.svelte';
+  import AnimatedButton from '$lib/components/AnimatedButton.svelte';
+  import GlassCard from '$lib/components/GlassCard.svelte';
+  import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   
   type Item = {
     id: string;
@@ -104,29 +107,35 @@
     <p class="hero-description">Capture anything with a single keystroke. Search everything instantly.<br/>Never lose a brilliant idea again.</p>
     
     <div class="quick-actions">
-      <a href="/capture" class="action-card capture-card">
-        <div class="card-icon">
-          <Icon name="capture" size="large" />
-        </div>
-        <div class="card-content">
-          <h3>Quick Capture</h3>
-          <p>Save URLs, text, or files instantly</p>
-        </div>
-        <span class="keyboard-hint floating">⌘N</span>
-        <div class="card-glow"></div>
-      </a>
+      <PremiumInteractions variant="hover" intensity="medium">
+        <GlassCard variant="elevated" interactive={true} glowColor="#6366f1">
+          <a href="/capture" class="action-card capture-card">
+            <div class="card-icon">
+              <Icon name="capture" size="large" />
+            </div>
+            <div class="card-content">
+              <h3>Quick Capture</h3>
+              <p>Save URLs, text, or files instantly</p>
+            </div>
+            <span class="keyboard-hint floating">⌘N</span>
+          </a>
+        </GlassCard>
+      </PremiumInteractions>
       
-      <a href="/search" class="action-card search-card">
-        <div class="card-icon">
-          <Icon name="search" size="large" />
-        </div>
-        <div class="card-content">
-          <h3>Smart Search</h3>
-          <p>Find anything you've saved in seconds</p>
-        </div>
-        <span class="keyboard-hint floating">⌘K</span>
-        <div class="card-glow"></div>
-      </a>
+      <PremiumInteractions variant="hover" intensity="medium">
+        <GlassCard variant="elevated" interactive={true} glowColor="#8b5cf6">
+          <a href="/search" class="action-card search-card">
+            <div class="card-icon">
+              <Icon name="search" size="large" />
+            </div>
+            <div class="card-content">
+              <h3>Smart Search</h3>
+              <p>Find anything you've saved in seconds</p>
+            </div>
+            <span class="keyboard-hint floating">⌘K</span>
+          </a>
+        </GlassCard>
+      </PremiumInteractions>
     </div>
   </div>
   
@@ -141,47 +150,59 @@
     {/if}
 
     <div class="stats-grid">
-      <div class="stat-card {mounted ? 'animate-slide' : ''}">
-        <div class="stat-icon">
-          <Icon name="link" size="medium" color="var(--accent)" />
-        </div>
-        <div class="stat-content">
-          {#if isLoading}
-            <div class="stat-value loading"><Spinner size="small" /></div>
-          {:else}
-            <div class="stat-value">{stats.totalItems}</div>
-          {/if}
-          <div class="stat-label">Total Items</div>
-        </div>
-      </div>
+      <PremiumInteractions variant="hover" intensity="subtle">
+        <GlassCard variant="gradient" interactive={true} glowColor="#6366f1">
+          <div class="stat-card {mounted ? 'animate-slide' : ''}">
+            <div class="stat-icon">
+              <Icon name="link" size="medium" color="var(--accent)" />
+            </div>
+            <div class="stat-content">
+              {#if isLoading}
+                <div class="stat-value loading"><Spinner size="small" /></div>
+              {:else}
+                <div class="stat-value">{stats.totalItems}</div>
+              {/if}
+              <div class="stat-label">Total Items</div>
+            </div>
+          </div>
+        </GlassCard>
+      </PremiumInteractions>
       
-      <div class="stat-card {mounted ? 'animate-slide' : ''}" style="animation-delay: 100ms">
-        <div class="stat-icon">
-          <Icon name="calendar" size="medium" color="var(--success)" />
-        </div>
-        <div class="stat-content">
-          {#if isLoading}
-            <div class="stat-value loading"><Spinner size="small" /></div>
-          {:else}
-            <div class="stat-value">{stats.todayItems}</div>
-          {/if}
-          <div class="stat-label">Today</div>
-        </div>
-      </div>
+      <PremiumInteractions variant="hover" intensity="subtle">
+        <GlassCard variant="gradient" interactive={true} glowColor="#10b981">
+          <div class="stat-card {mounted ? 'animate-slide' : ''}" style="animation-delay: 100ms">
+            <div class="stat-icon">
+              <Icon name="calendar" size="medium" color="var(--success)" />
+            </div>
+            <div class="stat-content">
+              {#if isLoading}
+                <div class="stat-value loading"><Spinner size="small" /></div>
+              {:else}
+                <div class="stat-value">{stats.todayItems}</div>
+              {/if}
+              <div class="stat-label">Today</div>
+            </div>
+          </div>
+        </GlassCard>
+      </PremiumInteractions>
       
-      <div class="stat-card {mounted ? 'animate-slide' : ''}" style="animation-delay: 200ms">
-        <div class="stat-icon">
-          <Icon name="tag" size="medium" color="var(--warning)" />
-        </div>
-        <div class="stat-content">
-          {#if isLoading}
-            <div class="stat-value loading"><Spinner size="small" /></div>
-          {:else}
-            <div class="stat-value">{stats.totalTags}</div>
-          {/if}
-          <div class="stat-label">Tags</div>
-        </div>
-      </div>
+      <PremiumInteractions variant="hover" intensity="subtle">
+        <GlassCard variant="gradient" interactive={true} glowColor="#f59e0b">
+          <div class="stat-card {mounted ? 'animate-slide' : ''}" style="animation-delay: 200ms">
+            <div class="stat-icon">
+              <Icon name="tag" size="medium" color="var(--warning)" />
+            </div>
+            <div class="stat-content">
+              {#if isLoading}
+                <div class="stat-value loading"><Spinner size="small" /></div>
+              {:else}
+                <div class="stat-value">{stats.totalTags}</div>
+              {/if}
+              <div class="stat-label">Tags</div>
+            </div>
+          </div>
+        </GlassCard>
+      </PremiumInteractions>
     </div>
   </div>
   
@@ -219,7 +240,9 @@
     {:else if recentItems.length > 0}
       <div class="items-grid">
         {#each recentItems as item, i}
-          <div class="item-card {item.status === 'pending' ? 'pending' : ''}" style="animation-delay: {300 + i * 50}ms">
+          <PremiumInteractions variant="hover" intensity="subtle">
+            <GlassCard variant="default" interactive={true}>
+              <div class="item-card {item.status === 'pending' ? 'pending' : ''}" style="animation-delay: {300 + i * 50}ms">
             <div class="item-header">
               <h4>{item.title}</h4>
               <div class="item-header-icons">
@@ -254,7 +277,9 @@
                 {/each}
               </div>
             </div>
-          </div>
+              </div>
+            </GlassCard>
+          </PremiumInteractions>
         {/each}
       </div>
     {:else}
@@ -263,10 +288,14 @@
           <Icon name="capture" size="large" color="var(--text-muted)" />
         </div>
         <p>No items yet. Press <span class="keyboard-hint">⌘N</span> to capture your first item.</p>
-        <button class="btn-red" on:click={() => window.location.href = '/capture'}>
-          <Icon name="plus" size="small" />
+        <AnimatedButton 
+          variant="primary" 
+          size="large" 
+          icon="plus"
+          on:click={() => window.location.href = '/capture'}
+        >
           Start Capturing
-        </button>
+        </AnimatedButton>
       </div>
     {/if}
   </div>
@@ -323,11 +352,7 @@
   }
   
   .action-card {
-    background: var(--bg-secondary);
-    border: 2px solid transparent;
-    border-radius: var(--radius-lg);
     padding: 2rem;
-    transition: all var(--transition-base);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -335,6 +360,9 @@
     position: relative;
     overflow: hidden;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    min-height: 200px;
   }
   
   .card-icon {
@@ -420,20 +448,11 @@
   }
   
   .stat-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 1.75rem;
     display: flex;
     align-items: center;
     gap: 1.5rem;
     transition: all var(--transition-base);
-  }
-  
-  .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--accent);
   }
   
   .stat-icon {
@@ -539,9 +558,6 @@
   }
   
   .item-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 1.5rem;
     transition: all var(--transition-base);
     cursor: pointer;
@@ -549,6 +565,7 @@
     opacity: 1;
     position: relative;
     overflow: hidden;
+    min-height: 250px;
   }
   
   .item-card::before {

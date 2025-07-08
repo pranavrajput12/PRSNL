@@ -39,7 +39,8 @@ class CaptureEngine:
                     'html': content,
                     'author': None,
                     'published_date': None,
-                    'scraped_at': None
+                    'scraped_at': None,
+                    'images': []
                 })()
             elif url:
                 logger.info(f"Scraping URL: {url}")
@@ -119,6 +120,31 @@ class CaptureEngine:
                             SELECT $1, id FROM tags WHERE name = $2
                             ON CONFLICT DO NOTHING
                         """, item_id, tag)
+                
+                # Save images as attachments
+                if hasattr(scraped_data, 'images') and scraped_data.images:
+                    for idx, img in enumerate(scraped_data.images[:5]):  # Limit to 5 images
+                        try:
+                            await conn.execute("""
+                                INSERT INTO attachments (item_id, file_type, file_path, mime_type, metadata)
+                                VALUES ($1, $2, $3, $4, $5)
+                            """, 
+                                item_id,
+                                'image',
+                                img['url'],  # Store URL as file_path
+                                'image/jpeg',  # Default, could be improved by checking URL extension
+                                json.dumps({
+                                    'alt': img.get('alt', ''),
+                                    'title': img.get('title', ''),
+                                    'width': img.get('width', ''),
+                                    'height': img.get('height', ''),
+                                    'is_remote': True,
+                                    'index': idx
+                                })
+                            )
+                            logger.info(f"Saved image attachment {idx} for item {item_id}")
+                        except Exception as e:
+                            logger.warning(f"Failed to save image attachment: {e}")
                 
                 # Generate and store embedding
                 if processed.summary:

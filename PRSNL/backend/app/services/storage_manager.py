@@ -6,13 +6,16 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from app.db.database import get_db_pool
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class StorageManager:
     """Manages storage for media files, including cleanup and metrics."""
 
-    def __init__(self, media_dir: str = "/app/media"):
+    def __init__(self, media_dir: str = None):
+        if media_dir is None:
+            media_dir = settings.MEDIA_DIR
         self.media_dir = Path(media_dir)
         self.videos_dir = self.media_dir / "videos"
         self.thumbnails_dir = self.media_dir / "thumbnails"

@@ -18,7 +18,6 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 | **Frontend (SvelteKit)** | **3002** | **FIXED** | Main web UI | `/PRSNL/frontend/vite.config.ts` |
 | **Backend (FastAPI)** | **8000** | FIXED | REST API | `/PRSNL/docker-compose.yml` |
 | **PostgreSQL** | **5432** | FIXED | Primary database | `/PRSNL/docker-compose.yml` |
-| **Ollama** | **11434** | FIXED | Local LLM service | `/PRSNL/docker-compose.yml` |
 | **Redis** | **6379** | FIXED | Cache & queue | `/PRSNL/docker-compose.yml` |
 
 ## Alternative Frontend Ports (CORS Allowed)
@@ -91,7 +90,7 @@ docker ps | grep ":PORT->"
 | **8000-8999** | Backend services | 8000 is primary API |
 | **5000-5999** | Databases | 5432 for PostgreSQL |
 | **9000-9999** | Monitoring | Prometheus, exporters |
-| **11000-11999** | AI/ML services | 11434 for Ollama |
+| **11000-11999** | AI/ML services | Reserved for future use |
 
 ## Common Port Conflicts & Solutions
 
@@ -143,10 +142,6 @@ services:
   db:
     ports:
       - "5432:5432"
-  
-  ollama:
-    ports:
-      - "11434:11434"
   
   redis:
     ports:

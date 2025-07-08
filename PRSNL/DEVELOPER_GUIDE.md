@@ -103,15 +103,14 @@ npm run build
 #### Backend (.env)
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost/prsnl
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://postgres:postgres@db:5432/prsnl
+REDIS_URL=redis://redis:6379
 
-# AI Services
-OPENAI_API_KEY=your-api-key
-ANTHROPIC_API_KEY=your-api-key
+# Azure OpenAI (Primary AI Provider)
 AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_ENDPOINT=your-endpoint
-OLLAMA_BASE_URL=http://localhost:11434
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
 
 # Storage
 MEDIA_ROOT=/app/media
@@ -120,61 +119,38 @@ MAX_VIDEO_SIZE_MB=500
 # Security
 SECRET_KEY=your-secret-key
 CORS_ORIGINS=["http://localhost:3002"]
+
+# Optional Models (if deployed)
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+AZURE_OPENAI_WHISPER_DEPLOYMENT=whisper
+AZURE_OPENAI_VISION_DEPLOYMENT=gpt-4-vision
 ```
 
 #### Frontend (.env)
 ```env
-PUBLIC_API_URL=http://localhost:8000/api
-PUBLIC_WS_URL=ws://localhost:8000/ws
+PUBLIC_API_URL=http://localhost:8000
 ```
 
 ## Project Structure
 
-### Backend Structure
-```
-backend/
-├── app/
-│   ├── api/              # API endpoints
-│   │   ├── capture.py    # Content capture endpoints
-│   │   ├── search.py     # Search functionality
-│   │   ├── timeline.py   # Timeline view
-│   │   └── ...
-│   ├── core/             # Core business logic
-│   │   ├── capture_engine.py
-│   │   └── exceptions.py
-│   ├── db/               # Database models and utilities
-│   │   ├── database.py
-│   │   └── models.py
-│   ├── services/         # Service layer
-│   │   ├── ai_router.py  # AI service routing
-│   │   ├── llm_processor.py
-│   │   ├── video_processor.py
-│   │   └── ...
-│   ├── config.py         # Configuration
-│   └── main.py           # FastAPI application
-├── alembic/              # Database migrations
-├── tests/                # Test suite
-└── requirements.txt      # Dependencies
-```
+For complete project structure and file organization, see:
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Comprehensive file organization
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Database tables and relationships
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - All API endpoints
 
-### Frontend Structure
-```
-frontend/
-├── src/
-│   ├── lib/              # Shared libraries
-│   │   ├── api.ts        # API client
-│   │   ├── stores/       # Svelte stores
-│   │   └── components/   # Reusable components
-│   ├── routes/           # SvelteKit routes
-│   │   ├── +page.svelte  # Home page
-│   │   ├── timeline/     # Timeline view
-│   │   ├── search/       # Search interface
-│   │   └── ...
-│   └── app.html          # HTML template
-├── static/               # Static assets
-├── tests/                # Test suite
-└── package.json          # Dependencies
-```
+### Quick Overview
+
+#### Backend
+- `/backend/app/api/` - REST API endpoints
+- `/backend/app/services/` - Business logic and AI services
+- `/backend/app/db/` - Database configuration
+- `/backend/app/core/` - Core utilities
+
+#### Frontend
+- `/frontend/src/routes/` - SvelteKit pages
+- `/frontend/src/lib/components/` - Reusable components
+- `/frontend/src/lib/api.ts` - API client
+- `/frontend/src/lib/stores/` - Svelte stores
 
 ## Development Workflow
 
@@ -603,20 +579,25 @@ brew install python@3.11  # Install ARM64 Python via Homebrew
 
 ## Resources
 
-### Documentation
+### Key Project Documentation
+- [PROJECT_STATUS.md](PROJECT_STATUS.md) - Current system state
+- [MODEL_COORDINATION_RULES.md](MODEL_COORDINATION_RULES.md) - AI model task assignments
+- [PORT_ALLOCATION.md](PORT_ALLOCATION.md) - Service port management
+
+### External Documentation
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [SvelteKit Documentation](https://kit.svelte.dev/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Docker Documentation](https://docs.docker.com/)
+- [Azure OpenAI Documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
 
-### Tools
+### Development Tools
 - [Postman](https://www.postman.com/) - API testing
-- [pgAdmin](https://www.pgadmin.org/) - Database management
+- [pgAdmin](https://www.pgadmin.org/) - Database management  
 - [Redis Commander](https://github.com/joeferner/redis-commander) - Redis GUI
 - [Portainer](https://www.portainer.io/) - Docker management
+- [TablePlus](https://tableplus.com/) - Modern database GUI
 
-### Learning Resources
-- FastAPI Tutorial
-- SvelteKit Tutorial
-- PostgreSQL Performance Tuning
-- Docker Best Practices
+### Testing APIs
+- Backend API Docs: http://localhost:8000/docs
+- WebSocket Test: http://localhost:8000/backend/test_chat.html

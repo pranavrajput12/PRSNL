@@ -62,7 +62,6 @@
 
 **Current Status**: Partially implemented
 **Requirements**:
-1. Complete the `_stream_process_with_ollama()` method
 2. Implement `_stream_process_with_azure()` method
 3. Add proper error handling for connection drops
 4. Implement heartbeat/ping-pong to keep connections alive

@@ -224,5 +224,8 @@ def invalidate_cache(patterns: list[str]):
     return decorator
 
 
+# Import settings at module level
+from app.config import settings
+
 # Global cache instance
-cache_service = CacheService()
+cache_service = CacheService(redis_url=settings.REDIS_URL)

@@ -33,8 +33,8 @@ PRSNL is a modern personal knowledge management system built with a microservice
         ┌────────────────────────────┴────────────────────────────┐
         │                    AI/ML Layer                           │
         ├─────────────┬──────────────┬─────────────┬─────────────┤
-        │   Ollama    │ Azure OpenAI │  Whisper    │ Embeddings  │
-        │  (Local)    │   (Cloud)    │   (ASR)     │  Service    │
+        │ Azure OpenAI │  Whisper    │ Embeddings  │
+        │   (Cloud)    │   (ASR)     │  Service    │
         └─────────────┴──────────────┴─────────────┴─────────────┘
                                      │
         ┌────────────────────────────┴────────────────────────────┐
@@ -94,7 +94,7 @@ PRSNL is a modern personal knowledge management system built with a microservice
 
 ### AI Router Service
 Intelligently routes AI tasks to the most appropriate provider:
-- **Providers**: Ollama (local), Azure OpenAI (cloud)
+- **Providers**: Azure OpenAI (cloud)
 - **Features**:
   - Cost optimization
   - Automatic fallback
@@ -112,7 +112,7 @@ Handles video download and processing:
 
 ### Embedding Service
 Generates and manages vector embeddings:
-- **Models**: OpenAI text-embedding-ada-002, Ollama embeddings
+- **Models**: OpenAI text-embedding-ada-002, Azure OpenAI embeddings
 - **Features**:
   - Batch processing
   - Caching
@@ -249,7 +249,6 @@ Search Query → API Endpoint → Query Parser
 ```yaml
 services:
   - PostgreSQL (Docker) - Port 5432
-  - Ollama (Docker) - Port 11434
   - Backend (Local) - Port 8000
   - Frontend (Local) - Port 3002
 ```
@@ -260,7 +259,6 @@ services:
 ```yaml
 services:
   - PostgreSQL (Managed/Docker)
-  - Ollama (GPU-enabled container)
   - Backend (Docker + Gunicorn)
   - Frontend (Docker + Nginx)
   - Redis (Caching)
@@ -323,8 +321,3 @@ services:
 - ACID compliance
 - Proven reliability
 
-### Why Ollama?
-- Local AI processing
-- No API costs
-- Privacy preservation
-- Model flexibility

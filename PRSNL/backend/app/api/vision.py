@@ -190,10 +190,6 @@ async def get_vision_status() -> Dict[str, Any]:
                     "available": bool(vision_processor.azure_endpoint),
                     "supports_vision": True
                 },
-                "ollama": {
-                    "available": True,
-                    "supports_vision": False  # Currently no vision support
-                },
                 "tesseract": {
                     "available": True,
                     "supports_vision": False,

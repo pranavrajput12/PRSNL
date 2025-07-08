@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: prsnl_db
+    environment:
+      POSTGRES_USER: prsnl
+      POSTGRES_PASSWORD: prsnl123
+      POSTGRES_DB: prsnl_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prsnl -d prsnl_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prsnl_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: prsnl_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prsnl_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: prsnl_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://prsnl:prsnl123@db:5432/prsnl
+      REDIS_URL: redis://redis:6379
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+      AZURE_OPENAI_DEPLOYMENT_NAME: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ELEVEN_LABS_API_KEY: ${ELEVEN_LABS_API_KEY}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - ./backend/app:/app/app
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - prsnl_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: prsnl_frontend
+    ports:
+      - "3002:3002"
+    environment:
+      PUBLIC_API_URL: http://backend:8000
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - prsnl_network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: prsnl_nginx
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - prsnl_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads:
+
+networks:
+  prsnl_network:
+    driver: bridge

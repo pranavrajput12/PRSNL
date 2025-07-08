@@ -13,18 +13,19 @@
   // State
   let isLoading = true;
   let error: Error | null = null;
-  let timeRange = 'week';
+  let timeRange = '30d';
   let selectedCluster: string | null = null;
   let insightsData: InsightsResponse | null = null;
+  let dynamicInsights: any = null;
   
   // Reactive statements
   $: timeRangeLabel = {
-    'day': 'Today',
-    'week': 'This Week',
-    'month': 'This Month',
-    'year': 'This Year',
+    '7d': 'Last 7 Days',
+    '30d': 'Last 30 Days',
+    '3m': 'Last 3 Months',
+    '1y': 'Last Year',
     'all': 'All Time'
-  }[timeRange];
+  }[timeRange] || timeRange;
   
   onMount(async () => {
     try {
@@ -40,7 +41,15 @@
     try {
       isLoading = true;
       error = null;
-      insightsData = await getInsights(timeRange);
+      
+      // Load both legacy and dynamic insights
+      const [legacyData, dynamicData] = await Promise.all([
+        getInsights(timeRange).catch(() => null),
+        fetch(`/api/insights/dashboard`).then(r => r.json()).catch(() => null)
+      ]);
+      
+      insightsData = legacyData;
+      dynamicInsights = dynamicData;
     } catch (e) {
       console.error('Failed to load insights data:', e);
       error = e as Error;
@@ -114,6 +123,16 @@
   </header>
   
   <AsyncBoundary loading={isLoading} {error} loadingMessage="Loading insights...">
+    {#if dynamicInsights && dynamicInsights.widgets}
+      <!-- Dynamic Insights Summary -->
+      {#if dynamicInsights.summary}
+        <div class="insights-summary">
+          <Icon name="sparkles" />
+          <p>{dynamicInsights.summary}</p>
+        </div>
+      {/if}
+    {/if}
+    
     {#if insightsData}
       <div class="insights-grid">
         <div class="insight-card">
@@ -543,6 +562,179 @@
     font-weight: 500;
   }
   
+  /* Dynamic Insights Styles */
+  .insights-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+  }
+  
+  .insights-summary p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  
+  .trending-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .trend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+  }
+  
+  .trend-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  
+  .trend-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .trend-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  
+  .trend-score {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+  }
+  
+  .trend-score.rising {
+    color: #10b981;
+  }
+  
+  .velocity-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--accent);
+  }
+  
+  .stat-value.momentum.increasing {
+    color: #10b981;
+  }
+  
+  .stat-value.momentum.decreasing {
+    color: #ef4444;
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  
+  .diversity-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .gauge {
+    position: relative;
+    height: 40px;
+    background: var(--bg-primary);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  
+  .gauge-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    transition: width 0.5s ease;
+  }
+  
+  .gauge-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+  
+  .interpretation {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+  
+  .themes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .theme-bubble {
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.75rem;
+    border-left: 3px solid var(--accent);
+  }
+  
+  .theme-bubble.high {
+    border-left-color: #10b981;
+  }
+  
+  .theme-bubble.medium {
+    border-left-color: #f59e0b;
+  }
+  
+  .theme-bubble h4 {
+    font-size: 1rem;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+  }
+  
+  .theme-bubble p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .confidence {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  
   @media (max-width: 768px) {
     .insights-page {
       padding: 1rem;
@@ -555,6 +747,10 @@
     }
     
     .insights-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .velocity-stats {
       grid-template-columns: 1fr;
     }
   }

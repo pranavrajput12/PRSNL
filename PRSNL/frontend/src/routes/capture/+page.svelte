@@ -9,6 +9,8 @@
   import TagAutocomplete from '$lib/components/TagAutocomplete.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import AnimatedButton from '$lib/components/AnimatedButton.svelte';
+  import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
 
   // Form fields and state
   let url = '';
@@ -452,17 +454,19 @@
           <div class="tag-suggestions">
             <span>Recent tags:</span>
             {#each recentTags as tag}
-              <button 
-                type="button" 
-                class="tag-button"
-                on:click={() => {
-                  if (!tags.includes(tag)) {
-                    tags = [...tags, tag];
-                  }
-                }}
-              >
-                {tag}
-              </button>
+              <PremiumInteractions variant="click" intensity="subtle">
+                <button 
+                  type="button" 
+                  class="tag-button"
+                  on:click={() => {
+                    if (!tags.includes(tag)) {
+                      tags = [...tags, tag];
+                    }
+                  }}
+                >
+                  {tag}
+                </button>
+              </PremiumInteractions>
             {/each}
           </div>
         {/if}
@@ -481,25 +485,35 @@
       {/if}
 
       <div class="form-actions">
-        <button 
-          type="submit" 
-          class="primary" 
+        <AnimatedButton 
+          variant="primary" 
+          size="large" 
+          icon={isSubmitting ? null : "download"}
+          loading={isSubmitting}
           disabled={isSubmitting}
+          on:click={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
         >
           {#if isSubmitting}
-            <Spinner size="small" />
             Capturing...
           {:else}
             Capture
           {/if}
-        </button>
-        <button 
-          type="button" 
-          on:click={() => window.history.back()}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </button>
+        </AnimatedButton>
+        
+        <PremiumInteractions variant="click" intensity="subtle">
+          <button 
+            type="button" 
+            class="secondary-button"
+            on:click={() => window.history.back()}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+        </PremiumInteractions>
+        
         <div class="keyboard-shortcut">Cmd+Enter to submit</div>
       </div>
     </form>
@@ -751,6 +765,23 @@
     font-size: 0.8125rem;
     color: var(--text-secondary);
     margin-left: auto;
+  }
+  
+  .secondary-button {
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .secondary-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
   .progress-bar {

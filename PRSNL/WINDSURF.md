@@ -5,9 +5,16 @@ Windsurf is the frontend specialist for PRSNL, focusing on SvelteKit development
 
 ## 📚 CRITICAL FILES TO READ BEFORE ANY TASK
 
-### 1. Current Status & Context
+### 1. Your Operating Procedures
 ```
-MUST READ FIRST:
+START HERE:
+/PRSNL/WINDSURF_SOP.md           # Your complete guide and process
+/PRSNL/CENTRALIZED_TASK_MANAGEMENT.md # How task tracking works
+```
+
+### 2. Current Status & Context
+```
+THEN READ:
 /PRSNL/PROJECT_STATUS.md          # Current state and active work
 /PRSNL/WINDSURF_TASKS.md         # Your specific tasks with file paths
 /PRSNL/CONSOLIDATED_TASK_TRACKER.md  # Task history and completions

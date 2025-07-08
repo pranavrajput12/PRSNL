@@ -1,218 +1,197 @@
-# 🧠 GEMINI - Backend AI Infrastructure Tasks
+# 🧠 GEMINI - Simple Backend Tasks
 
 ## 📚 REQUIRED READING BEFORE ANY TASK
 Always review these files before starting work:
 
 ### Documentation to Read First:
 1. `/PRSNL/PROJECT_STATUS.md` - Current project state and context
-2. `/PRSNL/MODEL_COORDINATION_RULES.md` - Port assignments and rules
-3. `/PRSNL/backend/API_DOCUMENTATION.md` - API structure and patterns
-4. `/PRSNL/ARCHITECTURE.md` - System design and data flow
+2. `/PRSNL/MODEL_COORDINATION_RULES.md` - **CRITICAL: PORT 8000 ONLY!**
+3. `/PRSNL/API_DOCUMENTATION.md` - API structure and patterns
+4. `/PRSNL/DATABASE_SCHEMA.md` - Database field mappings
 
 ### Files to Update After Each Task:
 1. `/PRSNL/CONSOLIDATED_TASK_TRACKER.md` - Mark task complete
 2. `/PRSNL/MODEL_ACTIVITY_LOG.md` - Log your changes
-3. `/PRSNL/backend/API_DOCUMENTATION.md` - If you add/modify endpoints
-4. `/PRSNL/PROJECT_STATUS.md` - Update progress section
+3. `/PRSNL/PROJECT_STATUS.md` - Update progress section
 
 ---
 
-## 🆕 NEW HIGH PRIORITY TASKS - 2025-07-07
+## ⚠️ TASK REASSIGNMENT (2025-01-08)
+Complex backend tasks have been reassigned to Claude. Gemini should focus on simple, time-consuming backend tasks.
 
-### Task GEMINI-005: Fix AI Suggestions Endpoint
-**Priority**: CRITICAL - User reported it's not working!
-**Status**: TODO
-**File**: `/PRSNL/backend/app/api/ai_suggest.py`
+## 🎯 NEW SIMPLE TASKS
 
-**Issue**: AI suggestions fail silently when URL is added in capture page
-**Requirements**:
-1. Add proper Azure OpenAI fallback to Ollama
-2. Use AI Router service pattern (see `/PRSNL/backend/app/services/ai_router.py`)
-3. Better error handling and logging
-4. Test with the URL: https://x.com/cline/status/1939716967012946141
-
-### Task GEMINI-006: Implement Missing Analytics Endpoints
-**Priority**: HIGH - Frontend needs these
-**Status**: TODO
-**File to Update**: `/PRSNL/backend/app/api/analytics.py`
-
-**Missing Endpoints**:
-- `GET /api/analytics/usage_patterns` - Usage statistics
-- `GET /api/analytics/ai_insights` - AI-generated insights about knowledge base
-
-**See**: `/PRSNL/GEMINI_NEXT_TASKS.md` for detailed requirements
-
----
-
-## 🎯 ACTIVE TASKS
-
-### Task GEMINI-001: Analytics API Endpoints
-**Priority**: HIGH
-**Status**: COMPLETED
-
-**Files to Create:**
-```
-/PRSNL/backend/app/api/analytics.py
-```
-
-**Files to Modify:**
-```
-/PRSNL/backend/app/main.py              # Add router
-/PRSNL/backend/app/db/database.py       # Add analytics queries
-/PRSNL/backend/app/models/schemas.py    # Add response models
-```
-
-**Files to Reference:**
-```
-/PRSNL/backend/app/api/search.py        # Example API structure
-/PRSNL/backend/app/api/timeline.py      # Pagination pattern
-/PRSNL/backend/app/services/embedding_service.py  # For semantic analysis
-```
-
-**Requirements:**
-1. Create endpoints:
-   - `GET /api/analytics/trends` - Content trends over time
-   - `GET /api/analytics/topics` - Topic clustering data
-   - `GET /api/analytics/insights` - AI-generated insights
-   - `GET /api/analytics/usage` - User activity patterns
-
-2. Database queries to implement:
-   ```python
-   # In database.py
-   async def get_content_trends(conn, timeframe: str)
-   async def get_topic_clusters(conn, limit: int = 10)
-   async def get_usage_analytics(conn, start_date, end_date)
-   ```
-
-3. Response schemas in schemas.py:
-   ```python
-   class TrendData(BaseModel):
-       date: datetime
-       articles: int
-       videos: int
-       notes: int
-       bookmarks: int
-   
-   class TopicCluster(BaseModel):
-       topic: str
-       count: int
-       items: List[UUID]
-       keywords: List[str]
-   ```
-
----
-
-### Task GEMINI-002: Complete LLM Streaming
-**Priority**: HIGH
-**Status**: COMPLETED
-
-**Files to Complete:**
-```
-/PRSNL/backend/app/services/llm_processor.py  # Finish streaming methods
-/PRSNL/backend/app/api/ws.py                  # Add streaming endpoints
-```
-
-**Files to Reference:**
-```
-/PRSNL/backend/app/services/ai_router.py      # AI provider selection
-/PRSNL/backend/app/core/websocket_manager.py  # WebSocket handling
-```
-
-**Requirements:**
-1. Complete streaming implementation in llm_processor.py:
-   - Finish `_stream_process_with_ollama()`
-   - Implement `_stream_process_with_azure()`
-   - Add proper error handling and reconnection
-
-2. WebSocket endpoints in ws.py:
-   - `/ws/ai/stream` - Stream AI responses
-   - `/ws/ai/suggestions` - Live tag suggestions
-   - Implement heartbeat/ping-pong
-
----
-
-### Task GEMINI-003: Performance Optimization
+### Task GEMINI-SIMPLE-001: Create Test Data Scripts
 **Priority**: MEDIUM
-**Status**: COMPLETED
+**Status**: TODO
+**Estimated Time**: 2 hours
 
-**Files to Optimize:**
-```
-/PRSNL/backend/app/services/embedding_service.py  # Batch processing
-/PRSNL/backend/app/worker.py                      # Background tasks
-/PRSNL/backend/app/db/database.py                 # Query optimization
-```
+**Task**: Create comprehensive test data population scripts
+- Create script to add 50+ diverse test items
+- Include all item types: videos, articles, tweets, GitHub repos, PDFs
+- Add realistic metadata, tags, and summaries
+- Create test users and activity patterns
 
 **Files to Create:**
 ```
-/PRSNL/backend/app/services/cache.py              # Redis caching layer
-/PRSNL/backend/app/db/migrations/003_add_indexes.sql
-```
-
-**Requirements:**
-1. Implement Redis caching for:
-   - Embedding results
-   - AI responses
-   - Search results
-
-2. Database optimizations:
-   - Add indexes for common queries
-   - Implement connection pooling improvements
-   - Add query result caching
-
-3. Background task improvements:
-   - Batch embedding generation
-   - Async video processing
-   - Queue prioritization
-
----
-
-## 🛠️ DEVELOPMENT WORKFLOW
-
-### Before Starting:
-```bash
-cd /PRSNL/backend
-source venv/bin/activate  # Or create: python3 -m venv venv
-pip install -r requirements.txt
-```
-
-### Testing Your Changes:
-```bash
-# Run backend
-uvicorn app.main:app --reload --port 8000
-
-# Run tests
-pytest tests/
-
-# Check API docs
-open http://localhost:8000/docs
-```
-
-### Environment Variables:
-```bash
-# Check .env file for required vars
-AZURE_OPENAI_API_KEY=xxx
-AZURE_OPENAI_ENDPOINT=xxx
-DATABASE_URL=postgresql://user:pass@localhost/prsnl
-REDIS_URL=redis://localhost:6379
+/PRSNL/backend/scripts/populate_test_data.py
+/PRSNL/backend/scripts/generate_activity_data.py
 ```
 
 ---
 
-## 📝 COMMIT MESSAGE FORMAT
+### Task GEMINI-SIMPLE-002: API Response Time Logging
+**Priority**: LOW
+**Status**: TODO
+**Estimated Time**: 1 hour
+
+**Task**: Add response time logging to all API endpoints
+- Log endpoint, method, response time, status code
+- Write logs to structured format
+- Create daily summary reports
+- No complex logic, just logging
+
+**Files to Update:**
 ```
-feat(backend): [GEMINI-XXX] Brief description
-
-- Detailed change 1
-- Detailed change 2
-
-Updates: CONSOLIDATED_TASK_TRACKER.md, MODEL_ACTIVITY_LOG.md
+/PRSNL/backend/app/middleware/logging.py
+/PRSNL/backend/app/utils/logger.py
 ```
 
 ---
 
-## ⚠️ CRITICAL REMINDERS
-1. **NEVER** change port assignments (Backend = 8000)
-2. **ALWAYS** update tracking files after completing work
-3. **TEST** all endpoints before marking complete
-4. **DOCUMENT** new APIs in API_DOCUMENTATION.md
-5. **CHECK** for existing patterns before implementing new ones
+### Task GEMINI-SIMPLE-003: Database Backup Scripts
+**Priority**: MEDIUM
+**Status**: TODO
+**Estimated Time**: 1.5 hours
+
+**Task**: Create automated database backup scripts
+- Daily backup script using pg_dump
+- Compress and timestamp backups
+- Keep last 7 days of backups
+- Simple bash/Python scripts
+
+**Files to Create:**
+```
+/PRSNL/backend/scripts/backup_database.sh
+/PRSNL/backend/scripts/restore_database.sh
+/PRSNL/backend/scripts/cleanup_old_backups.py
+```
+
+---
+
+### Task GEMINI-SIMPLE-004: Write Unit Tests for Utilities
+**Priority**: HIGH
+**Status**: TODO
+**Estimated Time**: 3 hours
+
+**Task**: Write tests for utility functions
+- Test date formatting functions
+- Test URL validation utilities
+- Test file size formatting
+- Test string truncation helpers
+- Aim for 100% coverage of utils
+
+**Files to Create:**
+```
+/PRSNL/backend/tests/test_utils_date.py
+/PRSNL/backend/tests/test_utils_url.py
+/PRSNL/backend/tests/test_utils_format.py
+```
+
+---
+
+### Task GEMINI-SIMPLE-005: Error Log Analysis Script
+**Priority**: LOW
+**Status**: TODO
+**Estimated Time**: 2 hours
+
+**Task**: Create script to analyze error logs
+- Parse application error logs
+- Group errors by type and frequency
+- Generate daily error report
+- Send summary to Slack/Discord webhook
+
+**Files to Create:**
+```
+/PRSNL/backend/scripts/analyze_errors.py
+/PRSNL/backend/scripts/error_report_template.md
+```
+
+---
+
+### Task GEMINI-SIMPLE-006: API Documentation Examples
+**Priority**: MEDIUM
+**Status**: TODO
+**Estimated Time**: 2 hours
+
+**Task**: Add example requests/responses to API docs
+- Create example JSON for each endpoint
+- Add curl command examples
+- Include common error responses
+- Update OpenAPI schema descriptions
+
+**Files to Update:**
+```
+/PRSNL/backend/app/api/examples/
+/PRSNL/API_DOCUMENTATION.md
+```
+
+---
+
+### Task GEMINI-SIMPLE-007: Health Check Endpoints
+**Priority**: HIGH
+**Status**: TODO
+**Estimated Time**: 1 hour
+
+**Task**: Implement simple health check endpoints
+- Database connectivity check
+- Redis connectivity check
+- Disk space check
+- Memory usage check
+- Return simple JSON status
+
+**Files to Create:**
+```
+/PRSNL/backend/app/api/health.py
+/PRSNL/backend/app/utils/system_checks.py
+```
+
+---
+
+### Task GEMINI-SIMPLE-008: Metrics Collection Script
+**Priority**: LOW
+**Status**: TODO
+**Estimated Time**: 2 hours
+
+**Task**: Create metrics collection scripts
+- Count items by type and status
+- Calculate storage usage
+- Track API usage by endpoint
+- Generate CSV reports
+
+**Files to Create:**
+```
+/PRSNL/backend/scripts/collect_metrics.py
+/PRSNL/backend/scripts/generate_reports.py
+```
+
+---
+
+## 📋 Guidelines for Simple Tasks
+
+1. **DO NOT** modify core business logic
+2. **DO NOT** change API contracts or database schema
+3. **DO NOT** implement complex algorithms
+4. **DO** focus on scripts, tests, and utilities
+5. **DO** write clear, well-documented code
+6. **DO** test your scripts before marking complete
+
+## 🚫 Tasks NOT for Gemini
+
+These are handled by Claude:
+- AI service implementations
+- Complex API endpoints
+- Database schema changes
+- WebSocket implementations
+- Authentication/authorization
+- Performance optimization of core features

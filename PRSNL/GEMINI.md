@@ -5,9 +5,16 @@ Gemini is the backend and infrastructure specialist for PRSNL, focusing on Pytho
 
 ## 📚 CRITICAL FILES TO READ BEFORE ANY TASK
 
-### 1. Current Status & Context
+### 1. Your Operating Procedures
 ```
-MUST READ FIRST:
+START HERE:
+/PRSNL/GEMINI_SOP.md             # Your complete guide and process
+/PRSNL/CENTRALIZED_TASK_MANAGEMENT.md # How task tracking works
+```
+
+### 2. Current Status & Context
+```
+THEN READ:
 /PRSNL/PROJECT_STATUS.md          # Current state and active work
 /PRSNL/GEMINI_TASKS.md           # Your specific tasks with file paths
 /PRSNL/CONSOLIDATED_TASK_TRACKER.md  # Task history and completions
@@ -61,7 +68,6 @@ REVIEW YOUR IMPLEMENTATIONS:
    # FIRST: Check port availability (see /PRSNL/PORT_ALLOCATION.md)
    lsof -i :8000  # Backend port
    lsof -i :5432  # PostgreSQL port
-   lsof -i :11434 # Ollama port
    
    cd /PRSNL/backend
    source venv/bin/activate
@@ -141,7 +147,6 @@ Create comprehensive analytics endpoints for the insights dashboard:
 
 ### 2. Complete LLM Streaming (GEMINI-002)
 Finish the streaming implementation:
-- Complete `_stream_process_with_ollama()`
 - Implement `_stream_process_with_azure()`
 - Add WebSocket streaming endpoints
 
@@ -167,7 +172,6 @@ Optimize system performance:
 - Response times must be < 1 second
 
 ### With AI Services
-- Ollama on port 11434
 - Azure OpenAI for embeddings
 - Fallback chains for reliability
 
