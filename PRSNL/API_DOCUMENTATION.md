@@ -1,51 +1,30 @@
-# PRSNL API Documentation
-*Last Updated: 2025-01-08*
+# 📚 PRSNL API Documentation
 
 ## Base URL
 - Development: `http://localhost:8000/api`
-- Production: `http://localhost:8001/api` (through NGINX)
+- Frontend Proxy: `http://localhost:3002/api`
+- iOS App: Configured in iOS app settings
 
-**NOTE**: The API prefix is `/api` NOT `/api/v1`
+## Client Applications
+- **SvelteKit Frontend**: Web application (port 3002)
+- **iOS App (PRSNL APP)**: Native iOS application - *separate codebase*
+- **Chrome Extension**: Browser extension
 
 ## Authentication
-Currently, the API is designed for local use without authentication. Future versions will include API key authentication.
+Currently no authentication required (development mode)
 
-## Core Endpoints
+**Note**: iOS app may require additional authentication mechanisms for production use.
 
-### 📥 Capture
+## Endpoints
 
-#### POST `/api/capture`
-Capture new content with AI processing.
+### 📊 Timeline
 
-**Request Body:**
-```json
-{
-  "url": "https://example.com/article",
-  "title": "Optional title override",
-  "tags": ["optional", "tags"],
-  "notes": "Optional notes",
-  "item_type": "article",  // Optional: video, article, tweet, etc.
-  "summary": "Optional summary"
-}
-```
-
-**Response:**
-```json
-{
-  "id": "uuid",
-  "status": "pending",  // or "completed"
-  "message": "Item capture initiated"
-}
-```
-
-### 📋 Timeline
-
-#### GET `/api/timeline`
-Get items in reverse chronological order.
+#### GET /api/timeline
+Get paginated timeline items
 
 **Query Parameters:**
-- `limit` (int): Number of items (default: 20, max: 100)
-- `cursor` (string): Pagination cursor
+- `page` (integer, default: 1) - Page number
+- `limit` (integer, default: 20, max: 100) - Items per page
 
 **Response:**
 ```json
@@ -53,282 +32,300 @@ Get items in reverse chronological order.
   "items": [
     {
       "id": "uuid",
-      "title": "Item Title",
-      "url": "https://...",
-      "summary": "Item summary",
-      "platform": "youtube",  // for videos
-      "item_type": "video",
-      "thumbnail_url": "https://...",
-      "duration": 3600,  // seconds for videos
-      "status": "completed",
-      "createdAt": "2025-01-08T12:00:00Z",
-      "tags": ["tag1", "tag2"]
+      "title": "string",
+      "url": "string",
+      "summary": "string",
+      "platform": "string",
+      "item_type": "article|video|note",
+      "thumbnail_url": "string",
+      "duration": 120,
+      "file_path": "string",
+      "createdAt": "2025-07-06T10:00:00Z",
+      "updatedAt": "2025-07-06T10:00:00Z",
+      "tags": ["string"]
     }
   ],
-  "next_cursor": "2025-01-08T12:00:00Z"
+  "total": 100,
+  "page": 1,
+  "pageSize": 20
 }
 ```
 
-### 🔍 Search
+### 📝 Capture
 
-#### GET `/api/search`
-Keyword-based search.
-
-**Query Parameters:**
-- `query` (string): Search terms
-- `limit` (int): Max results (default: 10)
-- `type` (string): Filter by item type
-- `tags` (string): Comma-separated tags
-
-#### POST `/api/search/semantic`
-Semantic search using embeddings.
+#### POST /api/capture
+Capture a new item (article, video, note)
 
 **Request Body:**
 ```json
 {
-  "query": "machine learning tutorials",
-  "limit": 10,
-  "full_text_query": "optional keyword filter"
+  "url": "https://example.com",
+  "title": "Optional title",
+  "content": "Optional content for notes"
 }
 ```
 
-#### GET `/api/search/similar/{id}`
-Find items similar to a specific item.
+**Response:**
+```json
+{
+  "message": "Item capture initiated",
+  "item_id": "uuid",
+  "item_type": "article|video"
+}
+```
 
-### 📄 Items
+**Notes:**
+- Either `url` or `content` must be provided
+- Videos are automatically detected and processed asynchronously
+- Supported video platforms: Instagram, YouTube, Twitter, TikTok
 
-#### GET `/api/items/{id}`
-Get single item details.
+### 🔍 Search
 
-#### PATCH `/api/items/{id}`
-Update item metadata.
+#### GET /api/search
+Search items by query and filters
 
-#### DELETE `/api/items/{id}`
-Delete an item.
+**Query Parameters:**
+- `query` (string) - Search query
+- `date` (string) - Date filter
+- `type` (string) - Item type filter
+- `tags` (string) - Tags filter
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "uuid",
+      "title": "string",
+      "url": "string",
+      "summary": "string",
+      "tags": ["string"],
+      "createdAt": "2025-07-06T10:00:00Z",
+      "type": "article"
+    }
+  ],
+  "total": 10
+}
+```
 
 ### 🏷️ Tags
 
-#### GET `/api/tags`
-Get all tags with usage counts.
+#### GET /api/tags
+Get all tags with usage count
 
 **Response:**
 ```json
 [
   {
-    "name": "javascript",
-    "count": 42
+    "name": "string",
+    "count": 10
   }
 ]
 ```
 
-### 🤖 AI Features
+### 📄 Items
 
-#### POST `/api/suggest`
-Get AI suggestions for URL content.
+#### GET /api/items/{id}
+Get a single item by ID
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "title": "string",
+  "url": "string",
+  "content": "string",
+  "summary": "string",
+  "platform": "string",
+  "item_type": "string",
+  "thumbnail_url": "string",
+  "duration": 120,
+  "file_path": "string",
+  "createdAt": "2025-07-06T10:00:00Z",
+  "updatedAt": "2025-07-06T10:00:00Z",
+  "tags": ["string"],
+  "attachments": []
+}
+```
+
+#### PATCH /api/items/{id}
+Update an item
 
 **Request Body:**
 ```json
 {
-  "url": "https://example.com/article"
+  "title": "New title",
+  "summary": "Updated summary",
+  "tags": ["tag1", "tag2"]
 }
 ```
 
 **Response:**
 ```json
 {
-  "title": "Suggested Title",
-  "summary": "AI-generated summary",
-  "tags": ["suggested", "tags"],
-  "category": "tutorial"
+  "message": "Item updated successfully",
+  "id": "uuid"
 }
 ```
 
-#### POST `/api/vision/analyze`
-Analyze images with AI.
-
-**Request:** Multipart form with `file` field
+#### DELETE /api/items/{id}
+Delete an item
 
 **Response:**
 ```json
 {
-  "text": "Extracted text",
-  "description": "AI description",
-  "objects": ["detected", "objects"],
-  "tags": ["suggested", "tags"]
+  "message": "Item deleted successfully",
+  "id": "uuid"
 }
 ```
 
-### 📊 AI Analytics & Processing
+### 🎥 Videos
 
-#### POST `/api/categorize`
-Categorize a single item.
+#### GET /api/videos/{item_id}/stream
+Stream a video file
+
+**Response:** Video file stream
+
+#### GET /api/videos/{item_id}/metadata
+Get video metadata
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "url": "string",
+  "title": "string",
+  "description": "string",
+  "author": "string",
+  "duration": 120,
+  "video_path": "string",
+  "thumbnail_path": "string",
+  "platform": "instagram",
+  "metadata": {},
+  "downloaded_at": "2025-07-06T10:00:00Z",
+  "status": "completed"
+}
+```
+
+#### POST /api/videos/{item_id}/transcode
+Request video transcoding
 
 **Request Body:**
 ```json
 {
-  "item_id": "uuid"
+  "quality": "high|standard"
 }
 ```
 
-#### POST `/api/categorize/bulk`
-Categorize multiple uncategorized items.
+#### DELETE /api/videos/{item_id}
+Delete a video and associated files
 
-**Request Body:**
+### 💬 Telegram
+
+#### POST /api/telegram/webhook
+Webhook endpoint for Telegram bot updates
+
+#### POST /api/telegram/setup-webhook
+Manually setup Telegram webhook
+
+### 📊 Admin
+
+#### GET /api/storage/metrics
+Get storage usage metrics
+
+**Response:**
 ```json
 {
-  "limit": 100
+  "total_size_bytes": 1000000,
+  "video_count": 10,
+  "thumbnail_count": 30,
+  "temp_files_count": 5
 }
 ```
 
-#### GET `/api/categories/stats`
-Get category statistics.
+### 🏥 Health
 
-#### POST `/api/duplicates/check`
-Check if content is duplicate.
+#### GET /health
+Check system health
 
-**Request Body:**
+**Response:**
 ```json
 {
-  "url": "https://...",
-  "title": "Title",
-  "content": "Optional content"
+  "database": {
+    "status": "UP",
+    "details": ""
+  },
+  "ollama": {
+    "status": "UP",
+    "details": ""
+  },
+  "disk_space": {
+    "status": "UP",
+    "details": {
+      "total": "100.00 GB",
+      "used": "50.00 GB",
+      "free": "50.00 GB",
+      "percentage_free": "50.00%"
+    }
+  },
+  "overall_status": "UP"
 }
 ```
-
-#### GET `/api/duplicates/find-all`
-Find all duplicate groups.
-
-#### POST `/api/duplicates/merge`
-Merge duplicate items.
-
-**Request Body:**
-```json
-{
-  "keep_id": "uuid",
-  "duplicate_ids": ["uuid1", "uuid2"]
-}
-```
-
-#### POST `/api/summarization/item`
-Summarize a single item.
-
-**Request Body:**
-```json
-{
-  "item_id": "uuid",
-  "summary_type": "brief"  // or "detailed", "key_points"
-}
-```
-
-#### POST `/api/summarization/digest`
-Generate periodic digest.
-
-**Request Body:**
-```json
-{
-  "period": "daily",  // or "weekly", "monthly"
-  "summary_type": "brief"
-}
-```
-
-#### POST `/api/summarization/topic`
-Summarize by topic.
-
-**Request Body:**
-```json
-{
-  "topic": "machine learning",
-  "limit": 20
-}
-```
-
-### 📹 Video Features
-
-#### GET `/api/videos/{id}/stream`
-Stream video file (for downloaded videos).
-
-#### GET `/api/videos/{id}/metadata`
-Get video metadata.
-
-#### POST `/api/video-streaming/analyze/{id}`
-Analyze video content with AI.
-
-#### GET `/api/video-streaming/mini-course`
-Get generated mini-courses from videos.
-
-### 📈 Analytics
-
-#### GET `/api/analytics/trends`
-Content trends over time.
-
-#### GET `/api/analytics/topics`  
-Topic clusters in knowledge base.
-
-#### GET `/api/analytics/usage_patterns`
-Usage statistics and patterns.
-
-#### GET `/api/analytics/ai_insights`
-AI-generated insights about your knowledge.
-
-### 💬 WebSocket
-
-#### WS `/ws/chat/{client_id}`
-RAG-based chat with knowledge base.
-
-**Message Format:**
-```json
-{
-  "message": "User question",
-  "history": [],
-  "chat_mode": "general"
-}
-```
-
-**Response Types:**
-- `connection`: Connection established
-- `status`: Processing status
-- `chunk`: Streaming response chunk
-- `complete`: Response complete with citations
-- `error`: Error message
-
-### 🔧 Utility
-
-#### GET `/api/health`
-Health check endpoint.
-
-#### GET `/api/debug/session`
-Debug session information.
-
-#### GET `/api/metrics`
-Prometheus metrics endpoint.
-
-## Rate Limiting
-
-- Default: 10 requests per minute per IP
-- Capture endpoint: 10 per minute
-- Search endpoints: 30 per minute
-- Analytics: 20 per minute
 
 ## Error Responses
 
-All errors follow this format:
+All endpoints return consistent error responses:
+
 ```json
 {
-  "detail": "Error description",
-  "status_code": 400
+  "detail": "Error message",
+  "status": 400
 }
 ```
 
-Common status codes:
-- 400: Bad Request
-- 404: Not Found
-- 429: Rate Limited
-- 500: Internal Server Error
+**Common Status Codes:**
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request
+- `404` - Not Found
+- `500` - Internal Server Error
 
-## Notes
+## Data Formats
 
-1. All timestamps are in ISO 8601 format with UTC timezone
-2. Frontend expects camelCase fields (createdAt, updatedAt, etc.)
-3. Item types: video, article, tweet, github, pdf, note
-4. Status values: pending, completed, failed, bookmark
-5. Platform values: youtube, twitter, github, web
+### Timestamps
+All timestamps are in ISO 8601 format with UTC timezone:
+`2025-07-06T10:00:00Z`
+
+### IDs
+All IDs are UUIDs in standard format:
+`123e4567-e89b-12d3-a456-426614174000`
+
+## Frontend Integration Notes
+
+### Field Name Conventions
+The backend now returns camelCase fields directly for frontend compatibility:
+- `createdAt` (instead of `created_at`)
+- `updatedAt` (instead of `updated_at`)
+
+Note: Some fields still use snake_case:
+- `item_type`
+- `thumbnail_url`
+- `file_path`
+
+### CORS Configuration
+Allowed origins:
+- `http://localhost:3000`
+- `http://localhost:3002`
+- `http://localhost:5173`
+
+## Rate Limiting
+Currently no rate limiting in development mode
+
+## Future Enhancements
+- [ ] Authentication & Authorization
+- [ ] WebSocket support for real-time updates
+- [ ] Batch operations
+- [ ] GraphQL endpoint
+- [ ] API versioning
+- [ ] Rate limiting
+- [ ] Pagination cursors

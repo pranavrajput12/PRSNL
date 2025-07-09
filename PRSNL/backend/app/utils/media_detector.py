@@ -22,6 +22,9 @@ class MediaDetector:
             r'(?:https?://)?player\.vimeo\.com/video/(\d+)'
         ],
         'twitter': [
+            r'(?:https?://)?(?:www\.)?twitter\.com/\w+/status/(\d+)/video/\d+',
+            r'(?:https?://)?(?:www\.)?x\.com/\w+/status/(\d+)/video/\d+',
+            # Twitter videos can also be in regular status URLs
             r'(?:https?://)?(?:www\.)?twitter\.com/\w+/status/(\d+)',
             r'(?:https?://)?(?:www\.)?x\.com/\w+/status/(\d+)'
         ],
@@ -29,10 +32,6 @@ class MediaDetector:
             r'(?:https?://)?(?:www\.)?instagram\.com/p/([a-zA-Z0-9_-]+)',
             r'(?:https?://)?(?:www\.)?instagram\.com/reel/([a-zA-Z0-9_-]+)',
             r'(?:https?://)?(?:www\.)?instagram\.com/tv/([a-zA-Z0-9_-]+)'
-        ],
-        'tiktok': [
-            r'(?:https?://)?(?:www\.)?tiktok\.com/@[\w.-]+/video/(\d+)',
-            r'(?:https?://)?(?:vm\.)?tiktok\.com/([a-zA-Z0-9]+)'
         ],
         'dailymotion': [
             r'(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)'
@@ -62,9 +61,11 @@ class MediaDetector:
             - embed_url: For videos, the embed URL
             - direct_url: For images/videos, the direct media URL
         """
-        # Check if it's a video platform
+        # Check if it's a video platform (including Twitter)
         video_info = cls.detect_video_platform(url)
         if video_info:
+            # For Twitter, we'll let yt-dlp determine if it's actually a video
+            # during the validation phase
             return {
                 'type': 'video',
                 'platform': video_info['platform'],

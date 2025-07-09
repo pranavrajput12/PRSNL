@@ -93,8 +93,8 @@
         tags = [...tags, 'video'];
         
         // Add platform tag if not already present
-        const platformTag = videoPlatform.toLowerCase();
-        if (!tags.includes(platformTag)) {
+        const platformTag = typeof videoPlatform === 'string' ? videoPlatform.toLowerCase() : null;
+        if (platformTag && !tags.includes(platformTag)) {
           tags = [...tags, platformTag];
         }
       }

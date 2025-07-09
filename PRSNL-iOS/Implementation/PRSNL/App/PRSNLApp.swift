@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 @main
 struct PRSNLApp: App {
@@ -7,20 +8,19 @@ struct PRSNLApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                if appState.isLaunching {
-                    LaunchScreenView()
-                        .transition(.opacity)
-                } else {
-                    ContentView()
-                        .transition(.opacity)
-                        .preferredColorScheme(isDarkMode ? .dark : .light)
-                }
-            }
-            .animation(.easeInOut(duration: 0.5), value: appState.isLaunching)
-            .onAppear {
-                appState.initializeApp()
-                setupAppearance()
+            if appState.isLaunching {
+                LaunchScreenView()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            appState.isLaunching = false
+                        }
+                    }
+            } else {
+                ContentView()
+                    .preferredColorScheme(isDarkMode ? .dark : .light)
+                    .onAppear {
+                        setupAppearance()
+                    }
             }
         }
     }
@@ -53,16 +53,25 @@ class AppState: ObservableObject {
     @Published var isLaunching = true
     
     func initializeApp() {
-        Task {
-            // Show launch screen for 1.5 seconds
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
-            
-            await MainActor.run {
-                self.isLaunching = false
-            }
-        }
+        // Not needed anymore - timing handled in view
     }
 }
+
+// Temporarily commenting out auth flow
+// struct RootView: View {
+//     @EnvironmentObject var authService: AuthService
+//     @AppStorage("onboarding_completed") private var onboardingCompleted = false
+//     
+//     var body: some View {
+//         if !authService.isAuthenticated {
+//             AuthView()
+//         } else if !onboardingCompleted {
+//             OnboardingView()
+//         } else {
+//             ContentView()
+//         }
+//     }
+// }
 
 struct ContentView: View {
     @State private var selectedTab = 0

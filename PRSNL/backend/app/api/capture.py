@@ -68,6 +68,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
         
         # Detect media type
         media_info = None
+        item_type = 'article'  # Default to article
+        
         if capture_request.url:
             media_info = MediaDetector.detect_media_type(str(capture_request.url))
             
@@ -86,6 +88,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                         raise InvalidInput(f"Video validation failed: {e}")
             elif media_info['type'] == 'image':
                 item_type = 'image'
+            elif media_info['type'] == 'article':
+                item_type = 'article'
+            # Add other media types as needed
         
         # Insert initial item record with metadata for capture type
         metadata = {
@@ -99,9 +104,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
         initial_content = capture_request.content if capture_request.content else None
         
         await db_connection.execute("""
-            INSERT INTO items (id, url, title, raw_content, status, metadata)
-            VALUES ($1, $2, $3, $4, 'pending', $5::jsonb)
-        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, json.dumps(metadata))
+            INSERT INTO items (id, url, title, raw_content, status, type, metadata)
+            VALUES ($1, $2, $3, $4, 'pending', $5, $6::jsonb)
+        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, json.dumps(metadata))
         
         logger.info(f"Successfully inserted item {item_id} into database")
         
@@ -126,35 +131,18 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             if capture_request.url and 'instagram.com' in str(capture_request.url).lower():
                 background_tasks.add_task(process_instagram_bookmark, item_id, str(capture_request.url))
             else:
-                # Process other videos normally
-                background_tasks.add_task(process_video_item, item_id, str(capture_request.url))
+                # Process video metadata quickly, then enhance with AI in background
+                background_tasks.add_task(process_video_metadata_fast, item_id, str(capture_request.url))
         else:
-            # Process regular item in background
+            # Process regular item synchronously to get title and highlights immediately
             capture_engine = CaptureEngine()
-            background_tasks.add_task(capture_engine.process_item, item_id, str(capture_request.url) if capture_request.url else None, capture_request.content)
+            await capture_engine.process_item(item_id, str(capture_request.url) if capture_request.url else None, capture_request.content)
         
         VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
         logger.info(f"Capture initiated successfully for item {item_id}")
         
-        # Check for content duplicates after capture (non-blocking)
+        # No duplicate check needed here - already checked before item creation
         duplicate_info = None
-        try:
-            from app.services.duplicate_detection import duplicate_detection
-            duplicate_check = await duplicate_detection.check_duplicate(
-                url=str(capture_request.url) if capture_request.url else None,
-                title=capture_request.title or "Untitled",
-                content=capture_request.content
-            )
-            
-            if duplicate_check["is_duplicate"] and duplicate_check["duplicates"]:
-                duplicate_info = {
-                    "has_duplicates": True,
-                    "count": len(duplicate_check["duplicates"]),
-                    "duplicates": duplicate_check["duplicates"],
-                    "recommendation": duplicate_check["recommendation"]
-                }
-        except Exception as e:
-            logger.warning(f"Failed to check for duplicates: {e}")
         
         return CaptureResponse(
             id=item_id,
@@ -181,8 +169,172 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
         raise InternalServerError(f"Failed to capture item: {e}")
 
 
+async def process_video_metadata_fast(item_id: uuid4, url: str):
+    """Fast video metadata processing without AI - AI enhancement happens in background"""
+    video_processor = VideoProcessor()
+    pool = await get_db_pool()
+    start_time = time.time()
+    
+    try:
+        # Get video info without downloading
+        logger.info(f"🔵 Fast processing video metadata from {url}")
+        video_info = await video_processor.get_video_info(url)
+        
+        if not video_info:
+            raise ValueError("Could not extract video information")
+        
+        # Get media detection info for embed URL
+        media_info = MediaDetector.detect_media_type(url)
+        
+        # Create basic metadata without AI processing
+        basic_metadata = {
+            'video_info': video_info,
+            'media_info': media_info,
+            'embed_url': media_info.get('embed_url', url),
+            'platform': video_info.get('platform', 'unknown'),
+            'downloaded': False,
+            'streaming_url': url,
+            'processing_status': 'basic_complete',  # Flag for AI enhancement
+            'processed_at': time.time()
+        }
+        
+        # Update item with basic video metadata (fast)
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE items
+                SET
+                    title = $2,
+                    summary = $3,
+                    duration = $4,
+                    thumbnail_url = $5,
+                    video_url = $6,
+                    metadata = jsonb_set(COALESCE(metadata, '{}'), '{video_metadata}', to_jsonb($7::jsonb), true),
+                    status = 'completed',
+                    updated_at = NOW()
+                WHERE id = $1
+            """,
+                item_id,
+                video_info.get('title', 'Unknown'),
+                video_info.get('description', 'No description available')[:500],  # Brief summary
+                video_info.get('duration'),
+                video_info.get('thumbnail'),
+                media_info.get('embed_url', url),
+                json.dumps(basic_metadata)
+            )
+        
+        logger.info(f"🟢 Fast video metadata processing completed for item {item_id} in {time.time() - start_time:.2f}s")
+        
+        # Now enhance with AI in background (non-blocking)
+        # We'll use asyncio.create_task to run in background
+        asyncio.create_task(enhance_video_with_ai(item_id, url, video_info, media_info))
+        
+    except Exception as e:
+        logger.error(f"🔴 Error in fast video processing for item {item_id}: {str(e)}", exc_info=True)
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE items
+                SET status = 'failed',
+                    metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
+                WHERE id = $1
+            """, item_id, str(e))
+
+
+async def enhance_video_with_ai(item_id: uuid4, url: str, video_info: dict, media_info: dict):
+    """Enhance video with AI analysis in background"""
+    pool = await get_db_pool()
+    llm_processor = LLMProcessor()
+    
+    try:
+        logger.info(f"🔵 Enhancing video {item_id} with AI analysis")
+        
+        # Process with AI for intelligent summary and tags
+        ai_content = f"""
+Video Title: {video_info.get('title', 'Unknown')}
+Description: {video_info.get('description', 'No description available')}
+Platform: {video_info.get('platform', 'Unknown')}
+Duration: {video_info.get('duration', 0)} seconds
+Author: {video_info.get('author', 'Unknown')}
+"""
+        
+        processed_content = await llm_processor.process_content(
+            content=ai_content,
+            url=url,
+            title=video_info.get('title', 'Unknown')
+        )
+        
+        # Update metadata with AI analysis
+        enhanced_metadata = {
+            'video_info': video_info,
+            'media_info': media_info,
+            'embed_url': media_info.get('embed_url', url),
+            'platform': video_info.get('platform', 'unknown'),
+            'downloaded': False,
+            'streaming_url': url,
+            'processing_status': 'ai_complete',
+            'ai_analysis': {
+                'summary': processed_content.summary,
+                'tags': processed_content.tags,
+                'key_points': processed_content.key_points,
+                'sentiment': processed_content.sentiment,
+                'reading_time': processed_content.reading_time,
+                'entities': processed_content.entities,
+                'questions': processed_content.questions,
+                'processed_at': time.time()
+            }
+        }
+        
+        # Update item with AI analysis
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE items
+                SET
+                    title = $2,
+                    summary = $3,
+                    metadata = jsonb_set(COALESCE(metadata, '{}'), '{video_metadata}', to_jsonb($4::jsonb), true),
+                    updated_at = NOW()
+                WHERE id = $1
+            """,
+                item_id,
+                processed_content.title or video_info.get('title', 'Unknown'),
+                processed_content.summary,
+                json.dumps(enhanced_metadata)
+            )
+            
+            # Generate and store embedding
+            if processed_content.summary:
+                try:
+                    embedding = await embedding_service.generate_embedding(processed_content.summary)
+                    if embedding:
+                        await update_item_embedding(str(item_id), embedding)
+                        logger.info(f"🟢 Generated embedding for video item {item_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to generate embedding for video {item_id}: {e}")
+            
+            # Add AI-generated tags
+            if processed_content.tags:
+                for tag_name in processed_content.tags:
+                    tag_id = await conn.fetchval("""
+                        INSERT INTO tags (name) VALUES ($1)
+                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                        RETURNING id
+                    """, tag_name.lower())
+                    
+                    await conn.execute("""
+                        INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                        ON CONFLICT DO NOTHING
+                    """, item_id, tag_id)
+        
+        logger.info(f"🟢 AI enhancement completed for video item {item_id}")
+        
+    except Exception as e:
+        logger.error(f"🔴 Error enhancing video {item_id} with AI: {str(e)}", exc_info=True)
+        # Don't fail the item, just log the error - basic metadata is already saved
+
+
+
+
 async def process_video_item(item_id: uuid4, url: str):
-    """Process a video item in the background"""
+    """Process a video item with download (only when explicitly requested)"""
     video_processor = VideoProcessor()
     
     # Create async wrapper for the callback

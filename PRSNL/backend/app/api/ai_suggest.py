@@ -128,13 +128,10 @@ async def get_ai_suggestions(request: SuggestionRequest):
         )
 
     if not scraped_data or not scraped_data.content:
-        logger.warning(f"No content scraped from {request.url}. Using title as fallback.")
-        page_title = scraped_data.title if (scraped_data and scraped_data.title) else "Untitled"
-        return SuggestionResponse(
-            title=page_title,
-            summary="Could not retrieve content from the URL.",
-            tags=["needs-manual-review"],
-            category="article"
+        logger.error(f"No content scraped from {request.url}. Content extraction failed.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to extract meaningful content from the URL. The page might be empty, dynamic, or block content extraction."
         )
 
     # 2. Prepare AI task

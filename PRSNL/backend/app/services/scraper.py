@@ -32,47 +32,57 @@ class WebScraper:
             timeout=30.0,
             follow_redirects=True,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; PRSNL/1.0; +http://localhost)"
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "DNT": "1",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1"
             }
         )
     
     async def scrape(self, url: str) -> ScrapedData:
         """
-        Scrape a URL and extract content
+        Scrape a URL and extract content from meta tags
         """
         try:
             # Fetch the page
             response = await self.client.get(url)
             response.raise_for_status()
             
-            html = response.text
+            # Parse with BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Use readability for content extraction
-            doc = Document(html)
-            article = doc.summary()
-            title = doc.title()
+            # Extract title - prioritize og:title, fallback to title tag
+            title = None
+            og_title = soup.find('meta', property='og:title')
+            if og_title and og_title.get('content'):
+                title = og_title.get('content').strip()
+            else:
+                title_tag = soup.find('title')
+                if title_tag and title_tag.text:
+                    title = title_tag.text.strip()
             
-            # Parse with BeautifulSoup for additional extraction
-            soup = BeautifulSoup(html, 'html.parser')
+            # Extract content from meta description
+            content = None
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            if meta_desc and meta_desc.get('content'):
+                content = meta_desc.get('content').strip()
+            else:
+                og_desc = soup.find('meta', property='og:description')
+                if og_desc and og_desc.get('content'):
+                    content = og_desc.get('content').strip()
             
-            # Extract images before stripping HTML
-            images = self._extract_images(soup, url)
-            
-            # Extract text content
-            article_soup = BeautifulSoup(article, 'html.parser')
-            content = article_soup.get_text(separator='\n', strip=True)
-            
-            # Try to extract author
-            author = self._extract_author(soup)
-            
-            # Try to extract publish date
-            published_date = self._extract_publish_date(soup)
+            # Extract basic metadata  
+            author = None
+            published_date = None
+            images = []
             
             return ScrapedData(
                 url=url,
                 title=title,
                 content=content,
-                html=html,
+                html=response.text,
                 author=author,
                 published_date=published_date,
                 scraped_at=datetime.now(),
@@ -80,7 +90,7 @@ class WebScraper:
             )
             
         except Exception as e:
-            logger.error(f"Error scraping {url}: {str(e)}")
+            logger.error(f"Error scraping {url}: {str(e)}", exc_info=True)
             return ScrapedData(
                 url=url,
                 title=None,
@@ -144,6 +154,7 @@ class WebScraper:
         
         return images
     
+
     def _extract_author(self, soup: BeautifulSoup) -> Optional[str]:
         """
         Try to extract author from meta tags

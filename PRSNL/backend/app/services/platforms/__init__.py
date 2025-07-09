@@ -22,6 +22,7 @@ class PlatformProcessor(ABC):
             'nopart': True,
             'trim_filenames': 200,
             'throttled_rate': '10M', # Limit download speed to 10MB/s
+            'ffmpeg_location': '/opt/homebrew/bin',  # Set ffmpeg location for ARM64
         }
 
     @abstractmethod

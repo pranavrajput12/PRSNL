@@ -209,18 +209,48 @@ function transformItem(item: any): Item | TimelineItem {
 export async function getTimeline(page: number = 1, limit: number = 20): Promise<TimelineResponse> {
   // For now, we'll ignore the page parameter since backend uses cursor pagination
   // TODO: Update frontend to use cursor pagination
-  const response = await fetchWithErrorHandling<TimelineResponse>(`/timeline?limit=${limit}`);
+  const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
   
   console.log('Raw timeline response before transform:', response);
   
-  // Transform snake_case to camelCase for frontend compatibility
-  if (response && response.items) {
-    response.items = response.items.map(item => transformItem(item) as TimelineItem);
+  // Transform backend response to match frontend expectations
+  const transformedResponse: TimelineResponse = {
+    items: [],
+    hasMore: response.next_cursor !== null,
+    // Include additional fields that might be used
+    total: response.items?.length || 0,
+    pageSize: limit
+  } as any;
+  
+  // Transform items if they exist
+  if (response && response.items && Array.isArray(response.items)) {
+    transformedResponse.items = response.items.map((item: any) => ({
+      ...transformItem(item),
+      // Map summary to snippet for TimelineItem interface
+      snippet: item.summary || item.snippet || '',
+      // Ensure all required fields are present
+      id: item.id,
+      title: item.title || 'Untitled',
+      url: item.url,
+      tags: item.tags || [],
+      created_at: item.createdAt || item.created_at,
+      // Preserve summary for the timeline page
+      summary: item.summary || '',
+      // Include additional fields the timeline might use
+      type: item.item_type || item.type || 'article',
+      status: item.status,
+      thumbnail_url: item.thumbnail_url,
+      duration: item.duration,
+      platform: item.platform,
+      file_path: item.file_path,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at
+    }));
   }
   
-  console.log('Timeline response after transform:', response);
+  console.log('Timeline response after transform:', transformedResponse);
   
-  return response;
+  return transformedResponse;
 }
 
 /**

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -108,7 +108,7 @@
 		18864097CD0BCC3AF4F22352 /* ShareExtensionServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionServices.swift; sourceTree = "<group>"; };
 		1B4FDE059370A59B0C1B8DFD /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		26500F43EDE81C6212E968DE /* TimelineWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineWidget.swift; sourceTree = "<group>"; };
-		2955015735FA53E7E398D408 /* PRSNL.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PRSNL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2955015735FA53E7E398D408 /* PRSNL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PRSNL.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AC6679D79C671B552E4F147 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F62ED71070266901E6C48B2 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		303F8D27C2B2817FE829A0A6 /* ConditionalCoreDataSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionalCoreDataSetup.swift; sourceTree = "<group>"; };
@@ -133,7 +133,7 @@
 		5EEC0E16B5D8150212229BCC /* PRSNLModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PRSNLModel.xcdatamodel; sourceTree = "<group>"; };
 		6310AFD117A047146FFCC991 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		64767D0DFA13766DE750AD48 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
-		67DBDABE0C92DE83C61AFE6D /* PRSNLWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PRSNLWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		67DBDABE0C92DE83C61AFE6D /* PRSNLWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PRSNLWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B377177C3FD1B49D8C18675 /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		6C670359513780924A3415EC /* Combine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Combine.framework; path = System/Library/Frameworks/Combine.framework; sourceTree = SDKROOT; };
 		6DE9AE2FDFAE705E88143E57 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
@@ -142,7 +142,7 @@
 		74850CC076C89FF307CAAF34 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		773F4DF39EFB6037E4D77DCA /* generate_app_icons.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = generate_app_icons.py; sourceTree = "<group>"; };
 		775C44167A7E90B9C5E6B9E1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		7772A92435F89695D97709F9 /* PRSNLApp_BROKEN.swift.backup */ = {isa = PBXFileReference; path = PRSNLApp_BROKEN.swift.backup; sourceTree = "<group>"; };
+		7772A92435F89695D97709F9 /* PRSNLApp_BROKEN.swift.backup */ = {isa = PBXFileReference; lastKnownFileType = text; path = PRSNLApp_BROKEN.swift.backup; sourceTree = "<group>"; };
 		7DFBBD3A9AE5BA5042D70CAD /* GetURL.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = GetURL.js; sourceTree = "<group>"; };
 		7F0BFEFA3EDEF4864B4C5457 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
 		87ABB6B51EE73CF015A2D4D3 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
@@ -152,7 +152,7 @@
 		957ADB43020DE7BD5020BD4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9766F98E41866A707812AAC0 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		A0E1C8FDA0F3B47518D8EA66 /* RealtimeUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeUpdateService.swift; sourceTree = "<group>"; };
-		A19EBD85CDE74CF804318EBB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A19EBD85CDE74CF804318EBB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A42884C4167E18336E39AC49 /* PRSNLWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PRSNLWidgets.swift; sourceTree = "<group>"; };
 		A85B9CDC48F231595A0F10E6 /* MockDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDataProvider.swift; sourceTree = "<group>"; };
 		B29D75E5DEBAA8D4967B7723 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
@@ -160,10 +160,10 @@
 		B45790BD4ED606CC45B51C5D /* coredata_verification.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = coredata_verification.md; sourceTree = "<group>"; };
 		B4BBAC6252728EA10E9A8C1F /* LaunchScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenView.swift; sourceTree = "<group>"; };
 		B95DEA96EA18BDA4B4DCBEE2 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
-		C24F284FF6301B16BED16CDE /* PRSNLShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PRSNLShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C24F284FF6301B16BED16CDE /* PRSNLShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PRSNLShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C51CA14559642DEFF879A00A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C592BC9A1BD56C2E8C8637C4 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		C754D1F6405866C9894CC157 /* PRSNLTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PRSNLTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C754D1F6405866C9894CC157 /* PRSNLTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PRSNLTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB12849FCBC8AA70CC2C2010 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		DE3E8B2977D3E91C0560C69D /* WIDGET_INTEGRATION_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = WIDGET_INTEGRATION_GUIDE.md; sourceTree = "<group>"; };
 		EDB8E7235A81C4EF26685BD9 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
@@ -579,20 +579,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-					485C7DE9700D3666588FFBD6 = {
-						DevelopmentTeam = ABC12DEF34;
-					};
-					6E86AB1851F82F51E0AE434D = {
-						DevelopmentTeam = ABC12DEF34;
-					};
-					912F8AE416FA460479A4A6BF = {
-						DevelopmentTeam = ABC12DEF34;
-					};
-					F5F69075746AEAF443908367 = {
-						DevelopmentTeam = ABC12DEF34;
-					};
-				};
 			};
 			buildConfigurationList = 033C08D01BC7484D1A3FA1C8 /* Build configuration list for PBXProject "PRSNL" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -604,7 +590,6 @@
 			);
 			mainGroup = 9A7A12D13CD094EE8AC699E8;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -744,6 +729,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = PRSNL/PRSNL.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNL/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -761,6 +747,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -779,6 +766,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PRSNLShareExtension/PRSNLShareExtension.entitlements;
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -797,6 +785,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PRSNLWidgets/PRSNLWidgets.entitlements;
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -815,6 +804,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PRSNLWidgets/PRSNLWidgets.entitlements;
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -833,6 +823,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PRSNLShareExtension/PRSNLShareExtension.entitlements;
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -853,6 +844,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = PRSNL/PRSNL.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNL/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -991,6 +983,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = J6BXNUX326;
 				INFOPLIST_FILE = PRSNLTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

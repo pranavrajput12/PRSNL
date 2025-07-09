@@ -37,11 +37,11 @@ class StorageManager:
             for record in records:
                 db_file_paths.add(record['file_path'])
             
-            # Also check items table for video_path and thumbnail_url
-            item_records = await conn.fetch("SELECT file_path, thumbnail_url FROM items WHERE item_type = 'video'")
+            # Also check items table for video_url and thumbnail_url
+            item_records = await conn.fetch("SELECT video_url, thumbnail_url FROM items WHERE type = 'video'")
             for record in item_records:
-                if record['file_path']:
-                    db_file_paths.add(record['file_path'])
+                if record['video_url']:
+                    db_file_paths.add(record['video_url'])
                 if record['thumbnail_url']:
                     db_file_paths.add(record['thumbnail_url'])
 

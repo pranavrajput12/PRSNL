@@ -10,7 +10,7 @@ PRSNL is a modern personal knowledge management system built with a microservice
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                              User Interface Layer                          │
 ├────────────────┬──────────────────┬────────────────┬───────────────────┤
-│  Web Browser   │  Chrome Extension │  API Clients   │   Mobile (Future) │
+│  Web Browser   │  Chrome Extension │  API Clients   │   iOS App (PRSNL) │
 └────────────────┴──────────────────┴────────────────┴───────────────────┘
                                      │
                     ┌────────────────┴────────────────┐
@@ -55,6 +55,16 @@ PRSNL is a modern personal knowledge management system built with a microservice
   - Optimistic UI updates
   - Responsive design (mobile-first)
   - Dark theme with Manchester United red accent
+
+### iOS App (PRSNL APP)
+- **Technology**: Native iOS application (Swift)
+- **Status**: Separate codebase - *not yet integrated in this documentation*
+- **Key Features**:
+  - Native iOS experience
+  - Share extension integration
+  - Offline capabilities
+  - Push notifications
+  - Syncs with backend API
 
 ### Backend (FastAPI)
 - **Technology**: FastAPI, Python 3.11, AsyncIO

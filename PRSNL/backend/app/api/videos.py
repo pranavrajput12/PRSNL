@@ -11,6 +11,8 @@ from app.models.video import VideoInDB
 from app.services.storage_manager import StorageManager
 from app.core.background_tasks import background_tasks
 from app.services.video_processor import VideoProcessor
+from app.api.capture import process_video_item
+from app.services.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ router = APIRouter()
 async def stream_video(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Streams a video file by its ID."""
     record = await db_connection.fetchrow(
-        "SELECT file_path FROM items WHERE id = $1 AND item_type = 'video'",
+        "SELECT file_path FROM items WHERE id = $1 AND type = 'video'",
         video_id
     )
     if not record or not record['file_path']:
@@ -41,7 +43,7 @@ async def stream_video(video_id: UUID, db_connection: asyncpg.Connection = Depen
 async def get_video_metadata(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Retrieves metadata for a specific video by its ID."""
     record = await db_connection.fetchrow(
-        "SELECT * FROM items WHERE id = $1 AND item_type = 'video'",
+        "SELECT * FROM items WHERE id = $1 AND type = 'video'",
         video_id
     )
     if not record:
@@ -65,6 +67,97 @@ async def get_video_metadata(video_id: UUID, db_connection: asyncpg.Connection =
     
     return VideoInDB(**video_data)
 
+@router.post("/videos/{video_id}/download", summary="Download Video", response_model=dict)
+async def download_video(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
+    """Downloads a video for offline viewing (only if not already downloaded)."""
+    # Check if video exists and get its metadata
+    record = await db_connection.fetchrow(
+        "SELECT id, url, metadata FROM items WHERE id = $1 AND type = 'video'",
+        video_id
+    )
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found.")
+    
+    # Check if video is already downloaded
+    metadata = record['metadata'] or {}
+    if isinstance(metadata, str):
+        import json
+        metadata = json.loads(metadata)
+    video_metadata = metadata.get('video_metadata', {})
+    
+    if video_metadata.get('downloaded', False):
+        return {
+            "message": "Video is already downloaded",
+            "status": "already_downloaded",
+            "video_id": str(video_id)
+        }
+    
+    # Start download process in background
+    url = record['url']
+    background_tasks.add_task(process_video_item, video_id, url)
+    
+    # Send websocket notification
+    await websocket_manager.send_personal_message(
+        f"Starting download for video {video_id}...", 
+        str(video_id)
+    )
+    
+    return {
+        "message": "Video download started",
+        "status": "download_started",
+        "video_id": str(video_id)
+    }
+
+@router.get("/videos/{video_id}/stream-url", summary="Get Video Stream URL")
+async def get_video_stream_url(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
+    """Gets the streaming URL/embed URL for a video."""
+    logger.info(f"🔵 Getting stream URL for video ID: {video_id}")
+    
+    record = await db_connection.fetchrow(
+        "SELECT url, video_url, metadata FROM items WHERE id = $1 AND type = 'video'",
+        video_id
+    )
+    if not record:
+        logger.error(f"🔴 Video not found in database: {video_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found.")
+    
+    logger.info(f"🔵 Raw database record: {dict(record)}")
+    
+    metadata = record['metadata'] or {}
+    logger.info(f"🔵 Raw metadata: {metadata}")
+    
+    if isinstance(metadata, str):
+        import json
+        metadata = json.loads(metadata)
+        logger.info(f"🔵 Parsed metadata: {metadata}")
+    
+    video_metadata = metadata.get('video_metadata', {})
+    logger.info(f"🔵 Video metadata: {video_metadata}")
+    
+    # Check if video is downloaded (use local file)
+    if video_metadata.get('downloaded', False):
+        logger.info(f"🔵 Video is downloaded, using local file")
+        return {
+            "type": "local",
+            "url": f"/api/videos/{video_id}/stream",
+            "embed_url": None
+        }
+    
+    # Return streaming/embed URL
+    embed_url = video_metadata.get('embed_url') or record['video_url']
+    streaming_url = video_metadata.get('streaming_url') or record['url']
+    
+    logger.info(f"🔵 Final streaming URLs: embed_url={embed_url}, streaming_url={streaming_url}")
+    
+    result = {
+        "type": "streaming",
+        "url": streaming_url,
+        "embed_url": embed_url
+    }
+    
+    logger.info(f"🟢 Returning stream URL result: {result}")
+    return result
+
 @router.post("/videos/{video_id}/transcode", summary="Request Video Transcoding", response_model=dict)
 async def request_video_transcode(video_id: UUID, target_quality: str, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Requests transcoding of a video to a different quality. (Placeholder - not fully implemented)"""
@@ -74,7 +167,7 @@ async def request_video_transcode(video_id: UUID, target_quality: str, db_connec
     
     # Check if video exists
     record = await db_connection.fetchrow(
-        "SELECT id FROM items WHERE id = $1 AND item_type = 'video'",
+        "SELECT id FROM items WHERE id = $1 AND type = 'video'",
         video_id
     )
     if not record:
@@ -96,7 +189,7 @@ async def process_transcode_request(video_id: UUID, target_quality: str):
 async def delete_video(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Deletes a video and its associated files from storage and database."""
     record = await db_connection.fetchrow(
-        "SELECT file_path, thumbnail_url FROM items WHERE id = $1 AND item_type = 'video'",
+        "SELECT file_path, thumbnail_url FROM items WHERE id = $1 AND type = 'video'",
         video_id
     )
     if not record:

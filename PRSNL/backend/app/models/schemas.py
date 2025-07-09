@@ -197,7 +197,8 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    pass
+    type: str = 'bookmark'
+    content: Optional[str] = None
 
 
 class ItemUpdate(BaseModel):

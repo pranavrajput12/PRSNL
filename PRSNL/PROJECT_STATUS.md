@@ -16,6 +16,12 @@ This document consolidates all project status, context, and task assignments. Ot
 
 ## 🚀 CURRENT STATE: Version 2.0 - Fully Operational with Complete AI Integration
 
+### 🏗️ System Architecture Overview
+PRSNL consists of three main components:
+- **🔧 Backend**: FastAPI server with PostgreSQL database and AI services
+- **🌐 Frontend**: SvelteKit web application
+- **📱 iOS App**: Native iOS application (PRSNL APP) - *separate codebase*
+
 ### 🎉 Version 2.0 Release Highlights
 - ✅ **All Azure OpenAI Models Integrated**: GPT-4.1, Whisper, text-embedding-ada-002
 - ✅ **Duplicate Detection**: Pre-capture URL check + content similarity detection

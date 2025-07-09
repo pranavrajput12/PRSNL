@@ -2,96 +2,105 @@
 
 A powerful personal knowledge management system with AI-powered search, video processing, and intelligent content organization. Built using AI-collaborative development.
 
+## 🎯 Quick Status
+
+**FULLY OPERATIONAL** - Version 2.0+ with latest web scraping fixes (2025-07-09)
+
+📊 **[Complete Project Status](PROJECT_STATUS_CONSOLIDATED.md)** - Single source of truth for all project information
+
+🏠 **[Local Development Guide](LOCAL_DEVELOPMENT_GUIDE.md)** - Setup and development workflow
+
 ## 🚀 Quick Start
 
+### Development Environment
 ```bash
-# Clone and enter directory
-git clone https://github.com/pranavrajput12/PRSNL.git
-cd PRSNL
+# Start PostgreSQL (ARM64)
+/opt/homebrew/opt/postgresql@16/bin/pg_ctl -D /opt/homebrew/var/postgresql@16 start
 
-# Start backend with Docker
-docker-compose up -d
+# Start Backend
+cd PRSNL/backend
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-# Start frontend
-cd frontend
+# Start Frontend  
+cd PRSNL/frontend
 npm install
 npm run dev
 
-# Open application
+# Access Application
 open http://localhost:3002
 
-# API docs
+# API Documentation
 open http://localhost:8000/docs
 ```
 
-## 🎯 Features
+### Health Check
+```bash
+curl http://localhost:8000/health
+curl http://localhost:3002
+```
 
-- **Universal Capture**: Save articles, videos, tweets, GitHub repos, and more
-- **AI-Powered Search**: Semantic search with RAG-based knowledge chat
-- **Video Support**: YouTube, Twitter, Instagram video processing with transcripts
-- **Smart Organization**: AI categorization, duplicate detection, and summarization
-- **Knowledge Graph**: Discover relationships between your saved content
-- **Real-time Chat**: Chat with your knowledge base using Azure OpenAI
-- **Beautiful UI**: Manchester United themed interface with premium animations
+## 🌟 Key Features
+
+1. **Universal Capture**: Articles, videos, notes with meta-tag extraction
+2. **AI-Powered Search**: Semantic and keyword search with RAG
+3. **Video Support**: YouTube, Vimeo, Twitter with streaming and transcription  
+4. **Knowledge Chat**: Chat with your captured content via WebSocket
+5. **Smart Processing**: AI-generated summaries, tags, and insights
+6. **Import System**: JSON, bookmarks, bulk URL import
+7. **Timeline View**: Chronological feed with infinite scroll
+8. **Beautiful UI**: Manchester United themed interface (#dc143c)
 
 ## 🏗️ Architecture
 
-- **Frontend**: SvelteKit with TypeScript, TailwindCSS
-- **Backend**: FastAPI with PostgreSQL, pgvector, Redis
-- **AI Processing**: Azure OpenAI (GPT-4.1) exclusive
-- **Media Storage**: Local file system with thumbnail generation
-- **Real-time**: WebSocket support for chat and streaming
+- **Frontend**: SvelteKit on port 3002 (TypeScript, TailwindCSS)
+- **Backend**: FastAPI on port 8000 (Python, PostgreSQL)
+- **Database**: PostgreSQL 16 with pgvector on port 5433
+- **AI**: Azure OpenAI exclusive (GPT-4, Whisper, Embeddings)
+- **Platform**: ARM64 (Apple Silicon) optimized
 
-## 📖 Documentation
+## 📚 Documentation Structure
 
-### Key References
-- **[PROJECT_STRUCTURE.md](./PRSNL/PROJECT_STRUCTURE.md)** - Complete file organization
-- **[DATABASE_SCHEMA.md](./PRSNL/DATABASE_SCHEMA.md)** - Database structure and mappings
-- **[API_DOCUMENTATION.md](./PRSNL/API_DOCUMENTATION.md)** - All API endpoints
-- **[PROJECT_STATUS.md](./PRSNL/PROJECT_STATUS.md)** - Current system status
+### Root Level (You Are Here)
+- **[PROJECT_STATUS_CONSOLIDATED.md](PROJECT_STATUS_CONSOLIDATED.md)** - Complete project overview
+- **[LOCAL_DEVELOPMENT_GUIDE.md](LOCAL_DEVELOPMENT_GUIDE.md)** - Development setup
+- **[README.md](README.md)** - This file
 
-### Guides
-- **[DEVELOPER_GUIDE.md](./PRSNL/DEVELOPER_GUIDE.md)** - Development setup
-- **[DEPLOYMENT_GUIDE.md](./PRSNL/DEPLOYMENT_GUIDE.md)** - Production deployment
-- **[PORT_ALLOCATION.md](./PRSNL/PORT_ALLOCATION.md)** - Service port assignments
+### Main Project Documentation
+- **[PRSNL/CLAUDE.md](PRSNL/CLAUDE.md)** - Main development guide
+- **[PRSNL/QUICK_REFERENCE.md](PRSNL/QUICK_REFERENCE.md)** - Quick commands
+- **[PRSNL/PROJECT_STATUS_REPORT.md](PRSNL/PROJECT_STATUS_REPORT.md)** - Detailed status
 
-## 🤖 AI Development Team
+### Technical Documentation  
+- **[docs/](docs/)** - Architecture, interfaces, collaboration guides
+- **[PRSNL-iOS/](PRSNL-iOS/)** - iOS application documentation
 
-This project is built collaboratively by AI agents (as of 2025-01-08):
+## 🤖 AI Team Coordination
 
-- **Claude**: All complex features, frontend, backend, and integration
-- **Windsurf**: Simple frontend tasks (styling, tooltips, UI polish)
-- **Gemini**: Simple backend tasks (tests, scripts, logging)
+This project is built collaboratively by AI agents:
 
-See [MODEL_COORDINATION_RULES.md](./PRSNL/MODEL_COORDINATION_RULES.md) for details.
+- **🎨 Claude**: Complex features, architecture, integration, debugging
+- **🚀 Windsurf**: Simple frontend tasks, UI polish  
+- **🧠 Gemini**: Simple backend tasks, testing, scripts
 
-## 🛠️ Development
+## 🎉 Recent Major Updates
 
-```bash
-# Backend (Docker)
-cd PRSNL
-docker-compose up -d
+### Web Scraping System Fixed (2025-07-09)
+- ✅ Meta-tag extraction working perfectly
+- ✅ AI suggestions returning proper content
+- ✅ All backend APIs integrated with new scraper
+- ✅ HTTP compression issues resolved
 
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# View logs
-docker logs prsnl_backend -f
-
-# Stop services
-docker-compose down
-
-# Reset database
-docker-compose down -v
-docker-compose up -d
-```
+### Version 2.0 Foundation (2025-01-08)  
+- ✅ Complete Azure OpenAI integration
+- ✅ Duplicate detection system
+- ✅ Video streaming with download-on-demand
+- ✅ WebSocket chat with RAG
+- ✅ Frontend-backend connection stabilized
 
 ## 📱 Usage
 
 ### Main Features
-- **Timeline**: http://localhost:3002 - Browse all your saved content
+- **Timeline**: http://localhost:3002 - Browse all saved content
 - **Capture**: http://localhost:3002/capture - Save new content with AI suggestions
 - **Search**: http://localhost:3002/search - Keyword and semantic search
 - **Chat**: http://localhost:3002/chat - Chat with your knowledge base
@@ -107,12 +116,11 @@ docker-compose up -d
 
 ### Backend (.env file in /PRSNL/backend)
 ```env
-DATABASE_URL=postgresql://postgres:postgres@db:5432/prsnl
+DATABASE_URL=postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl
 AZURE_OPENAI_API_KEY=your_key_here
 AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT=gpt-4.1
 AZURE_OPENAI_API_VERSION=2025-01-01-preview
-REDIS_URL=redis://redis:6379
 ```
 
 ### Frontend (.env file in /PRSNL/frontend)
@@ -120,10 +128,12 @@ REDIS_URL=redis://redis:6379
 PUBLIC_API_URL=http://localhost:8000
 ```
 
-## 📄 License
+---
 
-MIT License - see LICENSE file
+**📋 For Complete Details**: See [PROJECT_STATUS_CONSOLIDATED.md](PROJECT_STATUS_CONSOLIDATED.md)
 
-## 🙏 Acknowledgments
+**🛠️ For Development Setup**: See [LOCAL_DEVELOPMENT_GUIDE.md](LOCAL_DEVELOPMENT_GUIDE.md)
 
-Built with AI collaboration using Claude, Windsurf, and Gemini.
+**📄 License**: MIT License
+
+**🙏 Built with AI collaboration** using Claude, Windsurf, and Gemini.

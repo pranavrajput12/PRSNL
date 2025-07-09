@@ -42,14 +42,14 @@
     if (tagInput) {
       // Filter suggestions based on input
       const filtered = suggestions.filter(tag => 
-        tag.toLowerCase().includes(tagInput.toLowerCase()) && 
+        typeof tag === 'string' && tag.toLowerCase().includes(tagInput.toLowerCase()) && 
         !tags.includes(tag)
       );
       
       // Sort by relevance (starts with input first)
       filtered.sort((a, b) => {
-        const aStartsWith = a.toLowerCase().startsWith(tagInput.toLowerCase());
-        const bStartsWith = b.toLowerCase().startsWith(tagInput.toLowerCase());
+        const aStartsWith = typeof a === 'string' && a.toLowerCase().startsWith(tagInput.toLowerCase());
+        const bStartsWith = typeof b === 'string' && b.toLowerCase().startsWith(tagInput.toLowerCase());
         
         if (aStartsWith && !bStartsWith) return -1;
         if (!aStartsWith && bStartsWith) return 1;

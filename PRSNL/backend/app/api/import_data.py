@@ -17,7 +17,7 @@ import asyncio
 from pydantic import BaseModel, HttpUrl
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/import", tags=["import"])
+router = APIRouter(prefix="/import", tags=["import"])
 
 
 class BulkURLRequest(BaseModel):
@@ -79,16 +79,40 @@ async def import_json(
                     await _update_existing_item(conn, existing['id'], item_data)
                     imported_count += 1
                 else:
-                    # Create new item
-                    await capture_engine.create_item(
-                        url=item_create.url,
-                        title=item_create.title,
-                        type=item_create.type,
-                        content=item_create.content,
-                        summary=item_create.summary,
-                        tags=item_create.tags,
-                        metadata=item_data.get('metadata', {})
+                    # Create new item - insert directly then process
+                    item_id = uuid4()
+                    await conn.execute("""
+                        INSERT INTO items (id, url, title, type, raw_content, summary, status, metadata)
+                        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7::jsonb)
+                    """, 
+                        item_id,
+                        str(item_create.url) if item_create.url else None,
+                        item_create.title,
+                        item_create.type,
+                        item_create.content,
+                        item_create.summary,
+                        json.dumps(item_data.get('metadata', {}))
                     )
+                    
+                    # Process tags
+                    for tag_name in item_create.tags:
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                            RETURNING id
+                        """, tag_name.lower())
+                        
+                        await conn.execute("""
+                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                            ON CONFLICT DO NOTHING
+                        """, item_id, tag_id)
+                    
+                    # Process the item in background
+                    asyncio.create_task(capture_engine.process_item(
+                        item_id, 
+                        str(item_create.url) if item_create.url else None, 
+                        item_create.content
+                    ))
                     imported_count += 1
                     
             except Exception as e:
@@ -176,27 +200,70 @@ async def import_bookmarks(
                 if auto_fetch:
                     # Fetch full content
                     try:
-                        await capture_engine.capture_url(url)
+                        # Create item and process in background
+                        item_id = uuid4()
+                        await conn.execute("""
+                            INSERT INTO items (id, url, title, type, status)
+                            VALUES ($1, $2, $3, 'bookmark', 'pending')
+                        """, item_id, url, title)
+                        
+                        # Process tags
+                        for tag_name in tags:
+                            tag_id = await conn.fetchval("""
+                                INSERT INTO tags (name) VALUES ($1)
+                                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                                RETURNING id
+                            """, tag_name.lower())
+                            
+                            await conn.execute("""
+                                INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                                ON CONFLICT DO NOTHING
+                            """, item_id, tag_id)
+                        
+                        # Process the URL content in background
+                        asyncio.create_task(capture_engine.process_item(item_id, url))
                         imported_count += 1
                     except Exception as fetch_error:
                         # Fall back to simple bookmark
-                        await capture_engine.create_item(
-                            url=url,
-                            title=title,
-                            type='bookmark',
-                            content='',
-                            tags=tags
-                        )
+                        item_id = uuid4()
+                        await conn.execute("""
+                            INSERT INTO items (id, url, title, type, status)
+                            VALUES ($1, $2, $3, 'bookmark', 'completed')
+                        """, item_id, url, title)
+                        
+                        # Process tags
+                        for tag_name in tags:
+                            tag_id = await conn.fetchval("""
+                                INSERT INTO tags (name) VALUES ($1)
+                                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                                RETURNING id
+                            """, tag_name.lower())
+                            
+                            await conn.execute("""
+                                INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                                ON CONFLICT DO NOTHING
+                            """, item_id, tag_id)
                         imported_count += 1
                 else:
                     # Just save as bookmark
-                    await capture_engine.create_item(
-                        url=url,
-                        title=title,
-                        type='bookmark',
-                        content='',
-                        tags=tags
-                    )
+                    item_id = uuid4()
+                    await conn.execute("""
+                        INSERT INTO items (id, url, title, type, status)
+                        VALUES ($1, $2, $3, 'bookmark', 'completed')
+                    """, item_id, url, title)
+                    
+                    # Process tags
+                    for tag_name in tags:
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                            RETURNING id
+                        """, tag_name.lower())
+                        
+                        await conn.execute("""
+                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                            ON CONFLICT DO NOTHING
+                        """, item_id, tag_id)
                     imported_count += 1
                     
             except Exception as e:
@@ -252,13 +319,24 @@ async def import_notes(
                     # Save previous note if exists
                     if current_note['content']:
                         try:
-                            await capture_engine.create_item(
-                                url=None,
-                                title=current_note['title'],
-                                type='note',
-                                content='\n'.join(current_note['content']),
-                                tags=current_note['tags']
-                            )
+                            item_id = uuid4()
+                            await conn.execute("""
+                                INSERT INTO items (id, title, type, raw_content, status)
+                                VALUES ($1, $2, 'note', $3, 'completed')
+                            """, item_id, current_note['title'], '\n'.join(current_note['content']))
+                            
+                            # Process tags
+                            for tag_name in current_note['tags']:
+                                tag_id = await conn.fetchval("""
+                                    INSERT INTO tags (name) VALUES ($1)
+                                    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                                    RETURNING id
+                                """, tag_name.lower())
+                                
+                                await conn.execute("""
+                                    INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                                    ON CONFLICT DO NOTHING
+                                """, item_id, tag_id)
                             imported_count += 1
                         except Exception as e:
                             errors.append({
@@ -278,13 +356,24 @@ async def import_notes(
             # Save last note
             if current_note['content']:
                 try:
-                    await capture_engine.create_item(
-                        url=None,
-                        title=current_note['title'],
-                        type='note',
-                        content='\n'.join(current_note['content']),
-                        tags=current_note['tags']
-                    )
+                    item_id = uuid4()
+                    await conn.execute("""
+                        INSERT INTO items (id, title, type, raw_content, status)
+                        VALUES ($1, $2, 'note', $3, 'completed')
+                    """, item_id, current_note['title'], '\n'.join(current_note['content']))
+                    
+                    # Process tags
+                    for tag_name in current_note['tags']:
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                            RETURNING id
+                        """, tag_name.lower())
+                        
+                        await conn.execute("""
+                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                            ON CONFLICT DO NOTHING
+                        """, item_id, tag_id)
                     imported_count += 1
                 except Exception as e:
                     errors.append({
@@ -294,13 +383,24 @@ async def import_notes(
         else:
             # Import as single note
             try:
-                await capture_engine.create_item(
-                    url=None,
-                    title=file.filename or 'Imported Note',
-                    type='note',
-                    content=text_content,
-                    tags=default_tags or ['imported', 'note']
-                )
+                item_id = uuid4()
+                await conn.execute("""
+                    INSERT INTO items (id, title, type, raw_content, status)
+                    VALUES ($1, $2, 'note', $3, 'completed')
+                """, item_id, file.filename or 'Imported Note', text_content)
+                
+                # Process tags
+                for tag_name in (default_tags or ['imported', 'note']):
+                    tag_id = await conn.fetchval("""
+                        INSERT INTO tags (name) VALUES ($1)
+                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                        RETURNING id
+                    """, tag_name.lower())
+                    
+                    await conn.execute("""
+                        INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                        ON CONFLICT DO NOTHING
+                    """, item_id, tag_id)
                 imported_count = 1
             except Exception as e:
                 errors.append({
@@ -384,17 +484,48 @@ async def import_bulk_urls(
                 
                 # Quick import without fetching content
                 if not request.auto_fetch:
-                    await capture_engine.create_item(
-                        url=str(url),
-                        title=str(url).split('/')[-1] or 'Bookmarked URL',
-                        type='bookmark',
-                        content='',
-                        tags=tags
-                    )
+                    item_id = uuid4()
+                    await conn.execute("""
+                        INSERT INTO items (id, url, title, type, status)
+                        VALUES ($1, $2, $3, 'bookmark', 'completed')
+                    """, item_id, str(url), str(url).split('/')[-1] or 'Bookmarked URL')
+                    
+                    # Process tags
+                    for tag_name in tags:
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                            RETURNING id
+                        """, tag_name.lower())
+                        
+                        await conn.execute("""
+                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                            ON CONFLICT DO NOTHING
+                        """, item_id, tag_id)
                     return 'imported', None
                 else:
                     # Fetch content
-                    await capture_engine.capture_url(str(url))
+                    item_id = uuid4()
+                    await conn.execute("""
+                        INSERT INTO items (id, url, title, type, status)
+                        VALUES ($1, $2, $3, 'bookmark', 'pending')
+                    """, item_id, str(url), str(url).split('/')[-1] or 'Bookmarked URL')
+                    
+                    # Process tags
+                    for tag_name in tags:
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                            RETURNING id
+                        """, tag_name.lower())
+                        
+                        await conn.execute("""
+                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                            ON CONFLICT DO NOTHING
+                        """, item_id, tag_id)
+                    
+                    # Process the URL content in background
+                    asyncio.create_task(capture_engine.process_item(item_id, str(url)))
                     return 'imported', None
                     
             except Exception as e:

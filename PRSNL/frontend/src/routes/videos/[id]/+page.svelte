@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+  import StreamingVideoPlayer from '$lib/components/StreamingVideoPlayer.svelte';
   import YouTubeEmbed from '$lib/components/YouTubeEmbed.svelte';
   import { formatDate } from '$lib/utils/date';
   import { getItem } from '$lib/api';
@@ -12,6 +13,8 @@
   let activeTab: 'transcript' | 'summary' | 'moments' = 'transcript';
   let transcriptSummary = '';
   let summarizing = false;
+  let downloading = false;
+  let downloadStatus = '';
   
   async function loadVideo() {
     try {
@@ -25,6 +28,40 @@
       console.error('Error loading video:', error);
     } finally {
       loading = false;
+    }
+  }
+  
+  async function downloadVideo() {
+    if (downloading) return;
+    
+    try {
+      downloading = true;
+      downloadStatus = 'Starting download...';
+      
+      const response = await fetch(`/api/videos/${video.id}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'already_downloaded') {
+          downloadStatus = 'Video already downloaded';
+        } else {
+          downloadStatus = 'Download started - video will be available for offline viewing soon';
+        }
+      } else {
+        downloadStatus = 'Download failed';
+      }
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      downloadStatus = 'Download failed';
+    } finally {
+      downloading = false;
+      // Clear status after 5 seconds
+      setTimeout(() => {
+        downloadStatus = '';
+      }, 5000);
     }
   }
   
@@ -109,36 +146,48 @@
           <Icon name="bookmark" />
           Save
         </button>
+        <button 
+          class="btn btn-primary download-btn"
+          on:click={downloadVideo}
+          disabled={downloading}
+        >
+          {#if downloading}
+            <Icon name="spinner" class="animate-spin" />
+            Downloading...
+          {:else}
+            <Icon name="download" />
+            Download for Offline
+          {/if}
+        </button>
       </div>
+      
+      {#if downloadStatus}
+        <div class="download-status">
+          <Icon name="info" />
+          {downloadStatus}
+        </div>
+      {/if}
     </div>
     
     <div class="video-container">
       <div class="player-section">
-        {#if video.platform === 'youtube' && video.url}
-          <div class="youtube-player-wrapper">
-            <YouTubeEmbed 
-              url={video.url}
-              title={video.title}
-            />
-          </div>
-        {:else if video.file_path}
-          <VideoPlayer 
-            src={video.file_path}
-            thumbnail={video.thumbnail_url}
-            title={video.title}
-            platform={video.platform}
-          />
-        {:else}
-          <div class="video-unavailable">
-            <Icon name="video-off" size="large" />
-            <p>Video file not available</p>
-            {#if video.url}
-              <a href={video.url} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                Watch on {video.platform || 'Original Site'}
-              </a>
-            {/if}
-          </div>
+        {#if video}
+          {console.log('🔵 Video Page - Passing to StreamingVideoPlayer:', {
+            videoId: video.id,
+            title: video.title,
+            thumbnail: video.thumbnail_url,
+            duration: video.duration,
+            platform: video.platform,
+            fullVideoObject: video
+          })}
         {/if}
+        <StreamingVideoPlayer 
+          videoId={video.id}
+          title={video.title}
+          thumbnail={video.thumbnail_url}
+          duration={video.duration}
+          platform={video.platform}
+        />
         
         <div class="video-info">
           <h1 class="video-title">{video.title}</h1>
@@ -361,6 +410,27 @@
   .video-actions {
     display: flex;
     gap: 0.5rem;
+  }
+  
+  .download-btn {
+    background-color: var(--color-success);
+    color: white;
+  }
+  
+  .download-btn:hover:not(:disabled) {
+    background-color: var(--color-success-hover);
+  }
+  
+  .download-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--color-info-light);
+    color: var(--color-info);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
   }
   
   .video-container {

@@ -61,7 +61,7 @@
   function updateFilteredSuggestions() {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      filteredSuggestions = uniqueSuggestedTags.filter(tag => !tags.includes(tag) && tag.toLowerCase().includes(newTagInput.toLowerCase()));
+      filteredSuggestions = uniqueSuggestedTags.filter(tag => typeof tag === 'string' && !tags.includes(tag) && tag.toLowerCase().includes(newTagInput.toLowerCase()));
     }, debounceMs);
   }
   

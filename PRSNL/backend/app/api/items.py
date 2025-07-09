@@ -15,13 +15,15 @@ router = APIRouter()
 @router.get("/items/{item_id}", response_model=Item)
 async def get_item_detail(item_id: UUID):
     """Retrieve details of a specific item by ID."""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"🔵 Getting item detail for ID: {item_id}")
+    
     # Try cache first
     cache_key = cache_service.make_key(CacheKeys.ITEM, str(item_id))
     cached = await cache_service.get(cache_key)
     if cached:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Returning cached item for {item_id}")
+        logger.info(f"🔵 Returning cached item for {item_id}")
         return cached
     
     try:
@@ -43,9 +45,9 @@ async def get_item_detail(item_id: UUID):
                     END as item_type,
                     i.created_at,
                     i.updated_at,
-                    i.metadata->>'thumbnail_url' as thumbnail_url,
-                    i.metadata->>'platform' as platform,
-                    (i.metadata->>'duration')::int as duration,
+                    COALESCE(i.thumbnail_url, i.metadata->'video_metadata'->>'thumbnail', i.metadata->>'thumbnail_url') as thumbnail_url,
+                    COALESCE(i.metadata->'video_metadata'->>'platform', i.metadata->>'platform') as platform,
+                    COALESCE(i.duration, (i.metadata->'video_metadata'->'video_info'->>'duration')::int, (i.metadata->>'duration')::int) as duration,
                     i.metadata->>'file_path' as file_path,
                     i.metadata,
                     COALESCE(
@@ -67,7 +69,10 @@ async def get_item_detail(item_id: UUID):
             # Debug log
             import logging
             logger = logging.getLogger(__name__)
-            logger.info(f"Row data for {item_id}: item_type={row.get('item_type')}, platform={row.get('platform')}, metadata type={type(row.get('metadata'))}")
+            logger.info(f"🔵 Row data for {item_id}: item_type={row.get('item_type')}, platform={row.get('platform')}, thumbnail_url={row.get('thumbnail_url')}, duration={row.get('duration')}")
+            logger.info(f"🔵 Metadata type: {type(row.get('metadata'))}")
+            if row.get('metadata'):
+                logger.info(f"🔵 Metadata keys: {list(row.get('metadata').keys()) if isinstance(row.get('metadata'), dict) else 'Not a dict'}")
             
             # Transform thumbnail URL for container paths
             thumbnail_url = row.get("thumbnail_url")
@@ -96,6 +101,8 @@ async def get_item_detail(item_id: UUID):
             
             # Cache the result
             await cache_service.set(cache_key, result, settings.CACHE_TTL_ITEM)
+            
+            logger.info(f"🟢 Final result for {item_id}: platform={result.get('platform')}, thumbnail_url={result.get('thumbnail_url')}, duration={result.get('duration')}")
             
             return result
     except ItemNotFound:
