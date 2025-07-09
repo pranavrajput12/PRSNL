@@ -41,3 +41,9 @@ backend/media/
 
 # Build directories
 pgvector_build/
+
+# Backup files
+*.bak
+*.bak2
+*.backup
+*.tmp
