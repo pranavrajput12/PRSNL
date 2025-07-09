@@ -217,6 +217,10 @@
     }
   }
   
+  // Variables to store for cleanup
+  let mediaQuery: MediaQueryList | null = null;
+  let handleMotionPreferenceChange: ((e: MediaQueryListEvent) => void) | null = null;
+  
   // Initialize visibility and check for reduced motion preference on mount
   onMount(async () => {
     visible = active;
@@ -226,8 +230,8 @@
       isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       
       // Listen for changes to reduced motion preference
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      const handleMotionPreferenceChange = (e: MediaQueryListEvent) => {
+      mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      handleMotionPreferenceChange = (e: MediaQueryListEvent) => {
         isReducedMotion = e.matches;
       };
       
@@ -235,13 +239,6 @@
       if (mediaQuery.addEventListener) {
         mediaQuery.addEventListener('change', handleMotionPreferenceChange);
       }
-      
-      // Clean up on destroy
-      onDestroy(() => {
-        if (mediaQuery.removeEventListener) {
-          mediaQuery.removeEventListener('change', handleMotionPreferenceChange);
-        }
-      });
     }
     
     // If we're starting with progress at 0, show initial loading state
@@ -276,7 +273,7 @@
       });
       
       // Connect to WebSocket if autoConnect is true
-      if (autoConnect && !websocketStore.isHealthy()) {
+      if (autoConnect) {
         websocketStore.connect();
       }
     }
@@ -300,6 +297,11 @@
     
     if (connectionUnsubscribe) {
       connectionUnsubscribe();
+    }
+    
+    // Clean up media query listener
+    if (mediaQuery && handleMotionPreferenceChange && mediaQuery.removeEventListener) {
+      mediaQuery.removeEventListener('change', handleMotionPreferenceChange);
     }
   });
   

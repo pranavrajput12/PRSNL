@@ -293,7 +293,7 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                         relevant_items.extend(text_results)
 
                     if query_embedding is not None:
-                        # Semantic search
+                        # Semantic search - match the query structure from database.py
                         semantic_search_query = """
                             SELECT 
                                 id, title, 
@@ -307,9 +307,10 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                             FROM items
                             WHERE embedding IS NOT NULL
                                 {date_filter_sql}
-                            ORDER BY similarity_score DESC
+                            ORDER BY embedding <=> $1
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
+                        # Pass embedding directly - pgvector handles conversion
                         semantic_results = await conn.fetch(semantic_search_query, query_embedding)
                         
                         # Combine and deduplicate results

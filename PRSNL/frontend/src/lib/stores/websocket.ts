@@ -178,9 +178,10 @@ const createWebSocketStore = () => {
   };
   
   // Send a message through WebSocket
-  const sendMessage = (message: OutgoingMessage) => {
+  const sendMessage = (message: OutgoingMessage): boolean => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
+      return true;
     } else {
       // Queue message to send when connected
       messageQueue.push(message);
@@ -189,6 +190,7 @@ const createWebSocketStore = () => {
       if (!socket || socket.readyState === WebSocket.CLOSED) {
         connect();
       }
+      return false;
     }
   };
   

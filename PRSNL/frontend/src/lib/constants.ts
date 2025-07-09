@@ -60,6 +60,11 @@ export const FILTER_OPTIONS = {
 } as const;
 
 /**
+ * API Base URL
+ */
+export const API_BASE_URL = '/api' as const;
+
+/**
  * API endpoints
  */
 export const API_ENDPOINTS = {

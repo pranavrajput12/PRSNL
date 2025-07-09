@@ -1,205 +1,385 @@
-# PRSNL iOS API Integration Guide
+# API Integration Guide
 
-## Backend Connection Setup
+Complete API reference for PRSNL iOS backend integration.
 
-### Base Configuration
+## 🔧 Configuration
+
+### Base URLs
 ```swift
-struct APIConfig {
-    static let baseURL = ProcessInfo.processInfo.environment["API_URL"] ?? "http://localhost:8000"
-    static let apiVersion = "/api"
-    static let timeout: TimeInterval = 30.0
-}
+// Development
+http://localhost:8000
+
+// Production  
+https://api.prsnl.ai
+
+// Configure in Settings or via:
+APIClient.shared.setBaseURL("http://localhost:8000")
 ```
 
 ### Authentication
 ```swift
-// Store in Keychain
-let token = "Bearer <user_token>"
-KeychainService.shared.save(token, for: .apiToken)
+// Set API token
+APIClient.shared.setAPIToken("your-token-here")
+
+// Headers sent with each request
+Authorization: Bearer YOUR_API_TOKEN
+Content-Type: application/json
 ```
 
-## Core API Endpoints
+## 📡 REST API Endpoints
 
-### 1. Capture Content
-```swift
-POST /api/capture
-Body: {
-    "url": "https://example.com",
-    "title": "Optional title",
-    "tags": ["tag1", "tag2"],
-    "notes": "Optional notes"
-}
-Response: {
-    "id": "uuid",
-    "status": "processing",
-    "message": "Content captured successfully"
-}
+### Items Management
+
+#### List Items (Paginated)
+```http
+GET /api/items?page=1&pageSize=20&sort=created_at&order=desc
 ```
 
-### 2. Search
-```swift
-// Keyword Search
-GET /api/search?q=query&limit=20&offset=0
-
-// Semantic Search
-GET /api/semantic-search?q=natural+language+query&limit=10
-
-Response: {
-    "items": [...],
-    "total": 100,
-    "has_more": true
-}
-```
-
-### 3. Timeline
-```swift
-GET /api/timeline?limit=20&offset=0&start_date=2024-01-01&end_date=2024-12-31
-
-Response: {
-    "items": [...],
-    "total": 500,
-    "has_more": true
-}
-```
-
-### 4. Item Details
-```swift
-GET /api/items/{id}
-
-Response: {
-    "id": "uuid",
-    "url": "https://...",
-    "title": "...",
-    "content": "...",
-    "summary": "AI generated summary",
-    "tags": [...],
-    "metadata": {...},
-    "created_at": "2024-01-01T00:00:00Z"
-}
-```
-
-### 5. Tags
-```swift
-GET /api/tags
-
-Response: {
+**Response:**
+```json
+{
+  "items": [{
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "content": "My note content",
+    "type": "note",
+    "createdAt": "2025-07-09T10:00:00Z",
+    "modifiedAt": "2025-07-09T10:00:00Z",
     "tags": [
-        {"name": "tag1", "count": 45},
-        {"name": "tag2", "count": 23}
-    ]
+      {"name": "swift", "color": "#FF6B6B"},
+      {"name": "ios", "color": "#4ECDC4"}
+    ],
+    "attachments": [],
+    "embedding": null
+  }],
+  "total": 156,
+  "page": 1,
+  "pageSize": 20
 }
 ```
 
-### 6. Analytics (New)
-```swift
-// Content Trends
-GET /api/analytics/trends?days=30
-
-// Knowledge Graph
-GET /api/analytics/knowledge_graph
-
-// Semantic Clusters
-GET /api/analytics/semantic_clusters
-
-// Usage Patterns
-GET /api/analytics/usage_patterns
+#### Get Single Item
+```http
+GET /api/items/{id}
 ```
 
-### 7. WebSocket Streaming
-```swift
-// For real-time AI tag suggestions
-ws://localhost:8000/ws/ai-tag-stream/{client_id}
+#### Create Item
+```http
+POST /api/items
+Content-Type: application/json
+
+{
+  "content": "New note content",
+  "type": "note",
+  "tags": ["swift", "ios"]
+}
 ```
 
-## Swift Implementation Examples
+#### Update Item
+```http
+PUT /api/items/{id}
+Content-Type: application/json
 
-### API Client Setup
-```swift
-class PRSNLAPIClient {
-    static let shared = PRSNLAPIClient()
-    private let session = URLSession.shared
-    
-    private var baseURL: URL {
-        URL(string: APIConfig.baseURL + APIConfig.apiVersion)!
+{
+  "content": "Updated content",
+  "tags": ["swift", "ios", "updated"]
+}
+```
+
+#### Delete Item
+```http
+DELETE /api/items/{id}
+```
+
+### Search
+
+#### Search Items
+```http
+GET /api/items/search?q=swift&type=note,article&tags=ios,development&from=2025-01-01&to=2025-12-31
+```
+
+**Parameters:**
+- `q` - Search query (required)
+- `type` - Comma-separated item types
+- `tags` - Comma-separated tag names
+- `from` - Start date (ISO 8601)
+- `to` - End date (ISO 8601)
+- `page` - Page number (default: 1)
+- `pageSize` - Items per page (default: 20)
+
+#### Semantic Search
+```http
+POST /api/items/search/semantic
+Content-Type: application/json
+
+{
+  "query": "How to implement dark mode in SwiftUI",
+  "limit": 10,
+  "threshold": 0.7
+}
+```
+
+### Tags
+
+#### List All Tags
+```http
+GET /api/tags
+```
+
+**Response:**
+```json
+{
+  "tags": [
+    {"name": "swift", "color": "#FF6B6B", "count": 42},
+    {"name": "ios", "color": "#4ECDC4", "count": 38}
+  ]
+}
+```
+
+#### Popular Tags
+```http
+GET /api/tags/popular?limit=10
+```
+
+#### Create Tag
+```http
+POST /api/tags
+Content-Type: application/json
+
+{
+  "name": "swiftui",
+  "color": "#9B59B6"
+}
+```
+
+### Videos
+
+#### List Videos
+```http
+GET /api/videos?category=tutorial&page=1&pageSize=20
+```
+
+**Categories:** all, tutorial, lecture, podcast, documentary
+
+#### Get Video Details
+```http
+GET /api/videos/{id}
+```
+
+**Response:**
+```json
+{
+  "id": "video-123",
+  "title": "SwiftUI Tutorial",
+  "description": "Learn SwiftUI basics",
+  "duration": 1800,
+  "thumbnailUrl": "https://...",
+  "videoUrl": "https://...",
+  "category": "tutorial",
+  "views": 1523,
+  "createdAt": "2025-07-09T10:00:00Z"
+}
+```
+
+#### Get Video Transcript
+```http
+GET /api/videos/{id}/transcript
+```
+
+### Import/Export
+
+#### Import Data
+```http
+POST /api/import
+Content-Type: multipart/form-data
+
+file: [file data]
+format: json|csv|markdown
+```
+
+#### Export Data
+```http
+GET /api/export?format=json&from=2025-01-01&to=2025-12-31
+```
+
+## 🔌 WebSocket API
+
+### Chat Connection
+```javascript
+// Connect
+ws://localhost:8000/ws/chat/{client_id}
+
+// Send message
+{
+  "type": "message",
+  "content": "What is SwiftUI?",
+  "timestamp": "2025-07-09T10:00:00Z"
+}
+
+// Receive message
+{
+  "type": "response",
+  "content": "SwiftUI is Apple's declarative UI framework...",
+  "timestamp": "2025-07-09T10:00:01Z",
+  "metadata": {
+    "tokens": 150,
+    "model": "gpt-4"
+  }
+}
+```
+
+### Message Types
+- `message` - User message
+- `response` - AI response
+- `error` - Error message
+- `typing` - Typing indicator
+- `connected` - Connection established
+- `disconnected` - Connection closed
+
+## 🚨 Error Handling
+
+### Error Response Format
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request data",
+    "details": {
+      "field": "content",
+      "reason": "Content cannot be empty"
     }
-    
-    private var headers: [String: String] {
-        [
-            "Authorization": KeychainService.shared.get(.apiToken) ?? "",
-            "Content-Type": "application/json"
-        ]
-    }
+  },
+  "timestamp": "2025-07-09T10:00:00Z"
 }
 ```
 
-### Async/Await Request Example
+### Common Error Codes
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `UNAUTHORIZED` | 401 | Invalid or missing API token |
+| `FORBIDDEN` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `VALIDATION_ERROR` | 400 | Invalid request data |
+| `RATE_LIMITED` | 429 | Too many requests |
+| `SERVER_ERROR` | 500 | Internal server error |
+
+## 🔄 Rate Limiting
+
+- **Default**: 100 requests per minute
+- **Search**: 30 requests per minute
+- **Import**: 10 requests per hour
+
+Headers:
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1720521600
+```
+
+## 🧪 Testing
+
+### Test Endpoints
+```http
+# Health check
+GET /api/health
+
+# Test authentication
+GET /api/auth/test
+```
+
+### Mock API Token
+For development: `test-api-key-for-development`
+
+## 📝 Swift Integration Examples
+
+### Using APIClient
 ```swift
-func searchItems(query: String) async throws -> SearchResponse {
-    var components = URLComponents(url: baseURL.appendingPathComponent("search"), resolvingAgainstBaseURL: false)!
-    components.queryItems = [URLQueryItem(name: "q", value: query)]
-    
-    var request = URLRequest(url: components.url!)
-    request.allHTTPHeaderFields = headers
-    
-    let (data, response) = try await session.data(for: request)
-    
-    guard let httpResponse = response as? HTTPURLResponse,
-          (200...299).contains(httpResponse.statusCode) else {
-        throw APIError.invalidResponse
-    }
-    
-    return try JSONDecoder().decode(SearchResponse.self, from: data)
-}
+// Get items
+let items = try await APIClient.shared.getItems(page: 1, pageSize: 20)
+
+// Search
+let results = try await APIClient.shared.searchItems(
+    query: "SwiftUI",
+    filters: SearchFilters(
+        types: [.note, .article],
+        tags: ["ios"],
+        dateRange: DateRange(from: startDate, to: endDate)
+    )
+)
+
+// Create item
+let newItem = Item(
+    content: "My note",
+    type: .note,
+    tags: [Tag(name: "swift")]
+)
+let created = try await APIClient.shared.createItem(newItem)
 ```
 
-### Error Handling
+### WebSocket Chat
 ```swift
-enum APIError: Error {
-    case invalidResponse
-    case unauthorized
-    case serverError(String)
-    case networkError(Error)
-    case decodingError(Error)
+// Connect
+webSocketManager.connect(clientId: UUID().uuidString)
+
+// Send message
+webSocketManager.sendMessage("Hello, AI!")
+
+// Receive messages
+webSocketManager.onMessage = { message in
+    print("Received: \(message)")
 }
 ```
 
-### Offline Support Strategy
-1. Cache all GET responses in Core Data
-2. Queue POST/PUT/DELETE operations when offline
-3. Sync when connection restored
-4. Show offline indicator in UI
+## 🔐 Implementation Details
 
-## Testing Against Local Backend
+### Current APIClient Status
+- ✅ Base structure implemented
+- ✅ Async/await support
+- ✅ Error handling
+- ✅ Token management
+- ❌ Not connected to ViewModels (using mock data)
 
-### 1. Simulator Testing
-```bash
-# Backend should be accessible at host machine's IP
-# Find your IP: ifconfig | grep inet
-# Update API_URL to http://YOUR_IP:8000
-```
-
-### 2. Device Testing
-- Ensure device and backend are on same network
-- Update API_URL to backend machine's IP
-- May need to disable App Transport Security for HTTP
-
-### 3. Mock Server Option
+### Switching from Mock to Real Data
+1. In `TimelineViewModel`:
 ```swift
-#if DEBUG
-class MockAPIClient: APIClientProtocol {
-    // Return mock data for testing
-}
-#endif
+// Current (mock):
+items = MockDataProvider.shared.getTimelineItems()
+
+// Change to:
+items = try await APIClient.shared.getItems(page: currentPage)
 ```
 
-## Rate Limiting
-Backend implements rate limiting:
-- 100 requests per minute per IP
-- Handle 429 responses with exponential backoff
+2. In `SearchViewModel`:
+```swift
+// Current (mock):
+results = MockDataProvider.shared.searchItems(query)
 
-## Important Notes
-1. All timestamps are ISO 8601 format
-2. IDs are UUIDs
-3. Pagination uses limit/offset
-4. Search supports fuzzy matching
-5. Tags are case-insensitive
+// Change to:
+results = try await APIClient.shared.searchItems(query: query)
+```
+
+3. In `VideosViewModel`:
+```swift
+// Current (mock):
+videos = MockDataProvider.shared.getVideos()
+
+// Change to:
+videos = try await APIClient.shared.getVideos()
+```
+
+### Network Configuration
+For simulator testing with local backend:
+```swift
+// Use host machine's IP
+let baseURL = "http://192.168.1.100:8000"  // Replace with your IP
+```
+
+For device testing:
+1. Ensure device and backend on same network
+2. May need to add to Info.plist for HTTP:
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+```

@@ -144,7 +144,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
-from app.api import insights
+from app.api import insights, import_data
 from app.api.v2 import items as v2_items
 
 app.include_router(capture.router, prefix=settings.API_V1_STR)
@@ -166,6 +166,7 @@ app.include_router(duplicates.router, prefix=settings.API_V1_STR)
 app.include_router(summarization.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
+app.include_router(import_data.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

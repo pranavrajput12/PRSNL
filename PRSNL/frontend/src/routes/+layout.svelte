@@ -145,6 +145,13 @@
           <span>Videos</span>
         {/if}
       </a>
+      
+      <a href="/import" class="nav-link {$page.url.pathname === '/import' ? 'active' : ''}" title="Import">
+        <Icon name="upload" size="small" />
+        {#if !sidebarCollapsed}
+          <span>Import</span>
+        {/if}
+      </a>
     </nav>
     
     <div class="sidebar-footer">

@@ -384,12 +384,9 @@
               currentMode = mode;
               showModeSelector = false;
               
-              // Check if user has seen onboarding for this mode
-              const seenOnboarding = localStorage.getItem(`onboarding_${mode.id}_seen`);
-              if (!seenOnboarding) {
-                onboardingMode = mode;
-                showModeOnboarding = true;
-              }
+              // Always show onboarding when switching modes
+              onboardingMode = mode;
+              showModeOnboarding = true;
               
               console.log('Mode selected:', mode.id);
             }}
@@ -413,8 +410,6 @@
   <ModeOnboarding 
     mode={onboardingMode}
     onComplete={() => {
-      // Mark this mode's onboarding as seen
-      localStorage.setItem(`onboarding_${onboardingMode.id}_seen`, 'true');
       showModeOnboarding = false;
       onboardingMode = null;
     }}
@@ -675,13 +670,12 @@
 
 <style>
   .chat-page {
-    height: 100vh;
+    height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     position: relative;
-    overflow: hidden;
   }
   
   /* Animated background */
@@ -923,8 +917,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: calc(100vh - 80px);
-    overflow: hidden;
     position: relative;
     z-index: 1;
   }
@@ -932,7 +924,7 @@
   .messages-area {
     flex: 1;
     overflow-y: auto;
-    padding: 2rem 4rem;
+    padding: 1rem 2rem;
     scroll-behavior: smooth;
     max-width: 1200px;
     margin: 0 auto;
@@ -942,7 +934,7 @@
   /* Welcome Message */
   .welcome-message {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 2rem 1rem;
     animation: fadeIn 0.6s ease-out;
   }
   
@@ -962,8 +954,8 @@
   }
   
   .brain-visualization {
-    width: 120px;
-    height: 120px;
+    width: 60px;
+    height: 60px;
     margin: 0 auto;
   }
   
@@ -973,15 +965,15 @@
   }
   
   .welcome-message h2 {
-    font-size: 2rem;
-    margin: 1rem 0;
+    font-size: 1.25rem;
+    margin: 0.5rem 0;
     color: white;
   }
   
   .welcome-subtitle {
-    font-size: 1.125rem;
+    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
   }
   
   /* Suggested Questions */
@@ -991,21 +983,21 @@
   }
   
   .suggested-questions h3 {
-    font-size: 1rem;
+    font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
   }
   
   .questions-grid {
     display: grid;
-    gap: 1rem;
+    gap: 0.5rem;
   }
   
   .suggestion-card {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
@@ -1035,8 +1027,8 @@
   }
   
   .suggestion-icon {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;

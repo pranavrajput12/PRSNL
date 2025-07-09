@@ -2,14 +2,35 @@
 import asyncpg
 from typing import Optional, List, AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from pgvector.asyncpg import register_vector
 from app.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 _db_pool: Optional[asyncpg.Pool] = None
 
 # SQLAlchemy async engine and session
 _engine = None
 _async_session_maker = None
+
+
+async def safe_register_vector(conn):
+    """Safely register vector type if pgvector is available"""
+    try:
+        # Check if pgvector extension exists
+        result = await conn.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'vector')"
+        )
+        
+        if result:
+            # Only import and register if extension exists
+            from pgvector.asyncpg import register_vector
+            await register_vector(conn)
+            logger.info("pgvector registered successfully")
+        else:
+            logger.warning("pgvector extension not found in database - vector operations will be disabled")
+    except Exception as e:
+        logger.warning(f"Could not register pgvector: {e} - vector operations will be disabled")
 
 
 async def create_db_pool():
@@ -20,7 +41,7 @@ async def create_db_pool():
         min_size=10,
         max_size=20,
         command_timeout=60,
-        init=register_vector
+        init=safe_register_vector  # Use safe registration
     )
 
 
@@ -122,12 +143,11 @@ async def update_item_embedding(item_id: str, embedding: List[float]):
     """Update the embedding for a specific item"""
     pool = await get_db_pool()
     async with pool.acquire() as conn:
-        # Convert list to vector string format for pgvector
-        embedding_str = '[' + ','.join(map(str, embedding)) + ']'
+        # When using pgvector with register_vector, pass the embedding directly as a list
         await conn.execute(
-            "UPDATE items SET embedding = $2::vector WHERE id = $1",
+            "UPDATE items SET embedding = $2 WHERE id = $1",
             item_id,
-            embedding_str
+            embedding  # Pass embedding directly as list
         )
 
 async def find_similar_items_by_embedding(
@@ -137,16 +157,17 @@ async def find_similar_items_by_embedding(
     exclude_id: Optional[str] = None
 ):
     """Find similar items based on a given embedding using a provided connection."""
-    # Convert list to vector string format for pgvector
-    embedding_str = f"[{','.join(map(str, embedding))}]"
+    # When using pgvector with register_vector, pass the embedding directly as a list
+    # The register_vector init function handles the conversion
 
     # Base query
     query = """
-        SELECT id, title, url, summary, created_at, 1 - (embedding <=> $1) as similarity
+        SELECT id, title, url, summary, created_at,
+               1 - (embedding <=> $1) as similarity
         FROM items
         WHERE embedding IS NOT NULL
     """
-    params = [embedding_str]
+    params = [embedding]  # Pass embedding directly as list
 
     # Exclude a specific item if requested
     if exclude_id:

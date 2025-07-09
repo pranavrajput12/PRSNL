@@ -1,65 +1,117 @@
-# PRSNL iOS App
+# PRSNL iOS
 
-Native iOS companion app for PRSNL personal knowledge management system.
+Native iOS companion app for the PRSNL personal knowledge management system, providing mobile access to your knowledge base with a beautiful, intuitive interface.
 
-## Overview
-This iOS app provides mobile access to your PRSNL knowledge base with features optimized for on-the-go capture and retrieval.
+## 🚀 Quick Start
 
-## Features
-- 📱 **Quick Capture**: Share extension for instant content saving
-- 🔍 **Smart Search**: Natural language and semantic search
-- 📅 **Timeline View**: Browse your knowledge chronologically
-- 🏷️ **Smart Tags**: AI-generated and manual tagging
-- 🔄 **Offline Sync**: Access recent items without connection
-- 🎨 **Manchester United Theme**: Consistent with web app design
-
-## Requirements
-- iOS 17.0+
-- Xcode 15.0+
-- Swift 5.9+
-- PRSNL backend running on local network or accessible server
-
-## Setup Instructions
-
-### 1. Configure Backend Connection
-1. Ensure PRSNL backend is running (default: http://localhost:8000)
-2. Update `API_BASE_URL` in app settings
-3. Generate API token from web interface
-
-### 2. Build & Run
 ```bash
-cd PRSNL-iOS
+# 1. Open project
+cd Implementation
 open PRSNL.xcodeproj
-# Select target device/simulator
-# Build and run (Cmd+R)
+
+# 2. Select iPhone simulator (iOS 17+)
+# 3. Build and run (⌘R)
 ```
 
-### 3. Configure Share Extension
-1. Enable Share Extension in iOS Settings
-2. Add to favorite share destinations
-3. Use Cmd+Shift+S equivalent gesture
+**Current Status**: UI Complete with Mock Data - Ready for Backend Integration
 
-## Architecture
-- **Framework**: SwiftUI with MVVM
-- **Networking**: URLSession + async/await
-- **Storage**: Core Data for offline cache
-- **Min iOS**: 17.0 (latest features)
+## 📱 Features
 
-## Development Team
-- **Claude02**: Architecture & Technical Advisory
-- **Kilo Code**: Orchestration & Implementation
-- Working independently from main PRSNL 3-agent team
+### Implemented (UI Complete)
+- ✅ **Timeline** - Chronological knowledge feed with pull-to-refresh
+- ✅ **Search** - Advanced search with filters, tags, and AI assistant UI  
+- ✅ **Videos** - Media library with category filtering and player
+- ✅ **Settings** - Backend configuration and app preferences
+- ✅ **Launch Screen** - Animated splash with attribution
 
-## API Integration
-Connects to PRSNL backend API:
-- Capture endpoint for content saving
-- Search endpoints (keyword + semantic)
-- Timeline API for chronological browsing
-- Analytics for insights display
+### In Progress
+- 🚧 **Chat** - Basic UI ready, needs WebSocket integration
+- 🚧 **Backend Integration** - APIClient ready, currently using mock data
 
-## Roadmap
-- [ ] Phase 1: Foundation & API Client
-- [ ] Phase 2: Core Features (Timeline, Search, Capture)
-- [ ] Phase 3: Advanced Features (Share Extension, Semantic Search)
-- [ ] Phase 4: Polish & App Store Preparation
-- [ ] Future: iPad support, widgets, Apple Watch app
+### Planned
+- 📋 Share Extension - Quick capture from any app
+- 📋 Widgets - Home screen quick access
+- 📋 Offline Sync - Core Data integration
+- 📋 Push Notifications - Real-time updates
+
+## 🛠 Tech Stack
+
+- **Platform**: iOS 17.0+
+- **Language**: Swift 5.9+ 
+- **UI Framework**: SwiftUI
+- **Architecture**: MVVM
+- **Networking**: URLSession with async/await
+- **Storage**: Core Data (setup complete, not integrated)
+- **Design**: Manchester United red (#DC143C) accent
+
+## 📁 Project Structure
+
+```
+Implementation/
+├── PRSNL.xcodeproj          # Xcode project
+└── PRSNL/
+    ├── App/                 # App lifecycle
+    │   └── PRSNLApp.swift   # Main entry, tab setup
+    ├── Core/               
+    │   ├── Models/          # Data models
+    │   ├── Services/        # Business logic
+    │   └── DesignSystem.swift
+    ├── Features/            # UI modules
+    │   ├── Timeline/
+    │   ├── Search/
+    │   ├── Videos/
+    │   ├── Chat/
+    │   └── Settings/
+    ├── Networking/
+    │   └── APIClient.swift  # REST API
+    └── Services/
+        └── MockDataProvider.swift
+```
+
+## 🔧 Configuration
+
+### Connect to Backend
+1. Run your PRSNL backend on `http://localhost:8000`
+2. Open Settings tab in the app
+3. Enter backend URL
+4. Add API token (if required)
+5. Tap "Test Connection"
+
+### Enable Real Data
+Currently using mock data. To switch to real API:
+```swift
+// In TimelineViewModel.swift
+// Replace: MockDataProvider.shared.getTimelineItems()  
+// With: APIClient.shared.getItems()
+```
+
+## 📚 Key Documentation
+
+- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Detailed implementation status
+- **[API_INTEGRATION.md](API_INTEGRATION.md)** - Backend API reference
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - App architecture details
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Common tasks and solutions
+
+## 👨‍💻 Development
+
+### Prerequisites
+- Xcode 15.0+
+- iOS Simulator or device with iOS 17.0+
+- (Optional) PRSNL backend for full functionality
+
+### Common Tasks
+- **Run with mock data**: Just build and run - it works out of the box
+- **Test animations**: Search view has extensive animations
+- **Change theme**: Edit `Core/DesignSystem.swift`
+- **Add mock data**: Edit `Services/MockDataProvider.swift`
+
+## 🎯 Next Steps
+
+1. **Backend Integration** - Connect ViewModels to APIClient
+2. **WebSocket Chat** - Implement real-time messaging
+3. **Data Persistence** - Activate Core Data for offline support
+4. **Testing** - Add unit and UI tests
+
+## 📄 License
+
+Copyright © 2025 Pranav Rajput. All rights reserved.

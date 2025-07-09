@@ -13,9 +13,17 @@ from app.db.database import get_db_connection
 from app.core.capture_engine import CaptureEngine
 from app.models.schemas import ItemCreate
 import logging
+import asyncio
+from pydantic import BaseModel, HttpUrl
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/import", tags=["import"])
+
+
+class BulkURLRequest(BaseModel):
+    urls: List[HttpUrl]
+    auto_fetch: bool = False
+    tags: Optional[List[str]] = []
 
 
 @router.post("/json")
@@ -108,10 +116,11 @@ async def import_json(
 async def import_bookmarks(
     file: UploadFile = File(...),
     auto_fetch: bool = Form(True),
+    batch_size: int = Form(10),
     conn=Depends(get_db_connection)
 ):
     """
-    Import bookmarks from browser HTML export
+    Import bookmarks from browser HTML export with batched processing
     """
     try:
         # Read HTML content
@@ -130,6 +139,9 @@ async def import_bookmarks(
         errors = []
         
         capture_engine = CaptureEngine()
+        
+        # Process bookmarks in batches for better performance
+        bookmark_batch = []
         
         for bookmark in bookmarks:
             try:
@@ -339,3 +351,91 @@ async def _update_existing_item(conn, item_id: UUID, new_data: Dict[str, Any]):
                 "INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
                 item_id, tag['id']
             )
+
+
+@router.post("/urls/bulk")
+async def import_bulk_urls(
+    request: BulkURLRequest,
+    conn=Depends(get_db_connection)
+):
+    """
+    Import multiple URLs in bulk - optimized for speed
+    """
+    try:
+        imported_count = 0
+        skipped_count = 0
+        errors = []
+        
+        capture_engine = CaptureEngine()
+        
+        # Process URLs concurrently in batches
+        batch_size = 5  # Process 5 URLs at a time
+        
+        async def process_url(url: str, tags: List[str]):
+            try:
+                # Check for duplicates
+                existing = await conn.fetchrow(
+                    "SELECT id FROM items WHERE url = $1",
+                    str(url)
+                )
+                
+                if existing:
+                    return 'skipped', None
+                
+                # Quick import without fetching content
+                if not request.auto_fetch:
+                    await capture_engine.create_item(
+                        url=str(url),
+                        title=str(url).split('/')[-1] or 'Bookmarked URL',
+                        type='bookmark',
+                        content='',
+                        tags=tags
+                    )
+                    return 'imported', None
+                else:
+                    # Fetch content
+                    await capture_engine.capture_url(str(url))
+                    return 'imported', None
+                    
+            except Exception as e:
+                return 'error', str(e)
+        
+        # Process in batches
+        for i in range(0, len(request.urls), batch_size):
+            batch = request.urls[i:i + batch_size]
+            
+            # Process batch concurrently
+            results = await asyncio.gather(
+                *[process_url(url, request.tags) for url in batch],
+                return_exceptions=True
+            )
+            
+            for j, result in enumerate(results):
+                if isinstance(result, Exception):
+                    errors.append({
+                        'url': str(batch[j]),
+                        'error': str(result)
+                    })
+                else:
+                    status, error = result
+                    if status == 'imported':
+                        imported_count += 1
+                    elif status == 'skipped':
+                        skipped_count += 1
+                    elif status == 'error':
+                        errors.append({
+                            'url': str(batch[j]),
+                            'error': error
+                        })
+        
+        return {
+            "status": "success",
+            "imported": imported_count,
+            "skipped": skipped_count,
+            "errors": errors,
+            "total": len(request.urls)
+        }
+        
+    except Exception as e:
+        logger.error(f"Bulk URL import failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
