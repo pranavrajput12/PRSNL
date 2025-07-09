@@ -211,10 +211,63 @@ function transformItem(item: any): Item | TimelineItem {
 }
 
 /**
- * Get timeline items with cursor-based pagination
+ * Get timeline items with pagination (legacy page-based)
  */
-export async function getTimeline(cursor: string | null = null, limit: number = 20): Promise<TimelineResponse> {
-  // Use cursor-based pagination as supported by backend
+export async function getTimeline(page: number = 1, limit: number = 20): Promise<TimelineResponse> {
+  // Legacy page-based pagination - ignores page parameter since backend uses cursor pagination
+  const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
+  
+  if (import.meta.env.DEV) {
+    console.log('Raw timeline response before transform:', response);
+  }
+  
+  // Transform backend response to match frontend expectations
+  const transformedResponse: TimelineResponse = {
+    items: [],
+    hasMore: response.next_cursor !== null,
+    // Include additional fields that might be used
+    total: response.items?.length || 0,
+    pageSize: limit
+  } as any;
+  
+  // Transform items if they exist
+  if (response && response.items && Array.isArray(response.items)) {
+    transformedResponse.items = response.items.map((item: any) => ({
+      ...transformItem(item),
+      // Map summary to snippet for TimelineItem interface
+      snippet: item.summary || item.snippet || '',
+      // Ensure all required fields are present
+      id: item.id,
+      title: item.title || 'Untitled',
+      url: item.url,
+      tags: item.tags || [],
+      created_at: item.createdAt || item.created_at,
+      // Preserve summary for the timeline page
+      summary: item.summary || '',
+      // Include additional fields the timeline might use
+      type: item.item_type || item.type || 'article',
+      status: item.status,
+      thumbnail_url: item.thumbnail_url,
+      duration: item.duration,
+      platform: item.platform,
+      file_path: item.file_path,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at
+    }));
+  }
+  
+  if (import.meta.env.DEV) {
+    console.log('Timeline response after transform:', transformedResponse);
+  }
+  
+  return transformedResponse;
+}
+
+/**
+ * Get timeline items with cursor-based pagination (modern)
+ */
+export async function getTimelineCursor(cursor: string | null = null, limit: number = 20): Promise<TimelineResponse> {
+  // Modern cursor-based pagination as supported by backend
   const params = new URLSearchParams();
   params.append('limit', limit.toString());
   if (cursor) {
@@ -231,10 +284,8 @@ export async function getTimeline(cursor: string | null = null, limit: number = 
   const transformedResponse: TimelineResponse = {
     items: [],
     hasMore: response.next_cursor !== null,
-    // Include additional fields that might be used
     total: response.items?.length || 0,
     pageSize: limit,
-    // Add cursor for pagination
     nextCursor: response.next_cursor || null
   } as any;
   

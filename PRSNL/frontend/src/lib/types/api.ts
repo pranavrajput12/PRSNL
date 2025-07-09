@@ -145,6 +145,7 @@ export interface TimelineItem {
 export interface TimelineResponse {
   items: TimelineItem[];
   hasMore: boolean;
+  nextCursor?: string | null;
 }
 
 export interface TagsResponse {
