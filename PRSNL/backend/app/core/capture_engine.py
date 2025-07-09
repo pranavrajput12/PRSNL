@@ -20,15 +20,16 @@ class CaptureEngine:
         self.llm_processor = LLMProcessor()
         self.embedding_service = EmbeddingService()
     
-    async def process_item(self, item_id: UUID, url: str = None, content: str = None):
+    async def process_item(self, item_id: UUID, url: str = None, content: str = None, enable_summarization: bool = False, content_type: str = "auto"):
         """
         Process a captured item:
         1. Scrape content (if URL provided)
-        2. Process with LLM
+        2. Process with LLM (if enabled)
         3. Update database
         """
         try:
             pool = await get_db_pool()
+            logger.info(f"Processing item {item_id} - URL: {url}, Content: {content[:100] if content else None}, Type: {content_type}")
             
             # If content is provided directly, use it; otherwise scrape the URL
             if content:
@@ -49,24 +50,59 @@ class CaptureEngine:
                 raise ValueError("Either URL or content must be provided")
             
             if not scraped_data.content:
-                logger.error(f"Failed to scrape content from {url}")
-                async with pool.acquire() as conn:
-                    await conn.execute("""
-                        UPDATE items 
-                        SET status = 'failed', 
-                            metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', '"Failed to scrape content"')
-                        WHERE id = $1
-                    """, item_id)
-                return
+                logger.warning(f"No content extracted from {url}, using title as fallback")
+                # Use title as fallback content to avoid complete failure
+                if scraped_data.title:
+                    scraped_data.content = f"Content from {url}: {scraped_data.title}"
+                else:
+                    scraped_data.content = f"Web page content from {url}"
             
-            # Process with LLM
-            logger.info(f"Processing content with LLM for item {item_id}")
-            processed = await self.llm_processor.process_content(
-                content=scraped_data.content,
-                url=url,
-                title=scraped_data.title
-            )
+            # Process with LLM (if enabled and not a link-only capture)
+            if enable_summarization and content_type != "link":
+                logger.info(f"Processing content with LLM for item {item_id}")
+                processed = await self.llm_processor.process_content(
+                    content=scraped_data.content,
+                    url=url,
+                    title=scraped_data.title
+                )
+            else:
+                if content_type == "link":
+                    logger.info(f"Link-only capture for item {item_id} - extracting meta only")
+                else:
+                    logger.info(f"Skipping LLM processing for item {item_id} (summarization disabled)")
+                # Create a minimal processed object without AI analysis
+                processed = type('ProcessedContent', (), {
+                    'title': scraped_data.title,
+                    'summary': None,
+                    'content': scraped_data.content,
+                    'tags': [],
+                    'key_points': [],
+                    'sentiment': None
+                })()
             
+            # Build metadata
+            metadata = {
+                "author": scraped_data.author,
+                "published_date": scraped_data.published_date,
+                "word_count": len(processed.content.split()) if processed.content else 0,
+                "scraped_at": scraped_data.scraped_at.isoformat() if scraped_data.scraped_at else None,
+                "summarization_enabled": enable_summarization,
+                "content_type": content_type
+            }
+            
+            # Only include ai_analysis if AI processing actually occurred
+            if enable_summarization and content_type != "link":
+                metadata["ai_analysis"] = {
+                    "summary": processed.summary,
+                    "tags": processed.tags,
+                    "key_points": processed.key_points,
+                    "sentiment": processed.sentiment,
+                    "reading_time": getattr(processed, 'reading_time', None),
+                    "entities": getattr(processed, 'entities', []),
+                    "questions": getattr(processed, 'questions', []),
+                    "processed_at": time.time()
+                }
+
             # Update the item in database
             async with pool.acquire() as conn:
                 await conn.execute("""
@@ -83,26 +119,11 @@ class CaptureEngine:
                     WHERE id = $1
                 """, 
                     item_id,
-                    processed.title or scraped_data.title,
+                    processed.title or scraped_data.title or "Untitled",
                     processed.summary,
                     scraped_data.html,
                     processed.content,
-                    json.dumps({
-                        "author": scraped_data.author,
-                        "published_date": scraped_data.published_date,
-                        "word_count": len(processed.content.split()) if processed.content else 0,
-                        "scraped_at": scraped_data.scraped_at.isoformat() if scraped_data.scraped_at else None,
-                        "ai_analysis": {
-                            "summary": processed.summary,
-                            "tags": processed.tags,
-                            "key_points": processed.key_points,
-                            "sentiment": processed.sentiment,
-                            "reading_time": processed.reading_time,
-                            "entities": processed.entities,
-                            "questions": processed.questions,
-                            "processed_at": time.time()
-                        }
-                    })
+                    json.dumps(metadata)
                 )
                 
                 # Add auto-generated tags

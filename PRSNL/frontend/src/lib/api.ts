@@ -124,10 +124,45 @@ async function fetchWithErrorHandling<T>(
 export async function captureItem(
   data: CaptureRequest
 ): Promise<CaptureResponse> {
-  return fetchWithErrorHandling<CaptureResponse>('/capture', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+  // Check if files are uploaded
+  const hasFiles = data.uploaded_files && data.uploaded_files.length > 0;
+  
+  if (hasFiles) {
+    // Use FormData for file uploads
+    const formData = new FormData();
+    
+    // Add form fields
+    if (data.url) formData.append('url', data.url);
+    if (data.title) formData.append('title', data.title);
+    if (data.highlight) formData.append('highlight', data.highlight);
+    if (data.content_type) formData.append('content_type', data.content_type);
+    if (data.enable_summarization) formData.append('enable_summarization', data.enable_summarization.toString());
+    if (data.tags) formData.append('tags', JSON.stringify(data.tags));
+    
+    // Add files
+    data.uploaded_files.forEach((file, index) => {
+      formData.append('files', file);
+    });
+    
+    // Use fetch directly for file uploads (no JSON content-type)
+    const response = await fetch(`${API_BASE_URL}/file/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'File upload failed');
+    }
+    
+    return await response.json();
+  } else {
+    // Use regular JSON API for non-file uploads
+    return fetchWithErrorHandling<CaptureResponse>('/capture', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 /**

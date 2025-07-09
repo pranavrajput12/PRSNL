@@ -41,11 +41,30 @@ async def handle_notification(connection, pid, channel, payload):
         # Get item details from database to process
         pool = await get_db_pool()
         async with pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT url FROM items WHERE id = $1", item_id)
+            row = await conn.fetchrow("""
+                SELECT url, content, raw_content, enable_summarization, content_type, status, has_files 
+                FROM items WHERE id = $1
+            """, item_id)
             if row:
-                url = row['url']
-                # Process item in background
-                asyncio.create_task(capture_engine.process_item(item_id, url))
+                # Only process if not already completed or failed
+                if row['status'] in ['pending']:
+                    # Skip file uploads - they are handled by the file processor
+                    if row['has_files']:
+                        logger.info(f"Skipping file item {item_id} - handled by file processor")
+                        return
+                        
+                    url = row['url']
+                    # Use raw_content (from form) if available, otherwise use content
+                    content = row['raw_content'] or row['content']
+                    enable_summarization = row['enable_summarization'] or False
+                    content_type = row['content_type'] or 'auto'
+                    
+                    # Process item in background with all parameters
+                    asyncio.create_task(capture_engine.process_item(
+                        item_id, url, content, enable_summarization, content_type
+                    ))
+                else:
+                    logger.info(f"Item {item_id} already processed (status: {row['status']})")
             else:
                 logger.error(f"Item not found: {item_id}")
         

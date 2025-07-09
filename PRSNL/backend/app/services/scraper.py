@@ -63,7 +63,7 @@ class WebScraper:
                 if title_tag and title_tag.text:
                     title = title_tag.text.strip()
             
-            # Extract content from meta description
+            # Extract content from meta description with fallbacks
             content = None
             meta_desc = soup.find('meta', attrs={'name': 'description'})
             if meta_desc and meta_desc.get('content'):
@@ -72,6 +72,33 @@ class WebScraper:
                 og_desc = soup.find('meta', property='og:description')
                 if og_desc and og_desc.get('content'):
                     content = og_desc.get('content').strip()
+            
+            # Fallback: extract first paragraph or use readability
+            if not content or len(content) < 50:
+                try:
+                    # Try readability first
+                    doc = Document(response.text)
+                    readable_content = doc.summary()
+                    if readable_content:
+                        readable_soup = BeautifulSoup(readable_content, 'html.parser')
+                        content = readable_soup.get_text(strip=True)[:500] + "..."
+                    
+                    # If readability fails, try first paragraph
+                    if not content or len(content) < 50:
+                        paragraphs = soup.find_all(['p', 'article', 'main'])
+                        for p in paragraphs:
+                            text = p.get_text(strip=True)
+                            if len(text) > 50:
+                                content = text[:500] + ("..." if len(text) > 500 else "")
+                                break
+                    
+                    # Final fallback: use title as content
+                    if not content and title:
+                        content = f"Content from {url}: {title}"
+                        
+                except Exception as e:
+                    logger.warning(f"Content extraction fallback failed for {url}: {e}")
+                    content = f"Content from {url}: {title or 'Web page'}"
             
             # Extract basic metadata  
             author = None

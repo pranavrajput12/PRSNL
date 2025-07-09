@@ -42,10 +42,16 @@ from app.services.cache import invalidate_cache, CacheKeys
 @capture_limiter
 @invalidate_cache(patterns=[f"{CacheKeys.STATS}:*", f"{CacheKeys.SEARCH}:*"])
 async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
-    """Capture a new item (web page, note, etc.)."""
-    if not capture_request.url and not capture_request.content:
+    """Capture a new item (web page, note, file, etc.)."""
+    # Check if files are provided in the request
+    has_files = hasattr(capture_request, 'uploaded_files') and capture_request.uploaded_files
+    
+    # Check for highlight field as well (legacy field name)
+    has_highlight = hasattr(capture_request, 'highlight') and capture_request.highlight
+    
+    if not capture_request.url and not capture_request.content and not has_files and not has_highlight:
         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
-        raise InvalidInput("Either URL or content must be provided.")
+        raise InvalidInput("Either URL, content, or files must be provided.")
     
     item_id = uuid4()
     item_type = 'article'
@@ -96,17 +102,19 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
         metadata = {
             "capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page',
             "media_info": media_info,
-            "type": item_type  # Store item type in metadata
+            "type": item_type,  # Store item type in metadata
+            "content_type": capture_request.content_type  # Store user-selected content type
         }
         logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
         
         # For content-only captures, store content in raw_content field
-        initial_content = capture_request.content if capture_request.content else None
+        # Handle both content and highlight fields (highlight is legacy field name)
+        initial_content = capture_request.content if capture_request.content else capture_request.highlight if hasattr(capture_request, 'highlight') else None
         
         await db_connection.execute("""
-            INSERT INTO items (id, url, title, raw_content, status, type, metadata)
-            VALUES ($1, $2, $3, $4, 'pending', $5, $6::jsonb)
-        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, json.dumps(metadata))
+            INSERT INTO items (id, url, title, raw_content, status, type, metadata, content_type, enable_summarization)
+            VALUES ($1, $2, $3, $4, 'pending', $5, $6::jsonb, $7, $8)
+        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, json.dumps(metadata), capture_request.content_type or 'auto', capture_request.enable_summarization or False)
         
         logger.info(f"Successfully inserted item {item_id} into database")
         
@@ -134,9 +142,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 # Process video metadata quickly, then enhance with AI in background
                 background_tasks.add_task(process_video_metadata_fast, item_id, str(capture_request.url))
         else:
-            # Process regular item synchronously to get title and highlights immediately
-            capture_engine = CaptureEngine()
-            await capture_engine.process_item(item_id, str(capture_request.url) if capture_request.url else None, capture_request.content)
+            # Let the worker handle all non-video processing
+            logger.info(f"Item {item_id} will be processed by worker")
         
         VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
         logger.info(f"Capture initiated successfully for item {item_id}")

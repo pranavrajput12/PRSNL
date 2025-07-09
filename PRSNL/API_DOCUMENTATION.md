@@ -10,6 +10,15 @@
 - **iOS App (PRSNL APP)**: Native iOS application - *separate codebase*
 - **Chrome Extension**: Browser extension
 
+## Navigation Structure (Neural Nest Theme)
+- **Neural Nest** (`/`) - Main dashboard and knowledge hub
+- **Ingest** (`/capture`) - Content capture and ingestion
+- **Thought Stream** (`/timeline`) - Chronological content timeline
+- **Cognitive Map** (`/insights`) - AI-powered insights and analysis
+- **Mind Palace** (`/chat`) - Conversational interface with knowledge base
+- **Visual Cortex** (`/videos`) - Video content management
+- **Knowledge Sync** (`/import`) - External data import and synchronization
+
 ## Authentication
 Currently no authentication required (development mode)
 
@@ -61,7 +70,10 @@ Capture a new item (article, video, note)
 {
   "url": "https://example.com",
   "title": "Optional title",
-  "content": "Optional content for notes"
+  "content": "Optional content for notes",
+  "content_type": "auto|document|video|article|tutorial|image|note|link",
+  "enable_summarization": true,
+  "tags": ["tag1", "tag2"]
 }
 ```
 
@@ -70,7 +82,8 @@ Capture a new item (article, video, note)
 {
   "message": "Item capture initiated",
   "item_id": "uuid",
-  "item_type": "article|video"
+  "item_type": "article|video|document|note",
+  "processing_status": "pending|completed"
 }
 ```
 
@@ -78,6 +91,115 @@ Capture a new item (article, video, note)
 - Either `url` or `content` must be provided
 - Videos are automatically detected and processed asynchronously
 - Supported video platforms: Instagram, YouTube, Twitter, TikTok
+- AI summarization can be enabled/disabled per content type
+- All content types supported: auto, document, video, article, tutorial, image, note, link
+
+### 📁 File Upload
+
+#### POST /api/file/upload
+Upload and process files (documents, PDFs, images, etc.)
+
+**Request Body:** `multipart/form-data`
+- `files`: File(s) to upload (max 50MB each)
+- `url`: Optional URL associated with files
+- `title`: Optional title for the item
+- `highlight`: Optional highlight text
+- `content_type`: Content type classification (auto|document|video|article|tutorial|image|note|link)
+- `enable_summarization`: Whether to enable AI summarization (boolean)
+- `tags`: JSON string of tags array
+
+**Response:**
+```json
+{
+  "file_id": "uuid",
+  "item_id": "uuid", 
+  "original_filename": "document.pdf",
+  "file_size": 1024000,
+  "file_category": "document",
+  "processing_status": "completed|processing",
+  "message": "File uploaded and processed successfully"
+}
+```
+
+#### GET /api/file/status/{file_id}
+Get file processing status
+
+**Response:**
+```json
+{
+  "file_id": "uuid",
+  "status": "completed|processing|failed|ai_failed",
+  "progress": 100.0,
+  "message": "File processed successfully",
+  "extracted_text_length": 5000,
+  "word_count": 850,
+  "ai_analysis_complete": true
+}
+```
+
+#### GET /api/file/content/{file_id}
+Get file content and metadata
+
+**Response:**
+```json
+{
+  "file_id": "uuid",
+  "item_id": "uuid",
+  "original_filename": "document.pdf",
+  "file_category": "document",
+  "file_size": 1024000,
+  "mime_type": "application/pdf",
+  "extracted_text": "Full extracted text content...",
+  "word_count": 850,
+  "page_count": 5,
+  "processing_status": "completed",
+  "thumbnail_path": "/path/to/thumbnail.jpg",
+  "title": "Document Title",
+  "summary": "AI-generated summary",
+  "tags": ["tag1", "tag2"],
+  "created_at": "2025-07-09T10:00:00Z",
+  "processed_at": "2025-07-09T10:01:00Z"
+}
+```
+
+#### DELETE /api/file/{file_id}
+Delete a file and its associated item
+
+**Response:**
+```json
+{
+  "message": "File deleted successfully"
+}
+```
+
+#### GET /api/file/stats
+Get file storage and processing statistics
+
+**Response:**
+```json
+{
+  "storage_stats": [
+    {
+      "file_category": "document",
+      "total_files": 25,
+      "total_size_mb": 150.5
+    }
+  ],
+  "processing_stats": [
+    {
+      "status": "completed",
+      "count": 20
+    }
+  ],
+  "recent_files": [
+    {
+      "file_id": "uuid",
+      "filename": "document.pdf",
+      "created_at": "2025-07-09T10:00:00Z"
+    }
+  ]
+}
+```
 
 ### 🔍 Search
 

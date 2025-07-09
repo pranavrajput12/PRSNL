@@ -95,6 +95,12 @@ export interface CaptureRequest {
   highlight?: string;
   tags?: string[];
   type?: 'page' | 'selection';
+  enable_summarization?: boolean;
+  content_type?: string;
+  uploaded_files?: File[];
+  is_video?: boolean;
+  video_platform?: string | null;
+  video_quality?: string;
 }
 
 export interface SearchRequest {

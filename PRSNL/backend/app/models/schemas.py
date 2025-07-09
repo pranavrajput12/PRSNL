@@ -99,12 +99,26 @@ class CaptureRequest(BaseModel):
     title: Optional[TitleStr] = Field(None, description="Title of the item")
     highlight: Optional[str] = Field(None, max_length=1000, description="Highlighted text")
     tags: Optional[List[str]] = Field(default_factory=list, description="Tags for categorization")
+    enable_summarization: bool = Field(default=False, description="Enable AI summarization for this item")
+    content_type: str = Field(default="auto", description="Content type: auto, document, video, article, tutorial, image, note, link")
+    uploaded_files: Optional[List[Any]] = Field(default_factory=list, description="Uploaded files for processing")
     
-    @validator('url', 'content')
+    @validator('content')
     def validate_url_or_content(cls, v, values):
-        """Ensure either URL or content is provided"""
-        if v is None and values.get('url') is None and values.get('content') is None:
-            raise ValueError('Either URL or content must be provided')
+        """Ensure either URL, content, or files are provided"""
+        url = values.get('url')
+        content = v
+        highlight = values.get('highlight')
+        uploaded_files = values.get('uploaded_files')
+        
+        # Check if we have any content source
+        has_url = url is not None and url != ''
+        has_content = content is not None and content != ''
+        has_highlight = highlight is not None and highlight != ''
+        has_files = uploaded_files is not None and len(uploaded_files) > 0
+        
+        if not (has_url or has_content or has_highlight or has_files):
+            raise ValueError('Either URL, content, highlight, or files must be provided')
         return v
     
     @validator('title', 'highlight')
@@ -114,6 +128,18 @@ class CaptureRequest(BaseModel):
     @validator('tags')
     def validate_tags_field(cls, v):
         return validate_tags(v)
+    
+    @validator('content_type')
+    def validate_content_type(cls, v):
+        """Validate content type is one of the allowed values"""
+        if v is None:
+            return "auto"
+        
+        allowed_types = ["auto", "document", "video", "article", "tutorial", "image", "note", "link"]
+        if v.lower() not in allowed_types:
+            raise ValueError(f"Content type must be one of: {', '.join(allowed_types)}")
+        
+        return v.lower()
 
 
 class CaptureResponse(BaseModel):

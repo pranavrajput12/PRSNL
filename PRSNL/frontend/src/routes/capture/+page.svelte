@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { captureItem, getRecentTags, getAISuggestions } from '$lib/api';
+  import type { CaptureRequest } from '$lib/types/api';
   import { addNotification } from '$lib/stores/app';
   import { isVideoUrl, getVideoPlatform, estimateDownloadTime, formatTime } from '$lib/utils/url';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -11,6 +12,7 @@
   import Icon from '$lib/components/Icon.svelte';
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
+  import FileUpload from '$lib/components/FileUpload.svelte';
 
   // Form fields and state
   let url = '';
@@ -44,6 +46,15 @@
 
   // Debounced AI suggestions timeout
   let aiSuggestionsTimeout: number | undefined;
+  
+  // Summarization toggle
+  let enableSummarization = false;
+  
+  // Content type selector
+  let contentType = 'auto'; // auto, document, video, article, tutorial, image, note, link
+  
+  // File upload state
+  let uploadedFiles = [];
   
   // Watch for URL changes to detect video URLs and get AI suggestions
   $: {
@@ -204,46 +215,60 @@
     tags = event.detail.tags;
   }
   
+  function handleFileUpload(event: CustomEvent) {
+    uploadedFiles = event.detail.files;
+    console.log('Files uploaded:', uploadedFiles);
+  }
+  
   async function loadAISuggestions(urlToAnalyze: string) {
     if (!urlToAnalyze || isLoadingSuggestions) return;
+    
+    console.log('🔍 Loading AI suggestions for:', urlToAnalyze);
     
     try {
       isLoadingSuggestions = true;
       suggestionsError = null;
       
       const suggestions = await getAISuggestions(urlToAnalyze);
+      console.log('✅ AI suggestions received:', suggestions);
       
       // Only update if URL hasn't changed
       if (url === urlToAnalyze) {
         // Set title if empty
         if (!title && suggestions.title) {
           title = suggestions.title;
+          console.log('📝 Updated title:', title);
         }
         
         // Set highlight/summary if empty
         if (!highlight && suggestions.summary) {
           highlight = suggestions.summary;
+          console.log('📝 Updated highlight:', highlight);
         }
         
         // Add suggested tags that aren't already present
         if (suggestions.tags && suggestions.tags.length > 0) {
           const newTags = suggestions.tags.filter(tag => !tags.includes(tag));
           tags = [...tags, ...newTags];
+          console.log('🏷️ Updated tags:', tags);
         }
+      } else {
+        console.log('⚠️ URL changed during request, skipping update');
       }
     } catch (err) {
-      console.error('Failed to get AI suggestions:', err);
+      console.error('❌ Failed to get AI suggestions:', err);
       // Don't show error to user, just silently fail and let them enter manually
       // This prevents the 500 error from breaking the UI
       suggestionsError = null;
     } finally {
       isLoadingSuggestions = false;
+      console.log('✅ AI suggestions loading complete');
     }
   }
 
   async function handleSubmit() {
-    if (!url && !highlight) {
-      message = 'Please enter a URL or highlight text';
+    if (!url && !highlight && uploadedFiles.length === 0) {
+      message = 'Please enter a URL, highlight text, or upload a file';
       messageType = 'error';
       return;
     }
@@ -257,20 +282,22 @@
       startProgressIndicator();
 
       // Include video-specific options if a video is detected
-      const captureData: {
-        url?: string;
-        title?: string;
-        highlight?: string;
-        tags?: string[];
-        is_video?: boolean;
-        video_platform?: string | null;
-        video_quality?: string;
-      } = {
-        url,
-        title,
-        highlight,
-        tags
+      const captureData: CaptureRequest = {
+        enable_summarization: enableSummarization,
+        content_type: contentType,
+        uploaded_files: uploadedFiles
       };
+      
+      // Only include non-empty fields to avoid validation errors
+      if (url && url.trim()) captureData.url = url.trim();
+      if (title && title.trim()) captureData.title = title.trim();
+      if (highlight && highlight.trim()) {
+        captureData.content = highlight.trim(); // Map highlight to content for backend compatibility
+        captureData.highlight = highlight.trim();
+      }
+      if (tags && tags.length > 0) captureData.tags = tags;
+      
+      console.log('🚀 Submitting capture data:', captureData);
       
       // Add video-specific data if detected
       if (isVideoDetected) {
@@ -293,6 +320,7 @@
         title = '';
         highlight = '';
         tags = [];
+        uploadedFiles = [];
         resetVideoDetection();
         window.location.href = '/';
       }, 1000);
@@ -353,7 +381,7 @@
       </div>
     </div>
 
-    <h1>Capture</h1>
+    <h1>Ingest</h1>
 
     {#if error}
       <ErrorMessage 
@@ -415,6 +443,39 @@
       </div>
 
       <div class="form-group">
+        <label for="content-type">Content Type</label>
+        <div class="content-type-selector">
+          <select 
+            id="content-type" 
+            bind:value={contentType}
+            disabled={isSubmitting}
+          >
+            <option value="auto">🤖 Auto-detect</option>
+            <option value="document">📄 Document</option>
+            <option value="video">🎥 Video</option>
+            <option value="article">📰 Article</option>
+            <option value="tutorial">🎓 Tutorial</option>
+            <option value="image">🖼️ Image</option>
+            <option value="note">📝 Note</option>
+            <option value="link">🔗 Link</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- File Upload Section - Show for document and image types -->
+      {#if contentType === 'document' || contentType === 'image'}
+        <div class="form-group">
+          <label>File Upload</label>
+          <FileUpload 
+            contentType={contentType}
+            multiple={false}
+            disabled={isSubmitting}
+            on:files={handleFileUpload}
+          />
+        </div>
+      {/if}
+
+      <div class="form-group">
         <label for="title">Title</label>
         <input 
           type="text" 
@@ -434,6 +495,23 @@
           rows="4"
           disabled={isSubmitting}
         ></textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="summarization-toggle">
+          <label class="toggle-label">
+            <input 
+              type="checkbox" 
+              bind:checked={enableSummarization}
+              disabled={isSubmitting}
+            />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Enable AI Summarization</span>
+          </label>
+          <p class="toggle-description">
+            Only generate AI summary when needed to save resources
+          </p>
+        </div>
       </div>
 
       <div class="form-group">
@@ -521,6 +599,11 @@
 </div>
 
 <style>
+  .container {
+    min-height: 100vh;
+    background: transparent;
+  }
+  
   .capture-container {
     max-width: 800px;
     margin: 0 auto;
@@ -528,6 +611,7 @@
     position: relative;
     min-height: 400px;
     transition: all 0.3s ease;
+    background: transparent;
   }
   
   .url-input-container {
@@ -801,5 +885,126 @@
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Summarization toggle styles */
+  .summarization-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-label input[type="checkbox"] {
+    display: none;
+  }
+
+  .toggle-slider {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    transition: background 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .toggle-label input[type="checkbox"]:checked + .toggle-slider {
+    background: var(--accent);
+  }
+
+  .toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(24px);
+  }
+
+  .toggle-text {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .toggle-description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .toggle-label input[type="checkbox"]:disabled + .toggle-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .toggle-label input[type="checkbox"]:disabled ~ .toggle-text {
+    opacity: 0.5;
+  }
+
+  /* Content type selector styles */
+  .content-type-selector {
+    position: relative;
+  }
+
+  .content-type-selector select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+
+  .content-type-selector select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.1);
+  }
+
+  .content-type-selector select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .content-type-selector select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .content-type-selector select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.5rem;
+  }
+
+  .content-type-selector select option:hover {
+    background: var(--bg-hover);
   }
 </style>

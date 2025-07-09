@@ -5,6 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
+from fastapi import HTTPException
 
 from ..core.exceptions import ErrorResponse, InternalServerError
 
@@ -33,6 +34,9 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
             return await call_next(request)
+        except HTTPException:
+            # Let HTTPExceptions (like InvalidInput) pass through to FastAPI's handler
+            raise
         except Exception as exc:
             request_id = getattr(request.state, "request_id", "N/A")
             logger.exception(f"Unhandled exception for Request ID: {request_id}", exc_info=exc)

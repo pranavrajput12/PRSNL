@@ -115,14 +115,14 @@ curl http://localhost:3002/           # Frontend
 psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"  # Database
 ```
 
-### Test Content Capture
+### Test Content Ingest
 ```bash
-# Capture a YouTube video
+# Ingest a YouTube video
 curl -X POST "http://localhost:8000/api/capture" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "tags": ["test"]}'
 
-# Capture an article
+# Ingest an article
 curl -X POST "http://localhost:8000/api/capture" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/article", "tags": ["article", "test"]}'
@@ -159,6 +159,81 @@ curl "http://localhost:8000/api/items/{item_id}" | jq
 curl -X POST "http://localhost:8000/api/ai-suggest" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com"}' | jq
+```
+
+### 🧪 Comprehensive Capture System Testing
+
+**Complete test matrix covering all content types and AI settings:**
+
+```bash
+# Test 1: URL with auto content type + AI ON
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "content_type": "auto", "enable_summarization": true, "tags": ["test"]}'
+
+# Test 2: URL with link content type + AI OFF  
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com", "content_type": "link", "enable_summarization": false, "tags": ["github"]}'
+
+# Test 3: Text content with note type + AI ON
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is a test note with important information.", "content_type": "note", "enable_summarization": true, "tags": ["note"]}'
+
+# Test 4: Highlight text with article type + AI OFF
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{"highlight": "Artificial intelligence is transforming industries.", "content_type": "article", "enable_summarization": false, "tags": ["ai"]}'
+
+# Test 5: File upload with document processing + AI ON
+curl -X POST "http://localhost:8000/api/file/upload" \
+  -F "files=@/tmp/final_test_doc.txt" \
+  -F "content_type=document" \
+  -F "enable_summarization=true" \
+  -F "tags=[\"document\", \"test\"]"
+
+# Test 6: YouTube video with auto detection + AI ON
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "content_type": "auto", "enable_summarization": true, "tags": ["video", "youtube"]}'
+```
+
+### 📁 File Upload API Testing
+
+```bash
+# Check file processing status
+curl "http://localhost:8000/api/file/status/{file_id}" | jq
+
+# Get file content and metadata
+curl "http://localhost:8000/api/file/content/{file_id}" | jq
+
+# Get file storage statistics
+curl "http://localhost:8000/api/file/stats" | jq
+
+# Delete a file and associated item
+curl -X DELETE "http://localhost:8000/api/file/{file_id}" | jq
+```
+
+### ✅ Expected Success Indicators
+
+**All tests should return:**
+- Status 201 (Created) for successful captures
+- Valid UUID for item_id and file_id
+- Proper item_type detection (article, video, document, note)
+- Processing status (completed for simple content, processing for AI-enabled)
+
+**Database verification:**
+```bash
+# Check all captured items
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+SELECT id, title, content_type, enable_summarization, status, type, has_files 
+FROM items ORDER BY created_at DESC LIMIT 10;"
+
+# Check file processing
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+SELECT f.id, f.original_filename, f.processing_status, i.title 
+FROM files f JOIN items i ON f.item_id = i.id ORDER BY f.created_at DESC;"
 ```
 
 ---
