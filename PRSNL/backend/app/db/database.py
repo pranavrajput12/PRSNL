@@ -162,7 +162,7 @@ async def find_similar_items_by_embedding(
 
     # Base query
     query = """
-        SELECT id, title, url, summary, created_at,
+        SELECT id, title, url, summary, created_at, type,
                1 - (embedding <=> $1) as similarity
         FROM items
         WHERE embedding IS NOT NULL

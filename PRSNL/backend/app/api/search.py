@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import timedelta
+import time
 
 from app.core.exceptions import InvalidInput, InternalServerError
 from app.core.search_engine import SearchEngine
@@ -43,9 +44,15 @@ async def search_items(
         print(f"DEBUG: No cache found for key: {cache_key}")
     
     try:
+        # Start timing
+        start_time = time.time()
+        
         search_engine = SearchEngine(db_connection)
         # Pass parameters correctly with offset support
         results = await search_engine.search(query, limit=limit, offset=offset)
+        
+        # Calculate execution time
+        execution_time_ms = int((time.time() - start_time) * 1000)
         
         # Frontend expects SearchResponse format with results array
         print(f"DEBUG: Found {len(results)} results from search engine")
@@ -62,7 +69,7 @@ async def search_items(
                 } for item in results
             ],
             "total": len(results),
-            "took_ms": 0  # TODO: Add actual timing
+            "took_ms": execution_time_ms
         }
         
         # Cache the result
@@ -100,7 +107,7 @@ async def find_similar_items(
                 "url": record["url"],
                 "summary": record.get("summary"), # Use .get for optional fields
                 "createdAt": record["created_at"].isoformat() if record["created_at"] else None,
-                "type": "article" # TODO: Get actual type
+                "type": record.get("type", "article") # Get actual type from database
             }
             for record in similar_items
         ]

@@ -211,12 +211,17 @@ function transformItem(item: any): Item | TimelineItem {
 }
 
 /**
- * Get timeline items with pagination
+ * Get timeline items with cursor-based pagination
  */
-export async function getTimeline(page: number = 1, limit: number = 20): Promise<TimelineResponse> {
-  // For now, we'll ignore the page parameter since backend uses cursor pagination
-  // TODO: Update frontend to use cursor pagination
-  const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
+export async function getTimeline(cursor: string | null = null, limit: number = 20): Promise<TimelineResponse> {
+  // Use cursor-based pagination as supported by backend
+  const params = new URLSearchParams();
+  params.append('limit', limit.toString());
+  if (cursor) {
+    params.append('cursor', cursor);
+  }
+  
+  const response = await fetchWithErrorHandling<any>(`/timeline?${params.toString()}`);
   
   if (import.meta.env.DEV) {
     console.log('Raw timeline response before transform:', response);
@@ -228,7 +233,9 @@ export async function getTimeline(page: number = 1, limit: number = 20): Promise
     hasMore: response.next_cursor !== null,
     // Include additional fields that might be used
     total: response.items?.length || 0,
-    pageSize: limit
+    pageSize: limit,
+    // Add cursor for pagination
+    nextCursor: response.next_cursor || null
   } as any;
   
   // Transform items if they exist

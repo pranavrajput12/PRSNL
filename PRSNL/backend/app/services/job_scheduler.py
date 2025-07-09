@@ -57,14 +57,57 @@ class JobScheduler:
                 logger.info(f"Processing embedding job for item {item_id} (Priority: {priority})...")
                 await self.send_progress_update(item_id, "processing", 0.1, "Starting embedding generation.")
                 
-                # TODO: Implement actual embedding generation logic here
-                # This would involve fetching item content, calling embedding service,
-                # and updating the database.
-                await asyncio.sleep(1) # Simulate work
-                await self.send_progress_update(item_id, "processing", 0.5, "Generating embeddings...")
-                await asyncio.sleep(1) # Simulate work
-                await self.send_progress_update(item_id, "processing", 0.9, "Saving embeddings to database.")
-                await asyncio.sleep(1) # Simulate work
+                # Implement actual embedding generation logic
+                try:
+                    # Get database session
+                    from app.db.database import get_db
+                    from app.services.embedding_service import EmbeddingService
+                    
+                    async for db in get_db():
+                        # Fetch item content
+                        result = await db.execute(
+                            "SELECT title, summary, processed_content FROM items WHERE id = $1",
+                            item_id
+                        )
+                        item = result.fetchone()
+                        
+                        if not item:
+                            raise ValueError(f"Item {item_id} not found")
+                        
+                        await self.send_progress_update(item_id, "processing", 0.3, "Fetching item content...")
+                        
+                        # Prepare content for embedding
+                        content_parts = []
+                        if item.title:
+                            content_parts.append(f"Title: {item.title}")
+                        if item.summary:
+                            content_parts.append(f"Summary: {item.summary}")
+                        if item.processed_content:
+                            content_parts.append(f"Content: {item.processed_content[:5000]}")  # Limit content length
+                        
+                        content_text = "\n".join(content_parts)
+                        
+                        await self.send_progress_update(item_id, "processing", 0.5, "Generating embeddings...")
+                        
+                        # Generate embedding
+                        embedding_service = EmbeddingService()
+                        embedding = await embedding_service.generate_embedding(content_text)
+                        
+                        await self.send_progress_update(item_id, "processing", 0.8, "Saving embeddings to database...")
+                        
+                        # Update database with embedding
+                        await db.execute(
+                            "UPDATE items SET embedding = $1 WHERE id = $2",
+                            embedding,
+                            item_id
+                        )
+                        await db.commit()
+                        
+                        break  # Exit the async generator
+                        
+                except Exception as e:
+                    logger.error(f"Error generating embedding for item {item_id}: {e}")
+                    raise
 
                 logger.info(f"Finished embedding job for item {item_id}.")
                 await self.send_progress_update(item_id, "completed", 1.0, "Embedding generation completed.", is_complete=True)
