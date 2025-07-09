@@ -20,6 +20,9 @@
   let personalityData: any = null;
   let showTreeInfo = false;
   let showDNAInfo = false;
+  let showCognitiveInfo = false;
+  let showMetabolismInfo = false;
+  let showEcosystemInfo = false;
   
   // Reactive statements
   $: timeRangeLabel = {
@@ -302,6 +305,9 @@
             <h2>
               <Icon name="user" />
               Cognitive Fingerprint
+              <button class="info-button" on:click={() => showCognitiveInfo = !showCognitiveInfo}>
+                <Icon name="info" size="small" />
+              </button>
             </h2>
             <p class="description">
               The unique signature of your intellectual identity, as distinct as your DNA
@@ -363,6 +369,9 @@
             <h2>
               <Icon name="activity" />
               Learning Metabolism
+              <button class="info-button" on:click={() => showMetabolismInfo = !showMetabolismInfo}>
+                <Icon name="info" size="small" />
+              </button>
             </h2>
             <p class="description">
               The pulse of your intellectual appetite, tracking how your mind consumes knowledge
@@ -405,6 +414,9 @@
             <h2>
               <Icon name="globe" />
               Intellectual Ecosystem
+              <button class="info-button" on:click={() => showEcosystemInfo = !showEcosystemInfo}>
+                <Icon name="info" size="small" />
+              </button>
             </h2>
             <p class="description">
               The biodiversity of your knowledge habitat, showing the richness of your mental environment
@@ -556,6 +568,154 @@
         </div>
       </div>
       <p class="milestone-note">Your knowledge DNA encodes your learning evolution. Each strand represents different content types forming the genetic code of your intellectual identity.</p>
+    </div>
+  </div>
+{/if}
+
+{#if showCognitiveInfo}
+  <div class="info-modal" on:click={() => showCognitiveInfo = false}>
+    <div class="info-content" on:click|stopPropagation>
+      <button class="close-button" on:click={() => showCognitiveInfo = false}>×</button>
+      <h3>🧠 Cognitive Fingerprint Analysis</h3>
+      <div class="personality-explanation">
+        <p>Your cognitive fingerprint is determined by analyzing patterns in your content consumption, tag usage, and learning behavior.</p>
+        <h4>Analysis Factors:</h4>
+        <ul>
+          <li><strong>Content Variety:</strong> How many different types of content you consume (articles, videos, notes, etc.)</li>
+          <li><strong>Tag Diversity:</strong> The breadth of topics you explore, indicating intellectual curiosity</li>
+          <li><strong>Temporal Consistency:</strong> How regularly you engage with learning materials</li>
+          <li><strong>Topic Focus:</strong> Whether you specialize deeply or explore broadly</li>
+        </ul>
+        <h4>Personality Types:</h4>
+        <div class="personality-types">
+          <div class="personality-type">
+            <span class="type-icon">🧭</span>
+            <div class="type-info">
+              <strong>Explorer:</strong> High diversity, broad interests
+            </div>
+          </div>
+          <div class="personality-type">
+            <span class="type-icon">🔬</span>
+            <div class="type-info">
+              <strong>Specialist:</strong> Deep focus, methodical approach
+            </div>
+          </div>
+          <div class="personality-type">
+            <span class="type-icon">🌐</span>
+            <div class="type-info">
+              <strong>Connector:</strong> Links ideas across disciplines
+            </div>
+          </div>
+          <div class="personality-type">
+            <span class="type-icon">⚡</span>
+            <div class="type-info">
+              <strong>Practitioner:</strong> Hands-on, implementation focused
+            </div>
+          </div>
+        </div>
+        <p class="confidence-note">Confidence score reflects how strongly your behavior matches the identified personality type based on statistical analysis of your content patterns.</p>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if showMetabolismInfo}
+  <div class="info-modal" on:click={() => showMetabolismInfo = false}>
+    <div class="info-content" on:click|stopPropagation>
+      <button class="close-button" on:click={() => showMetabolismInfo = false}>×</button>
+      <h3>⚡ Learning Metabolism Analysis</h3>
+      <div class="metabolism-explanation">
+        <p>Your learning metabolism measures how your mind processes and absorbs knowledge over time, similar to how a living organism metabolizes nutrients.</p>
+        <h4>Key Metrics:</h4>
+        <ul>
+          <li><strong>Daily Rate:</strong> Average number of items you consume per day</li>
+          <li><strong>Peak Activity:</strong> Your highest learning activity in a single day</li>
+          <li><strong>Metabolic Rhythm:</strong> The heartbeat pattern of your learning habits</li>
+          <li><strong>Processing Efficiency:</strong> How well you maintain consistent learning</li>
+        </ul>
+        <h4>Metabolism Stages:</h4>
+        <div class="metabolism-stages">
+          <div class="stage">
+            <span class="stage-icon">🐣</span>
+            <div class="stage-info">
+              <strong>Slow Metabolism:</strong> 0-2 items/day - Building habits
+            </div>
+          </div>
+          <div class="stage">
+            <span class="stage-icon">🔥</span>
+            <div class="stage-info">
+              <strong>Active Metabolism:</strong> 3-5 items/day - Steady growth
+            </div>
+          </div>
+          <div class="stage">
+            <span class="stage-icon">⚡</span>
+            <div class="stage-info">
+              <strong>High Metabolism:</strong> 6+ items/day - Rapid consumption
+            </div>
+          </div>
+        </div>
+        <p class="metabolism-note">The visualization shows your recent learning heartbeat, with each pulse representing your daily knowledge intake.</p>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if showEcosystemInfo}
+  <div class="info-modal" on:click={() => showEcosystemInfo = false}>
+    <div class="info-content" on:click|stopPropagation>
+      <button class="close-button" on:click={() => showEcosystemInfo = false}>×</button>
+      <h3>🌍 Intellectual Ecosystem Analysis</h3>
+      <div class="ecosystem-explanation">
+        <p>Your intellectual ecosystem represents the biodiversity of your knowledge habitat, showing how different types of content species coexist and thrive in your mental environment.</p>
+        <h4>Content Species:</h4>
+        <div class="species-guide">
+          <div class="species-item">
+            <span class="species-icon">📚</span>
+            <div class="species-info">
+              <strong>Article Species:</strong> Deep-dive content that forms the foundation of your knowledge forest
+            </div>
+          </div>
+          <div class="species-item">
+            <span class="species-icon">🎬</span>
+            <div class="species-info">
+              <strong>Video Species:</strong> Visual learners that bring dynamic energy to your ecosystem
+            </div>
+          </div>
+          <div class="species-item">
+            <span class="species-icon">📝</span>
+            <div class="species-info">
+              <strong>Note Species:</strong> Personal thoughts and insights that enrich your intellectual soil
+            </div>
+          </div>
+          <div class="species-item">
+            <span class="species-icon">🔖</span>
+            <div class="species-info">
+              <strong>Bookmark Species:</strong> Quick references that maintain ecosystem connectivity
+            </div>
+          </div>
+        </div>
+        <h4>Biodiversity Score:</h4>
+        <p>Calculated based on the variety and balance of different content types in your ecosystem. Higher biodiversity indicates a more resilient and adaptable knowledge environment.</p>
+        <div class="biodiversity-levels">
+          <div class="level">
+            <span class="level-icon">🌱</span>
+            <strong>0-30%:</strong> Monoculture - Limited diversity
+          </div>
+          <div class="level">
+            <span class="level-icon">🌿</span>
+            <strong>30-60%:</strong> Growing - Moderate diversity
+          </div>
+          <div class="level">
+            <span class="level-icon">🌳</span>
+            <strong>60-80%:</strong> Thriving - High diversity
+          </div>
+          <div class="level">
+            <span class="level-icon">🌴</span>
+            <strong>80-100%:</strong> Rainforest - Maximum biodiversity
+          </div>
+        </div>
+        <p class="ecosystem-note">A healthy intellectual ecosystem supports sustainable learning and knowledge cross-pollination between different domains.</p>
+      </div>
     </div>
   </div>
 {/if}
@@ -1299,6 +1459,137 @@
     color: var(--text-secondary);
   }
   
+  /* New modal styles */
+  .personality-explanation ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .personality-explanation li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .personality-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .personality-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+  
+  .type-icon {
+    font-size: 1.5rem;
+  }
+  
+  .confidence-note {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 1rem;
+  }
+  
+  .metabolism-explanation ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .metabolism-explanation li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .metabolism-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .metabolism-stages .stage {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+  
+  .stage-icon {
+    font-size: 1.5rem;
+  }
+  
+  .metabolism-note {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 1rem;
+  }
+  
+  .ecosystem-explanation ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .species-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .species-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+  
+  .species-icon {
+    font-size: 1.5rem;
+  }
+  
+  .biodiversity-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  
+  .level {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .level-icon {
+    font-size: 1.2rem;
+  }
+  
+  .ecosystem-note {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 1rem;
+  }
+  
   @media (max-width: 768px) {
     .insights-page {
       padding: 1rem;
@@ -1323,6 +1614,10 @@
     }
     
     .ecosystem-species {
+      grid-template-columns: 1fr;
+    }
+    
+    .personality-types {
       grid-template-columns: 1fr;
     }
   }
