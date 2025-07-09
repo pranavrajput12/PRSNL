@@ -18,8 +18,7 @@ PROTECTED_ROUTES = [
     "/api/admin",
     "/api/capture",
     "/api/items",
-    "/api/tags",
-    "/api/telegram/webhook"
+    "/api/tags"
 ]
 
 # Routes that are always public

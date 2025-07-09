@@ -25,9 +25,6 @@ class Settings(BaseSettings):
     AZURE_OPENAI_WHISPER_DEPLOYMENT: str = "whisper"  # Model version 001
     AZURE_OPENAI_API_VERSION: str = "2025-01-01-preview"
 
-    # Telegram Bot
-    TELEGRAM_BOT_TOKEN: str = ""
-    TELEGRAM_WEBHOOK_SECRET: str = ""
     
     # Storage
     MEDIA_DIR: str = "./media"  # Media directory path

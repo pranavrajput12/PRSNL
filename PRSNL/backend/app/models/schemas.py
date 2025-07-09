@@ -247,16 +247,3 @@ class CleanupRequest(BaseModel):
     hours: int = Field(default=24, ge=1, le=720)  # Max 30 days
 
 
-# Telegram schemas
-class TelegramWebhookRequest(BaseModel):
-    """Simplified Telegram update model with validation"""
-    update_id: int
-    message: Optional[Dict[str, Any]] = None
-    
-    @validator('message')
-    def validate_message(cls, v):
-        if v and 'text' in v:
-            # Limit message text length
-            if len(v['text']) > MAX_CONTENT_LENGTH:
-                v['text'] = v['text'][:MAX_CONTENT_LENGTH]
-        return v

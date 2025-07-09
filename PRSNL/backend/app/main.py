@@ -141,7 +141,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
         await asyncio.sleep(600) # Update every 10 minutes (600 seconds)
 
 from fastapi.staticfiles import StaticFiles
-from app.api import capture, search, timeline, items, admin, videos, telegram, tags, vision, ws, ai_suggest, debug
+from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
 from app.api import insights, import_data
@@ -154,7 +154,6 @@ app.include_router(items.router, prefix=settings.API_V1_STR)
 app.include_router(tags.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(videos.router, prefix=settings.API_V1_STR)
-app.include_router(telegram.router, prefix=settings.API_V1_STR)
 app.include_router(vision.router, prefix=settings.API_V1_STR)
 app.include_router(ai_suggest.router, prefix=settings.API_V1_STR)
 app.include_router(debug.router, prefix=settings.API_V1_STR)
