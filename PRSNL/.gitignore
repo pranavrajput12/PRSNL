@@ -38,3 +38,6 @@ build/
 
 # Media files
 backend/media/
+
+# Build directories
+pgvector_build/
