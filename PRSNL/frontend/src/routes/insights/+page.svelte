@@ -1,22 +1,25 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getInsights } from '$lib/api';
+  import { getInsights, getTimelineTrends, getTopTags, getPersonalityAnalysis } from '$lib/api';
   import type { InsightsResponse } from '$lib/types/api';
   import Icon from '$lib/components/Icon.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import TopicClusters from '$lib/components/TopicClusters.svelte';
   import ContentTrends from '$lib/components/ContentTrends.svelte';
-  import KnowledgeGraph from '$lib/components/KnowledgeGraph.svelte';
   import AsyncBoundary from '$lib/components/AsyncBoundary.svelte';
   
   // State
   let isLoading = true;
   let error: Error | null = null;
   let timeRange = '30d';
-  let selectedCluster: string | null = null;
   let insightsData: InsightsResponse | null = null;
   let dynamicInsights: any = null;
+  let timelineTrendsData: any = null;
+  let realTagsData: any = null;
+  let personalityData: any = null;
+  let showTreeInfo = false;
+  let showDNAInfo = false;
   
   // Reactive statements
   $: timeRangeLabel = {
@@ -42,16 +45,28 @@
       isLoading = true;
       error = null;
       
-      // Load insights data
-      const response = await getInsights(timeRange);
+      // Load insights data, timeline trends, top tags, and personality analysis in parallel
+      const [response, trendsResponse, tagsResponse, personalityResponse] = await Promise.all([
+        getInsights(timeRange),
+        getTimelineTrends(timeRange).catch(err => {
+          console.warn('Timeline trends API failed, using fallback:', err);
+          return null; // Use fallback instead of failing
+        }),
+        getTopTags(timeRange, 15).catch(err => {
+          console.warn('Top tags API failed, using fallback:', err);
+          return null; // Use fallback instead of failing
+        }),
+        getPersonalityAnalysis(timeRange).catch(err => {
+          console.warn('Personality analysis API failed, using fallback:', err);
+          return null; // Use fallback instead of failing
+        })
+      ]);
       
       // Transform new format to old format for compatibility
       if (response && response.insights) {
         insightsData = {
           topicClusters: [],
           contentTrends: [],
-          knowledgeGraph: { nodes: [], links: [] },
-          topContent: [],
           tagAnalysis: []
         };
         
@@ -71,36 +86,74 @@
             }
           }
           
-          if (insight.type === 'knowledge_depth' && insight.data.deep_knowledge_areas) {
-            // Use depth data for tag analysis
-            insightsData.tagAnalysis = insight.data.deep_knowledge_areas.map((area, idx) => ({
-              name: area.topic,
-              weight: Math.min(1, area.item_count / 10),
-              hue: (idx * 60) % 360
-            }));
-            
-            // Also populate top content
-            insightsData.topContent = insight.data.deep_knowledge_areas.slice(0, 5).map(area => ({
-              id: `fake-${area.topic}`,
-              title: `${area.topic} content`,
-              item_type: 'article',
-              created_at: new Date().toISOString(),
-              metadata: { ai_analysis: { score: area.consistency_score / 10 } }
-            }));
-          }
-          
-          if (insight.type === 'time_patterns' && insight.data.daily_distribution) {
-            // Create fake content trends from time patterns
-            const now = new Date();
-            insightsData.contentTrends = insight.data.daily_distribution.map((day, idx) => ({
-              date: new Date(now.getTime() - (6 - idx) * 24 * 60 * 60 * 1000).toISOString(),
-              articles: Math.floor(day.count * 0.4),
-              videos: Math.floor(day.count * 0.3),
-              notes: Math.floor(day.count * 0.2),
-              bookmarks: Math.floor(day.count * 0.1)
-            }));
-          }
         });
+        
+        // Use real tags data for Memory Palace
+        if (tagsResponse && tagsResponse.tags) {
+          realTagsData = tagsResponse;
+          insightsData.tagAnalysis = tagsResponse.tags.map((tag, idx) => ({
+            name: tag.name,
+            weight: tag.weight,
+            hue: (idx * 137.5) % 360, // Golden angle distribution for better color spread
+            usage_count: tag.usage_count,
+            latest_use: tag.latest_use,
+            recency_weight: tag.recency_weight
+          }));
+        } else {
+          // Fallback to empty tags if API fails
+          insightsData.tagAnalysis = [];
+        }
+        
+        // Use real personality analysis data for Cognitive Fingerprint
+        if (personalityResponse && personalityResponse.personality) {
+          personalityData = personalityResponse;
+        } else {
+          // Fallback to default personality if API fails
+          personalityData = {
+            personality: {
+              type: "explorer",
+              name: "The Explorer",
+              description: "You thrive on discovering new ideas and diverse topics. Your knowledge spans wide horizons, always seeking the next frontier of understanding.",
+              traits: ["Curious", "Diverse interests", "Adventurous", "Open-minded"],
+              icon: "🧭",
+              confidence: 0.3,
+              scores: {},
+              analysis_factors: {
+                content_variety: 0,
+                tag_diversity: 0,
+                temporal_consistency: 0,
+                total_items: 0
+              }
+            }
+          };
+        }
+        
+        
+        
+        // Use real timeline trends data instead of synthetic data
+        if (trendsResponse && trendsResponse.timeline_data) {
+          timelineTrendsData = trendsResponse.timeline_data;
+          insightsData.contentTrends = trendsResponse.timeline_data.map(day => ({
+            date: day.date,
+            articles: day.articles,
+            videos: day.videos,
+            notes: day.notes,
+            bookmarks: day.bookmarks,
+            value: day.articles + day.videos + day.notes + day.bookmarks
+          }));
+        } else {
+          // Fallback to synthetic data if timeline trends API fails
+          console.log('Using fallback synthetic data for content trends');
+          const now = new Date();
+          insightsData.contentTrends = Array.from({ length: 30 }, (_, i) => ({
+            date: new Date(now.getTime() - i * 24 * 60 * 60 * 1000).toISOString(),
+            articles: Math.floor(Math.random() * 5),
+            videos: Math.floor(Math.random() * 3),
+            notes: Math.floor(Math.random() * 4),
+            bookmarks: Math.floor(Math.random() * 2),
+            value: Math.floor(Math.random() * 10)
+          }));
+        }
         
         // Set dynamic insights summary
         dynamicInsights = {
@@ -121,9 +174,6 @@
     loadInsightsData();
   }
   
-  function handleClusterSelect(event: CustomEvent) {
-    selectedCluster = event.detail.cluster;
-  }
 </script>
 
 <svelte:head>
@@ -197,17 +247,22 @@
           <div class="card-header">
             <h2>
               <Icon name="pie-chart" />
-              Topic Clusters
+              Knowledge Tree
+              <button class="info-button" on:click={() => showTreeInfo = !showTreeInfo}>
+                <Icon name="info" size="small" />
+              </button>
             </h2>
             <p class="description">
-              Discover how your knowledge is organized into related topics
+              Watch your knowledge grow like a living tree, with each topic branching into deeper understanding
             </p>
           </div>
           <div class="card-content">
             <TopicClusters 
               data={insightsData.topicClusters} 
-              on:clusterSelect={handleClusterSelect} 
             />
+            <div class="section-explanation">
+              <p>Like a living organism, your knowledge base has evolved into a complex ecosystem where ideas take root, branch out, and interconnect. This visualization maps the organic growth of your intellectual landscape, showing how different topics cluster into thriving knowledge communities.</p>
+            </div>
           </div>
         </div>
         
@@ -215,10 +270,13 @@
           <div class="card-header">
             <h2>
               <Icon name="trending-up" />
-              Content Trends
+              Knowledge DNA
+              <button class="info-button" on:click={() => showDNAInfo = !showDNAInfo}>
+                <Icon name="info" size="small" />
+              </button>
             </h2>
             <p class="description">
-              Track how your knowledge collection has grown over time
+              The double helix of your digital evolution, encoding the genetic blueprint of your learning journey
             </p>
           </div>
           <div class="card-content">
@@ -233,98 +291,167 @@
               })) || []} 
               {timeRange} 
             />
-          </div>
-        </div>
-        
-        <div class="insight-card full-width">
-          <div class="card-header">
-            <h2>
-              <Icon name="git-branch" />
-              Knowledge Graph
-            </h2>
-            <p class="description">
-              Explore connections between topics and content in your knowledge base
-            </p>
-          </div>
-          <div class="card-content graph-container">
-            <KnowledgeGraph 
-              data={insightsData?.knowledgeGraph || { nodes: [], links: [] }} 
-              {selectedCluster} 
-            />
+            <div class="section-explanation">
+              <p>Your learning evolution encoded in a double helix, revealing the genetic patterns of your intellectual growth. Like a living organism, your knowledge DNA shows how different content types interact and evolve over time, forming the unique genetic signature of your learning journey.</p>
+            </div>
           </div>
         </div>
         
         <div class="insight-card">
           <div class="card-header">
             <h2>
-              <Icon name="star" />
-              Top Content
+              <Icon name="user" />
+              Cognitive Fingerprint
             </h2>
             <p class="description">
-              Your most valuable knowledge items based on AI analysis
+              The unique signature of your intellectual identity, as distinct as your DNA
             </p>
           </div>
           <div class="card-content">
-            {#if insightsData.topContent && insightsData.topContent.length > 0}
-              <ul class="top-content-list">
-                {#each insightsData.topContent as item}
-                  <li>
-                    <a href="/item/{item.id}" class="top-content-item">
-                      <div class="item-icon">
-                        <Icon name={item.item_type === 'video' ? 'play-circle' : 'file-text'} />
-                      </div>
-                      <div class="item-details">
-                        <h3>{item.title}</h3>
-                        <div class="item-meta">
-                          <span class="item-type">{item.item_type}</span>
-                          <span class="item-date">{new Date(item.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div class="item-score">
-                        <div class="score-indicator" style="--score: {(item.metadata?.ai_analysis?.score || 0) * 100}%"></div>
-                        <span>{Math.round((item.metadata?.ai_analysis?.score || 0) * 100)}%</span>
-                      </div>
-                    </a>
-                  </li>
-                {/each}
-              </ul>
+            {#if personalityData && personalityData.personality}
+              <div class="personality-analysis">
+                <div class="personality-header">
+                  <span class="personality-icon">{personalityData.personality.icon}</span>
+                  <div class="personality-title">
+                    <h3>{personalityData.personality.name}</h3>
+                    <span class="confidence">
+                      {Math.round(personalityData.personality.confidence * 100)}% confidence
+                    </span>
+                  </div>
+                </div>
+                
+                <div class="personality-description">
+                  <p>{personalityData.personality.description}</p>
+                </div>
+                
+                <div class="personality-traits">
+                  <h4>Core Traits</h4>
+                  <div class="trait-list">
+                    {#each personalityData.personality.traits as trait}
+                      <span class="trait-tag">{trait}</span>
+                    {/each}
+                  </div>
+                </div>
+                
+                <div class="personality-stats">
+                  <div class="stat">
+                    <span class="stat-value">{personalityData.personality.analysis_factors.content_variety}</span>
+                    <span class="stat-label">Content Types</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-value">{personalityData.personality.analysis_factors.tag_diversity}</span>
+                    <span class="stat-label">Tag Diversity</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-value">{personalityData.personality.analysis_factors.total_items}</span>
+                    <span class="stat-label">Items Analyzed</span>
+                  </div>
+                </div>
+              </div>
             {:else}
               <div class="empty-state">
                 <Icon name="info" />
-                <p>No top content available for this time period</p>
+                <p>Not enough data for personality analysis</p>
               </div>
             {/if}
+          </div>
+        </div>
+        
+        <!-- New Life-Themed Sections -->
+        <div class="insight-card">
+          <div class="card-header">
+            <h2>
+              <Icon name="activity" />
+              Learning Metabolism
+            </h2>
+            <p class="description">
+              The pulse of your intellectual appetite, tracking how your mind consumes knowledge
+            </p>
+          </div>
+          <div class="card-content">
+            <div class="section-explanation">
+              <p>Like a living organism, your knowledge acquisition follows metabolic rhythms. This visualization reveals the heartbeat of your learning process, showing when your intellectual hunger peaks and how efficiently you process new information.</p>
+            </div>
+            <div class="metabolism-display">
+              <div class="metabolism-stats">
+                <div class="stat">
+                  <span class="stat-value">{Math.round((insightsData?.contentTrends?.reduce((sum, d) => sum + d.value, 0) || 0) / 30)}</span>
+                  <span class="stat-label">Daily Rate</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">{Math.max(...(insightsData?.contentTrends?.map(d => d.value) || [0]))}</span>
+                  <span class="stat-label">Peak Day</span>
+                </div>
+              </div>
+              <div class="heartbeat-chart">
+                <svg width="100%" height="80">
+                  {#each (insightsData?.contentTrends || []).slice(-14) as point, i}
+                    <circle 
+                      cx={20 + i * 25} 
+                      cy={40 - (point.value * 2)} 
+                      r={Math.max(3, point.value)} 
+                      fill="#DC143C" 
+                      opacity="0.8"
+                    />
+                  {/each}
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
         
         <div class="insight-card">
           <div class="card-header">
             <h2>
-              <Icon name="tag" />
-              Tag Analysis
+              <Icon name="globe" />
+              Intellectual Ecosystem
             </h2>
             <p class="description">
-              Distribution and relationships between your content tags
+              The biodiversity of your knowledge habitat, showing the richness of your mental environment
             </p>
           </div>
           <div class="card-content">
-            {#if insightsData.tagAnalysis && insightsData.tagAnalysis.length > 0}
-              <div class="tag-cloud">
-                {#each insightsData.tagAnalysis as tag}
-                  <span 
-                    class="tag" 
-                    style="--size: {tag.weight}; --hue: {tag.hue};"
-                  >
-                    {tag.name}
-                  </span>
-                {/each}
+            <div class="section-explanation">
+              <p>Your mind is a complex ecosystem where different types of knowledge species coexist and interact. This visualization maps the biodiversity of your intellectual environment, revealing which knowledge habitats thrive and which areas need cultivation.</p>
+            </div>
+            <div class="ecosystem-display">
+              <div class="ecosystem-species">
+                <div class="species articles">
+                  <div class="species-icon">📚</div>
+                  <div class="species-info">
+                    <span class="species-name">Article Species</span>
+                    <span class="species-count">{insightsData?.contentTrends?.reduce((sum, d) => sum + d.articles, 0) || 0}</span>
+                  </div>
+                </div>
+                <div class="species videos">
+                  <div class="species-icon">🎬</div>
+                  <div class="species-info">
+                    <span class="species-name">Video Species</span>
+                    <span class="species-count">{insightsData?.contentTrends?.reduce((sum, d) => sum + d.videos, 0) || 0}</span>
+                  </div>
+                </div>
+                <div class="species notes">
+                  <div class="species-icon">📝</div>
+                  <div class="species-info">
+                    <span class="species-name">Note Species</span>
+                    <span class="species-count">{insightsData?.contentTrends?.reduce((sum, d) => sum + d.notes, 0) || 0}</span>
+                  </div>
+                </div>
+                <div class="species bookmarks">
+                  <div class="species-icon">🔖</div>
+                  <div class="species-info">
+                    <span class="species-name">Bookmark Species</span>
+                    <span class="species-count">{insightsData?.contentTrends?.reduce((sum, d) => sum + d.bookmarks, 0) || 0}</span>
+                  </div>
+                </div>
               </div>
-            {:else}
-              <div class="empty-state">
-                <Icon name="info" />
-                <p>No tag data available for this time period</p>
+              <div class="biodiversity-score">
+                <div class="score-circle">
+                  <span class="score-value">{Math.round((realTagsData?.tags?.length || 0) / 10 * 100)}%</span>
+                  <span class="score-label">Biodiversity</span>
+                </div>
               </div>
-            {/if}
+            </div>
           </div>
         </div>
       </div>
@@ -337,6 +464,101 @@
     {/if}
   </AsyncBoundary>
 </div>
+
+<!-- Info Modals -->
+{#if showTreeInfo}
+  <div class="info-modal" on:click={() => showTreeInfo = false}>
+    <div class="info-content" on:click|stopPropagation>
+      <button class="close-button" on:click={() => showTreeInfo = false}>×</button>
+      <h3>🌳 Knowledge Tree Milestones</h3>
+      <div class="milestone-stages">
+        <div class="stage">
+          <div class="stage-icon">🌱</div>
+          <div class="stage-info">
+            <h4>Sprouting Seedling</h4>
+            <p>10+ items: Just trunk + 3 small branches</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🌿</div>
+          <div class="stage-info">
+            <h4>Growing Sapling</h4>
+            <p>50+ items: 5 branches, need 2+ items per topic</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🌳</div>
+          <div class="stage-info">
+            <h4>Young Tree</h4>
+            <p>100+ items: 8 branches, need 3+ items per topic</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🌲</div>
+          <div class="stage-info">
+            <h4>Mature Forest</h4>
+            <p>500+ items: 12 branches, need 5+ items per topic</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🏛️</div>
+          <div class="stage-info">
+            <h4>Ancient Grove</h4>
+            <p>1000+ items: 15 branches, need 10+ items per topic</p>
+          </div>
+        </div>
+      </div>
+      <p class="milestone-note">Your tree grows meaningfully as you accumulate knowledge. Each milestone represents a significant expansion of your intellectual landscape.</p>
+    </div>
+  </div>
+{/if}
+
+{#if showDNAInfo}
+  <div class="info-modal" on:click={() => showDNAInfo = false}>
+    <div class="info-content" on:click|stopPropagation>
+      <button class="close-button" on:click={() => showDNAInfo = false}>×</button>
+      <h3>🧬 Knowledge DNA Evolution</h3>
+      <div class="milestone-stages">
+        <div class="stage">
+          <div class="stage-icon">🧬</div>
+          <div class="stage-info">
+            <h4>Basic Formation</h4>
+            <p>20+ items: Single strands only</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🔬</div>
+          <div class="stage-info">
+            <h4>Helix Forming</h4>
+            <p>50+ items: Partial double helix</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🧪</div>
+          <div class="stage-info">
+            <h4>Complete Helix</h4>
+            <p>100+ items: Full double helix structure</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">⚗️</div>
+          <div class="stage-info">
+            <h4>Complex Patterns</h4>
+            <p>300+ items: Advanced DNA patterns</p>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stage-icon">🧬</div>
+          <div class="stage-info">
+            <h4>Fully Evolved</h4>
+            <p>1000+ items: Complete intellectual genome</p>
+          </div>
+        </div>
+      </div>
+      <p class="milestone-note">Your knowledge DNA encodes your learning evolution. Each strand represents different content types forming the genetic code of your intellectual identity.</p>
+    </div>
+  </div>
+{/if}
 
 <style>
   .insights-page {
@@ -476,12 +698,24 @@
   .card-content {
     padding: 1.5rem;
     flex: 1;
-    min-height: 250px;
+    min-height: 150px;
   }
   
-  .graph-container {
-    min-height: 400px;
+  .section-explanation {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--accent);
   }
+  
+  .section-explanation p {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
   
   .empty-state {
     display: flex;
@@ -520,89 +754,6 @@
     color: var(--text-primary);
   }
   
-  .top-content-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .top-content-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    text-decoration: none;
-    color: var(--text-primary);
-    transition: all 0.2s ease;
-  }
-  
-  .top-content-item:hover {
-    background: var(--bg-hover);
-  }
-  
-  .item-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: var(--accent-transparent);
-    color: var(--accent);
-    margin-right: 1rem;
-  }
-  
-  .item-details {
-    flex: 1;
-  }
-  
-  .item-details h3 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1rem;
-    font-weight: 500;
-  }
-  
-  .item-meta {
-    display: flex;
-    gap: 0.75rem;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-  }
-  
-  .item-score {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-left: 1rem;
-  }
-  
-  .score-indicator {
-    width: 50px;
-    height: 4px;
-    background: var(--bg-hover);
-    border-radius: 2px;
-    margin-bottom: 0.25rem;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .score-indicator::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: var(--score);
-    background: var(--accent);
-    border-radius: 2px;
-  }
-  
-  .item-score span {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--accent);
-  }
   
   .tag-cloud {
     display: flex;
@@ -618,6 +769,140 @@
     color: hsl(var(--hue), 70%, 45%);
     font-size: calc(0.8rem + var(--size) * 0.5rem);
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .tag:hover {
+    background: hsl(var(--hue), 70%, 40%, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .tag-count {
+    display: inline-block;
+    margin-left: 0.5rem;
+    background: hsl(var(--hue), 70%, 50%, 0.8);
+    color: white;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  
+  .tag-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  
+  .tag-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .tag-stats .stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .tag-stats .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  /* Personality Analysis Styles */
+  .personality-analysis {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .personality-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .personality-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+  
+  .personality-title h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+  }
+  
+  .confidence {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 0.25rem;
+  }
+  
+  .personality-description {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--accent);
+  }
+  
+  .personality-description p {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  
+  .personality-traits h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+  }
+  
+  .trait-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .trait-tag {
+    padding: 0.4rem 0.8rem;
+    background: var(--accent);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .personality-stats {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  
+  .personality-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .personality-stats .stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .personality-stats .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
   }
   
   /* Dynamic Insights Styles */
@@ -793,6 +1078,227 @@
     opacity: 0.7;
   }
   
+  /* Info Button Styles */
+  .info-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .info-button:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+  }
+  
+  /* Info Modal Styles */
+  .info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+  
+  .info-content {
+    background: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--accent);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .close-button:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+  }
+  
+  .milestone-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--accent);
+  }
+  
+  .stage-icon {
+    font-size: 1.5rem;
+    width: 2rem;
+    text-align: center;
+  }
+  
+  .stage-info h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+  
+  .stage-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  
+  .milestone-note {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-top: 1rem;
+  }
+  
+  /* New Life-Themed Section Styles */
+  .metabolism-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .metabolism-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .metabolism-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--accent);
+  }
+  
+  .metabolism-stats .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .metabolism-stats .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  
+  .heartbeat-chart {
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--accent);
+  }
+  
+  .ecosystem-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .ecosystem-species {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .species {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--accent);
+  }
+  
+  .species-icon {
+    font-size: 1.5rem;
+  }
+  
+  .species-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .species-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  
+  .species-count {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .biodiversity-score {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .score-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 3px solid var(--accent);
+  }
+  
+  .score-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  
+  .score-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
   @media (max-width: 768px) {
     .insights-page {
       padding: 1rem;
@@ -809,6 +1315,14 @@
     }
     
     .velocity-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .metabolism-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .ecosystem-species {
       grid-template-columns: 1fr;
     }
   }

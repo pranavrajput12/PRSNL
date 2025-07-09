@@ -64,7 +64,7 @@
   const camera = {
     x: 0,
     y: 0,
-    z: 800,
+    z: 300,
     fov: 400
   };
   
@@ -84,22 +84,22 @@
     if (container) {
       const rect = container.getBoundingClientRect();
       width = rect.width;
-      height = rect.height;
+      height = Math.min(rect.height, 300); // Constrain max height
     }
     
     if (canvas) {
       ctx = canvas.getContext('2d')!;
       canvas.width = width;
-      canvas.height = height;
+      canvas.height = Math.min(height, 300); // Constrain canvas height
     }
     
     const resizeObserver = new ResizeObserver(entries => {
       for (let entry of entries) {
         width = entry.contentRect.width;
-        height = entry.contentRect.height;
+        height = Math.min(entry.contentRect.height, 300); // Constrain height
         if (canvas) {
           canvas.width = width;
-          canvas.height = height;
+          canvas.height = Math.min(height, 300); // Constrain canvas height
         }
         if (data && data.length) {
           generateDNAHelix();
@@ -127,19 +127,27 @@
     dnaStrands = [];
     dnaConnections = [];
     
-    const maxValue = Math.max(...data.map(d => d.value));
+    // Apply milestone-based filtering
+    const significantData = getSignificantDNAData(data);
+    
+    if (significantData.length === 0) return;
+    
+    const maxValue = Math.max(...significantData.map(d => d.value));
     const contentTypes = ['articles', 'videos', 'notes', 'bookmarks'] as const;
     
-    data.forEach((point, timeIndex) => {
-      const heightPosition = (timeIndex / (data.length - 1)) * helixPitch * 2 - helixPitch;
+    significantData.forEach((point, timeIndex) => {
+      const heightPosition = (timeIndex / (significantData.length - 1)) * helixPitch * 2 - helixPitch;
       
       contentTypes.forEach((type, typeIndex) => {
         const value = point[type] || 0;
-        if (value === 0) return;
+        const minStrandValue = getMinStrandValue(data);
+        
+        // Only create strands for significant values
+        if (value < minStrandValue) return;
         
         // Create two strands (double helix)
         for (let strandIndex = 0; strandIndex < 2; strandIndex++) {
-          const baseAngle = (timeIndex / data.length) * Math.PI * 8 + strandIndex * Math.PI;
+          const baseAngle = (timeIndex / significantData.length) * Math.PI * 8 + strandIndex * Math.PI;
           const typeOffset = (typeIndex * Math.PI) / 2;
           const angle = baseAngle + typeOffset;
           
@@ -168,6 +176,53 @@
     
     // Create connections between complementary strands
     generateDNAConnections();
+  }
+  
+  // Milestone-based filtering: Only show data that meets significance thresholds
+  function getSignificantDNAData(dataPoints: DataPoint[]) {
+    const totalItems = dataPoints.reduce((sum, point) => 
+      sum + (point.articles || 0) + (point.videos || 0) + (point.notes || 0) + (point.bookmarks || 0), 0
+    );
+    
+    // Define milestone thresholds for DNA formation
+    const milestones = {
+      basic: 20,      // 20+ items: Single strands only
+      forming: 50,    // 50+ items: Partial double helix
+      complete: 100,  // 100+ items: Full double helix structure
+      complex: 300,   // 300+ items: Advanced DNA patterns
+      evolved: 1000   // 1000+ items: Complete intellectual genome
+    };
+    
+    let maxDays = 7;
+    
+    if (totalItems >= milestones.evolved) {
+      maxDays = 30;  // Show full month of data
+    } else if (totalItems >= milestones.complex) {
+      maxDays = 21;  // Show 3 weeks
+    } else if (totalItems >= milestones.complete) {
+      maxDays = 14;  // Show 2 weeks  
+    } else if (totalItems >= milestones.forming) {
+      maxDays = 10;  // Show 10 days
+    } else if (totalItems >= milestones.basic) {
+      maxDays = 7;   // Show 1 week
+    } else {
+      return []; // Not enough data - no DNA visualization
+    }
+    
+    return dataPoints.slice(0, maxDays);
+  }
+  
+  // Get minimum value required for strand formation
+  function getMinStrandValue(dataPoints: DataPoint[]) {
+    const totalItems = dataPoints.reduce((sum, point) => 
+      sum + (point.articles || 0) + (point.videos || 0) + (point.notes || 0) + (point.bookmarks || 0), 0
+    );
+    
+    if (totalItems >= 1000) return 3;  // Need 3+ items per day per type
+    if (totalItems >= 300) return 2;   // Need 2+ items per day per type
+    if (totalItems >= 100) return 1;   // Need 1+ items per day per type
+    if (totalItems >= 50) return 1;    // Any activity counts
+    return 1; // Minimum threshold
   }
   
   function generateDNAConnections() {
@@ -246,9 +301,10 @@
     function animate() {
       if (!ctx || !canvas) return;
       
-      time += 0.02;
-      helixRotation += 0.008;
-      verticalOffset = Math.sin(time * 0.5) * 20;
+      try {
+        time += 0.02;
+        helixRotation += 0.008;
+        verticalOffset = Math.sin(time * 0.5) * 20;
       
       // Clear canvas with molecular background
       const gradient = ctx.createRadialGradient(
@@ -287,7 +343,14 @@
         strand.pulsePhase += 0.04;
       });
       
-      animationFrame = requestAnimationFrame(animate);
+        animationFrame = requestAnimationFrame(animate);
+      } catch (error) {
+        console.error('Canvas rendering error:', error);
+        // Stop animation on error to prevent infinite loops
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+      }
     }
     
     animate();
@@ -303,13 +366,17 @@
     
     // Project to 2D
     const distance = camera.z - rotatedZ;
-    const scale = camera.fov / distance;
+    const scale = Math.abs(distance) > 0.1 ? camera.fov / distance : 1;
+    
+    // Ensure all values are finite
+    const projectedX = width / 2 + rotatedX * scale;
+    const projectedY = height / 2 + offsetY * scale;
     
     return {
-      x: width / 2 + rotatedX * scale,
-      y: height / 2 + offsetY * scale,
+      x: isFinite(projectedX) ? projectedX : width / 2,
+      y: isFinite(projectedY) ? projectedY : height / 2,
       z: rotatedZ,
-      scale
+      scale: isFinite(scale) ? scale : 1
     };
   }
   
@@ -389,11 +456,22 @@
       const pos1 = project3D(connection.strand1.x, connection.strand1.y, connection.strand1.z);
       const pos2 = project3D(connection.strand2.x, connection.strand2.y, connection.strand2.z);
       
+      // Ensure positions are valid before creating gradient
+      if (!isFinite(pos1.x) || !isFinite(pos1.y) || !isFinite(pos2.x) || !isFinite(pos2.y)) {
+        return; // Skip this connection if positions are invalid
+      }
+      
       // Create connection gradient
       const gradient = ctx.createLinearGradient(pos1.x, pos1.y, pos2.x, pos2.y);
-      gradient.addColorStop(0, `${connection.strand1.color}80`);
-      gradient.addColorStop(0.5, `${connection.color}60`);
-      gradient.addColorStop(1, `${connection.strand2.color}80`);
+      
+      // Fix color format - ensure proper alpha blending
+      const color1 = connection.strand1.color.startsWith('#') ? connection.strand1.color + '80' : 'rgba(255,255,255,0.5)';
+      const color2 = connection.color.startsWith('#') ? connection.color + '60' : 'rgba(255,255,255,0.4)';
+      const color3 = connection.strand2.color.startsWith('#') ? connection.strand2.color + '80' : 'rgba(255,255,255,0.5)';
+      
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(0.5, color2);
+      gradient.addColorStop(1, color3);
       
       // Draw connection line
       ctx.strokeStyle = gradient;

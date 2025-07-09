@@ -142,44 +142,45 @@ struct TimelineView: View {
     }
     
     private var timelineContent: some View {
-        VStack(spacing: 0) {
-            // Top padding for clean look
-            Spacer()
-                .frame(height: 40)
-            
-            // Short pun - much more concise
-            if let inspiration = viewModel.dailyInspiration {
-                dailyInspirationSection(inspiration)
-                    .padding(.bottom, 20)
-            }
-            
-            // Restore the stats card - this wasn't the problem
-            personalizedHeroSection
-                .padding(.bottom, 20)
-            
-            // Rolling Quote Section - shorter and punchier
-            if let inspiration = viewModel.dailyInspiration {
-                rollingQuoteSection(inspiration)
-                    .padding(.bottom, 40)
-            }
-            
-            // Filter Pills (shown when filter is active)
-            if showingFilters {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DesignSystem.Spacing.space2) {
-                        FilterPill(title: "All", isSelected: true)
-                        FilterPill(title: "Articles", isSelected: false)
-                        FilterPill(title: "Videos", isSelected: false)
-                        FilterPill(title: "Notes", isSelected: false)
-                        FilterPill(title: "Recent", isSelected: false)
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, DesignSystem.Spacing.space2)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                // Top padding for clean look
+                Spacer()
+                    .frame(height: 40)
+                
+                // Short pun - much more concise
+                if let inspiration = viewModel.dailyInspiration {
+                    dailyInspirationSection(inspiration)
+                        .padding(.bottom, 20)
                 }
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-            
-            ScrollView {
+                
+                // Restore the stats card - this wasn't the problem
+                personalizedHeroSection
+                    .padding(.bottom, 20)
+                
+                // Rolling Quote Section - shorter and punchier
+                if let inspiration = viewModel.dailyInspiration {
+                    rollingQuoteSection(inspiration)
+                        .padding(.bottom, 40)
+                }
+                
+                // Filter Pills (shown when filter is active)
+                if showingFilters {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: DesignSystem.Spacing.space2) {
+                            FilterPill(title: "All", isSelected: true)
+                            FilterPill(title: "Articles", isSelected: false)
+                            FilterPill(title: "Videos", isSelected: false)
+                            FilterPill(title: "Notes", isSelected: false)
+                            FilterPill(title: "Recent", isSelected: false)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, DesignSystem.Spacing.space2)
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
+                // Timeline entries
                 LazyVStack(spacing: DesignSystem.Spacing.space3) {
                     ForEach(groupedItems, id: \.key) { date, items in
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.space3) {
@@ -230,9 +231,9 @@ struct TimelineView: View {
                 }
                 .padding(.vertical)
             }
-            .refreshable {
-                await viewModel.refresh()
-            }
+        }
+        .refreshable {
+            await viewModel.refresh()
         }
     }
     

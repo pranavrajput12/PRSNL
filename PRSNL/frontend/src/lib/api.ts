@@ -52,12 +52,15 @@ async function fetchWithErrorHandling<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const fullUrl = `${API_BASE_URL}${endpoint}`;
-  console.log('🔵 API Request:', {
-    url: fullUrl,
-    method: options.method || 'GET',
-    endpoint,
-    API_BASE_URL
-  });
+  // Debug logging - remove in production
+  if (import.meta.env.DEV) {
+    console.log('🔵 API Request:', {
+      url: fullUrl,
+      method: options.method || 'GET',
+      endpoint,
+      API_BASE_URL
+    });
+  }
 
   try {
     const response = await fetch(fullUrl, {
@@ -68,12 +71,14 @@ async function fetchWithErrorHandling<T>(
       },
     });
 
-    console.log('🟡 API Response:', {
-      url: fullUrl,
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
+    if (import.meta.env.DEV) {
+      console.log('🟡 API Response:', {
+        url: fullUrl,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -89,10 +94,12 @@ async function fetchWithErrorHandling<T>(
     }
 
     const data = await response.json();
-    console.log('🟢 API Success:', {
-      url: fullUrl,
-      dataPreview: Array.isArray(data) ? `Array[${data.length}]` : typeof data
-    });
+    if (import.meta.env.DEV) {
+      console.log('🟢 API Success:', {
+        url: fullUrl,
+        dataPreview: Array.isArray(data) ? `Array[${data.length}]` : typeof data
+      });
+    }
     return data;
   } catch (error) {
     console.error('🔴 API Catch Error:', {
@@ -211,7 +218,9 @@ export async function getTimeline(page: number = 1, limit: number = 20): Promise
   // TODO: Update frontend to use cursor pagination
   const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
   
-  console.log('Raw timeline response before transform:', response);
+  if (import.meta.env.DEV) {
+    console.log('Raw timeline response before transform:', response);
+  }
   
   // Transform backend response to match frontend expectations
   const transformedResponse: TimelineResponse = {
@@ -248,7 +257,9 @@ export async function getTimeline(page: number = 1, limit: number = 20): Promise
     }));
   }
   
-  console.log('Timeline response after transform:', transformedResponse);
+  if (import.meta.env.DEV) {
+    console.log('Timeline response after transform:', transformedResponse);
+  }
   
   return transformedResponse;
 }
@@ -325,6 +336,74 @@ export async function getAISuggestions(url: string): Promise<{
 export async function getInsights(timeRange: string = '30d'): Promise<InsightsResponse> {
   return fetchWithErrorHandling<InsightsResponse>(`/insights?time_range=${timeRange}`);
 }
+
+/**
+ * Get timeline trends data for Knowledge DNA visualization
+ */
+export async function getTimelineTrends(timeRange: string = '30d'): Promise<{
+  timeline_data: Array<{
+    date: string;
+    articles: number;
+    videos: number;
+    notes: number;
+    bookmarks: number;
+  }>;
+  time_range: string;
+  total_days: number;
+  generated_at: string;
+}> {
+  return fetchWithErrorHandling(`/insights/timeline-trends?time_range=${timeRange}`);
+}
+
+/**
+ * Get top tags for Memory Palace visualization
+ */
+export async function getTopTags(timeRange: string = '30d', limit: number = 10): Promise<{
+  tags: Array<{
+    name: string;
+    usage_count: number;
+    latest_use: string;
+    weight: number;
+    recency_weight: number;
+  }>;
+  time_range: string;
+  total_tags: number;
+  max_usage: number;
+  generated_at: string;
+}> {
+  return fetchWithErrorHandling(`/insights/top-tags?time_range=${timeRange}&limit=${limit}`);
+}
+
+/**
+ * Get personality analysis for Cognitive Fingerprint visualization
+ */
+export async function getPersonalityAnalysis(timeRange: string = '30d'): Promise<{
+  personality: {
+    type: string;
+    name: string;
+    description: string;
+    traits: string[];
+    icon: string;
+    confidence: number;
+    scores: Record<string, number>;
+    analysis_factors: {
+      content_variety: number;
+      tag_diversity: number;
+      temporal_consistency: number;
+      total_items: number;
+    };
+  };
+  analysis_data: {
+    content_distribution: Array<{ type: string; count: number }>;
+    top_tags: Array<{ name: string; usage: number }>;
+    temporal_pattern: Array<{ date: string; count: number }>;
+  };
+  time_range: string;
+  generated_at: string;
+}> {
+  return fetchWithErrorHandling(`/insights/personality-analysis?time_range=${timeRange}`);
+}
+
 
 /**
  * AI Features API

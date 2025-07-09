@@ -29,6 +29,7 @@ class Item(Base):
     summary = Column(Text)
     raw_content = Column(Text)
     processed_content = Column(Text)
+    type = Column(String(50), nullable=False, default='bookmark')
     status = Column(String(20), nullable=False, default='pending')
     item_metadata = Column('metadata', JSON, default={})
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
