@@ -219,6 +219,14 @@
               screenFound = true;
             }
           }
+          // Fallback: Apply to any mesh that looks like it could be a screen
+          else if (!screenFound && child.material) {
+            // Try applying to any flat, front-facing mesh
+            if (child.geometry && child.geometry.attributes.position) {
+              child.material = screenMaterial;
+              screenFound = true;
+            }
+          }
         }
       });
       
