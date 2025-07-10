@@ -600,27 +600,17 @@
     </div>
   </div>
   
-  <div class="calendar-section">
-    <div class="section-header">
-      <h2>Your Knowledge Calendar</h2>
-      <a href="/timeline" class="view-all">
-        View Timeline
-        <Icon name="arrow-right" size="small" />
-      </a>
-    </div>
-    
-    {#if isLoading}
-      <SkeletonLoader type="card" count={1} />
-    {:else}
-      <Calendar3D 
-        items={timelineItems} 
-        onDateClick={(date, items) => {
-          const dateStr = date.toISOString().split('T')[0];
-          window.location.href = `/timeline?date=${dateStr}`;
-        }}
-      />
-    {/if}
-  </div>
+  {#if isLoading}
+    <SkeletonLoader type="card" count={1} />
+  {:else}
+    <Calendar3D 
+      items={timelineItems} 
+      onDateClick={(date, items) => {
+        const dateStr = date.toISOString().split('T')[0];
+        window.location.href = `/timeline?date=${dateStr}`;
+      }}
+    />
+  {/if}
 </div>
 
 <style>
@@ -2079,23 +2069,6 @@
     pointer-events: none;
   }
   
-  .calendar-section {
-    margin: 4rem 0;
-  }
-  
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-  }
-  
-  .section-header h2 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
   
   .view-all {
     display: flex;
@@ -3610,44 +3583,6 @@
     pointer-events: none;
   }
   
-  /* Calendar section as memory modules */
-  .calendar-section {
-    position: relative;
-    background: 
-      linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(42, 42, 42, 0.9)),
-      radial-gradient(circle at 70% 30%, rgba(0, 255, 100, 0.05), transparent 50%);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin: 2rem 0;
-    border: 1px solid rgba(0, 255, 100, 0.2);
-    box-shadow: 0 0 20px rgba(0, 255, 100, 0.1);
-  }
-  
-  .calendar-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      repeating-linear-gradient(
-        30deg,
-        transparent,
-        transparent 6px,
-        rgba(0, 255, 100, 0.03) 6px,
-        rgba(0, 255, 100, 0.03) 8px
-      ),
-      repeating-linear-gradient(
-        -30deg,
-        transparent,
-        transparent 6px,
-        rgba(0, 255, 100, 0.03) 6px,
-        rgba(0, 255, 100, 0.03) 8px
-      );
-    border-radius: var(--radius-lg);
-    pointer-events: none;
-  }
   
   /* Circuit traces connecting all sections */
   .hero::after {
