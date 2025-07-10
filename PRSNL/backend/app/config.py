@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     PRSNL_API_KEY: Optional[str] = None
     RATE_LIMITING_ENABLED: bool = True
     
+    # Service Port Configuration (Exclusive Port Ownership)
+    BACKEND_PORT: int = int(os.getenv("BACKEND_PORT", "8000"))
+    FRONTEND_PORT: int = int(os.getenv("FRONTEND_PORT", "3003"))
+    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

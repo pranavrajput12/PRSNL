@@ -98,6 +98,11 @@ export interface CaptureRequest {
   enable_summarization?: boolean;
   content_type?: string;
   uploaded_files?: File[];
+  // Development-specific fields
+  programming_language?: string;
+  project_category?: string;
+  difficulty_level?: number;
+  is_career_related?: boolean;
   is_video?: boolean;
   video_platform?: string | null;
   video_quality?: string;

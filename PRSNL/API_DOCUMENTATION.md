@@ -2,11 +2,11 @@
 
 ## Base URL
 - Development: `http://localhost:8000/api`
-- Frontend Proxy: `http://localhost:3002/api`
+- Frontend Proxy: `http://localhost:3003/api`
 - iOS App: Configured in iOS app settings
 
 ## Client Applications
-- **SvelteKit Frontend**: Web application (port 3002)
+- **SvelteKit Frontend**: Web application (port 3003)
 - **iOS App (PRSNL APP)**: Native iOS application - *separate codebase*
 - **Chrome Extension**: Browser extension
 
@@ -17,6 +17,7 @@
 - **Cognitive Map** (`/insights`) - AI-powered insights and analysis
 - **Mind Palace** (`/chat`) - Conversational interface with knowledge base
 - **Visual Cortex** (`/videos`) - Video content management
+- **Code Cortex** (`/code-cortex`) - Development content management hub
 - **Knowledge Sync** (`/import`) - External data import and synchronization
 
 ## Authentication
@@ -350,6 +351,126 @@ Webhook endpoint for Telegram bot updates
 #### POST /api/telegram/setup-webhook
 Manually setup Telegram webhook
 
+### 💻 Development Content
+
+#### GET /api/development/stats
+Get development content statistics and analytics
+
+**Response:**
+```json
+{
+  "total_items": 4,
+  "by_language": {
+    "python": 2,
+    "javascript": 1,
+    "dockerfile": 1
+  },
+  "by_category": {
+    "Backend": 1,
+    "Frontend": 1,
+    "DevOps": 1
+  },
+  "by_difficulty": {
+    "2": 2,
+    "3": 1,
+    "4": 1
+  },
+  "career_related_count": 1,
+  "recent_activity": [
+    {
+      "id": "uuid",
+      "title": "GitHub - fastapi/fastapi: FastAPI framework",
+      "programming_language": "python",
+      "project_category": "Backend",
+      "created_at": "2025-07-11T04:22:42Z"
+    }
+  ]
+}
+```
+
+#### GET /api/development/docs
+Get development documents with filtering
+
+**Query Parameters:**
+- `limit` (integer, default: 20) - Items per page
+- `offset` (integer, default: 0) - Pagination offset
+- `category` (string) - Filter by project category
+- `language` (string) - Filter by programming language
+- `difficulty` (integer, 1-5) - Filter by difficulty level
+- `career_related` (boolean) - Filter career-related content
+- `search` (string) - Full-text search query
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "title": "GitHub - fastapi/fastapi: FastAPI framework",
+    "url": "https://github.com/fastapi/fastapi",
+    "summary": "High performance web framework for Python",
+    "type": "development",
+    "programming_language": "python",
+    "project_category": "Backend",
+    "difficulty_level": 2,
+    "is_career_related": false,
+    "learning_path": null,
+    "code_snippets": [],
+    "created_at": "2025-07-11T04:22:42Z",
+    "updated_at": "2025-07-11T04:22:43Z",
+    "tags": ["python", "api", "framework"]
+  }
+]
+```
+
+#### GET /api/development/categories
+Get all development categories with item counts
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Frontend",
+    "description": "Frontend development resources",
+    "icon": "🎨",
+    "color": "#3b82f6",
+    "created_at": "2025-07-11T00:00:00Z",
+    "item_count": 2
+  }
+]
+```
+
+#### GET /api/development/languages
+Get all programming languages found in development content
+
+**Response:**
+```json
+{
+  "languages": [
+    {
+      "name": "python",
+      "count": 2
+    },
+    {
+      "name": "javascript", 
+      "count": 1
+    }
+  ]
+}
+```
+
+**Example Usage:**
+```bash
+# Get development statistics
+curl "http://localhost:8000/api/development/stats"
+
+# Search Python backend content
+curl "http://localhost:8000/api/development/docs?language=python&category=Backend"
+
+# Get all development categories
+curl "http://localhost:8000/api/development/categories"
+```
+
 ### 📊 Admin
 
 #### GET /api/storage/metrics
@@ -437,7 +558,7 @@ Note: Some fields still use snake_case:
 ### CORS Configuration
 Allowed origins:
 - `http://localhost:3000`
-- `http://localhost:3002`
+- `http://localhost:3003`
 - `http://localhost:5173`
 
 ## Rate Limiting

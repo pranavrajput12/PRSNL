@@ -70,6 +70,11 @@
         e.preventDefault();
         window.location.href = '/insights';
       }
+      // CMD/CTRL + D for code cortex
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        e.preventDefault();
+        window.location.href = '/code-cortex';
+      }
       // CMD/CTRL + B for toggle sidebar
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         e.preventDefault();
@@ -210,6 +215,19 @@
         </div>
         {#if !sidebarCollapsed}
           <div class="process-info">MEM: 256MB | CPU: 10%</div>
+        {/if}
+      </a>
+      
+      <a href="/code-cortex" class="nav-link terminal-process {$page.url.pathname.startsWith('/code-cortex') ? 'active' : ''}" title="Code Cortex">
+        <div class="process-header">
+          <div class="process-name">Code Cortex</div>
+          <div class="process-status">
+            <div class="status-indicator {$page.url.pathname.startsWith('/code-cortex') ? 'active' : ''}"></div>
+            <span>{$page.url.pathname.startsWith('/code-cortex') ? 'ACTIVE' : 'READY'}</span>
+          </div>
+        </div>
+        {#if !sidebarCollapsed}
+          <div class="process-info">MEM: 320MB | CPU: 18%</div>
         {/if}
       </a>
       

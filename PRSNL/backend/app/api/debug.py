@@ -1,7 +1,7 @@
 """
 Debug endpoints for troubleshooting
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 import asyncpg
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
@@ -128,4 +128,42 @@ async def get_item_processing_status(
             },
             "tags": [tag["name"] for tag in tags]
         }
+    }
+
+
+@router.get("/debug/routes")
+async def get_all_routes(request: Request) -> Dict[str, Any]:
+    """Get all registered routes for debugging"""
+    routes = []
+    
+    for route in request.app.routes:
+        route_info = {
+            "path": getattr(route, "path", None),
+            "name": getattr(route, "name", None),
+            "methods": list(getattr(route, "methods", [])),
+        }
+        
+        # Handle path regex for mounted apps
+        if hasattr(route, "path_regex"):
+            route_info["path_regex"] = route.path_regex.pattern
+            
+        # Get endpoint details if available
+        if hasattr(route, "endpoint"):
+            endpoint = route.endpoint
+            doc_string = getattr(endpoint, "__doc__", None)
+            route_info["endpoint"] = {
+                "module": getattr(endpoint, "__module__", None),
+                "name": getattr(endpoint, "__name__", None),
+                "doc": doc_string.strip() if doc_string else None
+            }
+            
+        routes.append(route_info)
+    
+    # Sort routes by path for easier reading
+    routes.sort(key=lambda x: x.get("path") or x.get("path_regex", ""))
+    
+    return {
+        "total_routes": len(routes),
+        "routes": routes,
+        "api_prefix": "/api"
     }

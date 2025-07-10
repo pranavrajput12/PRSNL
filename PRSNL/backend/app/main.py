@@ -8,6 +8,7 @@ import httpx
 import shutil
 import logging
 import sys
+import socket
 
 # Configure comprehensive logging
 logging.basicConfig(
@@ -77,11 +78,28 @@ from app.services.cache import cache_service
 # Placeholder for worker task
 worker_task = None
 
+def is_port_in_use(port: int) -> bool:
+    """Check if a port is already in use"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('', port))
+            return False
+        except socket.error:
+            return True
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting PRSNL backend...")
     logger.debug(f"Database URL: {settings.DATABASE_URL}")
     logger.debug(f"Azure OpenAI configured: {settings.AZURE_OPENAI_API_KEY is not None}")
+    
+    # Startup assertion: Check if our port is available
+    if is_port_in_use(settings.BACKEND_PORT):
+        logger.error(f"🚨 Port {settings.BACKEND_PORT} is already in use!")
+        logger.error("Run 'make kill-ports' or './scripts/kill_ports.sh kill' to free up ports")
+        # Don't assert in production, just warn
+        if settings.ENVIRONMENT == "development":
+            raise RuntimeError(f"Port {settings.BACKEND_PORT} conflict detected! Another process is using this port.")
     
     await create_db_pool()
     await init_sqlalchemy()
@@ -95,16 +113,17 @@ async def startup_event():
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     logger.info("Worker started in background.")
 
-    # STEP 2: Dump all registered routes to debug routing issue
-    logger.warning("🚀 === ALL REGISTERED ROUTES ===")
-    for route in app.routes:
-        if hasattr(route, 'path') and hasattr(route, 'methods'):
-            logger.warning(f"🚀 ROUTE: {route.path} METHODS: {getattr(route, 'methods', 'N/A')}")
-        elif hasattr(route, 'path_regex'):
-            logger.warning(f"🚀 ROUTE: {route.path_regex.pattern} METHODS: {getattr(route, 'methods', 'N/A')}")
-        else:
-            logger.warning(f"🚀 ROUTE: {route} TYPE: {type(route)}")
-    logger.warning("🚀 === END ROUTES ===")
+    # STEP 2: Dump all registered routes to debug routing issue (controlled by env var)
+    if os.getenv("DEBUG_ROUTES", "false").lower() == "true":
+        logger.warning("🚀 === ALL REGISTERED ROUTES ===")
+        for route in app.routes:
+            if hasattr(route, 'path') and hasattr(route, 'methods'):
+                logger.warning(f"🚀 ROUTE: {route.path} METHODS: {getattr(route, 'methods', 'N/A')}")
+            elif hasattr(route, 'path_regex'):
+                logger.warning(f"🚀 ROUTE: {route.path_regex.pattern} METHODS: {getattr(route, 'methods', 'N/A')}")
+            else:
+                logger.warning(f"🚀 ROUTE: {route} TYPE: {type(route)}")
+        logger.warning("🚀 === END ROUTES ===")
 
     # Schedule periodic cleanup tasks
     storage_manager = StorageManager()
@@ -155,7 +174,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
-from app.api import insights, import_data, file_upload, content_types
+from app.api import insights, import_data, file_upload, content_types, development
 from app.api.v2 import items as v2_items
 
 # STEP 3: Debug capture router inclusion
@@ -185,6 +204,7 @@ app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(import_data.router, prefix=settings.API_V1_STR)
 app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
 app.include_router(content_types.router, prefix=settings.API_V1_STR)
+app.include_router(development.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

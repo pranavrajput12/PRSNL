@@ -7,11 +7,19 @@
 - Do NOT start Docker Desktop
 - Do NOT rebuild docker containers
 
-## Ports
+## Ports (Exclusive Port Ownership)
 - Frontend: **3003** (Updated from 3002 due to container conflict)
 - Backend API: **8000**
 - PostgreSQL: **5432**
 - Redis: **6379**
+
+**Port Conflict Resolution:**
+```bash
+# Kill processes on specific ports
+lsof -ti:8000 | xargs kill -9  # Backend
+lsof -ti:3003 | xargs kill -9  # Frontend
+lsof -ti:5432 | xargs kill -9  # PostgreSQL
+```
 
 ## Running Services - CRITICAL DISTINCTION
 **DEVELOPMENT MODE (WHAT WE USE):**
@@ -44,7 +52,22 @@ docker-compose stop frontend
 - Type check: `npm run check`
 - Format: `npm run format`
 
+## Development Tools (Expert Engineer Improvements)
+- Health checks: `make test-health` - Run comprehensive smoke tests
+- Port management: `make kill-ports`, `make check-ports`
+- Clean environment: `make clean-dev`
+- Route debugging: `curl http://localhost:8000/api/debug/routes`
+
+## 🏗️ CRITICAL: System Architecture Repository
+**BEFORE BUILDING ANY NEW FEATURE, CONSULT:**
+- **File**: `/docs/SYSTEM_ARCHITECTURE_REPOSITORY.md`
+- **Purpose**: Prevents breaking existing functionality when adding features
+- **Contains**: API patterns, database schemas, frontend integration, testing templates
+- **Rule**: ALL new development must follow the patterns in this repository
+
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- System Architecture Repository (2025-07-10) - Foundation for consistent development
+- Expert Engineer Development Tools (2025-07-10) - Port management, health checks, debugging
 - Fan3D component (commit b383191)
 - Mac3D improvements (commit 468175f)
 - Neural Motherboard Interface v4.2 (commit 0c97c5b)

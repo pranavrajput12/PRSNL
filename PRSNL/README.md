@@ -34,6 +34,7 @@ Your AI-powered personal knowledge base. Capture anything from the web, process 
 - **Storage Management**: Automatic cleanup and optimization
 - **Health Monitoring**: Service status and metrics
 - **Telegram Bot**: Capture content via Telegram
+- **Development Tools**: Enhanced with expert engineer improvements (Route debugging, zero-cache reloads, port management, health checks)
 
 ✅ **RECENTLY COMPLETED** (2025-01-07)
 - **Smart Categorization Service**: Auto-categorize and reorganize content
@@ -87,7 +88,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 cd frontend
 npm install
 npm run dev
-# UI available at http://localhost:3002
+# UI available at http://localhost:3003
 ```
 
 ### 5. Load Chrome Extension (Optional)
@@ -99,7 +100,7 @@ npm run dev
 ```
 
 ### 6. Access the Application
-- **Frontend**: http://localhost:3002
+- **Frontend**: http://localhost:3003
 - **Backend API**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
 

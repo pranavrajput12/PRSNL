@@ -28,7 +28,7 @@
 
   // Animation
   let time = 0;
-  const helixSpeed = 0.02;
+  let helixSpeed = 0.02;
 
   // Types
   interface DNAStrand {

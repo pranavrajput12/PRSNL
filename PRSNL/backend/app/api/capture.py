@@ -20,6 +20,8 @@ import time
 from app.api.instagram_handler import process_instagram_bookmark
 from app.services.websocket_manager import websocket_manager
 from app.utils.media_detector import MediaDetector
+from app.utils.url_classifier import URLClassifier
+from app.services.preview_service import preview_service
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Force debug level for capture logging
@@ -172,20 +174,47 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             
             # Rule 2: Auto-detection only when content_type='auto' or not specified
             elif capture_request.url and (not capture_request.content_type or capture_request.content_type == 'auto'):
-                media_info = MediaDetector.detect_media_type(str(capture_request.url))
+                # First check for development content
+                url_classification = URLClassifier.classify_url(str(capture_request.url))
                 
-                if media_info['type'] == 'video':
-                    item_type = 'video'
-                elif media_info['type'] == 'image':
-                    item_type = 'image'
-                elif media_info['type'] == 'article':
-                    item_type = 'article'
+                if url_classification['is_development']:
+                    # Auto-classify as development content
+                    item_type = 'development'
                     
-                logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
+                    # Auto-fill development fields if not provided by user
+                    if not capture_request.programming_language and url_classification['programming_language']:
+                        capture_request.programming_language = url_classification['programming_language']
+                    
+                    if not capture_request.project_category and url_classification['project_category']:
+                        capture_request.project_category = url_classification['project_category']
+                    
+                    if not capture_request.difficulty_level and url_classification['difficulty_level']:
+                        capture_request.difficulty_level = url_classification['difficulty_level']
+                    
+                    # Set career-related flag if detected
+                    if url_classification['is_career_related']:
+                        capture_request.is_career_related = True
+                    
+                    logger.info(f"🔍 Auto-detected development content: {url_classification['platform']} → type: {item_type}")
+                    logger.info(f"🔍 Auto-filled: lang={capture_request.programming_language}, category={capture_request.project_category}, difficulty={capture_request.difficulty_level}")
+                else:
+                    # Fall back to media detection
+                    media_info = MediaDetector.detect_media_type(str(capture_request.url))
+                    
+                    if media_info['type'] == 'video':
+                        item_type = 'video'
+                    elif media_info['type'] == 'image':
+                        item_type = 'image'
+                    elif media_info['type'] == 'article':
+                        item_type = 'article'
+                        
+                    logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
             
             # Rule 3: Special case - if no summarization requested for URL, treat as simple link
+            # Exception: Don't convert development content to link (it needs rich preview)
             if (capture_request.url and not capture_request.enable_summarization and 
-                capture_request.content_type not in ['video', 'document', 'image']):
+                capture_request.content_type not in ['video', 'document', 'image', 'development'] and
+                item_type != 'development'):
                 item_type = 'link'
                 logger.info(f"🔗 No summarization requested for URL → type: link")
             
@@ -213,6 +242,21 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 "type": item_type,  # Store item type in metadata
                 "content_type": capture_request.content_type  # Store user-selected content type
             }
+            
+            # Generate rich preview for development content
+            if item_type == 'development' and capture_request.url:
+                try:
+                    logger.info(f"🔍 Generating rich preview for development content: {capture_request.url}")
+                    preview_data = await preview_service.generate_preview(str(capture_request.url), 'development')
+                    if preview_data and preview_data.get('type') != 'error':
+                        metadata['rich_preview'] = preview_data
+                        logger.info(f"🟢 Rich preview generated successfully for {capture_request.url}")
+                    else:
+                        logger.warning(f"🟡 Rich preview generation failed or returned error for {capture_request.url}")
+                except Exception as e:
+                    logger.error(f"🔴 Error generating rich preview: {e}")
+                    # Don't fail the entire capture if preview generation fails
+                    pass
             logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
             
             # For content-only captures, store content in raw_content field
@@ -251,10 +295,26 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             
             # Now try the actual INSERT
             sql_query = """
-                INSERT INTO public.items (id, url, title, raw_content, status, type, content_type, enable_summarization, metadata)
-                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb)
+                INSERT INTO public.items (
+                    id, url, title, raw_content, status, type, content_type, enable_summarization, metadata,
+                    programming_language, project_category, difficulty_level, is_career_related
+                )
+                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
             """
-            params = (item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, capture_request.content_type, capture_request.enable_summarization, json.dumps(metadata))
+            params = (
+                item_id, 
+                str(capture_request.url) if capture_request.url else None, 
+                capture_request.title or 'Untitled', 
+                initial_content, 
+                item_type, 
+                capture_request.content_type, 
+                capture_request.enable_summarization, 
+                json.dumps(metadata),
+                capture_request.programming_language,
+                capture_request.project_category,
+                capture_request.difficulty_level,
+                capture_request.is_career_related
+            )
             
             logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")
             logger.info(f"🔍 EXACT PARAMS: {params}")

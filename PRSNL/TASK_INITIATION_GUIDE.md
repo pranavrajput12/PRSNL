@@ -27,9 +27,16 @@ This is your single source of truth for starting tasks properly. Use these promp
 
 ### ⚠️ CRITICAL ENVIRONMENT INFO
 - **Container Runtime**: RANCHER DESKTOP (NOT Docker)
-- **Frontend Port**: 3002 (NEVER 3003)
+- **Frontend Port**: 3003 (Updated from 3002)
 - **Backend Port**: 8000
 - **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
+
+### 🏗️ MANDATORY: System Architecture Repository
+**BEFORE STARTING ANY FEATURE DEVELOPMENT:**
+- **MUST READ**: `/docs/SYSTEM_ARCHITECTURE_REPOSITORY.md`
+- **PURPOSE**: Contains API patterns, database schemas, frontend templates
+- **RULE**: ALL new features must follow the established patterns
+- **PREVENTS**: Breaking existing functionality and repetitive issues
 
 ### 🤖 What AI Will Do Automatically
 When you tag this file, the AI will:

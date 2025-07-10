@@ -2,9 +2,9 @@
 
 ## 🎯 System Status (2025-07-09)
 - ✅ **Video Streaming**: Fully functional
-- ✅ **Frontend**: Working on port 3002
+- ✅ **Frontend**: Working on port 3003
 - ✅ **Backend**: Working on port 8000
-- ✅ **Database**: PostgreSQL 16 on port 5433
+- ✅ **Database**: PostgreSQL 16 on port 5432
 - ✅ **Web Scraping**: Fixed meta-tag extraction
 - ✅ **AI Integration**: Azure OpenAI working
 - ✅ **Documentation**: Consolidated (48 → 13 files)
@@ -27,7 +27,7 @@ cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev
 ```
 
 ### Essential URLs
-- **Frontend**: http://localhost:3002
+- **Frontend**: http://localhost:3003
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
@@ -79,7 +79,7 @@ grep -A 2 "$(date +%Y-%m-%d)" TASK_HISTORY.md
 grep "LOCKED" TASK_HISTORY.md
 
 # Check port availability
-lsof -i :3002,8000,5433
+lsof -i :3003,8000,5432
 ```
 
 ### Pre-Task Verification
@@ -91,11 +91,11 @@ echo "1. Check active tasks:"
 grep -A 2 "IN PROGRESS" TASK_HISTORY.md
 
 echo "2. Check port availability:"
-lsof -i :3002,8000,5433
+lsof -i :3003,8000,5432
 
 echo "3. Check service health:"
 curl -s http://localhost:8000/health | jq .status
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3003/
 
 echo "4. Check file locks:"
 grep "LOCKED" TASK_HISTORY.md
@@ -111,8 +111,8 @@ echo "=== READY TO START TASK ==="
 ```bash
 # Check all services
 curl http://localhost:8000/health      # Backend
-curl http://localhost:3002/           # Frontend
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"  # Database
+curl http://localhost:3003/           # Frontend
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT version();"  # Database
 ```
 
 ### Test Content Ingest
@@ -131,15 +131,15 @@ curl -X POST "http://localhost:8000/api/capture" \
 ### Check Database Content
 ```bash
 # View all items by type
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT type, COUNT(*) as count FROM items GROUP BY type ORDER BY count DESC;"
 
 # View recent items
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, type, created_at FROM items ORDER BY created_at DESC LIMIT 10;"
 
 # View video metadata
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, metadata->'video_metadata'->'platform' as platform, duration
 FROM items WHERE type = 'video' LIMIT 5;"
 ```
@@ -226,12 +226,12 @@ curl -X DELETE "http://localhost:8000/api/file/{file_id}" | jq
 **Database verification:**
 ```bash
 # Check all captured items
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, content_type, enable_summarization, status, type, has_files 
 FROM items ORDER BY created_at DESC LIMIT 10;"
 
 # Check file processing
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT f.id, f.original_filename, f.processing_status, i.title 
 FROM files f JOIN items i ON f.item_id = i.id ORDER BY f.created_at DESC;"
 ```
@@ -246,8 +246,8 @@ FROM files f JOIN items i ON f.item_id = i.id ORDER BY f.created_at DESC;"
 ```bash
 # Check what's using ports
 lsof -i :8000  # Backend
-lsof -i :3002  # Frontend
-lsof -i :5433  # PostgreSQL
+lsof -i :3003  # Frontend
+lsof -i :5432  # PostgreSQL
 
 # Kill processes if needed
 kill -9 $(lsof -ti :8000)
@@ -259,28 +259,28 @@ pg_ctl status -D /opt/homebrew/var/postgresql@16
 #### Database Connection Issues
 ```bash
 # Test database connection
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT NOW();"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT NOW();"
 
 # Check if database exists
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "\l"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "\l"
 
 # Create database if missing
-createdb -h 127.0.0.1 -p 5433 -U prsnl prsnl
+createdb -h 127.0.0.1 -p 5432 -U prsnl prsnl
 
 # Check pgvector extension
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
 ```
 
 #### Frontend API Connection Issues
-**Symptom**: ERR_CONNECTION_REFUSED on localhost:3002
+**Symptom**: ERR_CONNECTION_REFUSED on localhost:3003
 **Fix**:
 ```bash
 # Ensure frontend is running
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend
 npm run dev
 
-# Check if port 3002 is occupied
-lsof -i :3002
+# Check if port 3003 is occupied
+lsof -i :3003
 ```
 
 #### Backend API Errors
@@ -311,7 +311,7 @@ results = data.items || [];  // NOT data.results
 **Check**:
 ```bash
 # Verify video data in database
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, thumbnail_url, 
        metadata->'video_metadata'->'platform' as platform,
        metadata->'video_metadata'->'embed_url' as embed_url
@@ -470,8 +470,8 @@ Database: prsnl
 User: prsnl
 Password: prsnl123
 Host: 127.0.0.1
-Port: 5433
-Connection: postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl
+Port: 5432
+Connection: postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl
 ```
 
 ### Video Metadata Structure
@@ -547,26 +547,26 @@ echo "2. Backend:"
 curl -s http://localhost:8000/health | jq
 
 echo "3. Frontend:"
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3003/
 
 echo "4. Database Content:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 echo "5. Port Usage:"
-lsof -i :8000,3002,5433
+lsof -i :8000,3003,5432
 ```
 
 ### Content Verification
 ```bash
 # Check recent captures
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, type, url, created_at 
 FROM items 
 ORDER BY created_at DESC 
 LIMIT 10;"
 
 # Check video content specifically
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, duration, thumbnail_url,
        metadata->'video_metadata'->'platform' as platform
 FROM items 
@@ -580,7 +580,7 @@ time curl -s http://localhost:8000/api/timeline?limit=10 > /dev/null
 time curl -s http://localhost:8000/api/search?query=test > /dev/null
 
 # Database performance
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del
 FROM pg_stat_user_tables 
 WHERE tablename = 'items';"
@@ -609,15 +609,15 @@ npm run dev
 
 # 5. Test everything
 curl http://localhost:8000/health
-curl http://localhost:3002/
+curl http://localhost:3003/
 ```
 
 ### Reset Database (Nuclear Option)
 ```bash
 # CAUTION: This will delete all data
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "DROP DATABASE IF EXISTS prsnl;"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "CREATE DATABASE prsnl;"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "CREATE EXTENSION vector;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "DROP DATABASE IF EXISTS prsnl;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "CREATE DATABASE prsnl;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "CREATE EXTENSION vector;"
 
 # Then restart backend to recreate tables
 ```

@@ -71,6 +71,20 @@ CONTENT_TYPE_DEFINITIONS = {
         "icon": "code",
         "description": "Code snippets and repositories",
         "color": "#84CC16"
+    },
+    "development": {
+        "name": "development",
+        "display_name": "Development",
+        "icon": "terminal",
+        "description": "Development documentation, tutorials, and code resources",
+        "color": "#10B981"
+    },
+    "auto": {
+        "name": "auto",
+        "display_name": "Auto-Detect",
+        "icon": "zap",
+        "description": "Automatically detect content type",
+        "color": "#F59E0B"
     }
 }
 

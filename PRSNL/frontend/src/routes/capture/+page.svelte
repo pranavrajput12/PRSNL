@@ -13,17 +13,24 @@
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   import FileUpload from '$lib/components/FileUpload.svelte';
+  import DynamicCaptureInput from '$lib/components/DynamicCaptureInput.svelte';
   import { contentTypes, getTypeIcon } from '$lib/stores/contentTypes';
 
   // Form fields and state
   let url = '';
   let title = '';
+  let content = '';
   let highlight = '';
   let tags: string[] = [];
   let isSubmitting = false;
   let message = '';
   let messageType = '';
   let error: Error | null = null;
+  
+  // Development-specific fields
+  let programmingLanguage = '';
+  let projectCategory = '';
+  let difficultyLevel = 2;
   let recentTags: string[] = [];
   let isLoadingTags = false;
   let isDragging = false;
@@ -221,6 +228,62 @@
     addTerminalLine(`> FILE_UPLOADED: ${uploadedFiles.length} files`);
   }
 
+  function handleDynamicInput(event: CustomEvent): void {
+    const { field, value } = event.detail;
+    if (field === 'url') {
+      url = value;
+      detectVideoUrl(url);
+      // Debounce AI suggestions
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        if (aiSuggestionsTimeout) clearTimeout(aiSuggestionsTimeout);
+        aiSuggestionsTimeout = setTimeout(() => loadAISuggestions(url), 500);
+      }
+    } else if (field === 'content') {
+      content = value;
+      // Auto-detect development content
+      if (contentType === 'development' || contentType === 'auto') {
+        autoDetectDevelopmentMetadata(value);
+      }
+    }
+    addTerminalLine(`> INPUT_UPDATED: ${field.toUpperCase()}`);
+  }
+
+  function autoDetectDevelopmentMetadata(content: string): void {
+    if (!content) return;
+    
+    const lowerContent = content.toLowerCase();
+    
+    // Detect programming language
+    if (!programmingLanguage) {
+      if (content.includes('import ') && content.includes('from ')) {
+        programmingLanguage = 'python';
+      } else if (content.includes('function') || content.includes('const ') || content.includes('let ')) {
+        programmingLanguage = 'javascript';
+      } else if (content.includes('interface ') || content.includes('type ')) {
+        programmingLanguage = 'typescript';
+      } else if (content.includes('public class') || content.includes('private ')) {
+        programmingLanguage = 'java';
+      } else if (content.includes('func ') || content.includes('package main')) {
+        programmingLanguage = 'go';
+      }
+    }
+    
+    // Detect project category
+    if (!projectCategory) {
+      if (lowerContent.includes('react') || lowerContent.includes('vue') || lowerContent.includes('frontend')) {
+        projectCategory = 'Frontend';
+      } else if (lowerContent.includes('api') || lowerContent.includes('server') || lowerContent.includes('backend')) {
+        projectCategory = 'Backend';
+      } else if (lowerContent.includes('docker') || lowerContent.includes('kubernetes') || lowerContent.includes('deployment')) {
+        projectCategory = 'DevOps';
+      } else if (lowerContent.includes('tutorial') || lowerContent.includes('guide') || lowerContent.includes('how to')) {
+        projectCategory = 'Tutorials';
+      } else {
+        projectCategory = 'Documentation';
+      }
+    }
+  }
+
   function selectContentType(type: string): void {
     contentType = type;
     updateStepStatus(2, 'completed');
@@ -251,11 +314,22 @@
 
       const captureRequest: CaptureRequest = {
         url: url || undefined,
+        content: content || undefined,
         title: title || undefined,
         highlight: highlight || undefined,
         content_type: contentType,
         enable_summarization: enableSummarization,
-        tags: tags
+        tags: tags,
+        // Development-specific fields
+        programming_language: programmingLanguage || undefined,
+        project_category: projectCategory || undefined,
+        difficulty_level: difficultyLevel || undefined,
+        is_career_related: contentType === 'development' && (
+          title?.toLowerCase().includes('career') ||
+          title?.toLowerCase().includes('job') ||
+          content?.toLowerCase().includes('career') ||
+          content?.toLowerCase().includes('professional')
+        )
       };
 
       const result = await captureItem(captureRequest);
@@ -304,11 +378,16 @@
   function resetForm(): void {
     url = '';
     title = '';
+    content = '';
     highlight = '';
     tags = [];
     contentType = 'auto';
     enableSummarization = false;
     uploadedFiles = [];
+    // Reset development fields
+    programmingLanguage = '';
+    projectCategory = '';
+    difficultyLevel = 2;
     currentStep = 1;
     stepStatus = {
       1: 'active',
@@ -316,7 +395,8 @@
       3: 'pending',
       4: 'pending'
     };
-    urlInput?.focus();
+    // Focus on the dynamic input component instead
+    // urlInput?.focus();
   }
 </script>
 
@@ -393,27 +473,33 @@
           </div>
           
           <div class="step-content">
-            <div class="input-group">
-              <input 
-                bind:this={urlInput}
-                bind:value={url}
-                type="text" 
-                class="terminal-input"
-                placeholder="https://example.com"
-                disabled={isSubmitting}
-              />
-              {#if isLoadingSuggestions}
-                <div class="input-status">
-                  <Spinner size="small" />
-                  <span>AI analyzing...</span>
-                </div>
-              {:else if isVideoDetected}
-                <div class="input-status video">
-                  <Icon name="video" size="small" color="#DC143C" />
-                  <span>{videoPlatform} Video Detected</span>
-                </div>
-              {/if}
-            </div>
+            <DynamicCaptureInput
+              {contentType}
+              {isSubmitting}
+              bind:url
+              bind:title
+              bind:content
+              bind:highlight
+              bind:tags
+              bind:programmingLanguage
+              bind:projectCategory
+              bind:difficultyLevel
+              on:input={handleDynamicInput}
+              on:tagsUpdate={handleTagsUpdate}
+              on:fileUpload={handleFileUpload}
+            />
+            
+            {#if isLoadingSuggestions}
+              <div class="input-status">
+                <Spinner size="small" />
+                <span>AI analyzing...</span>
+              </div>
+            {:else if isVideoDetected}
+              <div class="input-status video">
+                <Icon name="video" size="small" color="#DC143C" />
+                <span>{videoPlatform} Video Detected</span>
+              </div>
+            {/if}
             
             {#if url && stepStatus[1] === 'processing'}
               <div class="progress-bar">
@@ -470,6 +556,7 @@
                     {:else if type.name === 'link'}🔗
                     {:else if type.name === 'audio'}🎵
                     {:else if type.name === 'code'}💻
+                    {:else if type.name === 'development'}⚡
                     {:else}📋{/if}
                   </span>
                   <span class="option-label">{type.display_name.substring(0, 4).toUpperCase()}</span>

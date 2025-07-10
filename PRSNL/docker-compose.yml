@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
@@ -25,7 +25,7 @@ services:
     container_name: prsnl_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,7 +39,7 @@ services:
     container_name: prsnl_backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
       - ./backend/media:/app/media
@@ -58,13 +58,16 @@ services:
       AZURE_OPENAI_API_VERSION: 2025-01-01-preview
       AZURE_OPENAI_EMBEDDING_DEPLOYMENT: text-embedding-ada-002
       AZURE_OPENAI_WHISPER_DEPLOYMENT: whisper
+      # Zero-cache code reloads
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
 
   frontend:
     build: ./frontend
     container_name: prsnl_frontend
     restart: unless-stopped
     ports:
-      - "3003:3003"
+      - "${FRONTEND_PORT:-3003}:3003"
     environment:
       PUBLIC_API_URL: http://backend:8000
       NODE_ENV: production

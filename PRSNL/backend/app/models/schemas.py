@@ -100,8 +100,13 @@ class CaptureRequest(BaseModel):
     highlight: Optional[str] = Field(None, max_length=1000, description="Highlighted text")
     tags: Optional[List[str]] = Field(default_factory=list, description="Tags for categorization")
     enable_summarization: bool = Field(default=False, description="Enable AI summarization for this item")
-    content_type: str = Field(default="auto", description="Content type: auto, document, video, article, tutorial, image, note, link")
+    content_type: str = Field(default="auto", description="Content type: auto, document, video, article, tutorial, image, note, link, development")
     uploaded_files: Optional[List[Any]] = Field(default_factory=list, description="Uploaded files for processing")
+    # Development-specific fields
+    programming_language: Optional[str] = Field(None, max_length=50, description="Programming language for development content")
+    project_category: Optional[str] = Field(None, max_length=100, description="Project category for development content")
+    difficulty_level: Optional[int] = Field(None, ge=1, le=5, description="Difficulty level (1-5) for development content")
+    is_career_related: Optional[bool] = Field(False, description="Whether this content is career/job related")
     
     @validator('content')
     def validate_url_or_content(cls, v, values):
@@ -135,7 +140,7 @@ class CaptureRequest(BaseModel):
         if v is None:
             return "auto"
         
-        allowed_types = ["auto", "document", "video", "article", "tutorial", "image", "note", "link"]
+        allowed_types = ["auto", "document", "video", "article", "tutorial", "image", "note", "link", "development"]
         if v.lower() not in allowed_types:
             raise ValueError(f"Content type must be one of: {', '.join(allowed_types)}")
         

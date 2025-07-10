@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: dev stop reset seed logs
+.PHONY: dev stop reset seed logs kill-ports check-ports clean-dev test-health
 
 # Define colors for output
 GREEN=\033[0;32m
@@ -49,3 +49,42 @@ seed:
 logs:
 	@echo "$(YELLOW)Showing all service logs (Ctrl+C to exit)...$(NC)"
 	@cd $(PRSNL_DIR) && docker compose logs -f
+
+# Process Lifecycle Management Commands
+
+kill-ports:
+	@echo "$(YELLOW)Killing processes on PRSNL ports...$(NC)"
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:3003 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:5432 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:6379 | xargs kill -9 2>/dev/null || true
+	@echo "$(GREEN)Ports cleared!$(NC)"
+
+check-ports:
+	@echo "$(YELLOW)Checking port usage...$(NC)"
+	@echo "Port 8000 (Backend):"
+	@lsof -i:8000 || echo "  ✓ Available"
+	@echo "Port 3003 (Frontend):"
+	@lsof -i:3003 || echo "  ✓ Available"
+	@echo "Port 5432 (PostgreSQL):"
+	@lsof -i:5432 || echo "  ✓ Available"
+	@echo "Port 6379 (Redis):"
+	@lsof -i:6379 || echo "  ✓ Available"
+
+clean-dev: kill-ports stop
+	@echo "$(YELLOW)Cleaning development environment...$(NC)"
+	@rm -rf frontend/node_modules/.vite 2>/dev/null || true
+	@rm -rf frontend/.svelte-kit 2>/dev/null || true
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@echo "$(GREEN)Development environment cleaned!$(NC)"
+
+test-health:
+	@echo "$(YELLOW)Running smoke tests...$(NC)"
+	@./scripts/smoke_test.sh
+
+quick-test:
+	@echo "$(YELLOW)Quick health check...$(NC)"
+	@curl -s http://localhost:8000/health | jq . || echo "Backend not responding"
+	@curl -s http://localhost:8000/api/health/ready | jq . || echo "Backend not ready"
+	@curl -s http://localhost:8000/api/debug/routes | jq '.total_routes' || echo "Debug endpoint not available"

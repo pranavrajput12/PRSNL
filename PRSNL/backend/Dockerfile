@@ -1,8 +1,11 @@
 FROM python:3.11-slim-bullseye
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1
+# Prevent Python from creating .pyc files (zero-cache reloads)
 ENV PYTHONDONTWRITEBYTECODE=1
+# Force Python to output everything immediately (no buffering)
+ENV PYTHONUNBUFFERED=1
+# Poetry version
 ENV POETRY_VERSION=1.7.1
 
 # Install system dependencies

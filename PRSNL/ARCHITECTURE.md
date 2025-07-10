@@ -15,7 +15,7 @@ PRSNL is a modern personal knowledge management system built with a microservice
                                      │
                     ┌────────────────┴────────────────┐
                     │     SvelteKit Frontend          │
-                    │   (Port 3002, TypeScript)       │
+                    │   (Port 3003, TypeScript)       │
                     └────────────────┬────────────────┘
                                      │ HTTP/WebSocket
                     ┌────────────────┴────────────────┐
@@ -260,7 +260,7 @@ Search Query → API Endpoint → Query Parser
 services:
   - PostgreSQL (Docker) - Port 5432
   - Backend (Local) - Port 8000
-  - Frontend (Local) - Port 3002
+  - Frontend (Local) - Port 3003
 ```
 
 **Note**: See `/PRSNL/PORT_ALLOCATION.md` for complete port assignments and conflict prevention.

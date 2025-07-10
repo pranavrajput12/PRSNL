@@ -11,7 +11,7 @@ This is your single source of truth for completing tasks properly. Use this simp
 
 ### ⚠️ CRITICAL ENVIRONMENT INFO
 - **Container Runtime**: RANCHER DESKTOP (NOT Docker)
-- **Frontend Port**: 3002 (NEVER 3003)
+- **Frontend Port**: 3003 (Updated from 3002)
 - **Backend Port**: 8000
 - **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
 
@@ -88,14 +88,14 @@ Run verification commands from the matrix below to ensure everything works.
 **Sanity Checks - Run These**:
 ```bash
 # 1. Verify frontend still works
-npm run dev -- --port 3002
-curl http://localhost:3002/
+npm run dev -- --port 3003
+curl http://localhost:3003/
 
 # 2. Check for TypeScript errors
 npm run check
 
 # 3. Test the specific changes
-# Open browser to http://localhost:3002 and verify your changes work
+# Open browser to http://localhost:3003 and verify your changes work
 ```
 
 **Update Template**:
@@ -162,14 +162,14 @@ curl -X POST "http://localhost:8000/api/[endpoint]" -H "Content-Type: applicatio
 **Sanity Checks - Run These**:
 ```bash
 # 1. Verify database connection
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT version();"
 
 # 2. Test schema changes
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "\d items"  # Check table structure
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "\d items"  # Check table structure
 
 # 3. Test data integrity
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT COUNT(*) FROM items;"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 # 4. Test API still works with changes
 curl http://localhost:8000/api/timeline?limit=5
@@ -183,7 +183,7 @@ curl http://localhost:8000/api/timeline?limit=5
 
 # In QUICK_REFERENCE_COMPLETE.md - Add to database section:
 # [Description of new capability]
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "[YOUR_QUERY]"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "[YOUR_QUERY]"
 ```
 
 ### 🤖 AI Service Tasks (Claude) - COMPLETED
@@ -266,7 +266,7 @@ pytest tests/[your_test_file].py
 #!/bin/bash
 echo "=== FRONTEND TASK COMPLETION VERIFICATION ==="
 echo "1. Frontend service check:"
-curl -s -o /dev/null -w "Frontend Status: %{http_code}\n" http://localhost:3002/
+curl -s -o /dev/null -w "Frontend Status: %{http_code}\n" http://localhost:3003/
 
 echo "2. TypeScript validation:"
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend
@@ -292,7 +292,7 @@ echo "3. Core functionality test:"
 curl -s http://localhost:8000/api/timeline?limit=3 | jq '.items | length'
 
 echo "4. Database connectivity:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT COUNT(*) FROM items;"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
 
 echo "=== BACKEND VERIFICATION COMPLETE ==="
 ```
@@ -302,13 +302,13 @@ echo "=== BACKEND VERIFICATION COMPLETE ==="
 #!/bin/bash
 echo "=== DATABASE TASK COMPLETION VERIFICATION ==="
 echo "1. Database connection:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT version();"
 
 echo "2. Table structure:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "\d items"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "\d items"
 
 echo "3. Data integrity:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 echo "4. API integration:"
 curl -s http://localhost:8000/api/timeline?limit=1 | jq

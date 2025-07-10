@@ -32,15 +32,21 @@ PRSNL consists of three main components:
 ### ✅ COMPLETED FEATURES
 1. **Core Application** (100%)
    - ✅ **Universal Content Capture** - **Ingest** page
-     - All content types: auto, document, video, article, tutorial, image, note, link
+     - All content types: auto, document, video, article, tutorial, image, note, link, development
      - AI summarization toggle per content type
      - File upload with document processing (PDF, DOCX, TXT, images)
      - Complete validation and error handling (422 errors fixed)
      - 100% success rate across all content types and AI settings
+     - ✅ **Development Content Auto-Classification**: GitHub, Stack Overflow, documentation sites
    - Thought stream with lazy loading - **Thought Stream** page
    - Full-text search (FIXED: was looking for wrong field in API response) - **Neural Nest** page
    - Tag management
    - Individual item pages
+   - ✅ **Code Cortex Hub** - Development content management system
+     - Real-time development statistics and analytics
+     - Functional documentation and links pages with navigation
+     - Programming language and category filtering
+     - Clickable items linking to detailed views
 
 2. **AI Infrastructure** (100%)
    - Azure OpenAI exclusive integration
@@ -76,7 +82,7 @@ PRSNL consists of three main components:
    - Knowledge base integration with RAG
 
 ### 🚧 CURRENT STATUS
-- **Website**: ✅ Running on http://localhost:3002
+- **Website**: ✅ Running on http://localhost:3003 (Updated from 3002)
 - **Backend**: ✅ Running in Docker on port 8000 (all routes operational)
 - **Chat**: ✅ WORKING - WebSocket connection fixed, RAG implemented
 - **Search**: ✅ Working correctly
@@ -84,10 +90,58 @@ PRSNL consists of three main components:
 - **API**: ✅ All endpoints use /api prefix (NOT /api/v1)
 - **AI Provider**: ✅ Azure OpenAI exclusive (Ollama completely removed)
 - **Database**: ✅ 15 test items added (videos, tweets, articles, GitHub repos)
+- **Development Tools**: ✅ Enhanced with expert engineer improvements (2025-07-10)
 
 ---
 
-## 🔧 RECENT FIXES (2025-01-08)
+## 🔧 RECENT FIXES & IMPROVEMENTS
+
+### Latest Updates (2025-07-10)
+
+#### Expert Engineer Development Experience Enhancements:
+1. **Route-Registration Dump System** 
+   - Issue: Debugging routing problems was difficult
+   - Fix: Added environment-controlled route dumping with `DEBUG_ROUTES=true`
+   - Added `/api/debug/routes` endpoint for programmatic route inspection
+   - Status: ✅ COMPLETED
+
+2. **Zero-Cache Code Reloads**
+   - Issue: Python bytecode caching slowed development iterations
+   - Fix: Added `PYTHONDONTWRITEBYTECODE=1` and `PYTHONUNBUFFERED=1` to Docker and backend
+   - Prevents .pyc file creation for instant code changes
+   - Status: ✅ COMPLETED
+
+3. **Exclusive Port Ownership Configuration**
+   - Issue: Port conflicts caused mysterious failures
+   - Fix: Centralized port configuration with environment variables
+   - Updated docker-compose.yml to use `${BACKEND_PORT:-8000}` pattern
+   - Added port configuration to backend config.py
+   - Status: ✅ COMPLETED
+
+4. **Process Lifecycle Management**
+   - Issue: Port conflicts required manual process killing
+   - Fix: Added comprehensive port management system
+   - New commands: `make kill-ports`, `make check-ports`, `make clean-dev`
+   - Created `scripts/kill_ports.sh` utility with intelligent port management
+   - Added startup port conflict detection with development environment assertions
+   - Status: ✅ COMPLETED
+
+5. **Enhanced Health Checks & Smoke Tests**
+   - Issue: No systematic way to validate system health
+   - Fix: Created comprehensive smoke test system
+   - Added `scripts/smoke_test.sh` with 15+ validation checks
+   - Enhanced Makefile with `make test-health` command
+   - Added startup assertions for critical services
+   - Status: ✅ COMPLETED
+
+6. **Future Development Roadmap**
+   - Created `/docs/FUTURE_ROADMAP.md` with prioritized improvements
+   - Documented medium-term goals (Docker dev environment, config centralization)
+   - Identified ideas to skip (event-driven architecture, complex mocking)
+   - Provided implementation priorities and success metrics
+   - Status: ✅ COMPLETED
+
+### Previous Fixes (2025-01-08)
 
 ### Fixed Issues:
 1. **Chat Date-Based Queries**
@@ -218,7 +272,7 @@ prsnl_db        - ✅ Running on 0.0.0.0:5432
 prsnl_redis     - ✅ Running on 0.0.0.0:6379
 
 # Frontend
-Vite dev server - ✅ Running on http://localhost:3002
+Vite dev server - ✅ Running on http://localhost:3003
 ```
 
 ### Known Issues:
@@ -269,6 +323,21 @@ npm run dev
 
 # Test search API
 curl -s "http://localhost:8000/api/search?query=typescript" | jq .
+
+# New Development Tools (2025-07-10)
+make kill-ports         # Kill processes on PRSNL ports
+make check-ports         # Check port availability  
+make clean-dev           # Full development environment cleanup
+make test-health         # Run comprehensive smoke tests
+make quick-test          # Quick health check
+
+# Debug routes
+curl -s "http://localhost:8000/api/debug/routes" | jq .total_routes
+
+# Port management
+./scripts/kill_ports.sh kill    # Kill port conflicts
+./scripts/kill_ports.sh check   # Check port usage
+./scripts/smoke_test.sh          # Full system validation
 ```
 
 ---
