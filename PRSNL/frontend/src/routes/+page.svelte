@@ -51,50 +51,8 @@
   let showSearchResults = false;
   
   onMount(async () => {
-    console.log('📊 Homepage: Starting page load...');
-    const pageStartTime = performance.now();
-    
     mounted = true;
     await loadData();
-    
-    const pageLoadTime = performance.now() - pageStartTime;
-    console.log(`📊 Homepage: Page loaded in ${pageLoadTime.toFixed(2)}ms`);
-    
-    // Monitor overall performance every 10 seconds
-    setInterval(() => {
-      if (performance.memory) {
-        const memory = {
-          used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
-          total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024),
-          limit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)
-        };
-        
-        // Server deployment readiness analysis
-        const connectionInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        const isProduction = window.location.hostname !== 'localhost';
-        const memoryPressure = (memory.used / memory.limit) * 100;
-        
-        console.log(`📊 Overall Performance ${isProduction ? '(PRODUCTION)' : '(LOCAL)'}:
-          - Memory: ${memory.used}MB / ${memory.total}MB (Limit: ${memory.limit}MB)
-          - Memory Pressure: ${memoryPressure.toFixed(1)}% ${memoryPressure > 50 ? '⚠️ HIGH' : '✅ OK'}
-          - Items Loaded: ${timelineItems.length}
-          - Search Results: ${searchResults.length}
-          - Network: ${connectionInfo?.effectiveType || 'Unknown'}
-          - Connection: ${connectionInfo?.downlink || 'Unknown'}Mbps
-          - RTT: ${connectionInfo?.rtt || 'Unknown'}ms
-          ${isProduction ? '🚀 PRODUCTION METRICS ACTIVE' : '🏠 LOCAL DEVELOPMENT'}
-        `);
-        
-        // Server deployment warnings
-        if (memoryPressure > 70) {
-          console.warn('⚠️ HIGH MEMORY PRESSURE: Consider optimizing 3D components for server deployment');
-        }
-        
-        if (memory.used > 200) {
-          console.warn('⚠️ HIGH MEMORY USAGE: May cause issues on lower-end server environments');
-        }
-      }
-    }, 10000);
   });
   
   onDestroy(() => {

@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-  import { performanceAnalyzer } from '$lib/utils/performanceAnalyzer';
   
   let canvas: HTMLCanvasElement;
   let scene: THREE.Scene;
@@ -17,37 +16,11 @@
   let rotationX = 0;
   let rotationY = 0;
   
-  // Performance monitoring
-  let frameCount = 0;
-  let lastFPSTime = 0;
-  let currentFPS = 0;
-  let memoryUsage = { used: 0, total: 0 };
-  let renderTime = 0;
-  let loadStartTime = 0;
-  let webglInfo = { vendor: '', renderer: '', version: '' };
-  let networkMetrics = { loadTime: 0, fileSize: 0 };
-  
   onMount(async () => {
-    console.log('🖥️ Mac3D: Component mounting...');
-    const startTime = performance.now();
-    
     initThreeJS();
     await loadMacModel();
     createScreenTexture();
     animate();
-    
-    const loadTime = performance.now() - startTime;
-    console.log(`🖥️ Mac3D: Initialized in ${loadTime.toFixed(2)}ms`);
-    
-    // Monitor performance every 5 seconds
-    setInterval(() => {
-      monitorPerformance();
-    }, 5000);
-    
-    // Generate performance report every 30 seconds
-    setInterval(() => {
-      console.log('🔍 Mac3D Deployment Analysis:\n' + performanceAnalyzer.generateReport());
-    }, 30000);
   });
   
   onDestroy(() => {
@@ -128,16 +101,6 @@
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
-    // Capture WebGL info for server deployment analysis
-    const gl = renderer.getContext();
-    webglInfo = {
-      vendor: gl.getParameter(gl.VENDOR),
-      renderer: gl.getParameter(gl.RENDERER),
-      version: gl.getParameter(gl.VERSION)
-    };
-    
-    console.log('🖥️ Mac3D WebGL Info:', webglInfo);
-    
     // Lighting setup
     const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
     scene.add(ambientLight);
@@ -214,34 +177,9 @@
   
   async function loadMacModel() {
     const loader = new GLTFLoader();
-    loadStartTime = performance.now();
     
     try {
-      // Track network performance for server deployment
-      const startTime = performance.now();
       const gltf = await loader.loadAsync('/models/mac-classic.glb');
-      const endTime = performance.now();
-      
-      networkMetrics.loadTime = endTime - startTime;
-      
-      // Estimate file size (rough approximation)
-      if (gltf.scene) {
-        let vertexCount = 0;
-        gltf.scene.traverse((child) => {
-          if (child instanceof THREE.Mesh && child.geometry) {
-            vertexCount += child.geometry.attributes.position?.count || 0;
-          }
-        });
-        networkMetrics.fileSize = Math.round(vertexCount * 0.1); // Rough estimate in KB
-      }
-      
-      console.log(`🖥️ Mac3D Network Metrics:
-        - Load Time: ${networkMetrics.loadTime.toFixed(2)}ms
-        - Estimated Size: ${networkMetrics.fileSize}KB
-        - Connection: ${navigator.connection?.effectiveType || 'Unknown'}
-        - Downlink: ${navigator.connection?.downlink || 'Unknown'}Mbps
-      `);
-      
       macModel = gltf.scene;
       
       // Center and scale the model
@@ -285,7 +223,6 @@
       });
       
       scene.add(macModel);
-      console.log('Mac Classic model loaded');
     } catch (error) {
       console.error('Error loading Mac model:', error);
     }
@@ -294,15 +231,6 @@
   function animate() {
     animationId = requestAnimationFrame(animate);
     
-    // FPS monitoring
-    frameCount++;
-    const currentTime = performance.now();
-    if (currentTime >= lastFPSTime + 1000) {
-      currentFPS = Math.round((frameCount * 1000) / (currentTime - lastFPSTime));
-      frameCount = 0;
-      lastFPSTime = currentTime;
-    }
-    
     // Apply user drag rotation only
     if (macModel) {
       macModel.rotation.x = rotationX;
@@ -310,56 +238,6 @@
     }
     
     renderer.render(scene, camera);
-  }
-  
-  function monitorPerformance() {
-    if (performance.memory) {
-      memoryUsage = {
-        used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
-        total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024)
-      };
-    }
-    
-    // Calculate render time for performance analysis
-    const renderStart = performance.now();
-    if (renderer && scene && camera) {
-      renderer.render(scene, camera);
-    }
-    renderTime = performance.now() - renderStart;
-    
-    // Server deployment metrics
-    const connectionInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const isSlowConnection = connectionInfo?.effectiveType === '2g' || connectionInfo?.effectiveType === 'slow-2g';
-    const batteryInfo = navigator.getBattery ? 'Available' : 'N/A';
-    
-    console.log(`🖥️ Mac3D Performance:
-      - FPS: ${currentFPS} ${currentFPS < 30 ? '⚠️ LOW' : currentFPS < 50 ? '⚡ OK' : '✅ GOOD'}
-      - Memory: ${memoryUsage.used}MB / ${memoryUsage.total}MB ${memoryUsage.used > 100 ? '⚠️ HIGH' : '✅ OK'}
-      - Render Time: ${renderTime.toFixed(2)}ms ${renderTime > 16 ? '⚠️ SLOW' : '✅ FAST'}
-      - WebGL Context: ${renderer?.getContext() ? '✅ Active' : '❌ Lost'}
-      - Textures: ${renderer?.info?.memory?.textures || 'N/A'}
-      - Geometries: ${renderer?.info?.memory?.geometries || 'N/A'}
-      - Network: ${connectionInfo?.effectiveType || 'Unknown'} ${isSlowConnection ? '⚠️ SLOW' : '✅ OK'}
-      - Load Time: ${networkMetrics.loadTime.toFixed(0)}ms
-      - File Size: ~${networkMetrics.fileSize}KB
-    `);
-    
-    // Feed data to performance analyzer
-    performanceAnalyzer.addMetric({
-      fps: currentFPS,
-      memoryUsed: memoryUsage.used,
-      memoryTotal: memoryUsage.total,
-      renderTime: renderTime,
-      loadTime: networkMetrics.loadTime,
-      fileSize: networkMetrics.fileSize,
-      networkType: connectionInfo?.effectiveType || 'unknown',
-      isWebGLActive: !!renderer?.getContext()
-    });
-    
-    // Alert if performance degrades (important for server deployment)
-    if (currentFPS < 30 || memoryUsage.used > 100 || renderTime > 16) {
-      console.warn('⚠️ Mac3D: Performance degradation detected! Consider optimizations for server deployment.');
-    }
   }
   
   function updateRotation() {

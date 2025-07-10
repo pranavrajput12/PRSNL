@@ -16,27 +16,10 @@
   let isHovered = false;
   let rotationSpeed = 0.1;
   
-  // Performance monitoring
-  let frameCount = 0;
-  let lastFPSTime = 0;
-  let currentFPS = 0;
-  let memoryUsage = { used: 0, total: 0 };
-  
   onMount(async () => {
-    console.log('🌀 Fan3D: Component mounting...');
-    const startTime = performance.now();
-    
     initThreeJS();
     await loadFanModel();
     animate();
-    
-    const loadTime = performance.now() - startTime;
-    console.log(`🌀 Fan3D: Initialized in ${loadTime.toFixed(2)}ms`);
-    
-    // Monitor performance every 5 seconds
-    setInterval(() => {
-      monitorPerformance();
-    }, 5000);
   });
   
   onDestroy(() => {
@@ -244,15 +227,6 @@
   function animate() {
     animationId = requestAnimationFrame(animate);
     
-    // FPS monitoring
-    frameCount++;
-    const currentTime = performance.now();
-    if (currentTime >= lastFPSTime + 1000) {
-      currentFPS = Math.round((frameCount * 1000) / (currentTime - lastFPSTime));
-      frameCount = 0;
-      lastFPSTime = currentTime;
-    }
-    
     // Rotate only the fan blades if not hovered
     if (!isHovered && fanBlades.length > 0) {
       fanBlades.forEach(blade => {
@@ -263,24 +237,6 @@
     }
     
     renderer.render(scene, camera);
-  }
-  
-  function monitorPerformance() {
-    if (performance.memory) {
-      memoryUsage = {
-        used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
-        total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024)
-      };
-    }
-    
-    console.log(`🌀 Fan3D Performance:
-      - FPS: ${currentFPS}
-      - Memory: ${memoryUsage.used}MB / ${memoryUsage.total}MB
-      - WebGL Context: ${renderer?.getContext() ? 'Active' : 'Lost'}
-      - Fan Blades: ${fanBlades.length}
-      - Textures: ${renderer?.info?.memory?.textures || 'N/A'}
-      - Geometries: ${renderer?.info?.memory?.geometries || 'N/A'}
-    `);
   }
   
   function handleMouseEnter() {
