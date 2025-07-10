@@ -57,32 +57,32 @@
     });
   }
   
-  // Get depth based on item count
-  function getDepth(itemCount: number) {
-    if (itemCount === 0) return 0;
-    if (itemCount === 1) return 20;
-    if (itemCount === 2) return 40;
-    if (itemCount === 3) return 60;
-    return Math.min(80, 20 * itemCount);
+  // Handle mouse movement for 3D effect
+  function handleMouseMove(event: MouseEvent) {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    
+    // Calculate rotation based on mouse position
+    const rotationX = (y - 0.5) * -15; // Smooth rotation
+    const rotationY = (x - 0.5) * 15;
+    
+    rotateX.set(rotationX);
+    rotateY.set(rotationY);
   }
   
-  // Navigate months
-  function previousMonth() {
-    if (currentMonth === 0) {
-      currentMonth = 11;
-      currentYear--;
-    } else {
-      currentMonth--;
-    }
+  function handleMouseLeave() {
+    rotateX.set(0);
+    rotateY.set(0);
   }
   
-  function nextMonth() {
-    if (currentMonth === 11) {
-      currentMonth = 0;
-      currentYear++;
-    } else {
-      currentMonth++;
-    }
+  // Handle day click
+  function handleDayClick(day: number) {
+    if (!day) return;
+    
+    const date = new Date(currentYear, currentMonth, day);
+    const dayItems = getItemsForDate(day);
+    onDateClick(date, dayItems);
   }
   
   // Format month/year display
@@ -92,112 +92,345 @@
     return `${monthNames[currentMonth]} ${currentYear}`;
   }
   
-  // Handle mouse movement for 3D effect
-  function handleMouseMove(event: MouseEvent) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    
-    $rotateY = (x - 0.5) * 20;
-    $rotateX = (y - 0.5) * -20;
-  }
-  
-  function handleMouseLeave() {
-    $rotateX = 0;
-    $rotateY = 0;
-  }
+  // Auto-update current month
+  onMount(() => {
+    const now = new Date();
+    currentMonth = now.getMonth();
+    currentYear = now.getFullYear();
+  });
   
   $: calendarDays = getCalendarDays();
+  $: monthYearDisplay = getMonthYearDisplay();
 </script>
 
-<div class="calendar-3d-container">
-  <div class="calendar-header">
-    <button class="month-nav" on:click={previousMonth}>
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M12 6L8 10L12 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <h3 class="month-year">{getMonthYearDisplay()}</h3>
-    <button class="month-nav" on:click={nextMonth}>
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M8 6L12 10L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-  </div>
-  
-  <div class="calendar-weekdays">
-    {#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as weekday}
-      <div class="weekday">{weekday}</div>
-    {/each}
+<div class="calendar-section">
+  <!-- Timeline DDR4 RAM - Below Calendar -->
+  <div class="timeline-ram-area">
+    <div class="timeline-ram-slot">
+      <!-- RAM Port/Slot -->
+      <div class="ram-port">
+        <div class="port-pins">
+          {#each Array(30) as _, i}
+            <div class="port-pin" style="--index: {i}"></div>
+          {/each}
+        </div>
+      </div>
+      
+      <div class="timeline-ddr4-ram" on:click={() => window.location.href = '/timeline'}>
+        <div class="ram-body">
+          <div class="ram-label">Timeline DDR4</div>
+          <div class="ram-notch"></div>
+          <div class="ram-contacts">
+            {#each Array(30) as _, i}
+              <div class="ram-contact" style="--index: {i}"></div>
+            {/each}
+          </div>
+        </div>
+        <div class="ram-hover-text">Click to access timeline</div>
+      </div>
+    </div>
   </div>
   
   <div 
-    class="calendar-grid"
+    class="calendar-container" 
     on:mousemove={handleMouseMove}
     on:mouseleave={handleMouseLeave}
-    style="transform: perspective(1000px) rotateX({$rotateX}deg) rotateY({$rotateY}deg)"
+    style="transform: rotateX({$rotateX}deg) rotateY({$rotateY}deg);"
+    role="button"
+    tabindex="0"
   >
-    {#each calendarDays as day, i}
-      {#if day}
-        {@const dayItems = getItemsForDate(day)}
-        {@const depth = getDepth(dayItems.length)}
-        {@const isToday = day === currentDate.getDate() && 
-                          currentMonth === currentDate.getMonth() && 
-                          currentYear === currentDate.getFullYear()}
-        
-        <button
-          class="calendar-day"
-          class:has-items={dayItems.length > 0}
-          class:is-today={isToday}
-          class:is-hovered={hoveredDay === day}
-          on:click={() => onDateClick(new Date(currentYear, currentMonth, day), dayItems)}
+    <!-- Wire Spiral Binding -->
+    <div class="wire-spiral-binding">
+      {#each Array(12) as _, i}
+        <div class="wire-coil" style="--index: {i}"></div>
+      {/each}
+    </div>
+    
+    <!-- Calendar Grid -->
+    <div class="calendar-grid">
+      <!-- Day headers -->
+      <div class="day-header">Sun</div>
+      <div class="day-header">Mon</div>
+      <div class="day-header">Tue</div>
+      <div class="day-header">Wed</div>
+      <div class="day-header">Thu</div>
+      <div class="day-header">Fri</div>
+      <div class="day-header">Sat</div>
+      
+      <!-- Calendar days -->
+      {#each calendarDays as day}
+        <div 
+          class="calendar-day {day ? 'active' : ''} {day === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear() ? 'today' : ''}"
+          class:has-items={day && getItemsForDate(day).length > 0}
+          on:click={() => handleDayClick(day)}
           on:mouseenter={() => hoveredDay = day}
           on:mouseleave={() => hoveredDay = null}
-          style="
-            transform: translateZ({hoveredDay === day ? depth * 1.5 + 20 : depth}px) 
-                      {hoveredDay === day ? 'scale(1.1)' : 'scale(1)'};
-            --depth: {depth}px;
-            --hover-depth: {depth * 1.5 + 20}px;
-            animation-delay: {i * 30}ms;
-            --glow-color: {dayItems.length > 3 ? 'rgba(74, 158, 255, 0.5)' : 
-                          dayItems.length > 0 ? 'rgba(139, 92, 246, 0.3)' : 
-                          'transparent'};
-          "
         >
-          <span class="day-number">{day}</span>
-          {#if dayItems.length > 0}
-            <span class="item-count">{dayItems.length}</span>
-          {/if}
-          
-          {#if hoveredDay === day && dayItems.length > 0}
-            <div class="tooltip">
-              <strong>{dayItems.length} item{dayItems.length !== 1 ? 's' : ''}</strong>
-              <div class="tooltip-items">
-                {#each dayItems.slice(0, 3) as item}
-                  <div class="tooltip-item">{item.title}</div>
-                {/each}
-                {#if dayItems.length > 3}
-                  <div class="tooltip-more">+{dayItems.length - 3} more</div>
-                {/if}
+          {#if day}
+            <span class="day-number">{day}</span>
+            {#if getItemsForDate(day).length > 0}
+              <div class="item-indicator">
+                <span class="item-count">{getItemsForDate(day).length}</span>
               </div>
-            </div>
+            {/if}
           {/if}
-        </button>
-      {:else}
-        <div class="calendar-day empty"></div>
-      {/if}
-    {/each}
+        </div>
+      {/each}
+    </div>
+  </div>
+</div>
+
+<!-- EPIC CPU FAN - Bottom Centerpiece -->
+<div class="epic-cpu-fan-section">
+  <div class="cpu-fan-massive rotating-smooth">
+    <!-- Fan Frame -->
+    <div class="fan-frame">
+      <!-- Mounting Holes -->
+      <div class="mounting-hole top-left"></div>
+      <div class="mounting-hole top-right"></div>
+      <div class="mounting-hole bottom-left"></div>
+      <div class="mounting-hole bottom-right"></div>
+      
+      <!-- Fan Blades -->
+      <div class="fan-blades">
+        {#each Array(9) as _, i}
+          <div class="fan-blade" style="--blade-index: {i}"></div>
+        {/each}
+      </div>
+      
+      <!-- Motor Housing -->
+      <div class="motor-housing">
+        <div class="motor-coils">
+          {#each Array(6) as _, i}
+            <div class="motor-coil" style="--coil-index: {i}"></div>
+          {/each}
+        </div>
+      </div>
+    </div>
+    
+    <!-- LED Ring -->
+    <div class="led-ring pulsing">
+      {#each Array(16) as _, i}
+        <div class="led-light" style="--led-index: {i}"></div>
+      {/each}
+    </div>
+    
+    <!-- Heatsink -->
+    <div class="heatsink">
+      <div class="heat-pipes">
+        {#each Array(4) as _, i}
+          <div class="heat-pipe" style="--pipe-index: {i}"></div>
+        {/each}
+      </div>
+      <div class="heatsink-fins">
+        {#each Array(8) as _, i}
+          <div class="fin" style="--fin-index: {i}"></div>
+        {/each}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Fan Performance Stats -->
+  <div class="fan-stats">
+    <div class="stat-item">
+      <span class="stat-label">RPM</span>
+      <span class="stat-value">1800</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Temp</span>
+      <span class="stat-value">42°C</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Status</span>
+      <span class="stat-value status-active">Active</span>
+    </div>
+  </div>
+  
+  <!-- Fan Wiring -->
+  <div class="fan-wiring">
+    <div class="wire red"></div>
+    <div class="wire black"></div>
+    <div class="wire yellow"></div>
+    <div class="wire blue"></div>
   </div>
 </div>
 
 <style>
-  .calendar-3d-container {
-    padding: 3rem;
-    background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.03) 0%,
-      rgba(255, 255, 255, 0.01) 50%,
-      rgba(255, 255, 255, 0.02) 100%
-    );
+  .calendar-section {
+    margin: 2rem 0;
+    position: relative;
+  }
+  
+  .calendar-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .calendar-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Timeline DDR4 RAM - Below Calendar */
+  .timeline-ram-area {
+    display: flex;
+    justify-content: center;
+    margin: 3rem 0;
+  }
+  
+  .timeline-ram-slot {
+    position: relative;
+    width: 220px;
+    height: 80px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+      inset 0 2px 8px rgba(0, 0, 0, 0.3),
+      0 4px 16px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+  }
+  
+  .ram-port {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 190px;
+    height: 15px;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    border-radius: 3px;
+    box-shadow: 
+      inset 0 3px 8px rgba(0, 0, 0, 0.9),
+      inset 0 -1px 2px rgba(255, 255, 255, 0.05);
+    z-index: 1;
+  }
+  
+  .port-pins {
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 6px;
+    display: flex;
+    gap: 1px;
+  }
+  
+  .port-pin {
+    flex: 1;
+    height: 100%;
+    background: linear-gradient(180deg, #333 0%, #111 100%);
+    border-radius: 0 0 1px 1px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .timeline-ddr4-ram {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 45px;
+    background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+      0 4px 12px rgba(74, 158, 255, 0.3),
+      inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    z-index: 2;
+  }
+  
+  .timeline-ddr4-ram:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 
+      0 8px 24px rgba(74, 158, 255, 0.4),
+      inset 0 1px 3px rgba(255, 255, 255, 0.4);
+  }
+  
+  .ram-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .ram-label {
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    z-index: 2;
+    position: relative;
+  }
+  
+  .ram-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 8px;
+    background: #1a1a1a;
+    border-radius: 0 0 4px 4px;
+  }
+  
+  .ram-contacts {
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 4px;
+    display: flex;
+    gap: 1px;
+  }
+  
+  .ram-contact {
+    flex: 1;
+    height: 100%;
+    background: linear-gradient(180deg, #ffd700 0%, #ffb000 100%);
+    border-radius: 0 0 1px 1px;
+  }
+  
+  .ram-hover-text {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .timeline-ddr4-ram:hover .ram-hover-text {
+    opacity: 1;
+  }
+  
+  .calendar-container {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    background: transparent;
     backdrop-filter: blur(40px) saturate(150%);
     border-radius: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -205,71 +438,78 @@
       0 30px 60px -20px rgba(0, 0, 0, 0.8),
       0 10px 20px -5px rgba(0, 0, 0, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-    position: relative;
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+      0 0 40px rgba(255, 255, 255, 0.1);
     overflow: visible;
     transform-style: preserve-3d;
     perspective: 2000px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .calendar-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
+  .calendar-container:hover {
+    box-shadow: 
+      0 40px 80px -20px rgba(0, 0, 0, 0.9),
+      0 15px 30px -5px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+      0 0 60px rgba(255, 255, 255, 0.15);
   }
   
-  .month-nav {
-    width: 40px;
+  /* Wire Spiral Binding */
+  .wire-spiral-binding {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
     height: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+    z-index: 10;
+  }
+  
+  .wire-coil {
+    width: 20px;
+    height: 40px;
+    background: linear-gradient(180deg, #c0c0c0 0%, #808080 50%, #404040 100%);
     border-radius: 50%;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 
+      inset 2px 0 4px rgba(255, 255, 255, 0.3),
+      inset -2px 0 4px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2);
   }
   
-  .month-nav:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-    transform: scale(1.1);
-  }
-  
-  .month-year {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-    min-width: 200px;
-    text-align: center;
-  }
-  
-  .calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  .weekday {
-    text-align: center;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 0.5rem;
+  .wire-coil::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(180deg, #e0e0e0 0%, #a0a0a0 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-    transform-style: preserve-3d;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 1px;
+    background: transparent;
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+  
+  .day-header {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border-radius: 0.5rem;
   }
   
   .calendar-day {
@@ -278,293 +518,462 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.05),
-      rgba(255, 255, 255, 0.02)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    cursor: pointer;
     position: relative;
-    transform-style: preserve-3d;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-    box-shadow: 
-      0 2px 8px rgba(0, 0, 0, 0.2),
-      0 1px 2px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-  
-  .calendar-day::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(145deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.03) 50%,
-      transparent 100%
-    );
-    border-radius: 1rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  
-  .calendar-day.empty {
-    cursor: default;
     background: transparent;
-    border: none;
-    box-shadow: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 60px;
   }
   
-  .calendar-day:not(.empty):hover {
-    background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05)
-    );
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 
-      0 10px 40px rgba(0, 0, 0, 0.3),
-      0 2px 10px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  .calendar-day.active {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .calendar-day:not(.empty):hover::before {
-    opacity: 1;
+  .calendar-day.active:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .calendar-day.today {
+    background: rgba(74, 158, 255, 0.2);
+    border: 1px solid rgba(74, 158, 255, 0.5);
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
   }
   
   .calendar-day.has-items {
-    background: linear-gradient(145deg, 
-      rgba(74, 158, 255, 0.15), 
-      rgba(139, 92, 246, 0.1)
-    );
-    border: 1px solid transparent;
-    border-image: linear-gradient(145deg,
-      rgba(74, 158, 255, 0.5),
-      rgba(139, 92, 246, 0.5)
-    ) 1;
-    box-shadow: 
-      0 4px 20px -2px rgba(74, 158, 255, 0.4),
-      0 2px 10px -2px rgba(139, 92, 246, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  }
-  
-  .calendar-day.has-items::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    background: linear-gradient(145deg,
-      rgba(74, 158, 255, 0.3),
-      rgba(139, 92, 246, 0.3)
-    );
-    border-radius: 1rem;
-    opacity: 0;
-    z-index: -1;
-    filter: blur(10px);
-    transition: opacity 0.3s;
+    background: rgba(220, 20, 60, 0.1);
+    border: 1px solid rgba(220, 20, 60, 0.3);
   }
   
   .calendar-day.has-items:hover {
-    background: linear-gradient(145deg, 
-      rgba(74, 158, 255, 0.25), 
-      rgba(139, 92, 246, 0.2)
-    );
-    box-shadow: 
-      0 15px 50px -5px rgba(74, 158, 255, 0.5),
-      0 5px 20px -2px rgba(139, 92, 246, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  }
-  
-  .calendar-day.has-items:hover::after {
-    opacity: 0.5;
-  }
-  
-  .calendar-day.is-today {
-    background: linear-gradient(145deg, 
-      rgba(220, 20, 60, 0.9),
-      rgba(220, 20, 60, 0.7)
-    );
-    border: 1px solid rgba(220, 20, 60, 0.8);
-    color: white;
-    box-shadow: 
-      0 8px 30px -4px rgba(220, 20, 60, 0.6),
-      0 4px 15px -2px rgba(220, 20, 60, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  }
-  
-  .calendar-day.is-today::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: radial-gradient(circle,
-      rgba(220, 20, 60, 0.6),
-      transparent
-    );
-    border-radius: 1rem;
-    z-index: -1;
-    filter: blur(15px);
-    animation: pulse 2s infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.1); }
-  }
-  
-  .calendar-day.is-today .day-number {
-    font-weight: 800;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: rgba(220, 20, 60, 0.2);
+    box-shadow: 0 10px 30px rgba(220, 20, 60, 0.3);
   }
   
   .day-number {
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--text-primary);
+    z-index: 1;
+  }
+  
+  .item-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--man-united-red);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(220, 20, 60, 0.4);
   }
   
   .item-count {
-    position: absolute;
-    top: -0.25rem;
-    right: -0.25rem;
-    background: linear-gradient(135deg, var(--accent), rgba(74, 158, 255, 0.8));
-    color: white;
     font-size: 0.7rem;
-    font-weight: 800;
-    padding: 0.25rem 0.5rem;
-    border-radius: 100px;
-    min-width: 1.5rem;
-    text-align: center;
-    box-shadow: 
-      0 4px 12px -2px rgba(74, 158, 255, 0.5),
-      0 2px 4px -1px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    transform: translateZ(10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards;
-    animation-delay: calc(var(--animation-delay, 0) + 200ms);
+    font-weight: 700;
   }
   
-  .calendar-day:hover .item-count {
-    transform: translateZ(20px) scale(1.2);
+  /* EPIC CPU FAN - Bottom Centerpiece */
+  .epic-cpu-fan-section {
+    margin: 4rem 0;
+    padding: 3rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border-radius: 2rem;
     box-shadow: 
-      0 6px 20px -2px rgba(74, 158, 255, 0.7),
-      0 3px 8px -1px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      0 20px 40px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
   }
   
-  @keyframes popIn {
+  .cpu-fan-massive {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .rotating-smooth {
+    animation: smoothRotate 3s linear infinite;
+  }
+  
+  @keyframes smoothRotate {
     from {
-      transform: scale(0) translateZ(0);
-      opacity: 0;
+      transform: rotate(0deg);
     }
     to {
-      transform: scale(1) translateZ(10px);
+      transform: rotate(360deg);
+    }
+  }
+  
+  .fan-frame {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 50%;
+    border: 8px solid #333;
+    box-shadow: 
+      0 0 50px rgba(0, 0, 0, 0.8),
+      inset 0 4px 16px rgba(0, 0, 0, 0.5),
+      inset 0 -4px 16px rgba(255, 255, 255, 0.1);
+  }
+  
+  .mounting-hole {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #000;
+    border-radius: 50%;
+    border: 2px solid #333;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .mounting-hole.top-left {
+    top: 15px;
+    left: 15px;
+  }
+  
+  .mounting-hole.top-right {
+    top: 15px;
+    right: 15px;
+  }
+  
+  .mounting-hole.bottom-left {
+    bottom: 15px;
+    left: 15px;
+  }
+  
+  .mounting-hole.bottom-right {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .fan-blades {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+  }
+  
+  .fan-blade {
+    position: absolute;
+    width: 80px;
+    height: 12px;
+    background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%);
+    border-radius: 6px;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 50%;
+    transform: translate(-50%, -50%) rotate(calc(var(--blade-index) * 40deg));
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.4),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+  
+  .fan-blade::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(135deg, #6a6a6a 0%, #4a4a4a 100%);
+    border-radius: 4px;
+  }
+  
+  .motor-housing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #444 0%, #222 100%);
+    border-radius: 50%;
+    border: 3px solid #333;
+    box-shadow: 
+      0 0 20px rgba(0, 0, 0, 0.5),
+      inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  
+  .motor-coils {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+  }
+  
+  .motor-coil {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #666;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(var(--coil-index) * 60deg)) translateY(-12px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .led-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  
+  .pulsing {
+    animation: ledPulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes ledPulse {
+    0%, 100% {
+      opacity: 0.7;
+    }
+    50% {
       opacity: 1;
     }
   }
   
-  .tooltip {
+  .led-light {
     position: absolute;
-    bottom: calc(100% + 0.5rem);
+    width: 4px;
+    height: 4px;
+    background: #00ff00;
+    border-radius: 50%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    min-width: 200px;
-    z-index: 1000;
+    transform: translate(-50%, -50%) rotate(calc(var(--led-index) * 22.5deg)) translateY(-158px);
+    box-shadow: 
+      0 0 8px #00ff00,
+      0 0 16px #00ff00;
+  }
+  
+  .heatsink {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
     pointer-events: none;
-    animation: tooltipIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .tooltip strong {
+  .heat-pipes {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+  }
+  
+  .heat-pipe {
+    position: absolute;
+    width: 4px;
+    height: 60px;
+    background: linear-gradient(180deg, #888 0%, #555 100%);
+    border-radius: 2px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(var(--pipe-index) * 90deg)) translateY(-20px);
+    box-shadow: 
+      0 1px 4px rgba(0, 0, 0, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  }
+  
+  .heatsink-fins {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px;
+    height: 90px;
+  }
+  
+  .fin {
+    position: absolute;
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(180deg, #aaa 0%, #777 100%);
+    border-radius: 1px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(var(--fin-index) * 45deg)) translateY(-25px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .fan-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-label {
     display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
   }
   
-  .tooltip-items {
+  .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  .status-active {
+    color: #00ff00;
+  }
+  
+  .fan-wiring {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 4px;
   }
   
-  .tooltip-item {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.8);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .wire {
+    width: 60px;
+    height: 3px;
+    border-radius: 1.5px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   
-  .tooltip-more {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.5);
-    font-style: italic;
-    margin-top: 0.25rem;
+  .wire.red {
+    background: linear-gradient(90deg, #ff0000 0%, #cc0000 100%);
   }
   
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateZ(-50px) rotateX(30deg) scale(0.8);
-      filter: blur(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateZ(var(--depth, 0)) rotateX(0) scale(1);
-      filter: blur(0);
-    }
+  .wire.black {
+    background: linear-gradient(90deg, #333 0%, #000 100%);
   }
   
-  /* Dynamic shadow based on depth */
-  .calendar-day:not(.empty) {
-    box-shadow: 
-      0 calc(2px + var(--depth) * 0.1) calc(8px + var(--depth) * 0.3) rgba(0, 0, 0, 0.2),
-      0 calc(1px + var(--depth) * 0.05) calc(2px + var(--depth) * 0.1) rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  .wire.yellow {
+    background: linear-gradient(90deg, #ffff00 0%, #cccc00 100%);
   }
   
-  .calendar-day.has-items {
-    box-shadow: 
-      0 calc(4px + var(--depth) * 0.15) calc(20px + var(--depth) * 0.4) -2px var(--glow-color),
-      0 calc(2px + var(--depth) * 0.1) calc(10px + var(--depth) * 0.2) -2px rgba(139, 92, 246, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  .wire.blue {
+    background: linear-gradient(90deg, #0000ff 0%, #0000cc 100%);
   }
   
-  @keyframes tooltipIn {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
-  
+  /* Responsive Design */
   @media (max-width: 768px) {
-    .calendar-3d-container {
-      padding: 1rem;
-    }
-    
-    .month-year {
-      font-size: 1.25rem;
+    .calendar-container {
+      padding: 2rem 1rem;
     }
     
     .calendar-grid {
-      gap: 0.25rem;
+      gap: 2px;
     }
     
     .day-number {
-      font-size: 0.875rem;
+      font-size: 1rem;
+    }
+    
+    .calendar-day {
+      min-height: 50px;
+    }
+    
+    .cpu-fan-massive {
+      width: 250px;
+      height: 250px;
+    }
+    
+    .fan-frame {
+      width: 230px;
+      height: 230px;
+    }
+    
+    .fan-blades {
+      width: 160px;
+      height: 160px;
+    }
+    
+    .fan-blade {
+      width: 60px;
+      height: 10px;
+    }
+    
+    .led-ring {
+      width: 270px;
+      height: 270px;
+    }
+    
+    .fan-stats {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .calendar-container {
+      padding: 1.5rem 0.5rem;
+    }
+    
+    .day-number {
+      font-size: 0.9rem;
+    }
+    
+    .calendar-day {
+      min-height: 40px;
+    }
+    
+    .cpu-fan-massive {
+      width: 200px;
+      height: 200px;
+    }
+    
+    .fan-frame {
+      width: 180px;
+      height: 180px;
+    }
+    
+    .timeline-ram-area {
+      margin: 2rem 0;
+    }
+    
+    .timeline-ram-slot {
+      width: 160px;
+      height: 50px;
+    }
+    
+    .timeline-ddr4-ram {
+      width: 140px;
+      height: 30px;
+    }
+    
+    .ram-label {
+      font-size: 0.8rem;
     }
   }
 </style>
