@@ -158,6 +158,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             duplicate_info=duplicate_info
         )
         
+    except InvalidInput:
+        # Re-raise InvalidInput exceptions without wrapping them
+        raise
     except Exception as e:
         logger.error(f"Failed to capture item: {str(e)}", exc_info=True)
         # Update item status to failed if initial insertion happened

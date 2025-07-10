@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Brain Terminal - Menu Preview</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            overflow-x: hidden;
+        }
+        
+        .preview-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .terminal-sidebar {
+            width: 350px;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+            border-right: 2px solid rgba(0, 255, 100, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .terminal-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 100, 0.1) 2px,
+                    rgba(0, 255, 100, 0.1) 4px
+                );
+            animation: scan-lines 2s linear infinite;
+            pointer-events: none;
+        }
+        
+        .electrical-animations {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .electrical-spark {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+            animation: spark-travel 4s ease-in-out infinite;
+        }
+        
+        .spark-1 {
+            top: 20%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .spark-2 {
+            top: 40%;
+            left: 95%;
+            animation-delay: 1s;
+        }
+        
+        .spark-3 {
+            top: 60%;
+            left: 10%;
+            animation-delay: 2s;
+        }
+        
+        .spark-4 {
+            top: 80%;
+            left: 90%;
+            animation-delay: 3s;
+        }
+        
+        .electrical-circuit {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            height: 1px;
+            opacity: 0.6;
+            animation: circuit-flow 3s ease-in-out infinite;
+        }
+        
+        .circuit-1 {
+            top: 25%;
+            left: 0;
+            width: 100%;
+            animation-delay: 0s;
+        }
+        
+        .circuit-2 {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            animation-delay: 1s;
+        }
+        
+        .circuit-3 {
+            top: 75%;
+            left: 0;
+            width: 100%;
+            animation-delay: 2s;
+        }
+        
+        .data-pulse {
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #DC143C, transparent);
+            animation: data-flow 2s ease-in-out infinite;
+        }
+        
+        .pulse-1 {
+            top: 30%;
+            left: 0;
+            animation-delay: 0s;
+        }
+        
+        .pulse-2 {
+            top: 55%;
+            left: 0;
+            animation-delay: 0.5s;
+        }
+        
+        .pulse-3 {
+            top: 70%;
+            left: 0;
+            animation-delay: 1s;
+        }
+        
+        .terminal-container {
+            position: relative;
+            padding: 1rem;
+            height: 100%;
+            color: #00ff00;
+        }
+        
+        .terminal-header {
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .terminal-logo {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .terminal-logo h1 {
+            color: #DC143C;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        .system-info {
+            font-size: 0.8rem;
+            color: #00ff00;
+            margin-bottom: 0.5rem;
+        }
+        
+        .boot-sequence {
+            margin-bottom: 1rem;
+        }
+        
+        .boot-line {
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            color: #00ff00;
+            opacity: 0.8;
+        }
+        
+        .terminal-menu {
+            position: relative;
+            height: calc(100% - 200px);
+        }
+        
+        .terminal-process {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            background: rgba(0, 255, 0, 0.05);
+            border-left: 4px solid #00ff00;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .terminal-process:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-left-color: #DC143C;
+            transform: translateX(4px);
+        }
+        
+        .terminal-process.active {
+            background: rgba(220, 20, 60, 0.1);
+            border-left-color: #DC143C;
+            box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
+        }
+        
+        .process-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .process-name {
+            color: #00ff00;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .terminal-process.active .process-name {
+            color: #DC143C;
+        }
+        
+        .process-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+            animation: status-blink 1.5s ease-in-out infinite;
+        }
+        
+        .status-indicator.active {
+            background: #DC143C;
+            animation: status-pulse 1s ease-in-out infinite;
+        }
+        
+        .process-info {
+            color: rgba(0, 255, 0, 0.9);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .process-command {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+            font-style: italic;
+        }
+        
+        .terminal-cursor {
+            display: inline-block;
+            width: 10px;
+            height: 16px;
+            background: #00ff00;
+            animation: cursor-blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+        
+        .phosphor-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.1);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        .main-preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(0, 255, 100, 0.03) 40px,
+                    rgba(0, 255, 100, 0.03) 42px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(0, 255, 100, 0.03) 40px,
+                    rgba(0, 255, 100, 0.03) 42px
+                );
+        }
+        
+        .preview-title {
+            background: linear-gradient(135deg, #DC143C, #FF6B6B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .preview-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+        
+        @keyframes scan-lines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+        
+        @keyframes spark-travel {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            25% { transform: translateX(100px) scale(1.2); opacity: 0.8; }
+            50% { transform: translateX(200px) scale(1); opacity: 0.6; }
+            75% { transform: translateX(300px) scale(1.2); opacity: 0.8; }
+            100% { transform: translateX(400px) scale(1); opacity: 0; }
+        }
+        
+        @keyframes circuit-flow {
+            0% { opacity: 0.3; transform: scaleX(0.8); }
+            50% { opacity: 0.8; transform: scaleX(1.2); }
+            100% { opacity: 0.3; transform: scaleX(0.8); }
+        }
+        
+        @keyframes data-flow {
+            0% { transform: translateX(0); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateX(350px); opacity: 0; }
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(220, 20, 60, 0.5); }
+            50% { text-shadow: 0 0 30px rgba(220, 20, 60, 0.8); }
+        }
+        
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        @keyframes status-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        @keyframes status-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="terminal-sidebar">
+            <div class="electrical-animations">
+                <div class="electrical-spark spark-1"></div>
+                <div class="electrical-spark spark-2"></div>
+                <div class="electrical-spark spark-3"></div>
+                <div class="electrical-spark spark-4"></div>
+                
+                <div class="electrical-circuit circuit-1"></div>
+                <div class="electrical-circuit circuit-2"></div>
+                <div class="electrical-circuit circuit-3"></div>
+                
+                <div class="data-pulse pulse-1"></div>
+                <div class="data-pulse pulse-2"></div>
+                <div class="data-pulse pulse-3"></div>
+            </div>
+            
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-logo">
+                        <h1>PRSNL</h1>
+                    </div>
+                    <div class="system-info">NEURAL OS v3.0 - BRAIN COMPUTER INTERFACE</div>
+                    <div class="boot-sequence">
+                        <div class="boot-line">[ OK ] Neural pathways initialized</div>
+                        <div class="boot-line">[ OK ] Cognitive processes loaded</div>
+                        <div class="boot-line">[ OK ] Memory banks online</div>
+                        <div class="boot-line">[ OK ] Ready for neural interface</div>
+                    </div>
+                </div>
+                
+                <div class="terminal-menu">
+                    <div class="terminal-process active">
+                        <div class="process-header">
+                            <div class="process-name">Neural Nest</div>
+                            <div class="process-status">
+                                <div class="status-indicator active"></div>
+                                <span>ACTIVE</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 256MB | CPU: 12%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Ingest</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 128MB | CPU: 5%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Thought Stream</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 192MB | CPU: 8%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Cognitive Map</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 384MB | CPU: 15%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Mind Palace</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 512MB | CPU: 20%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Visual Cortex</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 256MB | CPU: 10%</div>
+                    </div>
+                    
+                    <div class="terminal-process">
+                        <div class="process-header">
+                            <div class="process-name">Knowledge Sync</div>
+                            <div class="process-status">
+                                <div class="status-indicator"></div>
+                                <span>READY</span>
+                            </div>
+                        </div>
+                        <div class="process-info">MEM: 164MB | CPU: 6%</div>
+                    </div>
+                </div>
+                
+                <div class="terminal-cursor"></div>
+            </div>
+            
+            <div class="phosphor-glow"></div>
+        </div>
+        
+        <div class="main-preview">
+            <div>
+                <div class="preview-title">Computer Brain Terminal</div>
+                <div class="preview-subtitle">Retro terminal with neural OS and system processes</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

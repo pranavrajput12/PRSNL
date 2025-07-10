@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Control Dashboard - Menu Preview</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .preview-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .dashboard-sidebar {
+            width: 320px;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+            border-right: 2px solid rgba(0, 255, 100, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 8px,
+                    rgba(0, 255, 100, 0.03) 8px,
+                    rgba(0, 255, 100, 0.03) 10px
+                );
+            pointer-events: none;
+        }
+        
+        .dashboard-container {
+            position: relative;
+            padding: 1.5rem;
+            height: 100%;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .dashboard-logo {
+            margin-bottom: 1rem;
+        }
+        
+        .dashboard-logo h1 {
+            color: #DC143C;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+        }
+        
+        .system-status {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+            animation: status-pulse 2s ease-in-out infinite;
+        }
+        
+        .status-light.warning {
+            background: #ff9500;
+            box-shadow: 0 0 10px rgba(255, 149, 0, 0.6);
+        }
+        
+        .status-light.error {
+            background: #DC143C;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.6);
+        }
+        
+        .dashboard-title {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .control-modules {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: calc(100% - 180px);
+        }
+        
+        .control-module {
+            position: relative;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(42, 42, 42, 0.9));
+            border: 2px solid rgba(220, 20, 60, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .control-module:hover {
+            border-color: rgba(220, 20, 60, 0.6);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
+        }
+        
+        .control-module.active {
+            border-color: #DC143C;
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.1), rgba(42, 42, 42, 0.9));
+            box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
+        }
+        
+        .control-module::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 49%, rgba(0, 255, 100, 0.1) 50%, transparent 51%),
+                linear-gradient(-45deg, transparent 49%, rgba(0, 255, 100, 0.1) 50%, transparent 51%);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .module-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+        }
+        
+        .led-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #333;
+            border: 1px solid #1a1a1a;
+        }
+        
+        .led-indicator.active {
+            background: #00ff00;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+            animation: led-pulse 1.5s ease-in-out infinite;
+        }
+        
+        .control-module.active .led-indicator.active {
+            background: #DC143C;
+            box-shadow: 0 0 8px rgba(220, 20, 60, 0.8);
+        }
+        
+        .module-icon {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #DC143C, #B91C3C);
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(220, 20, 60, 0.5);
+            box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
+        }
+        
+        .control-module.active .module-icon {
+            background: radial-gradient(circle, #00ff00, #00cc00);
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        .icon-placeholder {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+        
+        .module-label {
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 0 8px rgba(220, 20, 60, 0.3);
+        }
+        
+        .control-module.active .module-label {
+            color: #00ff00;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+        }
+        
+        .module-status {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .control-module.active .module-status {
+            color: rgba(0, 255, 0, 0.8);
+        }
+        
+        .holographic-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 49%, rgba(0, 255, 100, 0.1) 50%, transparent 51%),
+                linear-gradient(0deg, transparent 49%, rgba(0, 255, 100, 0.1) 50%, transparent 51%);
+            background-size: 30px 30px;
+            opacity: 0.2;
+            pointer-events: none;
+            animation: holographic-scan 4s linear infinite;
+        }
+        
+        .main-preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(0, 255, 100, 0.03) 40px,
+                    rgba(0, 255, 100, 0.03) 42px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(0, 255, 100, 0.03) 40px,
+                    rgba(0, 255, 100, 0.03) 42px
+                );
+        }
+        
+        .preview-title {
+            background: linear-gradient(135deg, #DC143C, #FF6B6B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .preview-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+        
+        @keyframes status-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        @keyframes led-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes holographic-scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(30px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="dashboard-sidebar">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <div class="dashboard-logo">
+                        <h1>PRSNL</h1>
+                    </div>
+                    <div class="system-status">
+                        <div class="status-light"></div>
+                        <div class="status-light warning"></div>
+                        <div class="status-light error"></div>
+                    </div>
+                    <div class="dashboard-title">NEURAL CONTROL DASHBOARD</div>
+                </div>
+                
+                <div class="control-modules">
+                    <div class="control-module active">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Neural Nest</div>
+                        <div class="module-status">ONLINE</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Ingest</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Thought Stream</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator active"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Cognitive Map</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Mind Palace</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Visual Cortex</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                    
+                    <div class="control-module">
+                        <div class="module-indicator">
+                            <div class="led-indicator active"></div>
+                            <div class="led-indicator"></div>
+                            <div class="led-indicator"></div>
+                        </div>
+                        <div class="module-icon">
+                            <div class="icon-placeholder"></div>
+                        </div>
+                        <div class="module-label">Knowledge Sync</div>
+                        <div class="module-status">READY</div>
+                    </div>
+                </div>
+                
+                <div class="holographic-grid"></div>
+            </div>
+        </div>
+        
+        <div class="main-preview">
+            <div>
+                <div class="preview-title">Neural Control Dashboard</div>
+                <div class="preview-subtitle">Spaceship control panel with LED indicators and modules</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

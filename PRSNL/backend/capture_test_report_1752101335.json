@@ -1,0 +1,426 @@
+[
+  {
+    "scenario": {
+      "name": "URL + Auto Detection + AI On (GitHub)",
+      "input_type": "url",
+      "payload": {
+        "url": "https://github.com/microsoft/vscode",
+        "content_type": "auto",
+        "enable_summarization": true,
+        "title": "VS Code Repository"
+      },
+      "expected_db": {
+        "content_type": "auto",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:25.563975",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Auto Detection + AI Off (News)",
+      "input_type": "url",
+      "payload": {
+        "url": "https://news.ycombinator.com",
+        "content_type": "auto",
+        "enable_summarization": false,
+        "title": "Hacker News"
+      },
+      "expected_db": {
+        "content_type": "auto",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:26.647254",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Link Type + AI On",
+      "input_type": "url",
+      "payload": {
+        "url": "https://stackoverflow.com/questions/tagged/python",
+        "content_type": "link",
+        "enable_summarization": true,
+        "title": "Python Questions"
+      },
+      "expected_db": {
+        "content_type": "link",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:27.669260",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Link Type + AI Off",
+      "input_type": "url",
+      "payload": {
+        "url": "https://docs.python.org/3/",
+        "content_type": "link",
+        "enable_summarization": false,
+        "title": "Python Docs"
+      },
+      "expected_db": {
+        "content_type": "link",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:28.685195",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Article Type + AI On",
+      "input_type": "url",
+      "payload": {
+        "url": "https://techcrunch.com/2024/01/01/tech-trends/",
+        "content_type": "article",
+        "enable_summarization": true,
+        "title": "Tech Trends Article"
+      },
+      "expected_db": {
+        "content_type": "article",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:29.714276",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Article Type + AI Off",
+      "input_type": "url",
+      "payload": {
+        "url": "https://example.com/article-123",
+        "content_type": "article",
+        "enable_summarization": false,
+        "title": "Sample Article"
+      },
+      "expected_db": {
+        "content_type": "article",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:30.726656",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Video Type + AI On (YouTube)",
+      "input_type": "url",
+      "payload": {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "content_type": "video",
+        "enable_summarization": true,
+        "title": "Test Video"
+      },
+      "expected_db": {
+        "content_type": "video",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:31.735079",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "URL + Video Type + AI Off (YouTube)",
+      "input_type": "url",
+      "payload": {
+        "url": "https://www.youtube.com/watch?v=test123",
+        "content_type": "video",
+        "enable_summarization": false,
+        "title": "Test Video No AI"
+      },
+      "expected_db": {
+        "content_type": "video",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:32.746493",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "Text + Note Type + AI On",
+      "input_type": "text",
+      "payload": {
+        "content": "Meeting notes: Discussed project roadmap for Q1 2024. Key priorities include user authentication, data pipeline optimization, and mobile app development.",
+        "content_type": "note",
+        "enable_summarization": true,
+        "title": "Q1 Meeting Notes"
+      },
+      "expected_db": {
+        "content_type": "note",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:33.756995",
+    "api_response": {
+      "id": "d4ed1c97-7f4a-4d69-b9e9-3de4750dd707",
+      "status": "pending",
+      "message": "Item capture initiated",
+      "duplicate_info": null
+    },
+    "database_record": {
+      "id": "d4ed1c97-7f4a-4d69-b9e9-3de4750dd707",
+      "url": null,
+      "title": "Project Roadmap Meeting Notes for Q1 2024",
+      "summary": "The meeting focused on outlining the project roadmap for the first quarter of 2024. Key priorities identified include user authentication, data pipeline optimization, and mobile app development.",
+      "content": null,
+      "raw_content": "Meeting notes: Discussed project roadmap for Q1 2024. Key priorities include user authentication, data pipeline optimization, and mobile app development.",
+      "type": "article",
+      "status": "completed",
+      "content_type": "note",
+      "enable_summarization": true,
+      "metadata": "{\"author\": null, \"scraped_at\": null, \"word_count\": 20, \"ai_analysis\": {\"tags\": [\"project management\", \"roadmap\", \"q1 2024\", \"user authentication\", \"data pipeline\", \"mobile app\", \"development\", \"priorities\", \"meeting notes\"], \"summary\": \"The meeting focused on outlining the project roadmap for the first quarter of 2024. Key priorities identified include user authentication, data pipeline optimization, and mobile app development.\", \"entities\": {\"people\": [], \"concepts\": [\"user authentication\", \"data pipeline optimization\", \"mobile app development\", \"project roadmap\"], \"technologies\": [], \"organizations\": []}, \"questions\": [], \"sentiment\": \"neutral\", \"key_points\": [\"User authentication is a top priority for Q1 2024.\", \"Optimizing the data pipeline is essential for improved performance.\", \"Mobile app development will be a major focus area.\", \"The roadmap sets clear priorities for the upcoming quarter.\"], \"processed_at\": 1752101317.497366, \"reading_time\": 5}, \"content_type\": \"note\", \"published_date\": null, \"summarization_enabled\": true}",
+      "created_at": "2025-07-09 22:48:33.759728+00:00",
+      "updated_at": "2025-07-09 22:48:38.832926+00:00"
+    },
+    "processing_status": {
+      "id": "d4ed1c97-7f4a-4d69-b9e9-3de4750dd707",
+      "url": null,
+      "title": "Project Roadmap Meeting Notes for Q1 2024",
+      "summary": "The meeting focused on outlining the project roadmap for the first quarter of 2024. Key priorities identified include user authentication, data pipeline optimization, and mobile app development.",
+      "content": null,
+      "raw_content": "Meeting notes: Discussed project roadmap for Q1 2024. Key priorities include user authentication, data pipeline optimization, and mobile app development.",
+      "type": "article",
+      "status": "completed",
+      "content_type": "note",
+      "enable_summarization": true,
+      "metadata": "{\"author\": null, \"scraped_at\": null, \"word_count\": 20, \"ai_analysis\": {\"tags\": [\"project management\", \"roadmap\", \"q1 2024\", \"user authentication\", \"data pipeline\", \"mobile app\", \"development\", \"priorities\", \"meeting notes\"], \"summary\": \"The meeting focused on outlining the project roadmap for the first quarter of 2024. Key priorities identified include user authentication, data pipeline optimization, and mobile app development.\", \"entities\": {\"people\": [], \"concepts\": [\"user authentication\", \"data pipeline optimization\", \"mobile app development\", \"project roadmap\"], \"technologies\": [], \"organizations\": []}, \"questions\": [], \"sentiment\": \"neutral\", \"key_points\": [\"User authentication is a top priority for Q1 2024.\", \"Optimizing the data pipeline is essential for improved performance.\", \"Mobile app development will be a major focus area.\", \"The roadmap sets clear priorities for the upcoming quarter.\"], \"processed_at\": 1752101317.497366, \"reading_time\": 5}, \"content_type\": \"note\", \"published_date\": null, \"summarization_enabled\": true}",
+      "created_at": "2025-07-09 22:48:33.759728+00:00",
+      "updated_at": "2025-07-09 22:48:38.832926+00:00"
+    },
+    "ai_analysis": {
+      "expected_ai": true,
+      "should_use_ai": true,
+      "has_ai_processing": true,
+      "has_ai_summary": true,
+      "has_ai_metadata": true
+    },
+    "errors": [],
+    "success": true
+  },
+  {
+    "scenario": {
+      "name": "Text + Note Type + AI Off",
+      "input_type": "text",
+      "payload": {
+        "content": "Quick reminder: buy milk, eggs, and bread from the store.",
+        "content_type": "note",
+        "enable_summarization": false,
+        "title": "Shopping List"
+      },
+      "expected_db": {
+        "content_type": "note",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:44.925598",
+    "api_response": {
+      "id": "843c3099-65d0-4d4b-a896-4f37ea5f80b8",
+      "status": "pending",
+      "message": "Item capture initiated",
+      "duplicate_info": null
+    },
+    "database_record": {
+      "id": "843c3099-65d0-4d4b-a896-4f37ea5f80b8",
+      "url": null,
+      "title": "User Note",
+      "summary": null,
+      "content": null,
+      "raw_content": "Quick reminder: buy milk, eggs, and bread from the store.",
+      "type": "article",
+      "status": "failed",
+      "content_type": "note",
+      "enable_summarization": false,
+      "metadata": "{\"error\": \"Either URL or content must be provided\", \"author\": null, \"scraped_at\": null, \"word_count\": 10, \"content_type\": \"note\", \"published_date\": null, \"summarization_enabled\": false}",
+      "created_at": "2025-07-09 22:48:44.940172+00:00",
+      "updated_at": "2025-07-09 22:48:44.984854+00:00"
+    },
+    "processing_status": {
+      "id": "843c3099-65d0-4d4b-a896-4f37ea5f80b8",
+      "url": null,
+      "title": "User Note",
+      "summary": null,
+      "content": null,
+      "raw_content": "Quick reminder: buy milk, eggs, and bread from the store.",
+      "type": "article",
+      "status": "failed",
+      "content_type": "note",
+      "enable_summarization": false,
+      "metadata": "{\"error\": \"Either URL or content must be provided\", \"author\": null, \"scraped_at\": null, \"word_count\": 10, \"content_type\": \"note\", \"published_date\": null, \"summarization_enabled\": false}",
+      "created_at": "2025-07-09 22:48:44.940172+00:00",
+      "updated_at": "2025-07-09 22:48:44.984854+00:00"
+    },
+    "ai_analysis": {
+      "expected_ai": false,
+      "should_use_ai": false,
+      "has_ai_processing": false,
+      "has_ai_summary": false,
+      "has_ai_metadata": false
+    },
+    "errors": [],
+    "success": true
+  },
+  {
+    "scenario": {
+      "name": "Text + Link Type + AI On",
+      "input_type": "text",
+      "payload": {
+        "content": "Check out this amazing tool for developers: awesome-tool.dev - it has great features for code analysis.",
+        "content_type": "link",
+        "enable_summarization": true,
+        "title": "Developer Tool Recommendation"
+      },
+      "expected_db": {
+        "content_type": "link",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:51.056367",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Client error '429 Too Many Requests' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "Text + Link Type + AI Off",
+      "input_type": "text",
+      "payload": {
+        "content": "Bookmark: important-site.com - useful resource for later",
+        "content_type": "link",
+        "enable_summarization": false,
+        "title": "Important Site Bookmark"
+      },
+      "expected_db": {
+        "content_type": "link",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:52.102353",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Client error '429 Too Many Requests' for url 'http://localhost:8000/api/capture'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "File + Document Type + AI On",
+      "input_type": "file",
+      "payload": {
+        "file_upload": true,
+        "content_type": "document",
+        "enable_summarization": true,
+        "title": "Test Document"
+      },
+      "expected_db": {
+        "content_type": "document",
+        "enable_summarization": true
+      }
+    },
+    "timestamp": "2025-07-10T04:18:53.112124",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/file/upload'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  },
+  {
+    "scenario": {
+      "name": "File + Document Type + AI Off",
+      "input_type": "file",
+      "payload": {
+        "file_upload": true,
+        "content_type": "document",
+        "enable_summarization": false,
+        "title": "Test Document No AI"
+      },
+      "expected_db": {
+        "content_type": "document",
+        "enable_summarization": false
+      }
+    },
+    "timestamp": "2025-07-10T04:18:54.177772",
+    "api_response": null,
+    "database_record": null,
+    "processing_status": null,
+    "ai_analysis": null,
+    "errors": [
+      "Test execution error: Server error '500 Internal Server Error' for url 'http://localhost:8000/api/file/upload'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+    ],
+    "success": false
+  }
+]

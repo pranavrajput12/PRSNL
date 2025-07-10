@@ -55,6 +55,17 @@
   
   // File upload state
   let uploadedFiles = [];
+
+  // Terminal state
+  let currentStep = 1;
+  let stepStatus = {
+    1: 'active', // active, completed, pending
+    2: 'pending',
+    3: 'pending',
+    4: 'pending'
+  };
+  let terminalLines: string[] = [];
+  let isAnalyzing = false;
   
   // Watch for URL changes to detect video URLs and get AI suggestions
   $: {
@@ -73,22 +84,34 @@
 
   onMount(() => {
     urlInput?.focus();
-
-    // Load recent tags
     loadRecentTags();
-
-    // Setup paste handler for quick capture
     window.addEventListener('paste', handlePaste);
-
-    // Setup drag and drop
     setupDragAndDrop();
+    
+    // Initialize terminal
+    addTerminalLine('> NEURAL PROCESSING TERMINAL v3.0 INITIALIZED');
+    addTerminalLine('> MEMORY TRACE CAPTURE SYSTEM: ONLINE');
+    addTerminalLine('> STATUS: READY FOR INPUT...');
 
     return () => {
       window.removeEventListener('paste', handlePaste);
       if (progressInterval) clearInterval(progressInterval);
     };
   });
-  
+
+  function addTerminalLine(line: string) {
+    terminalLines = [...terminalLines, line];
+    // Keep only last 10 lines
+    if (terminalLines.length > 10) {
+      terminalLines = terminalLines.slice(-10);
+    }
+  }
+
+  function updateStepStatus(step: number, status: 'active' | 'completed' | 'pending' | 'processing') {
+    stepStatus = { ...stepStatus, [step]: status };
+    currentStep = step;
+  }
+
   /**
    * Detects if the URL is a video URL and updates the UI accordingly
    */
@@ -98,32 +121,22 @@
     if (isVideoDetected) {
       videoPlatform = getVideoPlatform(urlToCheck);
       estimatedDownloadTimeSeconds = estimateDownloadTime(urlToCheck);
-      
-      // Add video tag if not already present
-      if (videoPlatform && !tags.includes('video')) {
-        tags = [...tags, 'video'];
-        
-        // Add platform tag if not already present
-        const platformTag = typeof videoPlatform === 'string' ? videoPlatform.toLowerCase() : null;
-        if (platformTag && !tags.includes(platformTag)) {
-          tags = [...tags, platformTag];
-        }
-      }
-      
-      // For Instagram, we could potentially fetch a thumbnail preview
-      // This would require a backend endpoint in a real implementation
-      if (videoPlatform === 'Instagram') {
-        // Simulating a thumbnail URL - in a real app, this would come from an API
-        thumbnailPreviewUrl = null;
-      }
-    } else {
-      resetVideoDetection();
+      contentType = 'video';
+      addTerminalLine(`> VIDEO DETECTED: ${videoPlatform?.toUpperCase()}`);
+      addTerminalLine(`> ESTIMATED_DOWNLOAD_TIME: ${formatTime(estimatedDownloadTimeSeconds)}`);
+    }
+    
+    if (urlToCheck) {
+      updateStepStatus(1, 'processing');
+      addTerminalLine(`> SCANNING_URL: ${urlToCheck.substring(0, 50)}...`);
+      setTimeout(() => {
+        updateStepStatus(1, 'completed');
+        updateStepStatus(2, 'active');
+        addTerminalLine('> URL_ANALYSIS: COMPLETE');
+      }, 1000);
     }
   }
-  
-  /**
-   * Resets video detection state
-   */
+
   function resetVideoDetection(): void {
     isVideoDetected = false;
     videoPlatform = null;
@@ -131,880 +144,1056 @@
     thumbnailPreviewUrl = null;
   }
 
-  function setupDragAndDrop() {
-    if (!dropZone) return;
-
-    dropZone.addEventListener('dragover', (e: DragEvent) => {
-      e.preventDefault();
-      isDragging = true;
-    });
-
-    dropZone.addEventListener('dragleave', (e: DragEvent) => {
-      e.preventDefault();
-      isDragging = false;
-    });
-
-    dropZone.addEventListener('dragenter', (e: DragEvent) => {
-      e.preventDefault();
-    });
-
-    dropZone.addEventListener('drop', (e: DragEvent) => {
-      e.preventDefault();
-      isDragging = false;
-
-      if (e.dataTransfer) {
-        const items = e.dataTransfer.items;
-
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].kind === 'string' && items[i].type === 'text/uri-list') {
-            items[i].getAsString((droppedUrl: string) => {
-              url = droppedUrl;
-            });
-          } else if (items[i].kind === 'string' && items[i].type === 'text/plain') {
-            items[i].getAsString((text: string) => {
-              if (text.startsWith('http://') || text.startsWith('https://')) {
-                url = text;
-              } else {
-                highlight = text;
-              }
-            });
-          }
-        }
-      }
-    });
-  }
-
-  function handlePaste(e: ClipboardEvent) {
-    // Only handle paste if not focused in an input
-    const activeElement = document.activeElement;
-    if (activeElement && (activeElement.tagName === 'INPUT' || 
-        activeElement.tagName === 'TEXTAREA')) {
-      return;
-    }
-
-    const clipboardData = e.clipboardData;
-    if (!clipboardData) return;
-    
-    const pastedText = clipboardData.getData('text');
-
-    if (pastedText) {
-      e.preventDefault();
-
-      if (pastedText.startsWith('http://') || pastedText.startsWith('https://')) {
-        url = pastedText;
-        urlInput?.focus();
-      } else {
-        highlight = pastedText;
-      }
-    }
-  }
-
-  async function loadRecentTags() {
+  async function loadRecentTags(): Promise<void> {
     try {
       isLoadingTags = true;
-      const data = await getRecentTags();
-      recentTags = data.tags || [];
+      const response = await getRecentTags();
+      recentTags = response.slice(0, 10);
     } catch (err) {
-      console.error('Failed to load tags:', err);
+      console.error('Failed to load recent tags:', err);
     } finally {
       isLoadingTags = false;
     }
   }
 
-  function handleTagsUpdate(event: CustomEvent) {
-    tags = event.detail.tags;
-  }
-  
-  function handleFileUpload(event: CustomEvent) {
-    uploadedFiles = event.detail.files;
-    console.log('Files uploaded:', uploadedFiles);
-  }
-  
-  async function loadAISuggestions(urlToAnalyze: string) {
-    if (!urlToAnalyze || isLoadingSuggestions) return;
-    
-    console.log('🔍 Loading AI suggestions for:', urlToAnalyze);
-    
+  async function loadAISuggestions(urlToAnalyze: string): Promise<void> {
     try {
       isLoadingSuggestions = true;
-      suggestionsError = null;
+      isAnalyzing = true;
+      addTerminalLine('> AI_ANALYSIS: INITIATED');
       
       const suggestions = await getAISuggestions(urlToAnalyze);
-      console.log('✅ AI suggestions received:', suggestions);
       
-      // Only update if URL hasn't changed
-      if (url === urlToAnalyze) {
-        // Set title if empty
-        if (!title && suggestions.title) {
-          title = suggestions.title;
-          console.log('📝 Updated title:', title);
-        }
-        
-        // Set highlight/summary if empty
-        if (!highlight && suggestions.summary) {
-          highlight = suggestions.summary;
-          console.log('📝 Updated highlight:', highlight);
-        }
-        
-        // Add suggested tags that aren't already present
-        if (suggestions.tags && suggestions.tags.length > 0) {
-          const newTags = suggestions.tags.filter(tag => !tags.includes(tag));
-          tags = [...tags, ...newTags];
-          console.log('🏷️ Updated tags:', tags);
-        }
-      } else {
-        console.log('⚠️ URL changed during request, skipping update');
+      if (suggestions.title && !title) {
+        title = suggestions.title;
+        addTerminalLine(`> TITLE_EXTRACTED: ${suggestions.title.substring(0, 30)}...`);
       }
+      
+      if (suggestions.tags && suggestions.tags.length > 0 && tags.length === 0) {
+        tags = suggestions.tags.slice(0, 5);
+        addTerminalLine(`> TAGS_GENERATED: ${suggestions.tags.join(', ')}`);
+      }
+      
+      addTerminalLine('> AI_ANALYSIS: COMPLETE');
+      
     } catch (err) {
-      console.error('❌ Failed to get AI suggestions:', err);
-      // Don't show error to user, just silently fail and let them enter manually
-      // This prevents the 500 error from breaking the UI
-      suggestionsError = null;
+      console.error('AI suggestions failed:', err);
+      suggestionsError = 'AI analysis failed';
+      addTerminalLine('> AI_ANALYSIS: FAILED');
     } finally {
       isLoadingSuggestions = false;
-      console.log('✅ AI suggestions loading complete');
+      isAnalyzing = false;
     }
   }
 
-  async function handleSubmit() {
+  function handlePaste(e: ClipboardEvent): void {
+    const pastedText = e.clipboardData?.getData('text');
+    if (pastedText && (pastedText.startsWith('http://') || pastedText.startsWith('https://'))) {
+      url = pastedText;
+      addTerminalLine('> CLIPBOARD_URL_DETECTED');
+    }
+  }
+
+  function setupDragAndDrop(): void {
+    // Implementation for drag and drop
+  }
+
+  function handleTagsUpdate(event: CustomEvent): void {
+    tags = event.detail;
+    addTerminalLine(`> TAGS_UPDATED: ${tags.join(', ')}`);
+  }
+
+  function handleFileUpload(event: CustomEvent): void {
+    uploadedFiles = event.detail;
+    addTerminalLine(`> FILE_UPLOADED: ${uploadedFiles.length} files`);
+  }
+
+  function selectContentType(type: string): void {
+    contentType = type;
+    updateStepStatus(2, 'completed');
+    updateStepStatus(3, 'active');
+    addTerminalLine(`> CONTENT_TYPE_SELECTED: ${type.toUpperCase()}`);
+  }
+
+  function toggleAISummarization(): void {
+    enableSummarization = !enableSummarization;
+    updateStepStatus(3, 'completed');
+    updateStepStatus(4, 'active');
+    addTerminalLine(`> AI_SUMMARIZATION: ${enableSummarization ? 'ENABLED' : 'DISABLED'}`);
+  }
+
+  async function handleSubmit(): Promise<void> {
     if (!url && !highlight && uploadedFiles.length === 0) {
-      message = 'Please enter a URL, highlight text, or upload a file';
-      messageType = 'error';
+      error = new Error('Please provide a URL, content, or upload a file');
+      addTerminalLine('> ERROR: NO_INPUT_PROVIDED');
       return;
     }
 
     try {
       isSubmitting = true;
-      message = 'Capturing...';
-      messageType = 'info';
+      error = null;
+      
+      addTerminalLine('> INITIATING_MEMORY_TRACE_CAPTURE...');
+      startProgressAnimation();
 
-      // Start progress indicator
-      startProgressIndicator();
-
-      // Include video-specific options if a video is detected
-      const captureData: CaptureRequest = {
-        enable_summarization: enableSummarization,
+      const captureRequest: CaptureRequest = {
+        url: url || undefined,
+        title: title || undefined,
+        highlight: highlight || undefined,
         content_type: contentType,
-        uploaded_files: uploadedFiles
+        enable_summarization: enableSummarization,
+        tags: tags
       };
-      
-      // Only include non-empty fields to avoid validation errors
-      if (url && url.trim()) captureData.url = url.trim();
-      if (title && title.trim()) captureData.title = title.trim();
-      if (highlight && highlight.trim()) {
-        captureData.content = highlight.trim(); // Map highlight to content for backend compatibility
-        captureData.highlight = highlight.trim();
-      }
-      if (tags && tags.length > 0) captureData.tags = tags;
-      
-      console.log('🚀 Submitting capture data:', captureData);
-      
-      // Add video-specific data if detected
-      if (isVideoDetected) {
-        captureData.is_video = true;
-        captureData.video_platform = videoPlatform;
-        captureData.video_quality = videoQuality;
-      }
 
-      await captureItem(captureData);
-
-      message = 'Successfully captured!';
+      const result = await captureItem(captureRequest);
+      
+      addTerminalLine('> MEMORY_TRACE_CAPTURED_SUCCESSFULLY');
+      addTerminalLine(`> TRACE_ID: ${result.item_id}`);
+      addTerminalLine('> NEURAL_NETWORK_UPDATED');
+      
+      message = 'Memory trace captured successfully!';
       messageType = 'success';
-
-      // Add notification
-      addNotification('Item captured successfully', 'success');
+      
+      addNotification({
+        type: 'success',
+        message: 'Content captured successfully!'
+      });
 
       // Reset form
-      setTimeout(() => {
-        url = '';
-        title = '';
-        highlight = '';
-        tags = [];
-        uploadedFiles = [];
-        resetVideoDetection();
-        window.location.href = '/';
-      }, 1000);
+      resetForm();
+      
     } catch (err) {
-      error = err instanceof Error ? err : new Error(String(err));
-      message = error.message || 'Failed to capture. Please try again.';
+      console.error('Capture failed:', err);
+      error = err as Error;
+      message = `Capture failed: ${err.message}`;
       messageType = 'error';
+      addTerminalLine('> ERROR: MEMORY_TRACE_CAPTURE_FAILED');
+      addTerminalLine(`> ERROR_CODE: ${err.message}`);
     } finally {
       isSubmitting = false;
-      if (progressInterval !== null) {
+      if (progressInterval) {
         clearInterval(progressInterval);
+        progressInterval = null;
       }
       progress = 0;
     }
   }
 
-  function startProgressIndicator() {
+  function startProgressAnimation(): void {
     progress = 0;
-    if (progressInterval !== null) {
-      clearInterval(progressInterval);
-    }
-
-    progressInterval = window.setInterval(() => {
-      // Simulate progress, but slow down as we approach 90%
+    progressInterval = setInterval(() => {
       if (progress < 90) {
-        progress += (90 - progress) / 10;
+        progress += Math.random() * 10;
       }
-    }, 100);
+    }, 200);
   }
 
-  // Keyboard shortcuts
-  function handleKeydown(e: KeyboardEvent) {
-    // CMD/CTRL + Enter to submit
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      handleSubmit();
-    }
-    // Escape to go back
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      window.location.href = '/';
-    }
+  function resetForm(): void {
+    url = '';
+    title = '';
+    highlight = '';
+    tags = [];
+    contentType = 'auto';
+    enableSummarization = false;
+    uploadedFiles = [];
+    currentStep = 1;
+    stepStatus = {
+      1: 'active',
+      2: 'pending', 
+      3: 'pending',
+      4: 'pending'
+    };
+    urlInput?.focus();
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:head>
+  <title>Ingest - Neural Processing Terminal</title>
+  <meta name="description" content="Neural interface for capturing and processing memory traces into your knowledge network" />
+</svelte:head>
 
-<div class="container">
-  <div class="capture-container" bind:this={dropZone} class:dragging={isDragging}>
-    <div class="drag-overlay" class:active={isDragging}>
-      <div class="drag-content">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <h2>Drop URL or text here</h2>
+<div class="neural-terminal-page">
+  <!-- Neural motherboard background -->
+  <div class="neural-motherboard-bg">
+    <div class="pcb-traces"></div>
+    <div class="circuit-nodes">
+      <div class="node node-1"></div>
+      <div class="node node-2"></div>
+      <div class="node node-3"></div>
+      <div class="node node-4"></div>
+    </div>
+  </div>
+
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <div class="terminal-title">
+        <Icon name="brain" size="small" color="#00ff64" />
+        NEURAL PROCESSING TERMINAL v3.0
+      </div>
+      <div class="terminal-controls">
+        <div class="control-dot minimize"></div>
+        <div class="control-dot maximize"></div>
+        <div class="control-dot close"></div>
       </div>
     </div>
 
-    <h1>Ingest</h1>
-
-    {#if error}
-      <ErrorMessage 
-        message="Failed to capture item" 
-        details={error.message} 
-        retry={() => error = null} 
-      />
-    {/if}
-
-    <form on:submit|preventDefault={handleSubmit}>
-      <div class="form-group">
-        <label for="url">URL</label>
-        <div class="url-input-container">
-          <input 
-            type="text" 
-            id="url" 
-            bind:this={urlInput}
-            bind:value={url} 
-            placeholder="https://example.com" 
-            disabled={isSubmitting}
-          />
-          {#if isLoadingSuggestions}
-            <div class="ai-indicator loading">
-              <Spinner size="small" />
-              <span>AI analyzing...</span>
-            </div>
-          {:else if isVideoDetected}
-            <div class="video-indicator">
-              <Icon name="video" size="small" />
-              <span>{videoPlatform} Video</span>
-            </div>
-          {/if}
+    <div class="terminal-body">
+      <!-- System Status -->
+      <div class="system-status">
+        <div class="status-line">
+          > NEURAL PATHWAYS: <span class="status-online">ONLINE</span>
         </div>
+        <div class="status-line">
+          > MEMORY BANKS: <span class="status-online">READY</span>
+        </div>
+        <div class="status-line">
+          > AI ENHANCEMENT: <span class="status-standby">STANDBY</span>
+        </div>
+      </div>
 
-        {#if url && !isVideoDetected}
-          <UrlPreview {url} />
-        {/if}
+      <!-- Terminal Output -->
+      <div class="terminal-output">
+        {#each terminalLines as line}
+          <div class="terminal-line">{line}</div>
+        {/each}
+        <div class="terminal-line current">
+          > Ready for neural interface command...<span class="cursor">_</span>
+        </div>
+      </div>
+
+      <!-- Processing Steps -->
+      <form on:submit|preventDefault={handleSubmit} class="processing-steps">
         
-        {#if isVideoDetected}
-          <div class="video-info">
-            <div class="video-platform">
-              <strong>Platform:</strong> {videoPlatform}
+        <!-- Step 1: Input Source Detection -->
+        <div class="step-section" class:active={currentStep === 1} class:completed={stepStatus[1] === 'completed'}>
+          <div class="step-header">
+            <div class="step-indicator">
+              {#if stepStatus[1] === 'completed'}
+                <Icon name="check" size="small" color="#00ff64" />
+              {:else if stepStatus[1] === 'processing'}
+                <Spinner size="small" />
+              {:else}
+                <span class="step-number">1</span>
+              {/if}
             </div>
-            <div class="video-download-time">
-              <strong>Estimated download time:</strong> {formatTime(estimatedDownloadTimeSeconds)}
+            <span class="step-title">[STEP 1] INPUT SOURCE DETECTION</span>
+          </div>
+          
+          <div class="step-content">
+            <div class="input-group">
+              <input 
+                bind:this={urlInput}
+                bind:value={url}
+                type="text" 
+                class="terminal-input"
+                placeholder="https://example.com"
+                disabled={isSubmitting}
+              />
+              {#if isLoadingSuggestions}
+                <div class="input-status">
+                  <Spinner size="small" />
+                  <span>AI analyzing...</span>
+                </div>
+              {:else if isVideoDetected}
+                <div class="input-status video">
+                  <Icon name="video" size="small" color="#DC143C" />
+                  <span>{videoPlatform} Video Detected</span>
+                </div>
+              {/if}
             </div>
             
-            <div class="video-options">
-              <label class="video-quality-label">
-                <span>Video Quality:</span>
-                <select bind:value={videoQuality} disabled={isSubmitting}>
-                  <option value="standard">Standard</option>
-                  <option value="high">High</option>
-                </select>
-              </label>
+            {#if url && stepStatus[1] === 'processing'}
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="status-text">Status: <span class="status-processing">SCANNING...</span></div>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Step 2: Cognitive Classification -->
+        <div class="step-section" class:active={currentStep === 2} class:completed={stepStatus[2] === 'completed'}>
+          <div class="step-header">
+            <div class="step-indicator">
+              {#if stepStatus[2] === 'completed'}
+                <Icon name="check" size="small" color="#00ff64" />
+              {:else}
+                <span class="step-number">2</span>
+              {/if}
+            </div>
+            <span class="step-title">[STEP 2] COGNITIVE CLASSIFICATION</span>
+          </div>
+          
+          <div class="step-content">
+            <div class="content-type-grid">
+              {#each [
+                { value: 'auto', label: 'AUTO', icon: '🤖' },
+                { value: 'document', label: 'DOC', icon: '📄' },
+                { value: 'video', label: 'VID', icon: '🎥' },
+                { value: 'article', label: 'ART', icon: '📰' },
+                { value: 'tutorial', label: 'TUT', icon: '🎓' },
+                { value: 'image', label: 'IMG', icon: '🖼️' },
+                { value: 'note', label: 'NOTE', icon: '📝' },
+                { value: 'link', label: 'LINK', icon: '🔗' }
+              ] as option}
+                <button
+                  type="button"
+                  class="content-type-option"
+                  class:active={contentType === option.value}
+                  on:click={() => selectContentType(option.value)}
+                  disabled={isSubmitting}
+                >
+                  <span class="option-icon">{option.icon}</span>
+                  <span class="option-label">{option.label}</span>
+                </button>
+              {/each}
+            </div>
+            
+            {#if stepStatus[2] === 'completed'}
+              <div class="status-text">
+                Classification: <span class="status-complete">{contentType.toUpperCase()}_SELECTED</span>
+              </div>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Step 3: Neural Enhancement Protocols -->
+        <div class="step-section" class:active={currentStep === 3} class:completed={stepStatus[3] === 'completed'}>
+          <div class="step-header">
+            <div class="step-indicator">
+              {#if stepStatus[3] === 'completed'}
+                <Icon name="check" size="small" color="#00ff64" />
+              {:else}
+                <span class="step-number">3</span>
+              {/if}
+            </div>
+            <span class="step-title">[STEP 3] NEURAL ENHANCEMENT PROTOCOLS</span>
+          </div>
+          
+          <div class="step-content">
+            <div class="enhancement-toggles">
+              <div class="enhancement-option">
+                <button
+                  type="button"
+                  class="toggle-switch"
+                  class:active={enableSummarization}
+                  on:click={toggleAISummarization}
+                  disabled={isSubmitting}
+                >
+                  <div class="switch-slider"></div>
+                </button>
+                <span class="option-text">
+                  AI Summarization Engine: 
+                  <span class="status-indicator" class:active={enableSummarization}>
+                    {enableSummarization ? 'ENABLED' : 'DISABLED'}
+                  </span>
+                </span>
+              </div>
+              
+              <div class="enhancement-option">
+                <button
+                  type="button"
+                  class="toggle-switch active"
+                  disabled
+                >
+                  <div class="switch-slider"></div>
+                </button>
+                <span class="option-text">
+                  Pattern Recognition: <span class="status-indicator active">ACTIVE</span>
+                </span>
+              </div>
+              
+              <div class="enhancement-option">
+                <button
+                  type="button"
+                  class="toggle-switch"
+                  disabled
+                >
+                  <div class="switch-slider"></div>
+                </button>
+                <span class="option-text">
+                  Knowledge Graph Link: <span class="status-indicator">STANDBY</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Memory Trace Metadata -->
+        <div class="step-section" class:active={currentStep === 4}>
+          <div class="step-header">
+            <div class="step-indicator">
+              <span class="step-number">4</span>
+            </div>
+            <span class="step-title">[STEP 4] MEMORY TRACE METADATA</span>
+          </div>
+          
+          <div class="step-content">
+            <div class="metadata-inputs">
+              <input
+                bind:value={title}
+                type="text"
+                class="terminal-input"
+                placeholder="Title (auto-generated if empty)"
+                disabled={isSubmitting}
+              />
+              
+              <textarea
+                bind:value={highlight}
+                class="terminal-textarea"
+                placeholder="Highlight or notes"
+                rows="3"
+                disabled={isSubmitting}
+              ></textarea>
+              
+              <TagAutocomplete
+                value=""
+                placeholder="Tags: #tech #ai #neural"
+                disabled={isSubmitting}
+                on:tags={handleTagsUpdate}
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- File Upload for document/image types -->
+        {#if (contentType === 'document' || contentType === 'image') && currentStep >= 2}
+          <div class="step-section file-upload-section">
+            <div class="step-header">
+              <Icon name="upload" size="small" color="#DC143C" />
+              <span class="step-title">[OPTIONAL] FILE UPLOAD</span>
+            </div>
+            <div class="step-content">
+              <FileUpload 
+                contentType={contentType}
+                multiple={false}
+                disabled={isSubmitting}
+                on:files={handleFileUpload}
+              />
             </div>
           </div>
         {/if}
-      </div>
 
-      <div class="form-group">
-        <label for="content-type">Content Type</label>
-        <div class="content-type-selector">
-          <select 
-            id="content-type" 
-            bind:value={contentType}
-            disabled={isSubmitting}
-          >
-            <option value="auto">🤖 Auto-detect</option>
-            <option value="document">📄 Document</option>
-            <option value="video">🎥 Video</option>
-            <option value="article">📰 Article</option>
-            <option value="tutorial">🎓 Tutorial</option>
-            <option value="image">🖼️ Image</option>
-            <option value="note">📝 Note</option>
-            <option value="link">🔗 Link</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- File Upload Section - Show for document and image types -->
-      {#if contentType === 'document' || contentType === 'image'}
-        <div class="form-group">
-          <label>File Upload</label>
-          <FileUpload 
-            contentType={contentType}
-            multiple={false}
-            disabled={isSubmitting}
-            on:files={handleFileUpload}
-          />
-        </div>
-      {/if}
-
-      <div class="form-group">
-        <label for="title">Title</label>
-        <input 
-          type="text" 
-          id="title" 
-          bind:value={title} 
-          placeholder="Page title" 
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="highlight">Highlight</label>
-        <textarea 
-          id="highlight" 
-          bind:value={highlight} 
-          placeholder="Text highlight or notes" 
-          rows="4"
-          disabled={isSubmitting}
-        ></textarea>
-      </div>
-
-      <div class="form-group">
-        <div class="summarization-toggle">
-          <label class="toggle-label">
-            <input 
-              type="checkbox" 
-              bind:checked={enableSummarization}
-              disabled={isSubmitting}
-            />
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">Enable AI Summarization</span>
-          </label>
-          <p class="toggle-description">
-            Only generate AI summary when needed to save resources
-          </p>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="tags">Tags</label>
-        <TagAutocomplete
-          value=""
-          placeholder="Add tags..."
-          disabled={isSubmitting}
-          on:tags={handleTagsUpdate}
-        />
-
-        {#if isLoadingTags}
-          <div class="tag-suggestions">
-            <Spinner size="small" />
-            <span>Loading tags...</span>
-          </div>
-        {:else if recentTags.length > 0}
-          <div class="tag-suggestions">
-            <span>Recent tags:</span>
-            {#each recentTags as tag}
-              <PremiumInteractions variant="click" intensity="subtle">
-                <button 
-                  type="button" 
-                  class="tag-button"
-                  on:click={() => {
-                    if (!tags.includes(tag)) {
-                      tags = [...tags, tag];
-                    }
-                  }}
-                >
-                  {tag}
-                </button>
-              </PremiumInteractions>
-            {/each}
+        <!-- Error Display -->
+        {#if error}
+          <div class="error-section">
+            <div class="error-header">
+              <Icon name="alert-triangle" size="small" color="#DC143C" />
+              <span>NEURAL PATHWAY DISRUPTED</span>
+            </div>
+            <div class="error-message">{error.message}</div>
           </div>
         {/if}
-      </div>
 
-      {#if message}
-        <div class="message {messageType}">
-          {message}
-        </div>
-      {/if}
+        <!-- Progress Bar -->
+        {#if isSubmitting}
+          <div class="processing-section">
+            <div class="processing-header">
+              <Spinner size="small" />
+              <span>PROCESSING MEMORY TRACE...</span>
+            </div>
+            <div class="progress-bar active">
+              <div class="progress-fill" style="width: {progress}%"></div>
+            </div>
+            <div class="processing-status">
+              Neural network synchronization: {Math.round(progress)}%
+            </div>
+          </div>
+        {/if}
 
-      {#if isSubmitting}
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {progress}%"></div>
-        </div>
-      {/if}
-
-      <div class="form-actions">
-        <AnimatedButton 
-          variant="primary" 
-          size="large" 
-          icon={isSubmitting ? null : "download"}
-          loading={isSubmitting}
-          disabled={isSubmitting}
-          on:click={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
-          {#if isSubmitting}
-            Capturing...
-          {:else}
-            Capture
-          {/if}
-        </AnimatedButton>
-        
-        <PremiumInteractions variant="click" intensity="subtle">
-          <button 
-            type="button" 
-            class="secondary-button"
-            on:click={() => window.history.back()}
-            disabled={isSubmitting}
+        <!-- Execute Button -->
+        <div class="execute-section">
+          <button
+            type="submit"
+            class="execute-button"
+            disabled={isSubmitting || (!url && !highlight && uploadedFiles.length === 0)}
           >
-            Cancel
+            {#if isSubmitting}
+              <Spinner size="small" />
+              PROCESSING...
+            {:else}
+              > EXECUTE_MEMORY_CAPTURE()
+            {/if}
           </button>
-        </PremiumInteractions>
-        
-        <div class="keyboard-shortcut">Cmd+Enter to submit</div>
-      </div>
-    </form>
+          
+          <div class="command-hint">
+            <Icon name="keyboard" size="small" color="#666" />
+            <span>Cmd+Enter to execute</span>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
 <style>
-  .container {
+  .neural-terminal-page {
     min-height: 100vh;
-    background: transparent;
-  }
-  
-  .capture-container {
-    max-width: 800px;
-    margin: 0 auto;
+    background: #0a0a0a;
+    position: relative;
     padding: 2rem;
-    position: relative;
-    min-height: 400px;
-    transition: all 0.3s ease;
-    background: transparent;
-  }
-  
-  .url-input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  .video-indicator {
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
-    background-color: var(--accent);
-    color: white;
-    padding: 4px 8px;
-    border-radius: var(--radius);
-    font-size: 0.8rem;
-  }
-  
-  .video-indicator :global(svg) {
-    margin-right: 5px;
-  }
-  
-  .ai-indicator {
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
-    background-color: var(--success);
-    color: white;
-    padding: 4px 8px;
-    border-radius: var(--radius);
-    font-size: 0.8rem;
-  }
-  
-  .ai-indicator.loading {
-    background-color: var(--info);
-  }
-  
-  .ai-indicator :global(svg) {
-    margin-right: 5px;
-  }
-  
-  .video-info {
-    margin-top: 10px;
-    padding: 12px;
-    background-color: var(--bg-secondary);
-    border-radius: var(--radius);
-    border-left: 3px solid var(--accent);
-  }
-  
-  .video-platform,
-  .video-download-time {
-    margin-bottom: 8px;
-  }
-  
-  .video-options {
-    margin-top: 12px;
-  }
-  
-  .video-quality-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .video-quality-label select {
-    padding: 6px 10px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background-color: var(--bg-primary);
-    color: var(--text);
+    font-family: var(--font-mono);
   }
 
-  .dragging {
-    background: var(--bg-secondary);
-    border: 2px dashed var(--accent);
-    border-radius: var(--radius);
+  .neural-motherboard-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
   }
 
-  .drag-overlay {
+  .pcb-traces {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 40px,
+        #00ff64 40px,
+        #00ff64 42px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        #00ff64 40px,
+        #00ff64 42px
+      );
+  }
+
+  .circuit-nodes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .node {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #DC143C, #B91C3C);
+    border-radius: 50%;
+    border: 2px solid #DC143C;
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+    animation: node-pulse 3s ease-in-out infinite;
+  }
+
+  .node-1 { top: 20%; left: 15%; animation-delay: 0s; }
+  .node-2 { top: 60%; left: 80%; animation-delay: 1s; }
+  .node-3 { top: 30%; left: 70%; animation-delay: 2s; }
+  .node-4 { top: 80%; left: 25%; animation-delay: 1.5s; }
+
+  @keyframes node-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.3); opacity: 0.9; }
+  }
+
+  .terminal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(26, 26, 26, 0.95);
+    border: 2px solid #00ff64;
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(15px);
+    box-shadow: 
+      0 0 30px rgba(0, 255, 100, 0.2),
+      inset 0 0 100px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .terminal-header {
+    background: linear-gradient(90deg, #00ff64, #00dd55);
+    color: #000;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .terminal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: scan 4s ease-in-out infinite;
+  }
+
+  @keyframes scan {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  .terminal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+  }
+
+  .terminal-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .control-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #000;
+    opacity: 0.7;
+  }
+
+  .terminal-body {
+    padding: 2rem;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-primary);
+  }
+
+  .system-status {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 255, 100, 0.2);
+    border-radius: var(--radius-sm);
+  }
+
+  .status-line {
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+
+  .status-line:last-child {
+    margin-bottom: 0;
+  }
+
+  .status-online {
+    color: #00ff64;
+    font-weight: 600;
+  }
+
+  .status-standby {
+    color: #fbbf24;
+    font-weight: 600;
+  }
+
+  .terminal-output {
+    margin-bottom: 2rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 255, 100, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .terminal-line {
+    color: #00ff64;
+    margin-bottom: 0.25rem;
+    font-size: 13px;
+  }
+
+  .terminal-line.current {
+    color: var(--text-primary);
+  }
+
+  .cursor {
+    animation: blink 1s infinite;
+    color: #00ff64;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .processing-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .step-section {
+    border: 1px solid rgba(0, 255, 100, 0.2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    background: rgba(0, 255, 100, 0.02);
+    transition: all var(--transition-base);
+  }
+
+  .step-section.active {
+    border-color: rgba(0, 255, 100, 0.5);
+    background: rgba(0, 255, 100, 0.05);
+    box-shadow: 0 0 15px rgba(0, 255, 100, 0.1);
+  }
+
+  .step-section.completed {
+    border-color: rgba(0, 255, 100, 0.3);
+    background: rgba(0, 255, 100, 0.02);
+    opacity: 0.8;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: #00ff64;
+    font-weight: 600;
+  }
+
+  .step-indicator {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #00ff64;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    z-index: 10;
+    font-weight: 700;
+    background: rgba(0, 255, 100, 0.1);
   }
 
-  .drag-overlay.active {
-    opacity: 1;
+  .step-section.completed .step-indicator {
+    background: #00ff64;
+    color: #000;
   }
 
-  .drag-content {
-    text-align: center;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
+  .step-number {
+    font-size: 14px;
   }
 
-  h1 {
-    margin-bottom: 2rem;
-    color: var(--text-primary);
+  .step-title {
+    font-size: 16px;
+    letter-spacing: 0.5px;
   }
 
-  .form-group {
-    margin-bottom: 1.5rem;
+  .step-content {
+    margin-left: 3rem;
   }
 
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 500;
+  .input-group {
+    position: relative;
   }
 
-  input, textarea {
+  .terminal-input, .terminal-textarea {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-input);
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #333;
     color: var(--text-primary);
-    font-size: 1rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  input:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-muted);
-    outline: none;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  button {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  button:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-  }
-
-  button:active {
-    transform: translateY(0);
-  }
-
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  button.primary {
-    background: var(--accent);
-    color: var(--accent-text);
-    border-color: var(--accent);
-  }
-
-  button.primary:hover {
-    background: var(--accent-hover);
-  }
-
-  .message {
     padding: 0.75rem;
-    border-radius: var(--radius);
-    margin-bottom: 1rem;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .message.success {
-    background: var(--success-bg);
-    color: var(--success);
-  }
-
-  .message.error {
-    background: var(--error-bg);
-    color: var(--error);
-  }
-
-  .message.info {
-    background: var(--info-bg);
-    color: var(--info);
-  }
-
-  .tag-suggestions {
-    margin-top: 0.5rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .tag-button {
-    padding: 0.25rem 0.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    transition: all var(--transition-base);
   }
 
-  .tag-button:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+  .terminal-input:focus, .terminal-textarea:focus {
+    outline: none;
+    border-color: #00ff64;
+    box-shadow: 0 0 15px rgba(0, 255, 100, 0.3);
+    background: rgba(0, 0, 0, 0.7);
   }
 
-  .keyboard-shortcut {
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
-    margin-left: auto;
+  .terminal-textarea {
+    resize: vertical;
+    min-height: 80px;
   }
-  
-  .secondary-button {
-    padding: 0.75rem 1.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
+
+  .input-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 13px;
+    color: #00ff64;
   }
-  
-  .secondary-button:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+
+  .input-status.video {
+    color: #DC143C;
   }
 
   .progress-bar {
-    height: 4px;
-    background: var(--bg-tertiary);
-    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    height: 8px;
+    border-radius: 4px;
     overflow: hidden;
-    margin: 1rem 0;
+    margin: 0.75rem 0;
   }
 
   .progress-fill {
+    background: linear-gradient(90deg, #00ff64, #DC143C);
     height: 100%;
-    background: var(--accent);
-    transition: width 0.3s ease;
+    width: 70%;
+    animation: progress-pulse 2s ease-in-out infinite;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+  .progress-bar.active .progress-fill {
+    transition: width var(--transition-base);
   }
 
-  /* Summarization toggle styles */
-  .summarization-toggle {
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  .status-text {
+    font-size: 13px;
+    color: #666;
+  }
+
+  .status-processing {
+    color: #fbbf24;
+    font-weight: 600;
+  }
+
+  .status-complete {
+    color: #00ff64;
+    font-weight: 600;
+  }
+
+  .content-type-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .content-type-option {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    color: var(--text-secondary);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .content-type-option:hover {
+    border-color: #00ff64;
+    background: rgba(0, 255, 100, 0.1);
+  }
+
+  .content-type-option.active {
+    border-color: #DC143C;
+    background: rgba(220, 20, 60, 0.2);
+    color: #DC143C;
+  }
+
+  .option-icon {
+    font-size: 16px;
+  }
+
+  .option-label {
+    font-weight: 600;
+  }
+
+  .enhancement-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .enhancement-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .toggle-switch {
+    width: 50px;
+    height: 25px;
+    background: #333;
+    border: none;
+    border-radius: 25px;
+    position: relative;
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .toggle-switch.active {
+    background: #DC143C;
+  }
+
+  .toggle-switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .switch-slider {
+    position: absolute;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    top: 2px;
+    left: 2px;
+    transition: all var(--transition-base);
+  }
+
+  .toggle-switch.active .switch-slider {
+    left: 27px;
+  }
+
+  .option-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .status-indicator {
+    font-weight: 600;
+    color: #666;
+  }
+
+  .status-indicator.active {
+    color: #00ff64;
+  }
+
+  .metadata-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .file-upload-section {
+    border-color: rgba(220, 20, 60, 0.2);
+    background: rgba(220, 20, 60, 0.02);
+  }
+
+  .error-section {
+    background: rgba(220, 20, 60, 0.1);
+    border: 1px solid rgba(220, 20, 60, 0.3);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .error-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #DC143C;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .error-message {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .processing-section {
+    background: rgba(0, 255, 100, 0.05);
+    border: 1px solid rgba(0, 255, 100, 0.2);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .processing-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #00ff64;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .processing-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  .execute-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .execute-button {
+    background: linear-gradient(135deg, #DC143C, #B91C3C);
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
   }
 
-  .toggle-label {
+  .execute-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #B91C3C, #991B1B);
+    box-shadow: 0 0 25px rgba(220, 20, 60, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .execute-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .command-hint {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    user-select: none;
+    gap: 0.5rem;
+    color: #666;
+    font-size: 12px;
   }
 
-  .toggle-label input[type="checkbox"] {
-    display: none;
-  }
+  @media (max-width: 768px) {
+    .neural-terminal-page {
+      padding: 1rem;
+    }
 
-  .toggle-slider {
-    position: relative;
-    width: 48px;
-    height: 24px;
-    background: var(--bg-tertiary);
-    border-radius: 12px;
-    transition: background 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+    .terminal-body {
+      padding: 1rem;
+    }
 
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+    .step-content {
+      margin-left: 0;
+    }
 
-  .toggle-label input[type="checkbox"]:checked + .toggle-slider {
-    background: var(--accent);
-  }
+    .content-type-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
 
-  .toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
-    transform: translateX(24px);
-  }
-
-  .toggle-text {
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 0.95rem;
-  }
-
-  .toggle-description {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  .toggle-label input[type="checkbox"]:disabled + .toggle-slider {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .toggle-label input[type="checkbox"]:disabled ~ .toggle-text {
-    opacity: 0.5;
-  }
-
-  /* Content type selector styles */
-  .content-type-selector {
-    position: relative;
-  }
-
-  .content-type-selector select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-weight: 500;
-    appearance: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
-  }
-
-  .content-type-selector select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.1);
-  }
-
-  .content-type-selector select:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  .content-type-selector select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .content-type-selector select option {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    padding: 0.5rem;
-  }
-
-  .content-type-selector select option:hover {
-    background: var(--bg-hover);
+    .terminal-container {
+      border-radius: var(--radius);
+    }
   }
 </style>

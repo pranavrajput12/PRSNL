@@ -12,6 +12,7 @@
   let selectedPlatform = 'all';
   let selectedCategory = 'all';
   let viewMode: 'timeline' | 'courses' = 'timeline';
+  let searchTerm = '';
   
   const platforms = ['all', 'youtube', 'twitter', 'instagram'];
   
@@ -63,10 +64,51 @@
   
   function filterVideos() {
     return videos.filter(video => {
+      // Platform filter
       if (selectedPlatform !== 'all' && video.platform !== selectedPlatform) return false;
+      // Category filter
       if (selectedCategory !== 'all' && video.category !== selectedCategory) return false;
+      // Search filter
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        const title = (video.title || '').toLowerCase();
+        const summary = (video.summary || '').toLowerCase();
+        if (!title.includes(search) && !summary.includes(search)) return false;
+      }
       return true;
     });
+  }
+
+  function getVideoId(video: Item): string {
+    return `VID_${String(videos.indexOf(video) + 1).padStart(3, '0')}${String.fromCharCode(65 + (videos.indexOf(video) % 26))}`;
+  }
+
+  function getVideoStatus(video: Item): string {
+    if (video.status === 'pending') return 'PROCESSING';
+    if (video.transcription) return 'INDEXED';
+    return 'ARCHIVED';
+  }
+
+  function getNeuralScore(video: Item): number {
+    // Generate a neural score based on video metadata
+    let score = 75; // Base score
+    if (video.transcription) score += 15;
+    if (video.summary) score += 10;
+    if (video.tags && video.tags.length > 0) score += 5;
+    return Math.min(99, score + Math.floor(Math.random() * 10));
+  }
+
+  function formatDuration(seconds: number): string {
+    if (!seconds) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function getQualityIndicator(video: Item): string {
+    // Random quality indicator for demo
+    const qualities = ['4K', 'HD', 'SD'];
+    return qualities[Math.floor(Math.random() * qualities.length)];
   }
   
   onMount(() => {
@@ -75,330 +117,781 @@
   });
 </script>
 
-<div class="page">
-  <div class="header">
-    <h1 class="page-title">
-      <Icon name="video" />
-      Video Library
-    </h1>
-    
-    <div class="header-actions">
-      <div class="view-toggle">
-        <button 
-          class="toggle-btn"
-          class:active={viewMode === 'timeline'}
-          on:click={() => viewMode = 'timeline'}
-        >
-          <Icon name="grid" />
-          Timeline
-        </button>
-        <button 
-          class="toggle-btn"
-          class:active={viewMode === 'courses'}
-          on:click={() => viewMode = 'courses'}
-        >
-          <Icon name="book" />
-          Courses
-        </button>
+<div class="cortex-container">
+  <!-- Matrix Grid Background -->
+  <div class="matrix-grid"></div>
+  
+  <!-- Cortex Header -->
+  <div class="cortex-header">
+    <div class="cortex-title">
+      <div class="neural-pulse"></div>
+      VISUAL CORTEX MATRIX
+    </div>
+    <div class="cortex-stats">
+      <div class="stat">
+        <div class="stat-value">{videos.length}</div>
+        <div class="stat-label">Neural Vids</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{Math.floor(videos.reduce((sum, v) => sum + (v.duration || 0), 0) / 3600)}h</div>
+        <div class="stat-label">Runtime</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{Math.round((videos.filter(v => v.transcription).length / videos.length) * 100) || 0}%</div>
+        <div class="stat-label">Index Rate</div>
       </div>
     </div>
   </div>
   
-  {#if viewMode === 'timeline'}
-    <div class="filters">
-      <select bind:value={selectedPlatform} class="filter-select">
+  <!-- Matrix Controls -->
+  <div class="matrix-controls">
+    <div class="control-group">
+      <button 
+        class="matrix-button"
+        class:active={viewMode === 'timeline'}
+        on:click={() => viewMode = 'timeline'}
+      >
+        MATRIX
+      </button>
+      <button 
+        class="matrix-button"
+        class:active={viewMode === 'courses'}
+        on:click={() => viewMode = 'courses'}
+      >
+        COURSES
+      </button>
+      <button class="matrix-button">NEURAL</button>
+      <button class="matrix-button">ARCHIVE</button>
+    </div>
+    
+    <div class="terminal-search">
+      <span class="search-prompt">></span>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="search neural video database..." 
+        bind:value={searchTerm}
+      />
+    </div>
+    
+    <div class="control-group">
+      <select bind:value={selectedPlatform} class="matrix-select">
         {#each platforms as platform}
           <option value={platform}>
-            {platform === 'all' ? 'All Platforms' : platform.charAt(0).toUpperCase() + platform.slice(1)}
+            {platform === 'all' ? 'ALL' : platform.toUpperCase()}
           </option>
         {/each}
       </select>
-      
-      <select bind:value={selectedCategory} class="filter-select">
-        <option value="all">All Categories</option>
-        <option value="tutorial">Tutorials</option>
-        <option value="lecture">Lectures</option>
-        <option value="documentary">Documentaries</option>
-        <option value="other">Other</option>
+      <select bind:value={selectedCategory} class="matrix-select">
+        <option value="all">ALL TYPES</option>
+        <option value="tutorial">TUTORIAL</option>
+        <option value="lecture">LECTURE</option>
+        <option value="documentary">DOCS</option>
+        <option value="other">OTHER</option>
       </select>
-      
-      <div class="stats">
-        {videos.length} videos • {videos.filter(v => v.transcription).length} with transcripts
-      </div>
     </div>
-    
+  </div>
+  
+  {#if viewMode === 'timeline'}
     {#if loading}
-      <div class="loading">
-        <Icon name="spinner" class="animate-spin" />
-        Loading videos...
+      <div class="matrix-loading">
+        <div class="loading-text">INITIALIZING NEURAL MATRIX...</div>
+        <div class="loading-bar">
+          <div class="loading-progress"></div>
+        </div>
       </div>
     {:else if videos.length === 0}
-      <div class="empty-state">
-        <Icon name="video" size={48} />
-        <h2>No videos yet</h2>
-        <p>Save some video links to see them here!</p>
+      <div class="matrix-empty">
+        <div class="empty-icon">⚠</div>
+        <div class="empty-title">NO NEURAL DATA DETECTED</div>
+        <div class="empty-message">Initialize video capture protocols to populate matrix</div>
       </div>
     {:else}
-      <div class="video-grid">
-        {#each filterVideos() as video}
-          <VideoCard {video} />
+      <div class="video-matrix">
+        {#each filterVideos() as video, index}
+          <div class="matrix-cell">
+            <div class="video-display">
+              {#if video.thumbnailUrl || video.thumbnail_url}
+                <img 
+                  src={video.thumbnailUrl || video.thumbnail_url} 
+                  alt={video.title} 
+                  class="video-thumbnail" 
+                />
+              {:else}
+                <div class="thumbnail-placeholder">
+                  <Icon name="video" size="large" />
+                </div>
+              {/if}
+              
+              <div class="video-overlay">
+                <button class="play-command" on:click={() => window.open(`/videos/${video.id}`, '_blank')}>
+                  EXECUTE
+                </button>
+              </div>
+              
+              <div class="duration-display">{formatDuration(video.duration || 0)}</div>
+              <div class="quality-indicator">{getQualityIndicator(video)}</div>
+              <div class="neural-indicator"></div>
+            </div>
+            
+            <div class="video-metadata">
+              <div class="video-header">
+                <div class="video-id">{getVideoId(video)}</div>
+                <div class="video-status">{getVideoStatus(video)}</div>
+              </div>
+              
+              <h3 class="video-title">{video.title || 'UNTITLED_VIDEO'}</h3>
+              
+              <p class="video-description">
+                {video.summary || 'Neural analysis pending... Video indexed for processing.'}
+              </p>
+              
+              <div class="video-metrics">
+                <div class="metric">
+                  <div class="metric-value">{video.platform || 'Unknown'}</div>
+                  <div class="metric-label">Source</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value">{Math.floor((Date.now() - new Date(video.createdAt).getTime()) / (1000 * 60 * 60 * 24))}d</div>
+                  <div class="metric-label">Age</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value">{getNeuralScore(video)}%</div>
+                  <div class="metric-label">Neural</div>
+                </div>
+              </div>
+              
+              <div class="neural-tags">
+                {#if video.tags && video.tags.length > 0}
+                  {#each video.tags.slice(0, 3) as tag}
+                    <span class="neural-tag">{tag.toUpperCase()}</span>
+                  {/each}
+                {:else}
+                  <span class="neural-tag">UNTAGGED</span>
+                {/if}
+              </div>
+            </div>
+          </div>
         {/each}
       </div>
     {/if}
     
   {:else}
-    <!-- Mini-Courses View -->
-    <div class="courses-section">
-      <div class="section-header">
-        <h2>Create a Mini-Course</h2>
-        <p>Let AI organize your videos into structured learning paths</p>
+    <!-- Courses Section with Matrix styling -->
+    <div class="matrix-courses">
+      <div class="courses-header">
+        <div class="courses-title">NEURAL COURSE GENERATOR</div>
+        <div class="courses-subtitle">AI-powered learning path synthesis</div>
       </div>
       
-      <div class="course-suggestions">
-        {#if videos.length < 5}
-          <div class="empty-state">
-            <Icon name="book-open" size={48} />
-            <h3>Need More Videos for Mini-Courses</h3>
-            <p>Mini-courses require at least 5 videos in your library.</p>
-            <p>You currently have {videos.length} video{videos.length !== 1 ? 's' : ''}.</p>
-            <p>Add more videos to unlock this feature!</p>
-          </div>
-        {:else if miniCourses.length === 0}
-          <div class="empty-state">
-            <Icon name="sparkles" size={48} />
-            <h3>Mini-Course Feature Coming Soon!</h3>
-            <p>AI-powered course creation will organize your videos into learning paths.</p>
-          </div>
-        {:else}
-          {#each miniCourses as course}
-            <div class="course-suggestion">
-              <h3>{course.suggested_title}</h3>
-              <p>{course.video_count} videos available</p>
-              <button 
-                class="btn btn-primary"
-                on:click={() => createMiniCourse(course.topic)}
-              >
-                Create Course
-              </button>
-            </div>
-          {/each}
-        {/if}
-      </div>
-      
-      <div class="custom-course">
-        <h3>Or create a custom course</h3>
-        <form on:submit|preventDefault={(e) => {
-          const formData = new FormData(e.target);
-          createMiniCourse(formData.get('topic'));
-        }}>
-          <input 
-            type="text" 
-            name="topic"
-            placeholder="Enter a topic (e.g., 'machine learning', 'web development')"
-            class="input"
-            required
-          />
-          <button type="submit" class="btn btn-primary">
-            Generate Course
-          </button>
-        </form>
-      </div>
+      {#if videos.length < 5}
+        <div class="matrix-empty">
+          <div class="empty-icon">📚</div>
+          <div class="empty-title">INSUFFICIENT NEURAL DATA</div>
+          <div class="empty-message">Minimum 5 videos required for course synthesis. Current count: {videos.length}</div>
+        </div>
+      {:else}
+        <div class="matrix-empty">
+          <div class="empty-icon">🔬</div>
+          <div class="empty-title">COURSE SYNTHESIS PROTOCOL</div>
+          <div class="empty-message">Neural course generation algorithms coming online soon...</div>
+        </div>
+      {/if}
     </div>
   {/if}
+  
+  <!-- Matrix Footer -->
+  <div class="matrix-footer">
+    <div class="system-status">
+      <div class="status-indicator status-active"></div>
+      <div class="status-indicator status-processing"></div>
+      <div class="status-indicator status-idle"></div>
+      <span class="status-text">SYSTEM OPERATIONAL</span>
+    </div>
+    
+    <div class="terminal-output">
+      > visual_cortex_matrix_v2.1_active | {videos.length}_videos_indexed | processing_queue_clear
+    </div>
+  </div>
 </div>
 
 <style>
-  .page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+  .cortex-container {
+    max-width: 100%;
+    padding: 1rem;
+    min-height: 100vh;
+    background: #0a0a0a;
+    font-family: 'JetBrains Mono', monospace;
+    color: #e0e0e0;
+    position: relative;
   }
   
-  .header {
+  .matrix-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(0, 255, 100, 0.1) 40px,
+      rgba(0, 255, 100, 0.1) 41px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(0, 255, 100, 0.1) 40px,
+      rgba(0, 255, 100, 0.1) 41px
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .cortex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(20px);
+  }
+  
+  .cortex-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #00ff64;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .neural-pulse {
+    width: 20px;
+    height: 20px;
+    background: #DC143C;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.7; }
+  }
+  
+  .cortex-stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.875rem;
+  }
+  
+  .stat {
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #DC143C;
+  }
+  
+  .stat-label {
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .matrix-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(220, 20, 60, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(20px);
   }
   
-  .page-title {
+  .control-group {
     display: flex;
+    gap: 1rem;
     align-items: center;
-    gap: 1rem;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--color-text);
   }
   
-  .header-actions {
-    display: flex;
-    gap: 1rem;
+  .matrix-button {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    color: #00ff64;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   
-  .view-toggle {
-    display: flex;
-    background-color: var(--color-surface);
-    border-radius: 0.5rem;
-    padding: 0.25rem;
+  .matrix-button:hover,
+  .matrix-button.active {
+    border-color: #DC143C;
+    color: #DC143C;
+    background: rgba(220, 20, 60, 0.1);
   }
   
-  .toggle-btn {
+  .terminal-search {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 255, 100, 0.5);
+    border-radius: 8px;
+    padding: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: none;
+    min-width: 300px;
+  }
+  
+  .search-prompt {
+    color: #00ff64;
+    font-weight: 600;
+  }
+  
+  .search-input {
+    background: transparent;
     border: none;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: inherit;
+    flex: 1;
+    outline: none;
   }
   
-  .toggle-btn.active {
-    background-color: var(--color-primary);
-    color: white;
+  .search-input::placeholder {
+    color: #666;
   }
   
-  .filters {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background-color: var(--color-surface);
-    border-radius: 0.5rem;
-  }
-  
-  .filter-select {
+  .matrix-select {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    color: #00ff64;
     padding: 0.5rem 1rem;
-    background-color: var(--color-background);
-    border: 1px solid var(--color-border);
-    border-radius: 0.375rem;
-    color: var(--color-text);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   
-  .stats {
-    margin-left: auto;
-    color: var(--color-text-muted);
-    font-size: 0.875rem;
-  }
-  
-  .video-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 4rem;
-    color: var(--color-text-muted);
-  }
-  
-  .empty-state {
+  .matrix-loading {
     text-align: center;
-    padding: 4rem;
-    color: var(--color-text-muted);
+    padding: 4rem 2rem;
+    margin-left: 80px;
   }
   
-  .empty-state h2 {
-    margin-top: 1rem;
-    font-size: 1.5rem;
-    color: var(--color-text);
+  .loading-text {
+    color: #00ff64;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
   }
   
-  .courses-section {
-    max-width: 800px;
+  .loading-bar {
+    width: 300px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
     margin: 0 auto;
   }
   
-  .section-header {
+  .loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #DC143C, #00ff64);
+    animation: loading-animation 2s ease-in-out infinite;
+  }
+  
+  @keyframes loading-animation {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+  
+  .matrix-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    margin-left: 80px;
+  }
+  
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #DC143C;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+  }
+  
+  .empty-message {
+    color: #a0a0a0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .video-matrix {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  
+  .matrix-cell {
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(15px);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .matrix-cell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #DC143C, #00ff64);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .matrix-cell:hover {
+    transform: translateY(-5px);
+    border-color: rgba(220, 20, 60, 0.5);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .matrix-cell:hover::before {
+    opacity: 1;
+  }
+  
+  .video-display {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #1a1a1a;
+    overflow: hidden;
+  }
+  
+  .video-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .matrix-cell:hover .video-thumbnail {
+    transform: scale(1.02);
+  }
+  
+  .thumbnail-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: #666;
+  }
+  
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      45deg,
+      rgba(220, 20, 60, 0.8) 0%,
+      transparent 50%,
+      rgba(0, 255, 100, 0.8) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .matrix-cell:hover .video-overlay {
+    opacity: 1;
+  }
+  
+  .play-command {
+    background: rgba(0, 0, 0, 0.9);
+    color: #00ff64;
+    padding: 1rem 2rem;
+    border: 1px solid #00ff64;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  .play-command:hover {
+    background: #00ff64;
+    color: #0a0a0a;
+  }
+  
+  .duration-display {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.9);
+    color: #00ff64;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+  }
+  
+  .quality-indicator {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: rgba(220, 20, 60, 0.9);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  
+  .neural-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 12px;
+    height: 12px;
+    background: #00ff64;
+    border-radius: 50%;
+    animation: neural-blink 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes neural-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  
+  .video-metadata {
+    padding: 1.5rem;
+  }
+  
+  .video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .video-id {
+    color: #666;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .video-status {
+    color: #00ff64;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .video-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e0e0e0;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+  
+  .video-description {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .video-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .metric {
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+  }
+  
+  .metric-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #DC143C;
+    text-transform: uppercase;
+  }
+  
+  .metric-label {
+    font-size: 0.65rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .neural-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .neural-tag {
+    background: rgba(0, 255, 100, 0.1);
+    color: #00ff64;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .matrix-courses {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+  }
+  
+  .courses-header {
     text-align: center;
     margin-bottom: 3rem;
   }
   
-  .section-header h2 {
-    font-size: 1.75rem;
+  .courses-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4a9eff;
     margin-bottom: 0.5rem;
+    letter-spacing: 2px;
   }
   
-  .section-header p {
-    color: var(--color-text-muted);
+  .courses-subtitle {
+    color: #a0a0a0;
+    font-size: 0.9rem;
   }
   
-  .course-suggestions {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 3rem;
-  }
-  
-  .course-suggestion {
+  .matrix-footer {
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
-    background-color: var(--color-surface);
-    border-radius: 0.75rem;
-    transition: transform 0.2s;
+    margin-top: 3rem;
   }
   
-  .course-suggestion:hover {
-    transform: translateY(-2px);
-  }
-  
-  .course-suggestion h3 {
-    font-size: 1.125rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .course-suggestion p {
-    color: var(--color-text-muted);
-    font-size: 0.875rem;
-  }
-  
-  .custom-course {
-    padding: 2rem;
-    background-color: var(--color-surface);
-    border-radius: 0.75rem;
-  }
-  
-  .custom-course h3 {
-    margin-bottom: 1rem;
-  }
-  
-  .custom-course form {
+  .system-status {
     display: flex;
+    align-items: center;
     gap: 1rem;
   }
   
-  .input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background-color: var(--color-background);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    color: var(--color-text);
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: status-pulse 2s ease-in-out infinite;
   }
   
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
+  .status-active { background: #00ff64; }
+  .status-processing { background: #DC143C; animation-delay: 0.5s; }
+  .status-idle { background: #4a9eff; animation-delay: 1s; }
+  
+  @keyframes status-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
   }
   
-  .btn-primary {
-    background-color: var(--color-primary);
-    color: white;
+  .status-text {
+    color: #00ff64;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   
-  .btn-primary:hover {
-    opacity: 0.9;
+  .terminal-output {
+    font-size: 0.8rem;
+    color: #00ff64;
+    font-family: inherit;
+  }
+  
+  @media (max-width: 768px) {
+    .cortex-header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .matrix-controls {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .video-matrix {
+      grid-template-columns: 1fr;
+    }
+    
+    .matrix-footer {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .terminal-search {
+      min-width: 100%;
+    }
   }
 </style>

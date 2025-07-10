@@ -39,7 +39,6 @@
   let filterMode = 'all'; // all, videos, documents, links, today
 
   onMount(async () => {
-    console.log('🔵 Neural Stream: Mounting timeline...');
     await loadTimeline(true);
   });
 
@@ -55,21 +54,14 @@
         groups = [];
       }
 
-      console.log('🔵 Neural Stream: Loading timeline page', page);
       const response = await getTimeline(page);
-      console.log('🔵 Neural Stream: Timeline response:', response);
       
       if (response && response.items) {
-        console.log('🔵 Neural Stream: Found', response.items.length, 'items');
-        
         // Group items by date
         const newGroups: { [key: string]: Item[] } = {};
         
         response.items.forEach((item: Item) => {
-          // Handle the date format properly
-          const itemDate = new Date(item.createdAt);
-          console.log('🔵 Neural Stream: Item date:', item.createdAt, '→', itemDate);
-          const date = itemDate.toDateString();
+          const date = new Date(item.createdAt).toDateString();
           if (!newGroups[date]) {
             newGroups[date] = [];
           }
@@ -82,8 +74,6 @@
           items: items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        console.log('🔵 Neural Stream: Created', groupArray.length, 'groups');
-
         if (reset) {
           groups = groupArray;
         } else {
@@ -92,13 +82,9 @@
 
         hasMore = response.items.length >= 20;
         page++;
-        
-        console.log('🔵 Neural Stream: Total groups now:', groups.length);
-      } else {
-        console.log('🔴 Neural Stream: No response or items');
       }
     } catch (e) {
-      console.error('🔴 Neural Stream: Failed to load timeline:', e);
+      console.error('Failed to load timeline:', e);
       error = e as Error;
     } finally {
       isLoading = false;
@@ -166,35 +152,7 @@
 
   function setFilterMode(mode: string) {
     filterMode = mode;
-    console.log('🔵 Neural Stream: Filter changed to:', mode);
   }
-
-  // Computed property to filter groups based on selected mode
-  $: filteredGroups = groups.map(group => {
-    let filteredItems = group.items;
-
-    // Apply filter based on mode
-    if (filterMode !== 'all') {
-      if (filterMode === 'videos') {
-        filteredItems = group.items.filter(item => item.item_type === 'video');
-      } else if (filterMode === 'documents') {
-        filteredItems = group.items.filter(item => item.file_path);
-      } else if (filterMode === 'links') {
-        filteredItems = group.items.filter(item => item.url && !item.file_path && item.item_type !== 'video');
-      } else if (filterMode === 'today') {
-        const today = new Date().toDateString();
-        const itemDate = new Date(group.date).toDateString();
-        if (itemDate !== today) {
-          filteredItems = [];
-        }
-      }
-    }
-
-    return {
-      ...group,
-      items: filteredItems
-    };
-  }).filter(group => group.items.length > 0); // Remove empty groups
 </script>
 
 <svelte:head>
@@ -263,27 +221,20 @@
         retry={() => loadTimeline(true)} 
         dismiss={() => { error = null; }} 
       />
-    {:else if isLoading && groups.length === 0}
-      <div class="loading-section">
-        <div class="neural-loading">
-          <Spinner size="large" />
-          <p>Initializing neural stream...</p>
-        </div>
-      </div>
-    {:else if filteredGroups.length === 0 && !isLoading}
+    {:else if groups.length === 0 && !isLoading}
       <div class="empty-state">
         <div class="empty-icon">
           <Icon name="brain" size="large" color="var(--text-muted)" />
         </div>
-        <h3>{filterMode === 'all' ? 'No neural traces detected' : `No ${filterMode} found`}</h3>
-        <p>{filterMode === 'all' ? 'Start capturing content to build your thought stream' : `Try switching to "All Traces" or capture more ${filterMode} content`}</p>
+        <h3>No neural traces detected</h3>
+        <p>Start capturing content to build your thought stream</p>
         <a href="/capture" class="btn-primary">
           <Icon name="plus" size="small" />
           Begin neural capture
         </a>
       </div>
     {:else}
-      {#each filteredGroups as group, groupIndex}
+      {#each groups as group, groupIndex}
         <div class="stream-section">
           <!-- Date node -->
           <div class="section-date">
@@ -323,12 +274,12 @@
                 </div>
               </div>
 
-              {#if item.item_type === 'video' && item.thumbnail_url && item.url}
+              {#if item.item_type === 'video' && item.thumbnail_url}
                 <div class="trace-video">
                   <VideoPlayer 
-                    src={item.url} 
+                    videoUrl={item.url} 
                     thumbnailUrl={item.thumbnail_url}
-                    title={item.title || 'Untitled'}
+                    title={item.title}
                     duration={item.duration}
                     platform={item.platform}
                   />
@@ -722,18 +673,6 @@
   .loading-section {
     margin-left: 80px;
     padding: 1rem;
-  }
-
-  .neural-loading {
-    text-align: center;
-    padding: 2rem;
-    color: #00ff64;
-  }
-
-  .neural-loading p {
-    margin-top: 1rem;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
   }
 
   /* Responsive design */
