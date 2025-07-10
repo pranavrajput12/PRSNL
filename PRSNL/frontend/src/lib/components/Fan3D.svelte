@@ -8,6 +8,8 @@
   let camera: THREE.PerspectiveCamera;
   let renderer: THREE.WebGLRenderer;
   let fanModel: THREE.Group;
+  let fanBlades: THREE.Object3D[] = [];
+  let fanFrame: THREE.Object3D[] = [];
   let animationId: number;
   let isHovered = false;
   let rotationSpeed = 0.1;
@@ -76,6 +78,14 @@
       const gltf = await loader.loadAsync('/models/fan.glb');
       fanModel = gltf.scene;
       
+      // Debug: Print model structure
+      console.log('Fan model loaded. Structure:');
+      fanModel.traverse((child, index) => {
+        if (child instanceof THREE.Mesh) {
+          console.log(`Mesh ${index}: ${child.name}, vertices: ${child.geometry.attributes.position.count}`);
+        }
+      });
+      
       // Center and scale the model
       const box = new THREE.Box3().setFromObject(fanModel);
       const center = box.getCenter(new THREE.Vector3());
@@ -84,24 +94,74 @@
       // Center the model
       fanModel.position.sub(center);
       
-      // Scale to fit nicely (adjust as needed)
+      // Scale to fit nicely
       const maxDim = Math.max(size.x, size.y, size.z);
       const scale = 3 / maxDim;
       fanModel.scale.setScalar(scale);
       
-      // Set up materials for motherboard look
+      // Create separate groups for frame and blades
+      const bladesGroup = new THREE.Group();
+      const frameGroup = new THREE.Group();
+      
+      // Analyze each mesh to determine if it's a blade or frame
+      const meshes: { mesh: THREE.Mesh, vertices: number, name: string }[] = [];
+      
       fanModel.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           
-          // Enhance materials for motherboard aesthetic
+          // Enhance materials
           if (child.material) {
             child.material.metalness = 0.7;
             child.material.roughness = 0.3;
           }
+          
+          meshes.push({
+            mesh: child,
+            vertices: child.geometry.attributes.position.count,
+            name: child.name
+          });
         }
       });
+      
+      // Sort by vertex count - blades usually have fewer vertices than the frame
+      meshes.sort((a, b) => a.vertices - b.vertices);
+      
+      console.log('Meshes sorted by vertex count:');
+      meshes.forEach((item, index) => {
+        console.log(`${index}: ${item.name} - ${item.vertices} vertices`);
+      });
+      
+      // Typically, the frame is the largest mesh, blades are smaller
+      const frameThreshold = meshes.length > 1 ? meshes[meshes.length - 1].vertices * 0.3 : 1000;
+      
+      meshes.forEach((item) => {
+        const clonedMesh = item.mesh.clone();
+        
+        // If it has fewer vertices than threshold, it's likely a blade
+        if (item.vertices < frameThreshold) {
+          bladesGroup.add(clonedMesh);
+          console.log(`Added to blades: ${item.name} (${item.vertices} vertices)`);
+        } else {
+          frameGroup.add(clonedMesh);
+          console.log(`Added to frame: ${item.name} (${item.vertices} vertices)`);
+        }
+        
+        // Hide original mesh
+        item.mesh.visible = false;
+      });
+      
+      // Add groups to scene
+      scene.add(frameGroup);
+      scene.add(bladesGroup);
+      
+      // Store references
+      fanFrame.push(frameGroup);
+      fanBlades.push(bladesGroup);
+      
+      console.log(`Frame group has ${frameGroup.children.length} parts`);
+      console.log(`Blades group has ${bladesGroup.children.length} parts`);
       
       scene.add(fanModel);
     } catch (error) {
@@ -112,9 +172,13 @@
   function animate() {
     animationId = requestAnimationFrame(animate);
     
-    // Rotate fan if not hovered
-    if (fanModel && !isHovered) {
-      fanModel.rotation.z += rotationSpeed;
+    // Rotate only the fan blades if not hovered
+    if (!isHovered && fanBlades.length > 0) {
+      fanBlades.forEach(blade => {
+        if (blade.rotation) {
+          blade.rotation.z += rotationSpeed;
+        }
+      });
     }
     
     renderer.render(scene, camera);
