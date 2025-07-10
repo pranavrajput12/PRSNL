@@ -11,6 +11,7 @@
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   import TagList from '$lib/components/TagList.svelte';
   import Calendar3D from '$lib/components/Calendar3D.svelte';
+  import Mac3D from '$lib/components/Mac3D.svelte';
   
   type Item = {
     id: string;
@@ -50,8 +51,50 @@
   let showSearchResults = false;
   
   onMount(async () => {
+    console.log('📊 Homepage: Starting page load...');
+    const pageStartTime = performance.now();
+    
     mounted = true;
     await loadData();
+    
+    const pageLoadTime = performance.now() - pageStartTime;
+    console.log(`📊 Homepage: Page loaded in ${pageLoadTime.toFixed(2)}ms`);
+    
+    // Monitor overall performance every 10 seconds
+    setInterval(() => {
+      if (performance.memory) {
+        const memory = {
+          used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
+          total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024),
+          limit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)
+        };
+        
+        // Server deployment readiness analysis
+        const connectionInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const isProduction = window.location.hostname !== 'localhost';
+        const memoryPressure = (memory.used / memory.limit) * 100;
+        
+        console.log(`📊 Overall Performance ${isProduction ? '(PRODUCTION)' : '(LOCAL)'}:
+          - Memory: ${memory.used}MB / ${memory.total}MB (Limit: ${memory.limit}MB)
+          - Memory Pressure: ${memoryPressure.toFixed(1)}% ${memoryPressure > 50 ? '⚠️ HIGH' : '✅ OK'}
+          - Items Loaded: ${timelineItems.length}
+          - Search Results: ${searchResults.length}
+          - Network: ${connectionInfo?.effectiveType || 'Unknown'}
+          - Connection: ${connectionInfo?.downlink || 'Unknown'}Mbps
+          - RTT: ${connectionInfo?.rtt || 'Unknown'}ms
+          ${isProduction ? '🚀 PRODUCTION METRICS ACTIVE' : '🏠 LOCAL DEVELOPMENT'}
+        `);
+        
+        // Server deployment warnings
+        if (memoryPressure > 70) {
+          console.warn('⚠️ HIGH MEMORY PRESSURE: Consider optimizing 3D components for server deployment');
+        }
+        
+        if (memory.used > 200) {
+          console.warn('⚠️ HIGH MEMORY USAGE: May cause issues on lower-end server environments');
+        }
+      }
+    }, 10000);
   });
   
   onDestroy(() => {
@@ -168,167 +211,9 @@
 </script>
 
 <div class="container animate-in">
-  <div class="hero">
-    <!-- NEURAL MOTHERBOARD CONSOLE -->
-    <div class="motherboard-console">
-      <div class="console-header">
-        <div class="console-brand">NEURAL-OS MAINFRAME</div>
-        <div class="console-indicators">
-          <div class="indicator">
-            <div class="indicator-light"></div>
-            <span>PWR</span>
-          </div>
-          <div class="indicator">
-            <div class="indicator-light red"></div>
-            <span>AI</span>
-          </div>
-          <div class="indicator">
-            <div class="indicator-light orange"></div>
-            <span>NET</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="console-content">
-        <!-- CREATIVE BRAIN NEURAL NETWORK ANIMATION -->
-        <div class="neural-brain-animation">
-          <!-- Brain Hemispheres -->
-          <div class="brain-hemisphere brain-left"></div>
-          <div class="brain-hemisphere brain-right"></div>
-          
-          <!-- Neural Network -->
-          <div class="neural-network">
-            <!-- Neurons -->
-            {#each Array(10) as _, i}
-              <div class="neuron neuron-{i + 1}"></div>
-            {/each}
-            
-            <!-- Synapses -->
-            {#each Array(5) as _, i}
-              <div class="synapse synapse-{i + 1}"></div>
-            {/each}
-          </div>
-          
-          <!-- Memory Bubbles -->
-          <div class="memory-bubbles">
-            {#each Array(3) as _, i}
-              <div class="memory-bubble bubble-{i + 1}"></div>
-            {/each}
-          </div>
-          
-          <!-- Data Packets -->
-          <div class="data-packets">
-            {#each Array(4) as _, i}
-              <div class="data-packet packet-{i + 1}"></div>
-            {/each}
-          </div>
-        </div>
-        
-        <div class="neural-header-section">
-          <div class="system-badge">
-            <Icon name="sparkles" size="small" />
-            <span>AI-Powered Knowledge Vault</span>
-          </div>
-          
-          <h1 class="motherboard-title">
-            Your Second Brain,<br/>Supercharged
-          </h1>
-          
-          <p class="neural-description">
-            Capture anything with a single keystroke. Search everything instantly.<br/>
-            Never lose a brilliant idea again.
-          </p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="processor-bay">
-      <div class="processor-connection-line"></div>
-      
-      <PremiumInteractions variant="hover" intensity="medium">
-        <a href="/capture" class="processor-card cpu-processor">
-          <div class="pcb-substrate">
-            <div class="circuit-traces cpu-traces"></div>
-            <div class="mounting-holes">
-              <div class="hole top-left"></div>
-              <div class="hole top-right"></div>
-              <div class="hole bottom-left"></div>
-              <div class="hole bottom-right"></div>
-            </div>
-            <div class="pin-connectors">
-              <div class="pin-row top"></div>
-              <div class="pin-row bottom"></div>
-              <div class="pin-row left"></div>
-              <div class="pin-row right"></div>
-            </div>
-            <div class="silicon-die cpu-die">
-              <div class="die-grid"></div>
-              <div class="chip-content">
-                <div class="chip-icon">
-                  <Icon name="ingest" size="large" color="#DC143C" />
-                </div>
-                <div class="chip-label">
-                  <h3>INGEST</h3>
-                  <p>Data Intake Processor</p>
-                </div>
-              </div>
-              <div class="led-indicators">
-                <div class="led active"></div>
-                <div class="led active"></div>
-                <div class="led"></div>
-              </div>
-            </div>
-            <div class="processor-label">
-              <span class="model-number">PRSNL-ING-001</span>
-              <span class="specs">32-Core Neural Engine</span>
-            </div>
-          </div>
-          <span class="keyboard-hint floating">⌘N</span>
-        </a>
-      </PremiumInteractions>
-      
-      <PremiumInteractions variant="hover" intensity="medium">
-        <a href="/insights" class="processor-card gpu-processor">
-          <div class="pcb-substrate">
-            <div class="circuit-traces gpu-traces"></div>
-            <div class="mounting-holes">
-              <div class="hole top-left"></div>
-              <div class="hole top-right"></div>
-              <div class="hole bottom-left"></div>
-              <div class="hole bottom-right"></div>
-            </div>
-            <div class="pin-connectors">
-              <div class="pin-row top"></div>
-              <div class="pin-row bottom"></div>
-              <div class="pin-row left"></div>
-              <div class="pin-row right"></div>
-            </div>
-            <div class="silicon-die gpu-die">
-              <div class="heat-sink"></div>
-              <div class="chip-content">
-                <div class="chip-icon">
-                  <Icon name="cognitive-map" size="large" color="#DC143C" />
-                </div>
-                <div class="chip-label">
-                  <h3>COGNITIVE MAP</h3>
-                  <p>Pattern Recognition GPU</p>
-                </div>
-              </div>
-              <div class="led-indicators">
-                <div class="led active"></div>
-                <div class="led active"></div>
-                <div class="led active"></div>
-              </div>
-            </div>
-            <div class="processor-label">
-              <span class="model-number">PRSNL-COG-001</span>
-              <span class="specs">AI Acceleration Unit</span>
-            </div>
-          </div>
-          <span class="keyboard-hint floating">⌘I</span>
-        </a>
-      </PremiumInteractions>
-    </div>
+  <!-- Mac3D Header Hero Section -->
+  <div class="hero-mac-section">
+    <Mac3D />
   </div>
   
   <!-- Neural Interface Scanner -->
@@ -619,6 +504,15 @@
     position: relative;
     width: 100%;
     margin-bottom: 4rem;
+  }
+  
+  .hero-mac-section {
+    padding: 2rem 0;
+    position: relative;
+    width: 100%;
+    margin-bottom: 4rem;
+    text-align: center;
+    background: transparent;
   }
 
   /* NEURAL MOTHERBOARD CONSOLE */

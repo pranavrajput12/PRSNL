@@ -10,24 +10,85 @@
   let fanModel: THREE.Group;
   let fanBlades: THREE.Object3D[] = [];
   let fanFrame: THREE.Object3D[] = [];
+  let bladesGroup: THREE.Group;
+  let frameGroup: THREE.Group;
   let animationId: number;
   let isHovered = false;
   let rotationSpeed = 0.1;
   
+  // Performance monitoring
+  let frameCount = 0;
+  let lastFPSTime = 0;
+  let currentFPS = 0;
+  let memoryUsage = { used: 0, total: 0 };
+  
   onMount(async () => {
+    console.log('🌀 Fan3D: Component mounting...');
+    const startTime = performance.now();
+    
     initThreeJS();
     await loadFanModel();
     animate();
+    
+    const loadTime = performance.now() - startTime;
+    console.log(`🌀 Fan3D: Initialized in ${loadTime.toFixed(2)}ms`);
+    
+    // Monitor performance every 5 seconds
+    setInterval(() => {
+      monitorPerformance();
+    }, 5000);
   });
   
   onDestroy(() => {
+    cleanup();
+  });
+  
+  function cleanup() {
+    // Cancel animation frame
     if (animationId) {
       cancelAnimationFrame(animationId);
+      animationId = 0;
     }
+    
+    // Dispose of geometries and materials
+    if (scene) {
+      scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          if (object.geometry) {
+            object.geometry.dispose();
+          }
+          if (object.material) {
+            if (Array.isArray(object.material)) {
+              object.material.forEach(material => material.dispose());
+            } else {
+              object.material.dispose();
+            }
+          }
+        }
+      });
+      scene.clear();
+    }
+    
+    // Dispose of renderer and force context loss
     if (renderer) {
       renderer.dispose();
+      renderer.forceContextLoss();
+      const gl = renderer.getContext();
+      if (gl && gl.getExtension('WEBGL_lose_context')) {
+        gl.getExtension('WEBGL_lose_context').loseContext();
+      }
     }
-  });
+    
+    // Clear references
+    scene = null;
+    camera = null;
+    renderer = null;
+    fanModel = null;
+    fanBlades = [];
+    fanFrame = [];
+    bladesGroup = null;
+    frameGroup = null;
+  }
   
   function initThreeJS() {
     // Scene setup
@@ -45,7 +106,7 @@
       alpha: true,
       powerPreference: "high-performance"
     });
-    renderer.setSize(300, 300);
+    renderer.setSize(600, 600); // Doubled from 300x300
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -94,17 +155,25 @@
       // Center the model
       fanModel.position.sub(center);
       
-      // Scale to fit nicely
+      // Scale to fit nicely (doubled size)
       const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 3 / maxDim;
+      const scale = 6 / maxDim; // Doubled from 3 to 6
       fanModel.scale.setScalar(scale);
       
-      // Create separate groups for frame and blades
-      const bladesGroup = new THREE.Group();
-      const frameGroup = new THREE.Group();
+      // Clear any existing groups
+      if (bladesGroup) scene.remove(bladesGroup);
+      if (frameGroup) scene.remove(frameGroup);
       
-      // Analyze each mesh to determine if it's a blade or frame
-      const meshes: { mesh: THREE.Mesh, vertices: number, name: string }[] = [];
+      // Create fresh groups for frame and blades
+      bladesGroup = new THREE.Group();
+      frameGroup = new THREE.Group();
+      
+      // Clear arrays
+      fanBlades.length = 0;
+      fanFrame.length = 0;
+      
+      // Collect all meshes with their info
+      const allMeshes: { mesh: THREE.Mesh, vertices: number, name: string }[] = [];
       
       fanModel.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -117,53 +186,56 @@
             child.material.roughness = 0.3;
           }
           
-          meshes.push({
+          allMeshes.push({
             mesh: child,
             vertices: child.geometry.attributes.position.count,
-            name: child.name
+            name: child.name || 'unnamed'
           });
         }
       });
       
-      // Sort by vertex count - blades usually have fewer vertices than the frame
-      meshes.sort((a, b) => a.vertices - b.vertices);
-      
-      console.log('Meshes sorted by vertex count:');
-      meshes.forEach((item, index) => {
-        console.log(`${index}: ${item.name} - ${item.vertices} vertices`);
+      console.log('All meshes found:');
+      allMeshes.forEach((item, index) => {
+        console.log(`${index}: "${item.name}" - ${item.vertices} vertices`);
       });
       
-      // Typically, the frame is the largest mesh, blades are smaller
-      const frameThreshold = meshes.length > 1 ? meshes[meshes.length - 1].vertices * 0.3 : 1000;
+      // Smart detection: Find the mesh with most vertices (likely the frame)
+      // and smaller meshes around the perimeter (likely blades)
+      allMeshes.sort((a, b) => b.vertices - a.vertices);
       
-      meshes.forEach((item) => {
-        const clonedMesh = item.mesh.clone();
-        
-        // If it has fewer vertices than threshold, it's likely a blade
-        if (item.vertices < frameThreshold) {
-          bladesGroup.add(clonedMesh);
-          console.log(`Added to blades: ${item.name} (${item.vertices} vertices)`);
-        } else {
-          frameGroup.add(clonedMesh);
-          console.log(`Added to frame: ${item.name} (${item.vertices} vertices)`);
+      const largestMesh = allMeshes[0];
+      console.log(`Largest mesh: "${largestMesh.name}" with ${largestMesh.vertices} vertices`);
+      
+      allMeshes.forEach((item, index) => {
+        // Remove from original parent
+        if (item.mesh.parent) {
+          item.mesh.parent.remove(item.mesh);
         }
         
-        // Hide original mesh
-        item.mesh.visible = false;
+        // FLIPPED ASSIGNMENT:
+        // Object_4 (65532 vertices) = Blades (rotating)
+        // Object_5 & Object_7 = Frame (static)
+        if (item.name === "Object_4") {
+          bladesGroup.add(item.mesh);
+          console.log(`Added to BLADES (rotating): "${item.name}" - ${item.vertices} vertices`);
+        } else {
+          frameGroup.add(item.mesh);
+          console.log(`Added to FRAME (static): "${item.name}" - ${item.vertices} vertices`);
+        }
       });
       
       // Add groups to scene
       scene.add(frameGroup);
       scene.add(bladesGroup);
       
-      // Store references
+      // Store references for animation
       fanFrame.push(frameGroup);
       fanBlades.push(bladesGroup);
       
-      console.log(`Frame group has ${frameGroup.children.length} parts`);
-      console.log(`Blades group has ${bladesGroup.children.length} parts`);
+      // Force a render to update
+      renderer.render(scene, camera);
       
-      scene.add(fanModel);
+      console.log(`Frame: ${frameGroup.children.length} parts, Blades: ${bladesGroup.children.length} parts`);
     } catch (error) {
       console.error('Error loading fan model:', error);
     }
@@ -171,6 +243,15 @@
   
   function animate() {
     animationId = requestAnimationFrame(animate);
+    
+    // FPS monitoring
+    frameCount++;
+    const currentTime = performance.now();
+    if (currentTime >= lastFPSTime + 1000) {
+      currentFPS = Math.round((frameCount * 1000) / (currentTime - lastFPSTime));
+      frameCount = 0;
+      lastFPSTime = currentTime;
+    }
     
     // Rotate only the fan blades if not hovered
     if (!isHovered && fanBlades.length > 0) {
@@ -184,6 +265,24 @@
     renderer.render(scene, camera);
   }
   
+  function monitorPerformance() {
+    if (performance.memory) {
+      memoryUsage = {
+        used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
+        total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024)
+      };
+    }
+    
+    console.log(`🌀 Fan3D Performance:
+      - FPS: ${currentFPS}
+      - Memory: ${memoryUsage.used}MB / ${memoryUsage.total}MB
+      - WebGL Context: ${renderer?.getContext() ? 'Active' : 'Lost'}
+      - Fan Blades: ${fanBlades.length}
+      - Textures: ${renderer?.info?.memory?.textures || 'N/A'}
+      - Geometries: ${renderer?.info?.memory?.geometries || 'N/A'}
+    `);
+  }
+  
   function handleMouseEnter() {
     isHovered = true;
   }
@@ -194,7 +293,7 @@
   
   function handleResize() {
     if (renderer && camera) {
-      const size = Math.min(300, window.innerWidth * 0.8);
+      const size = Math.min(600, window.innerWidth * 0.9); // Doubled base size
       renderer.setSize(size, size);
       camera.aspect = 1;
       camera.updateProjectionMatrix();
@@ -209,122 +308,316 @@
 </script>
 
 <div 
-  class="fan-3d-container"
+  class="fan-3d-embedded"
   on:mouseenter={handleMouseEnter}
   on:mouseleave={handleMouseLeave}
   role="button"
   tabindex="0"
 >
+  <!-- 3D Fan Canvas -->
   <canvas bind:this={canvas} class="fan-3d-canvas"></canvas>
   
-  <!-- Performance Stats -->
-  <div class="fan-stats">
-    <div class="stat-item">
-      <span class="stat-label">Status</span>
-      <span class="stat-value status-{isHovered ? 'paused' : 'active'}">
-        {isHovered ? 'Paused' : 'Active'}
-      </span>
+  <!-- Motherboard Components Around Fan -->
+  <div class="motherboard-components">
+    
+    <!-- RPM Digital Readout Chip -->
+    <div class="mb-component rpm-chip">
+      <div class="chip-body">
+        <div class="chip-label">RPM</div>
+        <div class="chip-display">{isHovered ? '0000' : '1800'}</div>
+        <div class="chip-pins">
+          {#each Array(8) as _, i}
+            <div class="chip-pin"></div>
+          {/each}
+        </div>
+      </div>
+      <div class="component-trace rpm-trace"></div>
     </div>
-    <div class="stat-item">
-      <span class="stat-label">RPM</span>
-      <span class="stat-value">{isHovered ? '0' : '1800'}</span>
+    
+    <!-- Temperature Sensor -->
+    <div class="mb-component temp-sensor">
+      <div class="sensor-body">
+        <div class="sensor-label">TEMP</div>
+        <div class="sensor-display">{isHovered ? '45°C' : '42°C'}</div>
+        <div class="sensor-indicator {isHovered ? 'warning' : 'normal'}"></div>
+      </div>
+      <div class="component-trace temp-trace"></div>
     </div>
-    <div class="stat-item">
-      <span class="stat-label">Temp</span>
-      <span class="stat-value">{isHovered ? '45°C' : '42°C'}</span>
+    
+    <!-- Status LED Array -->
+    <div class="mb-component status-leds">
+      <div class="led-array">
+        <div class="led-label">STATUS</div>
+        <div class="led-indicators">
+          <div class="status-led power {isHovered ? 'off' : 'on'}"></div>
+          <div class="status-led activity {isHovered ? 'off' : 'blinking'}"></div>
+          <div class="status-led error off"></div>
+        </div>
+        <div class="led-labels">
+          <span>PWR</span>
+          <span>ACT</span>
+          <span>ERR</span>
+        </div>
+      </div>
+      <div class="component-trace status-trace"></div>
     </div>
-  </div>
-  
-  <!-- Fan Wiring -->
-  <div class="fan-wiring">
-    <div class="wire red"></div>
-    <div class="wire black"></div>
-    <div class="wire yellow"></div>
-    <div class="wire blue"></div>
+    
+    <!-- Fan Wiring Harness -->
+    <div class="mb-component wiring-harness">
+      <div class="harness-connector">
+        <div class="connector-label">FAN1</div>
+        <div class="wire-bundle">
+          <div class="wire red"></div>
+          <div class="wire black"></div>
+          <div class="wire yellow"></div>
+          <div class="wire blue"></div>
+        </div>
+      </div>
+      <div class="component-trace wire-trace"></div>
+    </div>
+    
   </div>
 </div>
 
 <style>
-  .fan-3d-container {
+  .fan-3d-embedded {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
-    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-    border-radius: 2rem;
-    box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    overflow: hidden;
+    background: transparent;
     cursor: pointer;
     transition: all 0.3s ease;
   }
   
-  .fan-3d-container:hover {
-    box-shadow: 
-      0 25px 50px rgba(0, 0, 0, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-5px);
-  }
-  
   .fan-3d-canvas {
     display: block;
-    width: 300px;
-    height: 300px;
+    width: 600px;
+    height: 600px;
     max-width: 100%;
     margin: 0 auto;
-    border-radius: 1rem;
+    background: transparent;
   }
   
-  .fan-stats {
+  /* Motherboard Components Layout */
+  .motherboard-components {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  
+  .mb-component {
+    position: absolute;
     display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
   }
   
-  .stat-item {
+  /* RPM Digital Readout Chip */
+  .rpm-chip {
+    top: 20%;
+    left: 10%;
+  }
+  
+  .chip-body {
+    position: relative;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border: 2px solid #333;
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-width: 80px;
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.5),
+      inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  }
+  
+  .chip-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: center;
+    margin-bottom: 2px;
+    font-family: monospace;
+  }
+  
+  .chip-display {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #00ff00;
+    text-align: center;
+    font-family: monospace;
+    text-shadow: 0 0 6px #00ff00;
+  }
+  
+  .chip-pins {
+    position: absolute;
+    bottom: -6px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .chip-pin {
+    width: 3px;
+    height: 6px;
+    background: #666;
+    border-radius: 1px;
+  }
+  
+  /* Temperature Sensor */
+  .temp-sensor {
+    top: 20%;
+    right: 10%;
+  }
+  
+  .sensor-body {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  
+  .sensor-label {
+    font-size: 0.7rem;
+    color: #888;
+    font-family: monospace;
+  }
+  
+  .sensor-display {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #ff6600;
+    font-family: monospace;
+    text-shadow: 0 0 6px #ff6600;
+  }
+  
+  .sensor-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+  
+  .sensor-indicator.normal {
+    background: #00ff00;
+    box-shadow: 0 0 8px #00ff00;
+  }
+  
+  .sensor-indicator.warning {
+    background: #ff6600;
+    box-shadow: 0 0 8px #ff6600;
+  }
+  
+  /* Status LED Array */
+  .status-leds {
+    bottom: 20%;
+    left: 10%;
+  }
+  
+  .led-array {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border: 2px solid #333;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  
+  .led-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: center;
+    margin-bottom: 4px;
+    font-family: monospace;
+  }
+  
+  .led-indicators {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  
+  .status-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+  
+  .status-led.on {
+    background: #00ff00;
+    box-shadow: 0 0 8px #00ff00;
+  }
+  
+  .status-led.blinking {
+    background: #0066ff;
+    box-shadow: 0 0 8px #0066ff;
+    animation: blink 1s infinite;
+  }
+  
+  .status-led.off {
+    background: #333;
+    border: 1px solid #555;
+  }
+  
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+  }
+  
+  .led-labels {
+    display: flex;
+    gap: 4px;
+    font-size: 0.6rem;
+    color: #666;
+    font-family: monospace;
+  }
+  
+  .led-labels span {
+    width: 10px;
     text-align: center;
   }
   
-  .stat-label {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
+  /* Wiring Harness */
+  .wiring-harness {
+    bottom: 20%;
+    right: 10%;
   }
   
-  .stat-value {
-    display: block;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-primary);
+  .harness-connector {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #444;
+    border-radius: 4px;
+    padding: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   }
   
-  .status-active {
-    color: #00ff00;
+  .connector-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: center;
+    margin-bottom: 4px;
+    font-family: monospace;
   }
   
-  .status-paused {
-    color: #ff6600;
-  }
-  
-  .fan-wiring {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
+  .wire-bundle {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
   }
   
   .wire {
-    width: 50px;
-    height: 3px;
-    border-radius: 1.5px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    width: 40px;
+    height: 2px;
+    border-radius: 1px;
   }
   
   .wire.red {
@@ -343,44 +636,59 @@
     background: linear-gradient(90deg, #0000ff 0%, #0000cc 100%);
   }
   
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .fan-3d-container {
-      padding: 1.5rem;
-    }
-    
-    .fan-3d-canvas {
-      width: 250px;
-      height: 250px;
-    }
-    
-    .fan-stats {
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    
-    .stat-value {
-      font-size: 1rem;
-    }
+  /* PCB Traces */
+  .component-trace {
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(90deg, #00ff00 0%, transparent 100%);
+    border-radius: 1px;
+    opacity: 0.6;
   }
   
-  @media (max-width: 480px) {
-    .fan-3d-container {
+  .rpm-trace {
+    transform: rotate(45deg);
+  }
+  
+  .temp-trace {
+    transform: rotate(-45deg);
+  }
+  
+  .status-trace {
+    transform: rotate(135deg);
+  }
+  
+  .wire-trace {
+    transform: rotate(-135deg);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .fan-3d-embedded {
       padding: 1rem;
     }
     
     .fan-3d-canvas {
-      width: 200px;
-      height: 200px;
+      width: 400px;
+      height: 400px;
     }
     
-    .fan-stats {
-      flex-direction: column;
-      gap: 0.5rem;
+    .mb-component {
+      scale: 0.8;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .fan-3d-canvas {
+      width: 300px;
+      height: 300px;
     }
     
-    .wire {
-      width: 40px;
+    .mb-component {
+      scale: 0.7;
+    }
+    
+    .chip-body, .sensor-body, .led-array, .harness-connector {
+      padding: 4px 6px;
     }
   }
 </style>

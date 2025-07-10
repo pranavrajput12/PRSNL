@@ -181,9 +181,95 @@
   </div>
 </div>
 
-<!-- EPIC 3D FAN - Bottom Centerpiece -->
+<!-- EPIC 3D FAN - Bottom Centerpiece with Stickers -->
 <div class="epic-fan-section">
-  <Fan3D />
+  <div class="fan-with-stickers-layout">
+    <!-- Left Side - 3D Fan -->
+    <div class="fan-container">
+      <Fan3D />
+    </div>
+    
+    <!-- Right Side - Hardware Stickers -->
+    <div class="hardware-stickers">
+      <!-- Intel-style Processor Sticker -->
+      <div class="hardware-sticker intel-style">
+        <div class="sticker-frame">
+          <div class="hologram-layer"></div>
+          <div class="sticker-content">
+            <div class="brand-section">
+              <div class="brand-logo">PRSNL</div>
+              <div class="brand-tagline">Neural Core</div>
+            </div>
+            <div class="spec-section">
+              <div class="spec-line">AI-Powered</div>
+              <div class="spec-line">Knowledge Engine</div>
+            </div>
+            <div class="performance-badge">
+              <span class="perf-number">∞</span>
+              <span class="perf-unit">IQ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Memory Specification Sticker -->
+      <div class="hardware-sticker memory-style">
+        <div class="sticker-frame">
+          <div class="hologram-layer"></div>
+          <div class="sticker-content">
+            <div class="memory-brand">
+              <div class="brand-name">TIMELINE</div>
+              <div class="memory-type">DDR5</div>
+            </div>
+            <div class="memory-specs">
+              <div class="spec-item">
+                <span class="spec-value">∞GB</span>
+                <span class="spec-label">CAPACITY</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-value">∞MHz</span>
+                <span class="spec-label">SPEED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Graphics Certification Sticker -->
+      <div class="hardware-sticker graphics-style">
+        <div class="sticker-frame">
+          <div class="hologram-layer"></div>
+          <div class="sticker-content">
+            <div class="graphics-brand">
+              <div class="gpu-logo">INSIGHTS</div>
+              <div class="gpu-series">RTX ∞</div>
+            </div>
+            <div class="certification-badge">
+              <div class="cert-icon">✓</div>
+              <div class="cert-text">AI READY</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Energy Efficiency Sticker -->
+      <div class="hardware-sticker efficiency-style">
+        <div class="sticker-frame">
+          <div class="hologram-layer"></div>
+          <div class="sticker-content">
+            <div class="efficiency-rating">
+              <div class="rating-badge">A+++</div>
+              <div class="rating-label">EFFICIENCY</div>
+            </div>
+            <div class="eco-badge">
+              <div class="eco-icon">🌱</div>
+              <div class="eco-text">ECO NEURAL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -513,15 +599,303 @@
     font-weight: 700;
   }
   
-  /* EPIC 3D FAN - Bottom Centerpiece */
+  /* EPIC 3D FAN - Bottom Centerpiece with Stickers */
   .epic-fan-section {
     margin: 4rem 0;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
+  }
+  
+  .fan-with-stickers-layout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1200px;
+    width: 100%;
+  }
+  
+  .fan-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* Hardware Stickers */
+  .hardware-stickers {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 250px;
+  }
+  
+  .hardware-sticker {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+  }
+  
+  .hardware-sticker:hover {
+    transform: scale(1.05) rotate(1deg);
+    z-index: 10;
+  }
+  
+  .sticker-frame {
+    position: relative;
+    border-radius: 8px;
+    padding: 3px;
+    background: linear-gradient(135deg, #e0e0e0 0%, #bbb 50%, #999 100%);
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  .hologram-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 6px;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 50%,
+      rgba(0, 255, 255, 0.1) 75%,
+      transparent 100%
+    );
+    animation: hologramShift 3s infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes hologramShift {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+  }
+  
+  .sticker-content {
+    background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+    border-radius: 6px;
+    padding: 12px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Intel-style Processor Sticker */
+  .intel-style .sticker-content {
+    background: linear-gradient(135deg, #0071c5 0%, #005a9f 100%);
+    color: white;
+  }
+  
+  .intel-style .brand-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .intel-style .brand-logo {
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .intel-style .brand-tagline {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    font-weight: 600;
+  }
+  
+  .intel-style .spec-section {
+    margin-bottom: 8px;
+  }
+  
+  .intel-style .spec-line {
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.1;
+    opacity: 0.95;
+  }
+  
+  .intel-style .performance-badge {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+  
+  .intel-style .perf-number {
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .intel-style .perf-unit {
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+  
+  /* Memory Specification Sticker */
+  .memory-style .sticker-content {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+  }
+  
+  .memory-style .memory-brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .memory-style .brand-name {
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+  
+  .memory-style .memory-type {
+    font-size: 1.1rem;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  
+  .memory-style .memory-specs {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .memory-style .spec-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .memory-style .spec-value {
+    font-size: 0.9rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+  
+  .memory-style .spec-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+  
+  /* Graphics Certification Sticker */
+  .graphics-style .sticker-content {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+  }
+  
+  .graphics-style .graphics-brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .graphics-style .gpu-logo {
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
+  
+  .graphics-style .gpu-series {
+    font-size: 1.1rem;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  
+  .graphics-style .certification-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .graphics-style .cert-icon {
+    font-size: 1.2rem;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.9);
+    color: #27ae60;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .graphics-style .cert-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  
+  /* Energy Efficiency Sticker */
+  .efficiency-style .sticker-content {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+  }
+  
+  .efficiency-style .efficiency-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .efficiency-style .rating-badge {
+    font-size: 1.2rem;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.9);
+    color: #8e44ad;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-shadow: none;
+  }
+  
+  .efficiency-style .rating-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+  
+  .efficiency-style .eco-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .efficiency-style .eco-icon {
+    font-size: 1.1rem;
+  }
+  
+  .efficiency-style .eco-text {
+    font-size: 0.8rem;
+    font-weight: 700;
   }
   
   /* Responsive Design */
+  @media (max-width: 1024px) {
+    .fan-with-stickers-layout {
+      gap: 2rem;
+    }
+    
+    .hardware-stickers {
+      min-width: 200px;
+    }
+  }
+  
   @media (max-width: 768px) {
     .calendar-container {
       padding: 2rem 1rem;
@@ -539,34 +913,23 @@
       min-height: 50px;
     }
     
-    .cpu-fan-massive {
-      width: 250px;
-      height: 250px;
+    .fan-with-stickers-layout {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      text-align: center;
     }
     
-    .fan-frame {
-      width: 230px;
-      height: 230px;
-    }
-    
-    .fan-blades {
-      width: 160px;
-      height: 160px;
-    }
-    
-    .fan-blade {
-      width: 60px;
-      height: 10px;
-    }
-    
-    .led-ring {
-      width: 270px;
-      height: 270px;
-    }
-    
-    .fan-stats {
-      flex-direction: column;
+    .hardware-stickers {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 1rem;
+      min-width: auto;
+    }
+    
+    .hardware-sticker {
+      flex: 0 0 calc(50% - 0.5rem);
+      max-width: 180px;
     }
   }
   
