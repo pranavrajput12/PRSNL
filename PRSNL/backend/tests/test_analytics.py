@@ -21,18 +21,18 @@ async def clear_and_populate_db(db_connection: asyncpg.Connection):
 
     # Populate with test data
     test_items = [
-        {"id": "a0000000-0000-4000-8000-000000000001", "title": "Test Article 1", "url": "http://example.com/art1", "item_type": "article", "created_at": datetime.now() - timedelta(days=5)},
-        {"id": "a0000000-0000-4000-8000-000000000002", "title": "Test Video 1", "url": "http://example.com/vid1", "item_type": "video", "created_at": datetime.now() - timedelta(days=5)},
-        {"id": "a0000000-0000-4000-8000-000000000003", "title": "Test Note 1", "url": None, "item_type": "note", "created_at": datetime.now() - timedelta(days=4)},
-        {"id": "a0000000-0000-4000-8000-000000000004", "title": "Test Article 2", "url": "http://example.com/art2", "item_type": "article", "created_at": datetime.now() - timedelta(days=3)},
-        {"id": "a0000000-0000-4000-8000-000000000005", "title": "Test Video 2", "url": "http://example.com/vid2", "item_type": "video", "created_at": datetime.now() - timedelta(days=2)},
-        {"id": "a0000000-0000-4000-8000-000000000006", "title": "Test Article 3", "url": "http://example.com/art3", "item_type": "article", "created_at": datetime.now() - timedelta(days=1)},
+        {"id": "a0000000-0000-4000-8000-000000000001", "title": "Test Article 1", "url": "http://example.com/art1", "type": "article", "created_at": datetime.now() - timedelta(days=5)},
+        {"id": "a0000000-0000-4000-8000-000000000002", "title": "Test Video 1", "url": "http://example.com/vid1", "type": "video", "created_at": datetime.now() - timedelta(days=5)},
+        {"id": "a0000000-0000-4000-8000-000000000003", "title": "Test Note 1", "url": None, "type": "note", "created_at": datetime.now() - timedelta(days=4)},
+        {"id": "a0000000-0000-4000-8000-000000000004", "title": "Test Article 2", "url": "http://example.com/art2", "type": "article", "created_at": datetime.now() - timedelta(days=3)},
+        {"id": "a0000000-0000-4000-8000-000000000005", "title": "Test Video 2", "url": "http://example.com/vid2", "type": "video", "created_at": datetime.now() - timedelta(days=2)},
+        {"id": "a0000000-0000-4000-8000-000000000006", "title": "Test Article 3", "url": "http://example.com/art3", "type": "article", "created_at": datetime.now() - timedelta(days=1)},
     ]
     
     for item in test_items:
         await db_connection.execute(
-            "INSERT INTO items (id, title, url, item_type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
-            item["id"], item["title"], item["url"], item["item_type"], item["created_at"]
+            "INSERT INTO items (id, title, url, type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
+            item["id"], item["title"], item["url"], item["type"], item["created_at"]
         )
     
     # Add tags

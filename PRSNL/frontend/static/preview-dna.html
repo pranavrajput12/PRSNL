@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory DNA Sequencer - PRSNL Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .dna-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            color: #00ff64;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #DC143C;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px #DC143C;
+        }
+        
+        .sequence-btn {
+            background: #DC143C;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        
+        .sequence-btn:hover {
+            background: #B91C3C;
+            transform: translateY(-2px);
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #DC143C;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #00ff64;
+        }
+        
+        .info-panel p {
+            margin: 5px 0;
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .genome-stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #00ff64;
+            backdrop-filter: blur(10px);
+        }
+        
+        .genome-stats h3 {
+            margin: 0 0 15px 0;
+            color: #00ff64;
+            font-size: 18px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            color: #ccc;
+        }
+        
+        .stat-value {
+            color: #DC143C;
+            font-weight: 700;
+        }
+        
+        .mutation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(0, 255, 100, 0.9);
+            padding: 20px 40px;
+            border-radius: 20px;
+            color: black;
+            font-size: 18px;
+            font-weight: 700;
+            transition: transform 0.5s ease;
+        }
+        
+        .mutation.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #00ff64;
+            text-shadow: 0 0 20px rgba(0, 255, 100, 0.5);
+        }
+        
+        .header p {
+            color: #999;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dna-container">
+        <canvas id="canvas"></canvas>
+        
+        <div class="header">
+            <h1>🧬 Memory DNA Sequencer</h1>
+            <p>Decode the genetic makeup of your knowledge</p>
+        </div>
+        
+        <div class="genome-stats">
+            <h3>Genome Analysis</h3>
+            <div class="stat-item">
+                <span>Active Genes</span>
+                <span class="stat-value" id="activeGenes">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Mutations</span>
+                <span class="stat-value" id="mutations">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Evolution Stage</span>
+                <span class="stat-value" id="evolutionStage">1</span>
+            </div>
+            <div class="stat-item">
+                <span>Helix Integrity</span>
+                <span class="stat-value" id="helixIntegrity">100%</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Rotation Speed</label>
+                <input type="range" id="rotationSpeed" min="0" max="2" step="0.1" value="1">
+            </div>
+            
+            <div class="control-group">
+                <label>Zoom Level</label>
+                <input type="range" id="zoom" min="0.5" max="3" step="0.1" value="1">
+            </div>
+            
+            <button class="sequence-btn" id="sequenceBtn">Sequence Genome</button>
+        </div>
+        
+        <div class="info-panel" id="infoPanel" style="display: none;">
+            <h3 id="geneTitle"></h3>
+            <p>Type: <span id="geneType"></span></p>
+            <p>Activity: <span id="geneActivity"></span></p>
+            <p>Connections: <span id="geneConnections"></span></p>
+        </div>
+        
+        <div class="mutation" id="mutation">
+            <span>🧬 New Gene Discovered!</span>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let animationFrame;
+        
+        // DNA state
+        let dnaStrands = [];
+        let genes = [];
+        let particles = [];
+        let connections = [];
+        let selectedGene = null;
+        let hoveredGene = null;
+        
+        // Animation state
+        let time = 0;
+        let rotationSpeed = 1;
+        let zoomLevel = 1;
+        let sequencing = false;
+        let sequenceProgress = 0;
+        
+        // Stats
+        let activeGenes = 0;
+        let mutations = 0;
+        let evolutionStage = 1;
+        let helixIntegrity = 100;
+        
+        // Mock data
+        const mockCategories = [
+            { name: 'Technology', color: '#DC143C', count: 45 },
+            { name: 'Philosophy', color: '#4a9eff', count: 32 },
+            { name: 'Science', color: '#00ff64', count: 28 },
+            { name: 'Art', color: '#ffa500', count: 23 },
+            { name: 'History', color: '#ff69b4', count: 19 }
+        ];
+        
+        // Initialize
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            createDNAStructure();
+            createGenes();
+            animate();
+            
+            // Event listeners
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('click', handleClick);
+            
+            document.getElementById('rotationSpeed').addEventListener('input', (e) => {
+                rotationSpeed = parseFloat(e.target.value);
+            });
+            
+            document.getElementById('zoom').addEventListener('input', (e) => {
+                zoomLevel = parseFloat(e.target.value);
+            });
+            
+            document.getElementById('sequenceBtn').addEventListener('click', startSequencing);
+        }
+        
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function createDNAStructure() {
+            const numPoints = 50;
+            dnaStrands = [[], []];
+            
+            for (let i = 0; i < numPoints; i++) {
+                const t = i / numPoints * Math.PI * 4;
+                const radius = 100;
+                
+                // First strand
+                dnaStrands[0].push({
+                    x: Math.cos(t) * radius,
+                    y: i * 20 - numPoints * 10,
+                    z: Math.sin(t) * radius,
+                    t: t
+                });
+                
+                // Second strand (offset by PI)
+                dnaStrands[1].push({
+                    x: Math.cos(t + Math.PI) * radius,
+                    y: i * 20 - numPoints * 10,
+                    z: Math.sin(t + Math.PI) * radius,
+                    t: t + Math.PI
+                });
+            }
+        }
+        
+        function createGenes() {
+            genes = [];
+            const numGenes = 30;
+            
+            mockCategories.forEach((category, catIndex) => {
+                const geneCount = Math.min(category.count / 2, 10);
+                
+                for (let i = 0; i < geneCount; i++) {
+                    const y = (Math.random() - 0.5) * 800;
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 80 + Math.random() * 40;
+                    
+                    genes.push({
+                        id: `${category.name}-${i}`,
+                        name: category.name,
+                        x: Math.cos(angle) * radius,
+                        y: y,
+                        z: Math.sin(angle) * radius,
+                        radius: 10 + Math.random() * 10,
+                        color: category.color,
+                        activity: Math.random(),
+                        glowPhase: Math.random() * Math.PI * 2,
+                        connections: Math.floor(Math.random() * 5),
+                        type: ['dominant', 'recessive', 'mutation'][Math.floor(Math.random() * 3)]
+                    });
+                }
+            });
+            
+            // Create connections between genes
+            genes.forEach((gene, i) => {
+                const numConnections = Math.floor(Math.random() * 3);
+                for (let j = 0; j < numConnections; j++) {
+                    const targetIndex = Math.floor(Math.random() * genes.length);
+                    if (targetIndex !== i) {
+                        connections.push({
+                            from: gene,
+                            to: genes[targetIndex],
+                            strength: Math.random()
+                        });
+                    }
+                }
+            });
+            
+            updateStats();
+        }
+        
+        function updateStats() {
+            activeGenes = genes.filter(g => g.activity > 0.5).length;
+            mutations = genes.filter(g => g.type === 'mutation').length;
+            evolutionStage = Math.floor(activeGenes / 10) + 1;
+            helixIntegrity = Math.round((genes.length / 30) * 100);
+            
+            document.getElementById('activeGenes').textContent = activeGenes;
+            document.getElementById('mutations').textContent = mutations;
+            document.getElementById('evolutionStage').textContent = evolutionStage;
+            document.getElementById('helixIntegrity').textContent = helixIntegrity + '%';
+        }
+        
+        function animate() {
+            time += 0.016;
+            
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Center view
+            ctx.save();
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(zoomLevel, zoomLevel);
+            
+            // Rotate DNA
+            const rotation = time * rotationSpeed;
+            
+            // Draw connections
+            drawConnections(rotation);
+            
+            // Draw DNA strands
+            drawDNAStrands(rotation);
+            
+            // Draw genes
+            drawGenes(rotation);
+            
+            // Draw particles
+            updateParticles();
+            drawParticles(rotation);
+            
+            ctx.restore();
+            
+            // Draw sequencing progress
+            if (sequencing) {
+                drawSequencingProgress();
+            }
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+        
+        function drawDNAStrands(rotation) {
+            // Draw base pairs
+            for (let i = 0; i < dnaStrands[0].length; i++) {
+                const p1 = rotatePoint(dnaStrands[0][i], rotation);
+                const p2 = rotatePoint(dnaStrands[1][i], rotation);
+                
+                // Base pair connection
+                ctx.strokeStyle = `rgba(100, 100, 100, 0.3)`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+                
+                // Nucleotide bases
+                const colors = ['#DC143C', '#4a9eff', '#00ff64', '#ffa500'];
+                const baseColor = colors[i % 4];
+                
+                // Draw bases
+                [p1, p2].forEach(p => {
+                    ctx.fillStyle = baseColor;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw strand backbones
+            [0, 1].forEach(strandIndex => {
+                ctx.strokeStyle = `rgba(255, 255, 255, 0.5)`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                dnaStrands[strandIndex].forEach((point, i) => {
+                    const p = rotatePoint(point, rotation);
+                    if (i === 0) {
+                        ctx.moveTo(p.x, p.y);
+                    } else {
+                        ctx.lineTo(p.x, p.y);
+                    }
+                });
+                
+                ctx.stroke();
+            });
+        }
+        
+        function drawGenes(rotation) {
+            // Sort by depth
+            const rotatedGenes = genes.map(gene => ({
+                ...gene,
+                rotated: rotatePoint(gene, rotation)
+            })).sort((a, b) => a.rotated.z - b.rotated.z);
+            
+            rotatedGenes.forEach(gene => {
+                const p = gene.rotated;
+                
+                // Skip if behind view
+                if (p.z < -200) return;
+                
+                // Gene glow
+                const glowIntensity = 0.5 + Math.sin(time * 2 + gene.glowPhase) * 0.3;
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gene.radius * 3);
+                gradient.addColorStop(0, gene.color + 'ff');
+                gradient.addColorStop(0.5, gene.color + '40');
+                gradient.addColorStop(1, gene.color + '00');
+                
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = glowIntensity * gene.activity;
+                ctx.fillRect(p.x - gene.radius * 3, p.y - gene.radius * 3, gene.radius * 6, gene.radius * 6);
+                
+                // Gene core
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = gene.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, gene.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Activity ring
+                if (gene.activity > 0.5) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.globalAlpha = gene.activity;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, gene.radius + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Hover highlight
+                if (gene === hoveredGene) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.globalAlpha = 1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, gene.radius + 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.globalAlpha = 1;
+            });
+        }
+        
+        function drawConnections(rotation) {
+            ctx.globalAlpha = 0.3;
+            
+            connections.forEach(conn => {
+                const p1 = rotatePoint(conn.from, rotation);
+                const p2 = rotatePoint(conn.to, rotation);
+                
+                if (p1.z < -200 || p2.z < -200) return;
+                
+                const pulse = Math.sin(time * 3) * 0.5 + 0.5;
+                ctx.strokeStyle = `rgba(0, 255, 100, ${conn.strength * pulse})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            });
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function updateParticles() {
+            // Add new particles during sequencing
+            if (sequencing && Math.random() < 0.1) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 150;
+                particles.push({
+                    x: Math.cos(angle) * radius,
+                    y: (Math.random() - 0.5) * 800,
+                    z: Math.sin(angle) * radius,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    vz: (Math.random() - 0.5) * 2,
+                    size: Math.random() * 3,
+                    color: '#00ff64',
+                    life: 1
+                });
+            }
+            
+            // Update existing particles
+            particles = particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.z += particle.vz;
+                particle.life -= 0.02;
+                
+                return particle.life > 0;
+            });
+        }
+        
+        function drawParticles(rotation) {
+            particles.forEach(particle => {
+                const p = rotatePoint(particle, rotation);
+                
+                if (p.z < -200) return;
+                
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function rotatePoint(point, rotation) {
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+            
+            return {
+                x: point.x * cos - point.z * sin,
+                y: point.y,
+                z: point.x * sin + point.z * cos
+            };
+        }
+        
+        function drawSequencingProgress() {
+            if (sequenceProgress < 1) {
+                sequenceProgress += 0.01;
+                
+                // Progress bar
+                const barWidth = 400;
+                const barHeight = 20;
+                const x = width / 2 - barWidth / 2;
+                const y = height - 100;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(x - 10, y - 10, barWidth + 20, barHeight + 20);
+                
+                ctx.strokeStyle = '#00ff64';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, barWidth, barHeight);
+                
+                ctx.fillStyle = '#00ff64';
+                ctx.fillRect(x, y, barWidth * sequenceProgress, barHeight);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Sequencing... ${Math.round(sequenceProgress * 100)}%`, width / 2, y - 20);
+            } else {
+                sequencing = false;
+                sequenceProgress = 0;
+                
+                // Show mutation discovery
+                document.getElementById('mutation').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('mutation').classList.remove('show');
+                }, 3000);
+                
+                // Add new gene
+                const newCategory = mockCategories[Math.floor(Math.random() * mockCategories.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const y = (Math.random() - 0.5) * 800;
+                
+                genes.push({
+                    id: `mutation-${Date.now()}`,
+                    name: 'Mutation',
+                    x: Math.cos(angle) * 100,
+                    y: y,
+                    z: Math.sin(angle) * 100,
+                    radius: 15,
+                    color: '#ff00ff',
+                    activity: 1,
+                    glowPhase: 0,
+                    connections: 3,
+                    type: 'mutation'
+                });
+                
+                updateStats();
+            }
+        }
+        
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left - width / 2;
+            const mouseY = e.clientY - rect.top - height / 2;
+            
+            hoveredGene = null;
+            
+            genes.forEach(gene => {
+                const p = rotatePoint(gene, time * rotationSpeed);
+                const dx = mouseX / zoomLevel - p.x;
+                const dy = mouseY / zoomLevel - p.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < gene.radius + 10 && p.z > -200) {
+                    hoveredGene = gene;
+                    
+                    // Show info panel
+                    document.getElementById('infoPanel').style.display = 'block';
+                    document.getElementById('geneTitle').textContent = gene.name;
+                    document.getElementById('geneType').textContent = gene.type;
+                    document.getElementById('geneActivity').textContent = Math.round(gene.activity * 100) + '%';
+                    document.getElementById('geneConnections').textContent = gene.connections;
+                }
+            });
+            
+            if (!hoveredGene) {
+                document.getElementById('infoPanel').style.display = 'none';
+            }
+        }
+        
+        function handleClick(e) {
+            if (hoveredGene) {
+                selectedGene = hoveredGene;
+                hoveredGene.activity = Math.min(1, hoveredGene.activity + 0.2);
+                
+                // Create activation particles
+                for (let i = 0; i < 20; i++) {
+                    const angle = (i / 20) * Math.PI * 2;
+                    particles.push({
+                        x: hoveredGene.x,
+                        y: hoveredGene.y,
+                        z: hoveredGene.z,
+                        vx: Math.cos(angle) * 5,
+                        vy: (Math.random() - 0.5) * 5,
+                        vz: Math.sin(angle) * 5,
+                        size: 2,
+                        color: hoveredGene.color,
+                        life: 1
+                    });
+                }
+                
+                updateStats();
+            }
+        }
+        
+        function startSequencing() {
+            if (!sequencing) {
+                sequencing = true;
+                sequenceProgress = 0;
+            }
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>

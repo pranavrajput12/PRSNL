@@ -5,6 +5,7 @@
   import TagList from './TagList.svelte';
   import { aiApi } from '$lib/api';
   import type { Item, TimelineItem } from '$lib/types/api';
+  import { getTypeIcon } from '$lib/stores/contentTypes';
   
   export let item: Item | TimelineItem;
   export let view: 'feed' | 'grid' | 'list' = 'feed';
@@ -12,11 +13,12 @@
   
   // Type guard to check if item has video properties
   function hasVideoProperties(item: any): item is TimelineItem {
-    return item.itemType === 'video' || item.item_type === 'video';
+    const type = item.type || item.itemType || item.item_type;
+    return type === 'video';
   }
   
   // Normalize field names
-  $: itemType = item.itemType || item.item_type || 'article';
+  $: itemType = item.type || item.itemType || item.item_type || 'article';
   $: createdAt = item.createdAt || item.created_at;
   $: thumbnailUrl = item.thumbnailUrl || item.thumbnail_url;
   $: filePath = item.filePath || item.file_path;
@@ -130,7 +132,7 @@
   <header class="item-header">
     <div class="item-meta">
       <Icon 
-        name={itemType === 'video' ? 'video' : 'link'} 
+        name={getTypeIcon(itemType)} 
         size="small" 
         color="var(--text-muted)" 
       />

@@ -1,0 +1,12 @@
+Technical Documentation Example
+
+This document demonstrates the AI analysis capabilities of PRSNL.
+
+Technical Overview:
+- Dynamic content type system
+- Backend API integration
+- Frontend component updates
+- Real-time categorization
+
+Implementation Details:
+The system now supports dynamic content types fetched from the backend, allowing for flexible content categorization without code changes.

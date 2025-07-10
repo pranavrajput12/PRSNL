@@ -4,11 +4,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Main items table
 CREATE TABLE IF NOT EXISTS items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    url TEXT NOT NULL,
+    url TEXT,
     title TEXT NOT NULL,
     summary TEXT,
     raw_content TEXT,
     processed_content TEXT,
+    type VARCHAR(50) NOT NULL DEFAULT 'bookmark',
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     search_vector tsvector,
     metadata JSONB DEFAULT '{}',
@@ -16,7 +17,16 @@ CREATE TABLE IF NOT EXISTS items (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     accessed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     access_count INTEGER DEFAULT 0,
-    embedding vector(1536)
+    embedding vector(1536),
+    transcription TEXT,
+    content_type VARCHAR(50) DEFAULT 'auto',
+    enable_summarization BOOLEAN DEFAULT false,
+    video_url TEXT,
+    platform VARCHAR(50),
+    duration INTEGER,
+    file_path TEXT,
+    thumbnail_url TEXT,
+    highlight TEXT
 );
 
 -- Tags table

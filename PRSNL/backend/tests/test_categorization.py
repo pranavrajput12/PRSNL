@@ -22,14 +22,14 @@ async def populate_categorization_data(db_connection: asyncpg.Connection):
 
     # Insert test items
     test_items = [
-        {"id": "b0000000-0000-4000-8000-000000000001", "title": "Python Programming Basics", "content": "Introduction to Python syntax and data structures.", "item_type": "article", "created_at": datetime.now()},
-        {"id": "b0000000-0000-4000-8000-000000000002", "title": "Machine Learning with Scikit-learn", "content": "A guide to building ML models using Scikit-learn library.", "item_type": "article", "created_at": datetime.now()},
-        {"id": "b0000000-0000-4000-8000-000000000003", "title": "Healthy Eating Habits", "content": "Tips for maintaining a balanced diet and healthy lifestyle.", "item_type": "note", "created_at": datetime.now()},
+        {"id": "b0000000-0000-4000-8000-000000000001", "title": "Python Programming Basics", "content": "Introduction to Python syntax and data structures.", "type": "article", "created_at": datetime.now()},
+        {"id": "b0000000-0000-4000-8000-000000000002", "title": "Machine Learning with Scikit-learn", "content": "A guide to building ML models using Scikit-learn library.", "type": "article", "created_at": datetime.now()},
+        {"id": "b0000000-0000-4000-8000-000000000003", "title": "Healthy Eating Habits", "content": "Tips for maintaining a balanced diet and healthy lifestyle.", "type": "note", "created_at": datetime.now()},
     ]
     for item in test_items:
         await db_connection.execute(
-            "INSERT INTO items (id, title, content, item_type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
-            item["id"], item["title"], item["content"], item["item_type"], item["created_at"]
+            "INSERT INTO items (id, title, content, type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
+            item["id"], item["title"], item["content"], item["type"], item["created_at"]
         )
 
 @pytest.mark.asyncio

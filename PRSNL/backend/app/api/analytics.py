@@ -171,8 +171,8 @@ async def get_ai_generated_insights(
     """
     try:
         recent_items_query = """
-        SELECT title, content FROM items
-        WHERE content IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
+        SELECT title, processed_content FROM items
+        WHERE processed_content IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
         ORDER BY created_at DESC
         LIMIT 10;
         """

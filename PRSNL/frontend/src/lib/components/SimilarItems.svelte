@@ -4,6 +4,7 @@
   import type { ContentItem } from '$lib/types/api';
   import Icon from './Icon.svelte';
   import RelevanceScore from './RelevanceScore.svelte';
+  import { getTypeIcon } from '$lib/stores/contentTypes';
   
   // Props
   export let itemId: string;
@@ -87,19 +88,7 @@
           <li>
             <button class="similar-item" on:click={() => selectItem(item)}>
               <div class="item-icon">
-                {#if item.type === 'article'}
-                  <Icon name="file-text" />
-                {:else if item.type === 'note'}
-                  <Icon name="edit-3" />
-                {:else if item.type === 'video'}
-                  <Icon name="video" />
-                {:else if item.type === 'image'}
-                  <Icon name="image" />
-                {:else if item.type === 'bookmark'}
-                  <Icon name="bookmark" />
-                {:else}
-                  <Icon name="file" />
-                {/if}
+                <Icon name={getTypeIcon(item.type || 'article')} />
               </div>
               <div class="item-content">
                 <h3>{item.title || 'Untitled'}</h3>

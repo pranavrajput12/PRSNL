@@ -17,7 +17,39 @@ class APIClient {
     private let decoder = JSONDecoder()
     
     init() {
-        decoder.dateDecodingStrategy = .iso8601
+        // Custom date decoder to handle backend format with milliseconds
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+            
+            // Try with milliseconds first
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+            
+            // Fallback to ISO8601 without milliseconds
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+            
+            // Last fallback to standard ISO8601
+            let iso8601Formatter = ISO8601DateFormatter()
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+            
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Invalid date format: \(dateString)"
+                )
+            )
+        }
     }
     
     // MARK: - Helper Methods
@@ -29,24 +61,64 @@ class APIClient {
     }
     
     private func performRequest<T: Decodable>(_ request: URLRequest, type: T.Type) async throws -> T {
-        let (data, response) = try await session.data(for: request)
+        print("🌐 Making request to: \(request.url?.absoluteString ?? "unknown")")
+        print("🌐 Headers: \(request.allHTTPHeaderFields ?? [:])")
+        print("🌐 HTTP Method: \(request.httpMethod ?? "GET")")
         
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw APIError.invalidResponse
-        }
-        
-        switch httpResponse.statusCode {
-        case 200...299:
-            do {
-                return try decoder.decode(type, from: data)
-            } catch {
-                throw APIError.decodingFailed(error)
+        do {
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ Invalid response type")
+                throw APIError.invalidResponse
             }
-        case 401:
-            throw APIError.unauthorized
-        default:
-            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw APIError.serverError(httpResponse.statusCode, errorMessage)
+            
+            print("🌐 Response status: \(httpResponse.statusCode)")
+            print("🌐 Response headers: \(httpResponse.allHeaderFields)")
+            
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("🌐 Response body (first 1000 chars): \(responseString.prefix(1000))")
+            }
+            
+            switch httpResponse.statusCode {
+            case 200...299:
+                do {
+                    let decoded = try decoder.decode(type, from: data)
+                    print("✅ Successfully decoded response of type \(type)")
+                    return decoded
+                } catch {
+                    print("❌ Decoding failed: \(error)")
+                    if let decodingError = error as? DecodingError {
+                        print("❌ Detailed decoding error: \(decodingError)")
+                        switch decodingError {
+                        case .keyNotFound(let key, let context):
+                            print("❌ Key '\(key.stringValue)' not found: \(context.debugDescription)")
+                        case .typeMismatch(let type, let context):
+                            print("❌ Type mismatch for \(type): \(context.debugDescription)")
+                        case .valueNotFound(let type, let context):
+                            print("❌ Value not found for \(type): \(context.debugDescription)")
+                        case .dataCorrupted(let context):
+                            print("❌ Data corrupted: \(context.debugDescription)")
+                        @unknown default:
+                            print("❌ Unknown decoding error")
+                        }
+                    }
+                    throw APIError.decodingFailed(error)
+                }
+            case 401:
+                print("❌ Unauthorized (401)")
+                throw APIError.unauthorized
+            default:
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("❌ Server error \(httpResponse.statusCode): \(errorMessage)")
+                throw APIError.serverError(httpResponse.statusCode, errorMessage)
+            }
+        } catch {
+            print("❌ Network request failed: \(error)")
+            if let urlError = error as? URLError {
+                print("❌ URLError code: \(urlError.code.rawValue), description: \(urlError.localizedDescription)")
+            }
+            throw APIError.requestFailed(error)
         }
     }
     
@@ -59,17 +131,23 @@ class APIClient {
     
     // MARK: - Search
     func search(query: String, limit: Int = 20) async throws -> SearchResponse {
-        var components = URLComponents(string: APIConfiguration.shared.searchURL)!
-        components.queryItems = [
-            URLQueryItem(name: "q", value: query),
-            URLQueryItem(name: "limit", value: String(limit))
-        ]
-        
-        guard let url = components.url else {
+        guard var urlComponents = URLComponents(string: APIConfiguration.shared.searchURL) else {
             throw APIError.invalidURL
         }
         
-        let request = createRequest(url: url)
+        urlComponents.queryItems = [
+            URLQueryItem(name: "query", value: query),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        
+        guard let searchURL = urlComponents.url else {
+            throw APIError.invalidURL
+        }
+        
+        let request = createRequest(url: searchURL)
+        
+        print("🔍 Searching for: \(query)")
+        print("🔍 Final URL: \(searchURL.absoluteString)")
         return try await performRequest(request, type: SearchResponse.self)
     }
     
@@ -89,9 +167,18 @@ class APIClient {
     
     // MARK: - Videos
     func fetchVideos(limit: Int = 20, offset: Int = 0) async throws -> VideosResponse {
-        let url = URL(string: "\(APIConfiguration.shared.videosURL)?limit=\(limit)&offset=\(offset)")!
-        let request = createRequest(url: url)
-        return try await performRequest(request, type: VideosResponse.self)
+        // Backend doesn't support videos endpoint yet, return empty response
+        print("⚠️ Videos endpoint not implemented in backend, returning empty response")
+        
+        let mockResponse = VideosResponse(
+            videos: [],
+            total: 0,
+            limit: limit,
+            offset: offset,
+            hasMore: false
+        )
+        
+        return mockResponse
     }
     
     // MARK: - Analytics
@@ -106,32 +193,150 @@ class APIClient {
         let captureURL = URL(string: APIConfiguration.shared.captureURL)!
         var request = createRequest(url: captureURL, method: "POST")
         
-        let body = CaptureRequest(url: url, title: title, tags: tags)
-        request.httpBody = try JSONEncoder().encode(body)
+        // Generate title from URL if not provided (backend requires title)
+        let finalTitle = title ?? generateTitleFromURL(url)
         
-        return try await performRequest(request, type: Item.self)
+        let captureRequest = CaptureRequest(
+            url: url,
+            title: finalTitle,
+            tags: tags
+        )
+        
+        do {
+            let jsonData = try JSONEncoder().encode(captureRequest)
+            request.httpBody = jsonData
+            
+            print("🔗 Capturing URL: \(url) with title: \(finalTitle)")
+            let response = try await performRequest(request, type: CaptureResponse.self)
+            return response.item
+        } catch {
+            print("❌ Capture failed: \(error)")
+            throw error
+        }
+    }
+    
+    private func generateTitleFromURL(_ url: String) -> String {
+        guard let urlObj = URL(string: url) else {
+            return "Captured Link"
+        }
+        
+        // Extract domain name as title
+        if let host = urlObj.host {
+            let domain = host.replacingOccurrences(of: "www.", with: "")
+            return "Content from \(domain)"
+        }
+        
+        return "Captured Link"
+    }
+    
+    // MARK: - Chat
+    func sendChatMessage(message: String, mode: String) async throws -> ChatResponse {
+        let chatURL = URL(string: APIConfiguration.shared.chatURL)!
+        var request = createRequest(url: chatURL, method: "POST")
+        
+        let chatRequest = ChatRequest(
+            message: message,
+            mode: mode
+        )
+        
+        do {
+            let jsonData = try JSONEncoder().encode(chatRequest)
+            request.httpBody = jsonData
+            
+            print("💬 Sending chat message: \(message)")
+            return try await performRequest(request, type: ChatResponse.self)
+        } catch {
+            print("❌ Chat failed: \(error)")
+            throw error
+        }
+    }
+    
+    // MARK: - Authentication
+    func register(email: String, password: String, name: String) async throws -> AuthResponse {
+        let registerURL = URL(string: APIConfiguration.shared.authRegisterURL)!
+        var request = createRequest(url: registerURL, method: "POST")
+        
+        let registerRequest = RegisterRequest(
+            email: email,
+            password: password,
+            name: name
+        )
+        
+        do {
+            let jsonData = try JSONEncoder().encode(registerRequest)
+            request.httpBody = jsonData
+            
+            print("🔐 Registering user: \(email)")
+            return try await performRequest(request, type: AuthResponse.self)
+        } catch {
+            print("❌ Registration failed: \(error)")
+            throw error
+        }
+    }
+    
+    func login(email: String, password: String) async throws -> AuthResponse {
+        let loginURL = URL(string: APIConfiguration.shared.authLoginURL)!
+        var request = createRequest(url: loginURL, method: "POST")
+        
+        let loginRequest = LoginRequest(
+            email: email,
+            password: password
+        )
+        
+        do {
+            let jsonData = try JSONEncoder().encode(loginRequest)
+            request.httpBody = jsonData
+            
+            print("🔐 Logging in user: \(email)")
+            let response = try await performRequest(request, type: AuthResponse.self)
+            
+            // Store authentication details
+            APIConfiguration.shared.login(token: response.token, userId: response.user.id)
+            
+            return response
+        } catch {
+            print("❌ Login failed: \(error)")
+            throw error
+        }
+    }
+    
+    func getProfile() async throws -> User {
+        let profileURL = URL(string: APIConfiguration.shared.authProfileURL)!
+        let request = createRequest(url: profileURL)
+        
+        print("👤 Getting user profile")
+        return try await performRequest(request, type: User.self)
     }
 }
 
 // MARK: - Response Models
 struct TimelineResponse: Codable {
     let items: [Item]
-    let totalCount: Int
-    let page: Int
-    let totalPages: Int
+    let totalResults: Int
     
     enum CodingKeys: String, CodingKey {
         case items
-        case totalCount = "total_count"
-        case page
-        case totalPages = "total_pages"
+        case totalResults
     }
+    
+    // Computed properties for pagination
+    var totalCount: Int { totalResults }
+    var page: Int { 1 }
+    var totalPages: Int { 1 }
 }
 
 struct SearchResponse: Codable {
-    let results: [Item]
-    let total: Int
-    let query: String
+    let items: [Item]
+    let totalResults: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case items
+        case totalResults
+    }
+    
+    // Computed property for compatibility
+    var results: [Item] { items }
+    var query: String { "" }
 }
 
 struct InsightsResponse: Codable {
@@ -161,6 +366,17 @@ struct CaptureRequest: Codable {
     let url: String
     let title: String?
     let tags: [String]?
+}
+
+struct CaptureResponse: Codable {
+    let success: Bool
+    let message: String
+    let item: Item
+}
+
+struct ChatRequest: Codable {
+    let message: String
+    let mode: String
 }
 
 // MARK: - Additional Response Models
@@ -222,4 +438,47 @@ struct TagCount: Codable {
 struct TypeCount: Codable {
     let type: String
     let count: Int
+}
+
+struct ChatResponse: Codable {
+    let success: Bool
+    let response: String
+    let messageId: String
+    let timestamp: Date?
+    let context: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case success, response, timestamp, context
+        case messageId = "messageId"
+    }
+}
+
+// MARK: - Authentication Models
+struct RegisterRequest: Codable {
+    let email: String
+    let password: String
+    let name: String
+}
+
+struct LoginRequest: Codable {
+    let email: String
+    let password: String
+}
+
+struct AuthResponse: Codable {
+    let success: Bool
+    let token: String
+    let user: User
+}
+
+struct User: Codable {
+    let id: String
+    let email: String
+    let name: String
+    let createdAt: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, email, name
+        case createdAt = "created_at"
+    }
 }

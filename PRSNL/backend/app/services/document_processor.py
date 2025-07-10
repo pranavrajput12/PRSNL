@@ -17,6 +17,7 @@ import docx
 import pytesseract
 from PIL import Image
 import io
+import csv
 
 # For file type detection
 try:
@@ -34,11 +35,12 @@ class DocumentProcessor:
     def __init__(self, storage_root: str = "storage"):
         self.storage_root = Path(storage_root)
         self.supported_types = {
-            'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt'],
+            'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv'],
             'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff'],
             'text': ['.txt', '.md', '.rtf'],
             'office': ['.doc', '.docx', '.odt'],
-            'pdf': ['.pdf']
+            'pdf': ['.pdf'],
+            'spreadsheet': ['.csv', '.xls', '.xlsx']
         }
         
         # Create storage directories
@@ -89,12 +91,9 @@ class DocumentProcessor:
     
     def _categorize_file_type(self, extension: str, mime_type: str) -> str:
         """Categorize file based on extension and MIME type"""
-        if extension in self.supported_types['pdf']:
-            return 'pdf'
-        elif extension in self.supported_types['office']:
-            return 'office'
-        elif extension in self.supported_types['text']:
-            return 'text'
+        # All document-like files should be categorized as 'document'
+        if extension in ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv']:
+            return 'document'
         elif extension in self.supported_types['image']:
             return 'image'
         elif extension in self.supported_types['document']:
@@ -170,9 +169,22 @@ class DocumentProcessor:
     async def _extract_content(self, file_content: bytes, file_info: Dict, filename: str) -> Dict[str, Any]:
         """Extract content from file based on type"""
         category = file_info['category']
+        extension = file_info['extension']
         
         try:
-            if category == 'pdf':
+            # Handle 'document' category by checking specific extensions
+            if category == 'document':
+                if extension == '.pdf':
+                    return await self._extract_pdf_content(file_content)
+                elif extension in ['.doc', '.docx', '.odt']:
+                    return await self._extract_office_content(file_content, extension)
+                elif extension == '.csv':
+                    return await self._extract_csv_content(file_content)
+                elif extension in ['.txt', '.rtf']:
+                    return await self._extract_text_content(file_content)
+                else:
+                    return await self._extract_text_content(file_content)
+            elif category == 'pdf':
                 return await self._extract_pdf_content(file_content)
             elif category == 'office':
                 return await self._extract_office_content(file_content, file_info['extension'])
@@ -278,6 +290,46 @@ class DocumentProcessor:
                 'characters': len(text)
             }
         }
+    
+    async def _extract_csv_content(self, file_content: bytes) -> Dict[str, Any]:
+        """Extract content from CSV files"""
+        try:
+            # Decode CSV content
+            text = file_content.decode('utf-8')
+            
+            # Parse CSV to create a readable text representation
+            csv_reader = csv.reader(io.StringIO(text))
+            rows = list(csv_reader)
+            
+            # Create a text representation of the CSV
+            text_lines = []
+            if rows:
+                # Add headers if present
+                headers = rows[0]
+                text_lines.append("CSV Data with columns: " + ", ".join(headers))
+                text_lines.append("")
+                
+                # Add data rows
+                for row in rows[1:]:
+                    text_lines.append(" | ".join(row))
+            
+            extracted_text = "\n".join(text_lines)
+            
+            return {
+                'text': extracted_text,
+                'pages': 1,
+                'word_count': len(extracted_text.split()) if extracted_text else 0,
+                'extraction_method': 'csv_parse',
+                'metadata': {
+                    'row_count': len(rows),
+                    'column_count': len(rows[0]) if rows else 0,
+                    'encoding': 'utf-8'
+                }
+            }
+        except Exception as e:
+            logger.error(f"CSV extraction failed: {e}")
+            # Fallback to plain text extraction
+            return await self._extract_text_content(file_content)
     
     async def _extract_image_content(self, file_content: bytes) -> Dict[str, Any]:
         """Extract text from images using OCR"""

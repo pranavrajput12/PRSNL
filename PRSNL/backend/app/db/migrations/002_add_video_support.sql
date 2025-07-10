@@ -1,9 +1,9 @@
 -- Migration to add video support to PRSNL database
--- This adds item_type, video-specific fields, and attachments table
+-- This adds type, video-specific fields, and attachments table
 
--- Add item_type column to distinguish between different content types
+-- Add type column to distinguish between different content types
 ALTER TABLE items 
-ADD COLUMN IF NOT EXISTS item_type VARCHAR(20) NOT NULL DEFAULT 'article';
+ADD COLUMN IF NOT EXISTS type VARCHAR(20) NOT NULL DEFAULT 'article';
 
 -- Add video-specific columns
 ALTER TABLE items
@@ -11,8 +11,8 @@ ADD COLUMN IF NOT EXISTS file_path TEXT,
 ADD COLUMN IF NOT EXISTS duration INTEGER, -- in seconds
 ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
 
--- Update existing rows to have correct item_type
-UPDATE items SET item_type = 'article' WHERE item_type IS NULL;
+-- Update existing rows to have correct type
+UPDATE items SET type = 'article' WHERE type IS NULL;
 
 -- Create attachments table for multiple files per item
 CREATE TABLE IF NOT EXISTS attachments (
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS attachments (
 CREATE INDEX IF NOT EXISTS idx_attachments_item_id ON attachments(item_id);
 CREATE INDEX IF NOT EXISTS idx_attachments_file_type ON attachments(file_type);
 
--- Add index for item_type
-CREATE INDEX IF NOT EXISTS idx_items_type ON items(item_type);
+-- Add index for type
+CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
 
 -- Add platform column for videos (instagram, youtube, etc.)
 ALTER TABLE items
@@ -50,21 +50,21 @@ SELECT
     a.metadata as attachment_metadata
 FROM items i
 LEFT JOIN attachments a ON i.id = a.item_id AND a.file_type = 'video'
-WHERE i.item_type = 'video';
+WHERE i.type = 'video';
 
 -- Add constraints
 ALTER TABLE items
-ADD CONSTRAINT chk_item_type CHECK (item_type IN ('article', 'video', 'note', 'bookmark'));
+ADD CONSTRAINT chk_item_type CHECK (type IN ('article', 'video', 'note', 'bookmark'));
 
--- Function to automatically set item_type based on URL
+-- Function to automatically set type based on URL
 CREATE OR REPLACE FUNCTION set_item_type() RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.item_type IS NULL OR NEW.item_type = 'article' THEN
+    IF NEW.type IS NULL OR NEW.type = 'article' THEN
         IF NEW.url LIKE '%instagram.com%' OR 
            NEW.url LIKE '%youtube.com%' OR 
            NEW.url LIKE '%youtu.be%' OR
            NEW.url LIKE '%tiktok.com%' THEN
-            NEW.item_type = 'video';
+            NEW.type = 'video';
         END IF;
     END IF;
     RETURN NEW;

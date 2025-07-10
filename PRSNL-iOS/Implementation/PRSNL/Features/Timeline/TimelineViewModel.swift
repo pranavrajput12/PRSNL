@@ -28,7 +28,7 @@ struct InspirationalQuote {
 
 @MainActor
 class TimelineViewModel: ObservableObject {
-    @Published var items: [Item] = MockDataProvider.generateMockItems()
+    @Published var items: [Item] = []
     @Published var dailyInspiration: DailyInspiration? = nil
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -40,9 +40,11 @@ class TimelineViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        // Don't auto-load on init to prevent crashes
-        // User can pull to refresh when ready
         loadMockDailyInspiration()
+        // Auto-load timeline on init
+        Task {
+            await loadTimeline()
+        }
     }
     
     private func loadMockDailyInspiration() {
@@ -114,36 +116,56 @@ class TimelineViewModel: ObservableObject {
     }
     
     func loadTimeline() async {
-        guard !isLoading else { return }
+        guard !isLoading else { 
+            print("📱 Timeline already loading, skipping")
+            return 
+        }
         
+        print("📱 Starting timeline load...")
         isLoading = true
         errorMessage = nil
         needsConfiguration = false
         
         do {
+            print("📱 Calling apiClient.fetchTimeline...")
             let response = try await apiClient.fetchTimeline(page: 1)
-            self.items = response.items
-            self.currentPage = 1
-            self.hasMorePages = response.page < response.totalPages
+            print("📱 Timeline API call successful, got \(response.items.count) items")
+            
+            await MainActor.run {
+                self.items = response.items
+                self.currentPage = 1
+                self.hasMorePages = response.page < response.totalPages
+                print("📱 Timeline items updated, now showing \(self.items.count) items")
+            }
         } catch let error as APIError {
-            switch error {
-            case .unauthorized:
-                self.errorMessage = "Please configure your API key in Settings"
-                self.needsConfiguration = true
-            case .networkUnavailable:
-                self.errorMessage = "No internet connection"
-            case .serverError(let code, let message):
-                self.errorMessage = "Server error (\(code)): \(message)"
-            default:
+            print("📱 APIError caught: \(error)")
+            await MainActor.run {
+                switch error {
+                case .unauthorized:
+                    self.errorMessage = "Please configure your API key in Settings"
+                    self.needsConfiguration = true
+                case .networkUnavailable:
+                    self.errorMessage = "No internet connection"
+                case .serverError(let code, let message):
+                    self.errorMessage = "Server error (\(code)): \(message)"
+                case .requestFailed(let underlyingError):
+                    print("📱 Request failed with underlying error: \(underlyingError)")
+                    self.errorMessage = "Failed to load timeline: \(error.localizedDescription)"
+                default:
+                    self.errorMessage = "Failed to load timeline: \(error.localizedDescription)"
+                }
+            }
+        } catch {
+            print("📱 Other error caught: \(error)")
+            await MainActor.run {
                 self.errorMessage = "Failed to load timeline: \(error.localizedDescription)"
             }
-            print("Timeline error: \(error)")
-        } catch {
-            self.errorMessage = "Failed to load timeline: \(error.localizedDescription)"
-            print("Timeline error: \(error)")
         }
         
-        isLoading = false
+        await MainActor.run {
+            self.isLoading = false
+            print("📱 Timeline loading finished")
+        }
     }
     
     func loadMore() async {

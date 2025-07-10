@@ -21,8 +21,11 @@
       loading = true;
       // Use the API wrapper which handles camelCase conversion
       const data = await getTimeline(1, 100); // Get up to 100 items
-      // Filter for video items only
-      videos = data.items.filter(item => item.itemType === 'video' || item.item_type === 'video');
+      // Filter for video items only - check both type and item_type for compatibility
+      videos = data.items.filter(item => {
+        const itemType = item.type || item.item_type || item.itemType;
+        return itemType === 'video';
+      });
     } catch (error) {
       console.error('Error loading videos:', error);
     } finally {

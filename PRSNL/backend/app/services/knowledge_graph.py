@@ -90,7 +90,7 @@ class KnowledgeGraphService:
             # Create relationship in database
             # Using a JSON column to store relationships for now
             # In production, you'd want a separate relationship table
-            relationships = source_item.item_metadata.get("relationships", []) if source_item.item_metadata else []
+            relationships = source_item.metadata.get("relationships", []) if source_item.metadata else []
             
             # Check if relationship already exists
             existing = next(
@@ -115,9 +115,9 @@ class KnowledgeGraphService:
                 })
             
             # Update source item metadata
-            if not source_item.item_metadata:
-                source_item.item_metadata = {}
-            source_item.item_metadata["relationships"] = relationships
+            if not source_item.metadata:
+                source_item.metadata = {}
+            source_item.metadata["relationships"] = relationships
             
             await db.commit()
             
@@ -309,7 +309,7 @@ class KnowledgeGraphService:
                         
                         if source_item and target_item:
                             # Find relationship
-                            relationships = source_item.item_metadata.get("relationships", []) if source_item.item_metadata else []
+                            relationships = source_item.metadata.get("relationships", []) if source_item.metadata else []
                             rel = next(
                                 (r for r in relationships if r["target_id"] == path[i + 1]),
                                 {"type": "related", "confidence": 0.5}
@@ -342,8 +342,8 @@ class KnowledgeGraphService:
                 )
                 item = result.scalar_one_or_none()
                 
-                if item and item.item_metadata:
-                    relationships = item.item_metadata.get("relationships", [])
+                if item and item.metadata:
+                    relationships = item.metadata.get("relationships", [])
                     for rel in relationships:
                         if rel["target_id"] not in path:  # Avoid cycles
                             queue.append((rel["target_id"], path + [rel["target_id"]]))
@@ -406,8 +406,8 @@ class KnowledgeGraphService:
                 }
                 
                 # Get relationships
-                if item.item_metadata:
-                    relationships = item.item_metadata.get("relationships", [])
+                if item.metadata:
+                    relationships = item.metadata.get("relationships", [])
                     
                     for rel in relationships:
                         target_id = rel["target_id"]
@@ -603,7 +603,7 @@ class KnowledgeGraphService:
             gaps = []
             
             for item in items:
-                relationships = item.item_metadata.get("relationships", []) if item.item_metadata else []
+                relationships = item.metadata.get("relationships", []) if item.metadata else []
                 outgoing_count = len(relationships)
                 
                 # Count incoming relationships

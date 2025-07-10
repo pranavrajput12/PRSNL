@@ -64,7 +64,7 @@ services:
     container_name: prsnl_frontend
     restart: unless-stopped
     ports:
-      - "3002:3002"
+      - "3003:3003"
     environment:
       PUBLIC_API_URL: http://backend:8000
       NODE_ENV: production

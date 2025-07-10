@@ -41,21 +41,30 @@ async def handle_notification(connection, pid, channel, payload):
         # Get item details from database to process
         pool = await get_db_pool()
         async with pool.acquire() as conn:
-            row = await conn.fetchrow("""
-                SELECT url, content, raw_content, enable_summarization, content_type, status, has_files 
-                FROM items WHERE id = $1
-            """, item_id)
+            # Add debug logging to see what database worker connects to
+            logger.info(f"🔍 WORKER: Processing item {item_id}")
+            try:
+                # Test if the columns exist first
+                test_columns = await conn.fetch("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'items' 
+                    AND column_name IN ('content_type', 'enable_summarization')
+                """)
+                logger.info(f"🔍 WORKER: Available columns: {[r['column_name'] for r in test_columns]}")
+                
+                row = await conn.fetchrow("""
+                    SELECT url, processed_content, raw_content, enable_summarization, content_type, status
+                    FROM items WHERE id = $1
+                """, item_id)
+            except Exception as e:
+                logger.error(f"🔍 WORKER ERROR: {e}")
+                raise
             if row:
                 # Only process if not already completed or failed
                 if row['status'] in ['pending']:
-                    # Skip file uploads - they are handled by the file processor
-                    if row['has_files']:
-                        logger.info(f"Skipping file item {item_id} - handled by file processor")
-                        return
-                        
                     url = row['url']
-                    # Use raw_content (from form) if available, otherwise use content
-                    content = row['raw_content'] or row['content']
+                    # Use raw_content (from form) if available, otherwise use processed_content
+                    content = row['raw_content'] or row['processed_content']
                     enable_summarization = row['enable_summarization'] or False
                     content_type = row['content_type'] or 'auto'
                     

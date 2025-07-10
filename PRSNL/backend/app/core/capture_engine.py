@@ -34,9 +34,27 @@ class CaptureEngine:
             # If content is provided directly, use it; otherwise scrape the URL
             if content:
                 logger.info(f"Using provided content for item {item_id}")
+                
+                # Extract a meaningful title from the content
+                lines = content.strip().split('\n')
+                first_line = lines[0].strip() if lines else ''
+                
+                # Use first line as title if it's reasonable length, otherwise truncate content
+                if first_line and 10 <= len(first_line) <= 100:
+                    extracted_title = first_line
+                elif len(content) > 100:
+                    # Extract first sentence or chunk
+                    extracted_title = content[:80].strip()
+                    if not extracted_title.endswith('.'):
+                        extracted_title += '...'
+                else:
+                    extracted_title = content.strip() or 'Note'
+                
+                logger.info(f"Extracted title from content: {extracted_title}")
+                
                 scraped_data = type('ScrapedData', (), {
                     'content': content,
-                    'title': 'User Note',
+                    'title': extracted_title,
                     'html': content,
                     'author': None,
                     'published_date': None,

@@ -13,8 +13,9 @@ Your AI-powered personal knowledge base. Capture anything from the web, process 
 - **Vision AI**: Image analysis and OCR capabilities with GPT-4V
 - **Semantic Search**: Find similar content using embeddings
 - **Chrome Extension**: Full implementation with context menus & shortcuts
-- **Development Environment**: Docker setup with PostgreSQL and all services
-- **Production Config**: Docker production setup with monitoring
+- **Development Environment**: RANCHER DESKTOP setup with PostgreSQL and all services (NOT Docker)
+- **Production Config**: Rancher Desktop production setup with monitoring
+- **Frontend Port**: 3003 (Updated from 3002 due to container conflict)
 
 ✅ **WORKING FEATURES**
 - **AI-Powered Capture**: Automatic summarization and tagging with Azure OpenAI

@@ -24,7 +24,7 @@ async def populate_timeline_data(db_connection: asyncpg.Connection):
         item_id = str(uuid4())
         created_at = datetime.now() - timedelta(minutes=i)
         await db_connection.execute(
-            "INSERT INTO items (id, title, url, item_type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
+            "INSERT INTO items (id, title, url, type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
             item_id, f"Test Item {i}", f"http://example.com/item{i}", "article", created_at
         )
 

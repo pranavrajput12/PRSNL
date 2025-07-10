@@ -15,7 +15,7 @@ class TimelineItem(BaseModel):
     url: Optional[str] = None
     summary: Optional[str] = None
     platform: Optional[str] = None
-    item_type: str = "article"
+    type: str = "article"
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
     file_path: Optional[str] = None
@@ -49,12 +49,7 @@ async def get_timeline(
                     i.url,
                     i.summary,
                     COALESCE(i.metadata->'video_metadata'->>'platform', i.metadata->>'platform') as platform,
-                    CASE 
-                        WHEN i.url LIKE '%youtube.com%' OR i.url LIKE '%youtu.be%' THEN 'video'
-                        WHEN i.url LIKE '%.pdf' THEN 'pdf'
-                        WHEN i.metadata->>'type' IS NOT NULL THEN i.metadata->>'type'
-                        ELSE 'article'
-                    END as item_type,
+                    i.type as type,
                     COALESCE(i.thumbnail_url, i.metadata->'video_metadata'->>'thumbnail', i.metadata->>'thumbnail_url') as thumbnail_url,
                     COALESCE(i.duration, (i.metadata->'video_metadata'->'video_info'->>'duration')::int, (i.metadata->>'duration')::int) as duration,
                     i.metadata->>'file_path' as file_path,
@@ -97,7 +92,7 @@ async def get_timeline(
                     "url": row["url"],
                     "summary": row["summary"],
                     "platform": row["platform"],
-                    "item_type": row["item_type"],
+                    "type": row["type"],
                     "thumbnail_url": thumbnail_url,
                     "duration": row["duration"],
                     "file_path": row["file_path"],

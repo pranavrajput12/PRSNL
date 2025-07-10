@@ -15,7 +15,7 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 
 | Service | Port | Status | Description | Config Location |
 |---------|------|--------|-------------|-----------------|
-| **Frontend (SvelteKit)** | **3002** | **FIXED** | Main web UI | `/PRSNL/frontend/vite.config.ts` |
+| **Frontend (SvelteKit)** | **3003** | **FIXED** | Main web UI | `/PRSNL/frontend/vite.config.ts` |
 | **Backend (FastAPI)** | **8000** | FIXED | REST API | `/PRSNL/docker-compose.yml` |
 | **PostgreSQL** | **5432** | FIXED | Primary database | `/PRSNL/docker-compose.yml` |
 | **Redis** | **6379** | FIXED | Cache & queue | `/PRSNL/docker-compose.yml` |
@@ -24,7 +24,7 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 
 | Port | Purpose | When Used |
 |------|---------|-----------|
-| **3000** | Fallback for frontend | If 3002 unavailable |
+| **3002** | Legacy frontend port | If 3003 unavailable |
 | **5173** | Vite default | Development testing |
 
 ## Production Ports
@@ -86,7 +86,7 @@ docker ps | grep ":PORT->"
 
 | Range | Purpose | Notes |
 |-------|---------|-------|
-| **3000-3999** | Frontend services | 3002 is primary |
+| **3000-3999** | Frontend services | 3003 is primary |
 | **8000-8999** | Backend services | 8000 is primary API |
 | **5000-5999** | Databases | 5432 for PostgreSQL |
 | **9000-9999** | Monitoring | Prometheus, exporters |
@@ -94,20 +94,21 @@ docker ps | grep ":PORT->"
 
 ## Common Port Conflicts & Solutions
 
-### Frontend Port 3002 Conflict
+### Frontend Port 3003 Conflict
 
 ```bash
-# Check what's using port 3002
-lsof -i :3002
+# Check what's using port 3003
+lsof -i :3003
 
 # Common culprits:
 # - Another PRSNL instance
 # - Previous crashed process
 # - Other Node.js apps
+# - Frontend container running (stop with docker-compose stop frontend)
 
 # Solution:
 # 1. Kill the process or
-# 2. Use alternative port 3000 (update CORS in backend)
+# 2. Use alternative port 3002 (update CORS in backend)
 ```
 
 ### Backend Port 8000 Conflict
@@ -133,7 +134,7 @@ lsof -i :8000
 services:
   frontend:
     ports:
-      - "3002:3000"  # Host:Container
+      - "3003:3003"  # Host:Container
   
   backend:
     ports:
@@ -171,7 +172,7 @@ sudo systemctl restart docker
 If changing frontend port:
 1. Update `/PRSNL/backend/app/config.py`:
    ```python
-   CORS_ORIGINS = ["http://localhost:3002", "http://localhost:NEW_PORT"]
+   CORS_ORIGINS = ["http://localhost:3003", "http://localhost:NEW_PORT"]
    ```
 2. Restart backend service
 
@@ -194,5 +195,6 @@ taskkill /F /PID <PID>
 
 ## Update History
 
-- 2025-07-07: Initial document created with all known port allocations
+- 2025-07-07: Initial document created with all known port allocations  
+- 2025-07-10: Updated frontend port from 3002 to 3003 due to container conflict
 - Note: This document supersedes port information in MODEL_COORDINATION_RULES.md

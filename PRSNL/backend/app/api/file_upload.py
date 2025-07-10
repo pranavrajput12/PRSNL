@@ -327,7 +327,14 @@ async def _store_file_and_item(
     file_info = processing_result['file_info']
     extracted_content = processing_result['extracted_content']
     
-    # Create item
+    # Create item - use content_type for type field to ensure consistency
+    # If content_type is 'auto', use the detected category
+    if content_type == 'auto':
+        item_type = file_info['category']
+    else:
+        item_type = content_type if content_type else file_info['category']
+    logger.info(f"🗂️ Creating file item: content_type={content_type} → type={item_type}")
+    
     await db_connection.execute("""
         INSERT INTO items (
             id, title, summary, status, type, content_type, 
@@ -335,7 +342,7 @@ async def _store_file_and_item(
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
     """, 
         item_id, title, f"File: {filename}", 
-        ItemStatus.COMPLETED, file_info['category'], content_type,
+        ItemStatus.COMPLETED, item_type, content_type,
         True, 1, enable_summarization
     )
     

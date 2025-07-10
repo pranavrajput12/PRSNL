@@ -1,0 +1,11 @@
+Test Document WITHOUT AI Analysis
+
+This is a simple test document to verify document upload functionality with AI summarization disabled.
+
+Key Points:
+- File upload should work
+- No AI processing should occur
+- Document should be stored as-is
+- Basic metadata should be extracted
+
+This document tests the non-AI workflow path in the PRSNL system.

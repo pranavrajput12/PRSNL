@@ -774,7 +774,7 @@ async def get_top_content(
                 "id": row.id,
                 "title": row.title,
                 "url": row.url,
-                "item_type": row.type,
+                "type": row.type,
                 "created_at": row.created_at.isoformat(),
                 "summary": row.summary,
                 "metadata": {

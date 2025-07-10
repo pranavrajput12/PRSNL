@@ -4,6 +4,9 @@ struct TimelineView: View {
     @StateObject private var viewModel = TimelineViewModel()
     @State private var selectedItem: Item?
     @State private var showingAddView = false
+    @State private var showingVoiceCapture = false
+    @State private var showingScanCapture = false
+    @State private var showingChat = false
     @State private var refreshRotation = 0.0
     @State private var showingFilters = false
     @Namespace private var animation
@@ -42,7 +45,7 @@ struct TimelineView: View {
                 }
             }
             .navigationBarHidden(true)
-            .toolbar(content: {
+            .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: DesignSystem.Spacing.space3) {
                         // Filter Button
@@ -70,7 +73,7 @@ struct TimelineView: View {
                         }
                     }
                 }
-            })
+            }
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -83,12 +86,29 @@ struct TimelineView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .sheet(item: $selectedItem) { item in
-            ItemDetailView(item: item)
+            print("📱 Opening ItemDetailView for: \(item.title)")
+            return ItemDetailView(item: item)
         }
         .sheet(isPresented: $showingAddView) {
-            Text("Content Capture Coming Soon")
+            // ContentCaptureView() - needs to be added to Xcode project
+            NavigationStack {
+                ContentCaptureViewInline(timelineViewModel: viewModel)
+            }
+        }
+        .sheet(isPresented: $showingVoiceCapture) {
+            // VoiceCaptureView()
+            Text("Voice Capture Coming Soon")
                 .font(.title2)
                 .padding()
+        }
+        .sheet(isPresented: $showingScanCapture) {
+            // ScanCaptureView()
+            Text("Document Scanner Coming Soon")
+                .font(.title2)
+                .padding()
+        }
+        .sheet(isPresented: $showingChat) {
+            ChatView()
         }
     }
     
@@ -204,7 +224,9 @@ struct TimelineView: View {
                             
                             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                                 TimelineItemCard(item: item)
+                                    .contentShape(Rectangle())
                                     .onTapGesture {
+                                        print("🔍 Tapped item: \(item.title)")
                                         selectedItem = item
                                     }
                                     .onAppear {
@@ -306,36 +328,39 @@ struct TimelineView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: DesignSystem.Spacing.space3) {
                     ForEach(Array(quickActions.enumerated()), id: \.element.title) { index, action in
-                        VStack(spacing: DesignSystem.Spacing.space1) {
-                            ZStack {
-                                Circle()
-                                    .fill(action.color.opacity(0.1))
-                                    .frame(width: 36, height: 36)
-                                    .scaleEffect(1.0)
-                                    .animation(
-                                        Animation.easeInOut(duration: 1.5)
-                                            .repeatForever(autoreverses: true)
-                                            .delay(Double(index) * 0.3),
-                                        value: true
-                                    )
+                        Button(action: action.action) {
+                            VStack(spacing: DesignSystem.Spacing.space1) {
+                                ZStack {
+                                    Circle()
+                                        .fill(action.color.opacity(0.1))
+                                        .frame(width: 36, height: 36)
+                                        .scaleEffect(1.0)
+                                        .animation(
+                                            Animation.easeInOut(duration: 1.5)
+                                                .repeatForever(autoreverses: true)
+                                                .delay(Double(index) * 0.3),
+                                            value: true
+                                        )
+                                    
+                                    Image(systemName: action.icon)
+                                        .foregroundColor(action.color)
+                                        .font(.system(size: 16, weight: .medium))
+                                        .scaleEffect(1.0)
+                                        .animation(
+                                            Animation.easeInOut(duration: 1.2)
+                                                .repeatForever(autoreverses: true)
+                                                .delay(Double(index) * 0.2),
+                                            value: true
+                                        )
+                                }
                                 
-                                Image(systemName: action.icon)
-                                    .foregroundColor(action.color)
-                                    .font(.system(size: 16, weight: .medium))
-                                    .scaleEffect(1.0)
-                                    .animation(
-                                        Animation.easeInOut(duration: 1.2)
-                                            .repeatForever(autoreverses: true)
-                                            .delay(Double(index) * 0.2),
-                                        value: true
-                                    )
+                                Text(action.title)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.secondary)
                             }
-                            
-                            Text(action.title)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(.secondary)
+                            .frame(width: 60)
                         }
-                        .frame(width: 60)
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal)
@@ -514,12 +539,12 @@ struct TimelineView: View {
         }
     }
     
-    private var quickActions: [(title: String, icon: String, color: Color)] {
+    private var quickActions: [(title: String, icon: String, color: Color, action: () -> Void)] {
         [
-            ("Capture", "brain.head.profile", DesignSystem.Colors.primaryRed),
-            ("Voice", "waveform.path.ecg", DesignSystem.Colors.primaryGreen),
-            ("Scan", "viewfinder", DesignSystem.Colors.primaryPurple),
-            ("AI Chat", "bubble.left.and.bubble.right", Color.orange)
+            ("Capture", "brain.head.profile", DesignSystem.Colors.primaryRed, { showingAddView = true }),
+            ("Voice", "waveform.path.ecg", DesignSystem.Colors.primaryGreen, { showingVoiceCapture = true }),
+            ("Scan", "viewfinder", DesignSystem.Colors.primaryPurple, { showingScanCapture = true }),
+            ("AI Chat", "bubble.left.and.bubble.right", Color.orange, { showingChat = true })
         ]
     }
     
@@ -857,6 +882,130 @@ extension ItemType {
         case .document: return "doc"
         case .link: return "link"
         case .other: return "questionmark.circle"
+        }
+    }
+}
+
+// MARK: - Inline Content Capture View
+struct ContentCaptureViewInline: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var urlText = ""
+    @State private var isLoading = false
+    @ObservedObject var timelineViewModel: TimelineViewModel
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Header
+            VStack(spacing: 8) {
+                Text("Add Content")
+                    .font(.system(size: 24, weight: .bold))
+                
+                Text("Paste a URL to capture content")
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 40)
+            
+            // URL Input
+            VStack(alignment: .leading, spacing: 8) {
+                Text("URL")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                TextField("https://example.com", text: $urlText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .autocapitalization(.none)
+                    .keyboardType(.URL)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            // Buttons
+            VStack(spacing: 12) {
+                Button(action: captureURL) {
+                    HStack {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        Text("Capture")
+                    }
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(urlText.isEmpty ? Color.gray : DesignSystem.Colors.primaryRed)
+                    )
+                }
+                .disabled(urlText.isEmpty || isLoading)
+                
+                Button("Cancel") {
+                    dismiss()
+                }
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
+    }
+    
+    private func captureURL() {
+        guard !urlText.isEmpty else { return }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                let apiClient = APIClient.shared
+                let result = try await apiClient.capture(url: urlText)
+                await MainActor.run {
+                    print("✅ Successfully captured: \(result.title)")
+                    isLoading = false
+                    
+                    // Refresh timeline to show new item
+                    Task {
+                        await timelineViewModel.refresh()
+                    }
+                    
+                    // Show success feedback
+                    let alert = UIAlertController(title: "Success!", message: "Content '\(result.title)' captured successfully", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                        dismiss()
+                    })
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first {
+                        window.rootViewController?.present(alert, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    print("❌ Capture error: \(error)")
+                    isLoading = false
+                    
+                    // Show error feedback
+                    let alert = UIAlertController(title: "Capture Failed", message: "Error: \(error.localizedDescription)", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first {
+                        window.rootViewController?.present(alert, animated: true)
+                    }
+                }
+            }
         }
     }
 }

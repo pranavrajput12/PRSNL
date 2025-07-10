@@ -62,7 +62,7 @@ async def debug_items(db_connection: asyncpg.Connection = Depends(get_db_connect
                     WHEN url LIKE '%.pdf' THEN 'pdf'
                     WHEN metadata->>'type' IS NOT NULL THEN metadata->>'type'
                     ELSE 'article'
-                END as item_type, 
+                END as type, 
                 created_at, updated_at
             FROM items
             ORDER BY created_at DESC

@@ -1,0 +1,25 @@
+Test Document for AI Analysis
+
+This is a comprehensive test document to verify the document upload functionality with AI summarization enabled.
+
+The document contains multiple sections:
+
+1. Introduction
+This section introduces the purpose of the document testing.
+
+2. Technical Details
+We are testing the PRSNL backend's ability to process uploaded files and generate AI summaries.
+
+3. Features Being Tested
+- File upload capability
+- AI summarization toggle (enabled)
+- Content type classification
+- Document processing workflow
+
+4. Expected Results
+The system should successfully upload this document, process it with AI, and generate:
+- An intelligent summary
+- Relevant tags
+- Proper categorization
+
+This concludes our test document for AI-enabled processing.

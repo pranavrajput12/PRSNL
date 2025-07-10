@@ -9,9 +9,16 @@ This is your single source of truth for completing tasks properly. Use this simp
 @TASK_COMPLETION_GUIDE.md Update all documentation
 ```
 
+### ⚠️ CRITICAL ENVIRONMENT INFO
+- **Container Runtime**: RANCHER DESKTOP (NOT Docker)
+- **Frontend Port**: 3002 (NEVER 3003)
+- **Backend Port**: 8000
+- **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
+
 ### 🤖 What AI Will Do Automatically
 When you tag this file, the AI will:
 1. **Read Context Documentation**: Check all files for current state understanding
+2. **Check CLAUDE.md**: Read critical project configuration (Rancher, ports, etc.)
 2. **Identify Completed Task**: Check CURRENT_SESSION_STATE.md for active task
 3. **Update TASK_HISTORY.md**: Mark task as COMPLETED with timestamp
 4. **Update All Documentation**: Based on DOCUMENTATION_DEPENDENCIES.md matrix

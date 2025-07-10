@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metabolic Racing Dashboard - PRSNL Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .racing-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .dashboard {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .speedometer {
+            width: 180px;
+            height: 180px;
+            position: relative;
+        }
+        
+        .speedometer-dial {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: radial-gradient(circle at center, #111, #000);
+        }
+        
+        .speed-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+            color: #DC143C;
+            text-shadow: 0 0 20px #DC143C;
+        }
+        
+        .speed-unit {
+            font-size: 16px;
+            color: #999;
+            display: block;
+            text-align: center;
+            margin-top: -10px;
+        }
+        
+        .needle {
+            position: absolute;
+            width: 3px;
+            height: 70px;
+            background: #DC143C;
+            left: 50%;
+            top: 20px;
+            transform-origin: center bottom;
+            transform: translateX(-50%) rotate(-90deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .metric-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ff64;
+            margin-top: 5px;
+        }
+        
+        .gear-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .gear-display {
+            font-size: 72px;
+            font-weight: 900;
+            color: #DC143C;
+            text-shadow: 0 0 30px #DC143C;
+            font-family: 'monospace';
+        }
+        
+        .gear-label {
+            color: #999;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .boost-meter {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .boost-bar {
+            height: 30px;
+            background: #222;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #333;
+        }
+        
+        .boost-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff64, #00cc50);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-weight: 700;
+        }
+        
+        .boost-label {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #DC143C;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        .leaderboard h3 {
+            margin: 0 0 15px 0;
+            color: #00ff64;
+            font-size: 18px;
+        }
+        
+        .position {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .position.player {
+            color: #DC143C;
+            font-weight: 700;
+        }
+        
+        .position-rank {
+            width: 30px;
+        }
+        
+        .position-name {
+            flex: 1;
+            padding: 0 10px;
+        }
+        
+        .position-speed {
+            color: #00ff64;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 230px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+        
+        .control-btn {
+            background: rgba(220, 20, 60, 0.2);
+            border: 2px solid #DC143C;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        
+        .control-btn:hover {
+            background: #DC143C;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .achievement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(255, 215, 0, 0.9);
+            padding: 30px 50px;
+            border-radius: 20px;
+            color: black;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.5s ease;
+        }
+        
+        .achievement.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #DC143C;
+            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+        }
+        
+        .header p {
+            color: #999;
+            font-size: 16px;
+        }
+        
+        .streak-counter {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00ff64;
+        }
+        
+        .streak-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #00ff64;
+            text-align: center;
+        }
+        
+        .streak-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="racing-container">
+        <canvas id="canvas"></canvas>
+        
+        <div class="header">
+            <h1>🏎️ Metabolic Racing</h1>
+            <p>Speed through your learning journey</p>
+        </div>
+        
+        <div class="streak-counter">
+            <div class="streak-value" id="streakValue">7</div>
+            <div class="streak-label">Day Streak</div>
+        </div>
+        
+        <div class="leaderboard">
+            <h3>Knowledge Racers</h3>
+            <div class="position">
+                <span class="position-rank">#1</span>
+                <span class="position-name">SpeedReader</span>
+                <span class="position-speed">245</span>
+            </div>
+            <div class="position player">
+                <span class="position-rank">#2</span>
+                <span class="position-name">You</span>
+                <span class="position-speed" id="playerSpeed">180</span>
+            </div>
+            <div class="position">
+                <span class="position-rank">#3</span>
+                <span class="position-name">DataNinja</span>
+                <span class="position-speed">165</span>
+            </div>
+            <div class="position">
+                <span class="position-rank">#4</span>
+                <span class="position-name">InfoHunter</span>
+                <span class="position-speed">142</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="boost()">🚀 BOOST</button>
+            <button class="control-btn" onclick="shiftUp()">⬆️ SHIFT UP</button>
+            <button class="control-btn" onclick="shiftDown()">⬇️ SHIFT DOWN</button>
+        </div>
+        
+        <div class="dashboard">
+            <div class="speedometer">
+                <div class="speedometer-dial">
+                    <div class="speed-value">
+                        <span id="speedValue">180</span>
+                        <span class="speed-unit">km/h</span>
+                    </div>
+                    <div class="needle" id="needle"></div>
+                </div>
+            </div>
+            
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Items/Hour</div>
+                    <div class="metric-value" id="itemsPerHour">12.4</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Efficiency</div>
+                    <div class="metric-value" id="efficiency">87%</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Distance</div>
+                    <div class="metric-value" id="distance">1,234</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Fuel</div>
+                    <div class="metric-value" id="fuel">68%</div>
+                </div>
+            </div>
+            
+            <div class="gear-indicator">
+                <div class="gear-display" id="gearDisplay">3</div>
+                <div class="gear-label">GEAR</div>
+            </div>
+            
+            <div class="boost-meter">
+                <div class="boost-label">BOOST POWER</div>
+                <div class="boost-bar">
+                    <div class="boost-fill" id="boostFill" style="width: 60%">60%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="achievement" id="achievement">
+            <span style="font-size: 48px;">🏆</span>
+            <span>New Speed Record!</span>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let animationFrame;
+        
+        // Racing state
+        let speed = 180;
+        let targetSpeed = 180;
+        let gear = 3;
+        let boostPower = 60;
+        let distance = 1234;
+        let itemsPerHour = 12.4;
+        let efficiency = 87;
+        let fuel = 68;
+        let streak = 7;
+        
+        // Track elements
+        let trackOffset = 0;
+        let particles = [];
+        let stars = [];
+        let trackLines = [];
+        
+        // Animation
+        let time = 0;
+        
+        // Initialize
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            createStars();
+            createTrackLines();
+            animate();
+            
+            // Auto updates
+            setInterval(updateMetrics, 1000);
+        }
+        
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function createStars() {
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    speed: 0.5 + Math.random() * 2
+                });
+            }
+        }
+        
+        function createTrackLines() {
+            for (let i = 0; i < 20; i++) {
+                trackLines.push({
+                    y: i * 50,
+                    width: 5 + Math.random() * 10,
+                    speed: 2 + Math.random() * 3
+                });
+            }
+        }
+        
+        function animate() {
+            time += 0.016;
+            
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Update speed
+            speed += (targetSpeed - speed) * 0.1;
+            
+            // Draw elements
+            drawStars();
+            drawTrack();
+            drawSpeedLines();
+            drawParticles();
+            
+            // Update UI
+            updateSpeedometer();
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+        
+        function drawStars() {
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                star.y += star.speed * (speed / 100);
+                if (star.y > height) {
+                    star.y = -10;
+                    star.x = Math.random() * width;
+                }
+                
+                ctx.globalAlpha = 0.5 + Math.sin(time + star.x) * 0.3;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawTrack() {
+            // Road perspective
+            const roadWidth = 400;
+            const horizon = height * 0.3;
+            
+            // Road gradient
+            const roadGradient = ctx.createLinearGradient(0, horizon, 0, height);
+            roadGradient.addColorStop(0, '#1a1a1a');
+            roadGradient.addColorStop(1, '#333333');
+            
+            ctx.fillStyle = roadGradient;
+            ctx.beginPath();
+            ctx.moveTo(width / 2 - roadWidth / 2, height);
+            ctx.lineTo(width / 2 - roadWidth / 4, horizon);
+            ctx.lineTo(width / 2 + roadWidth / 4, horizon);
+            ctx.lineTo(width / 2 + roadWidth / 2, height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Track lines
+            trackOffset += speed / 20;
+            
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            
+            for (let i = 0; i < 20; i++) {
+                const y = (i * 50 + trackOffset) % (height - horizon) + horizon;
+                const perspective = (y - horizon) / (height - horizon);
+                const lineWidth = roadWidth * perspective;
+                const x = width / 2;
+                
+                ctx.globalAlpha = perspective * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(x - lineWidth / 8, y);
+                ctx.lineTo(x - lineWidth / 16, y);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(x + lineWidth / 16, y);
+                ctx.lineTo(x + lineWidth / 8, y);
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+            
+            // Side barriers
+            ctx.strokeStyle = '#DC143C';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 10]);
+            
+            // Left barrier
+            ctx.beginPath();
+            ctx.moveTo(width / 2 - roadWidth / 2, height);
+            ctx.lineTo(width / 2 - roadWidth / 4, horizon);
+            ctx.stroke();
+            
+            // Right barrier
+            ctx.beginPath();
+            ctx.moveTo(width / 2 + roadWidth / 2, height);
+            ctx.lineTo(width / 2 + roadWidth / 4, horizon);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+        }
+        
+        function drawSpeedLines() {
+            // Speed effect lines
+            const lineCount = Math.floor(speed / 20);
+            
+            ctx.strokeStyle = '#00ff64';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < lineCount; i++) {
+                const angle = (i / lineCount) * Math.PI;
+                const startX = width / 2 - Math.cos(angle) * width;
+                const startY = height / 2;
+                const endX = width / 2 - Math.cos(angle) * (width - speed * 2);
+                const endY = height / 2 + Math.sin(angle) * speed;
+                
+                ctx.globalAlpha = 0.1 + (speed / 300) * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawParticles() {
+            // Add new particles
+            if (speed > 100 && Math.random() < speed / 1000) {
+                particles.push({
+                    x: width / 2 + (Math.random() - 0.5) * 400,
+                    y: height,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: -speed / 10,
+                    size: Math.random() * 3,
+                    color: speed > 200 ? '#DC143C' : '#00ff64',
+                    life: 1
+                });
+            }
+            
+            // Update and draw particles
+            particles = particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life -= 0.02;
+                
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                return particle.life > 0 && particle.y > 0;
+            });
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function updateSpeedometer() {
+            // Update speed display
+            document.getElementById('speedValue').textContent = Math.round(speed);
+            
+            // Update needle rotation
+            const needleAngle = -90 + (speed / 300) * 180;
+            document.getElementById('needle').style.transform = `translateX(-50%) rotate(${needleAngle}deg)`;
+            
+            // Update player speed in leaderboard
+            document.getElementById('playerSpeed').textContent = Math.round(speed);
+        }
+        
+        function updateMetrics() {
+            // Simulate metric updates
+            distance += Math.round(speed / 60);
+            itemsPerHour = (10 + speed / 20 + Math.random() * 2).toFixed(1);
+            efficiency = Math.max(50, Math.min(100, efficiency + (Math.random() - 0.5) * 5));
+            fuel = Math.max(0, fuel - 0.5);
+            
+            document.getElementById('distance').textContent = distance.toLocaleString();
+            document.getElementById('itemsPerHour').textContent = itemsPerHour;
+            document.getElementById('efficiency').textContent = Math.round(efficiency) + '%';
+            document.getElementById('fuel').textContent = Math.round(fuel) + '%';
+            
+            // Low fuel warning
+            if (fuel < 20) {
+                document.getElementById('fuel').style.color = '#DC143C';
+            }
+        }
+        
+        function boost() {
+            if (boostPower >= 20) {
+                targetSpeed = Math.min(300, speed + 50);
+                boostPower -= 20;
+                updateBoostMeter();
+                
+                // Boost particles
+                for (let i = 0; i < 30; i++) {
+                    particles.push({
+                        x: width / 2,
+                        y: height / 2,
+                        vx: (Math.random() - 0.5) * 20,
+                        vy: (Math.random() - 0.5) * 20,
+                        size: 5 + Math.random() * 5,
+                        color: '#DC143C',
+                        life: 1
+                    });
+                }
+                
+                // Check for achievement
+                if (speed > 250) {
+                    showAchievement();
+                }
+            }
+        }
+        
+        function shiftUp() {
+            if (gear < 6) {
+                gear++;
+                targetSpeed = Math.min(300, targetSpeed + 30);
+                document.getElementById('gearDisplay').textContent = gear;
+                
+                // Gear change effect
+                createGearChangeEffect();
+            }
+        }
+        
+        function shiftDown() {
+            if (gear > 1) {
+                gear--;
+                targetSpeed = Math.max(50, targetSpeed - 30);
+                document.getElementById('gearDisplay').textContent = gear;
+                
+                // Gear change effect
+                createGearChangeEffect();
+            }
+        }
+        
+        function createGearChangeEffect() {
+            const gearDisplay = document.getElementById('gearDisplay');
+            gearDisplay.style.transform = 'scale(1.5)';
+            gearDisplay.style.textShadow = '0 0 50px #DC143C';
+            
+            setTimeout(() => {
+                gearDisplay.style.transform = 'scale(1)';
+                gearDisplay.style.textShadow = '0 0 30px #DC143C';
+            }, 300);
+        }
+        
+        function updateBoostMeter() {
+            document.getElementById('boostFill').style.width = boostPower + '%';
+            document.getElementById('boostFill').textContent = boostPower + '%';
+            
+            // Regenerate boost slowly
+            if (boostPower < 100) {
+                setTimeout(() => {
+                    boostPower = Math.min(100, boostPower + 1);
+                    updateBoostMeter();
+                }, 500);
+            }
+        }
+        
+        function showAchievement() {
+            document.getElementById('achievement').classList.add('show');
+            setTimeout(() => {
+                document.getElementById('achievement').classList.remove('show');
+            }, 3000);
+            
+            // Update streak
+            streak++;
+            document.getElementById('streakValue').textContent = streak;
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>

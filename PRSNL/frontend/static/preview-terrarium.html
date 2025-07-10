@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosystem Terrarium - PRSNL Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #87CEEB;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .terrarium-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #00ff64;
+            backdrop-filter: blur(10px);
+        }
+        
+        .season-btn,
+        .feed-btn {
+            background: #00ff64;
+            border: none;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .season-btn:hover,
+        .feed-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 100, 0.5);
+        }
+        
+        .feed-btn.active {
+            background: #DC143C;
+            color: white;
+            box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+        }
+        
+        .weather-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .weather-control label {
+            color: #00ff64;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .weather-control select {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #00ff64;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .ecosystem-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #00ff64;
+            backdrop-filter: blur(10px);
+        }
+        
+        .ecosystem-stats h3 {
+            margin: 0 0 15px 0;
+            color: #00ff64;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-icon {
+            font-size: 24px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00ff64;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .health-status {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .status-good {
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ff64;
+        }
+        
+        .status-medium {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+        }
+        
+        .status-poor {
+            background: rgba(220, 20, 60, 0.2);
+            color: #DC143C;
+        }
+        
+        .creature-info {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #ffffff;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .creature-info h3 {
+            margin: 0 0 10px 0;
+            color: #00ff64;
+        }
+        
+        .creature-info p {
+            margin: 5px 0;
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .feed-hint {
+            color: #DC143C !important;
+            font-weight: 600;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #00ff64;
+            text-shadow: 0 0 20px rgba(0, 255, 100, 0.5);
+        }
+        
+        .header p {
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .biodiversity-meter {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+        }
+        
+        .biodiversity-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#00ff64 0deg, #00ff64 var(--score), #333 var(--score), #333 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .biodiversity-inner {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .biodiversity-score {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00ff64;
+        }
+        
+        .biodiversity-label {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="terrarium-container">
+        <canvas id="canvas"></canvas>
+        
+        <div class="header">
+            <h1>🌍 Ecosystem Terrarium</h1>
+            <p>Your knowledge habitat comes alive</p>
+        </div>
+        
+        <div class="biodiversity-meter">
+            <div class="biodiversity-circle" id="biodiversityCircle" style="--score: 252deg;">
+                <div class="biodiversity-inner">
+                    <div class="biodiversity-score" id="biodiversityScore">70</div>
+                    <div class="biodiversity-label">Biodiversity</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ecosystem-stats">
+            <h3>Ecosystem Health</h3>
+            <div class="stat-grid">
+                <div class="stat">
+                    <span class="stat-icon">📚</span>
+                    <span class="stat-value" id="articleCount">8</span>
+                    <span class="stat-label">Articles</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🎬</span>
+                    <span class="stat-value" id="videoCount">6</span>
+                    <span class="stat-label">Videos</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">📝</span>
+                    <span class="stat-value" id="noteCount">10</span>
+                    <span class="stat-label">Notes</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">🔖</span>
+                    <span class="stat-value" id="bookmarkCount">5</span>
+                    <span class="stat-label">Bookmarks</span>
+                </div>
+            </div>
+            
+            <div class="health-status status-good" id="healthStatus">
+                🌳 Thriving ecosystem!
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="season-btn" onclick="changeSeason()">
+                Change Season
+            </button>
+            
+            <button class="feed-btn" id="feedBtn" onclick="toggleFeedMode()">
+                Feed Creatures
+            </button>
+            
+            <div class="weather-control">
+                <label>Weather</label>
+                <select id="weatherSelect" onchange="changeWeather()">
+                    <option value="sunny">☀️ Sunny</option>
+                    <option value="rainy">🌧️ Rainy</option>
+                    <option value="cloudy">☁️ Cloudy</option>
+                    <option value="snowy">❄️ Snowy</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="creature-info" id="creatureInfo" style="display: none;">
+            <h3 id="creatureEmoji">📚</h3>
+            <p>Age: <span id="creatureAge">0</span></p>
+            <p>Health: <span id="creatureHealth">100</span>%</p>
+            <p>Behavior: <span id="creatureBehavior">wander</span></p>
+            <p class="feed-hint" id="feedHint" style="display: none;">Click to feed!</p>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let animationFrame;
+        
+        // Ecosystem state
+        let creatures = [];
+        let plants = [];
+        let weather = { type: 'sunny', intensity: 0.5 };
+        let season = 'spring';
+        let particles = [];
+        let selectedCreature = null;
+        let feedingMode = false;
+        let biodiversityScore = 70;
+        
+        // Animation
+        let time = 0;
+        let dayNightCycle = 0;
+        
+        // Initialize
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            createEcosystem();
+            animate();
+            
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('click', handleClick);
+        }
+        
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function createEcosystem() {
+            // Create creatures
+            const creatureTypes = [
+                { type: 'article', emoji: '📚', color: '#DC143C', count: 8 },
+                { type: 'video', emoji: '🎬', color: '#4a9eff', count: 6 },
+                { type: 'note', emoji: '📝', color: '#00ff64', count: 10 },
+                { type: 'bookmark', emoji: '🔖', color: '#ffa500', count: 5 }
+            ];
+            
+            creatureTypes.forEach(({ type, emoji, color, count }) => {
+                for (let i = 0; i < count; i++) {
+                    creatures.push({
+                        id: `${type}-${i}`,
+                        type: type,
+                        x: Math.random() * width,
+                        y: height - 100 - Math.random() * (height - 200),
+                        size: 20 + Math.random() * 20,
+                        age: Math.floor(Math.random() * 100),
+                        health: 80 + Math.random() * 20,
+                        speed: 0.5 + Math.random() * 1,
+                        direction: Math.random() * Math.PI * 2,
+                        color,
+                        emoji,
+                        behavior: 'wander',
+                        target: null,
+                        bounceOffset: Math.random() * Math.PI * 2
+                    });
+                }
+            });
+            
+            // Create plants
+            for (let i = 0; i < 20; i++) {
+                plants.push({
+                    x: Math.random() * width,
+                    y: height - 50 - Math.random() * 150,
+                    size: 30 + Math.random() * 50,
+                    growth: 0.5 + Math.random() * 0.5,
+                    type: ['tree', 'flower', 'grass'][Math.floor(Math.random() * 3)],
+                    color: `hsl(${100 + Math.random() * 40}, 70%, 40%)`,
+                    swayPhase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        function animate() {
+            time += 0.016;
+            dayNightCycle = (time * 0.05) % (Math.PI * 2);
+            
+            // Draw sky
+            drawSky();
+            
+            // Draw terrain
+            drawTerrain();
+            
+            // Update weather
+            updateWeather();
+            
+            // Draw plants
+            drawPlants();
+            
+            // Update and draw creatures
+            updateCreatures();
+            drawCreatures();
+            
+            // Draw weather effects
+            drawWeatherEffects();
+            
+            // Draw UI elements
+            drawSeasonIndicator();
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+        
+        function drawSky() {
+            const daylight = Math.max(0, Math.cos(dayNightCycle));
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            
+            if (daylight > 0.7) {
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#98D8E8');
+            } else if (daylight > 0.3) {
+                gradient.addColorStop(0, '#FF6B35');
+                gradient.addColorStop(0.5, '#F7931E');
+                gradient.addColorStop(1, '#FDB462');
+            } else {
+                gradient.addColorStop(0, '#0a0a0a');
+                gradient.addColorStop(1, '#1a1a1a');
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Stars at night
+            if (daylight < 0.3) {
+                ctx.fillStyle = 'white';
+                for (let i = 0; i < 100; i++) {
+                    const x = (i * 137.5) % width;
+                    const y = (i * 89) % (height * 0.6);
+                    const size = Math.sin(time + i) * 0.5 + 1;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Sun/Moon
+            const celestialX = width / 2 + Math.cos(dayNightCycle - Math.PI / 2) * 300;
+            const celestialY = height / 2 + Math.sin(dayNightCycle - Math.PI / 2) * 300;
+            
+            if (daylight > 0.1) {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(celestialX, celestialY, 40, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#F0F0F0';
+                ctx.beginPath();
+                ctx.arc(celestialX, celestialY, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawTerrain() {
+            const groundGradient = ctx.createLinearGradient(0, height - 100, 0, height);
+            const seasonColors = {
+                spring: ['#90EE90', '#228B22'],
+                summer: ['#7CFC00', '#006400'],
+                autumn: ['#DAA520', '#8B4513'],
+                winter: ['#F0F8FF', '#B0C4DE']
+            };
+            
+            const [topColor, bottomColor] = seasonColors[season];
+            groundGradient.addColorStop(0, topColor);
+            groundGradient.addColorStop(1, bottomColor);
+            
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, height - 100, width, 100);
+            
+            // Texture
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 20; i++) {
+                const y = height - 100 + i * 5;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x < width; x += 10) {
+                    ctx.lineTo(x, y + Math.sin(x * 0.05 + time) * 2);
+                }
+                ctx.stroke();
+            }
+        }
+        
+        function drawPlants() {
+            plants.forEach(plant => {
+                ctx.save();
+                ctx.translate(plant.x, plant.y);
+                
+                const sway = Math.sin(time + plant.swayPhase) * 0.1;
+                ctx.rotate(sway);
+                
+                if (plant.type === 'tree') {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(-5, 0, 10, -plant.size * 0.4);
+                    
+                    ctx.fillStyle = plant.color;
+                    ctx.beginPath();
+                    ctx.arc(0, -plant.size * 0.4, plant.size * 0.3 * plant.growth, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    if (season === 'autumn') {
+                        ctx.fillStyle = '#FF6347';
+                        ctx.beginPath();
+                        ctx.arc(-10, -plant.size * 0.3, plant.size * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else if (plant.type === 'flower') {
+                    ctx.strokeStyle = '#228B22';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -plant.size * plant.growth);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = plant.color;
+                    for (let i = 0; i < 6; i++) {
+                        ctx.save();
+                        ctx.translate(0, -plant.size * plant.growth);
+                        ctx.rotate((i / 6) * Math.PI * 2);
+                        ctx.beginPath();
+                        ctx.ellipse(0, -10, 5, 10, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+                
+                ctx.restore();
+            });
+        }
+        
+        function updateCreatures() {
+            creatures.forEach(creature => {
+                // Random behavior changes
+                if (Math.random() < 0.01) {
+                    const behaviors = ['wander', 'feed', 'rest', 'socialize'];
+                    creature.behavior = behaviors[Math.floor(Math.random() * behaviors.length)];
+                }
+                
+                // Execute behavior
+                switch (creature.behavior) {
+                    case 'wander':
+                        creature.direction += (Math.random() - 0.5) * 0.2;
+                        creature.x += Math.cos(creature.direction) * creature.speed;
+                        creature.y += Math.sin(creature.direction) * creature.speed * 0.5;
+                        break;
+                        
+                    case 'feed':
+                        if (!creature.target) {
+                            const nearestPlant = plants[Math.floor(Math.random() * plants.length)];
+                            creature.target = { x: nearestPlant.x, y: nearestPlant.y };
+                        }
+                        
+                        if (creature.target) {
+                            const dx = creature.target.x - creature.x;
+                            const dy = creature.target.y - creature.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (dist > 5) {
+                                creature.x += (dx / dist) * creature.speed;
+                                creature.y += (dy / dist) * creature.speed;
+                            } else {
+                                creature.health = Math.min(100, creature.health + 1);
+                                creature.target = null;
+                                creature.behavior = 'wander';
+                            }
+                        }
+                        break;
+                }
+                
+                // Boundaries
+                creature.x = Math.max(creature.size, Math.min(width - creature.size, creature.x));
+                creature.y = Math.max(100, Math.min(height - 100 - creature.size, creature.y));
+                
+                // Age and health
+                creature.age += 0.01;
+                creature.health -= 0.01;
+            });
+            
+            // Update counts
+            const counts = {
+                article: creatures.filter(c => c.type === 'article').length,
+                video: creatures.filter(c => c.type === 'video').length,
+                note: creatures.filter(c => c.type === 'note').length,
+                bookmark: creatures.filter(c => c.type === 'bookmark').length
+            };
+            
+            document.getElementById('articleCount').textContent = counts.article;
+            document.getElementById('videoCount').textContent = counts.video;
+            document.getElementById('noteCount').textContent = counts.note;
+            document.getElementById('bookmarkCount').textContent = counts.bookmark;
+            
+            // Update biodiversity
+            updateBiodiversity();
+        }
+        
+        function drawCreatures() {
+            creatures.forEach(creature => {
+                ctx.save();
+                ctx.translate(creature.x, creature.y);
+                
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, creature.size / 2, creature.size * 0.8, creature.size * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Bounce animation
+                const bounce = Math.abs(Math.sin(time * 5 + creature.bounceOffset)) * 5;
+                ctx.translate(0, -bounce);
+                
+                // Health indicator
+                if (creature.health < 50) {
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, -creature.size, creature.size + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Creature body
+                ctx.fillStyle = creature.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, creature.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Emoji
+                ctx.font = `${creature.size * 1.2}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(creature.emoji, 0, 0);
+                
+                // Selection indicator
+                if (creature === selectedCreature) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, creature.size + 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            });
+        }
+        
+        function updateWeather() {
+            if (weather.type === 'rainy' && Math.random() < weather.intensity) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: -10,
+                    vx: 0,
+                    vy: 5 + Math.random() * 5,
+                    size: 1 + Math.random() * 2,
+                    color: 'rgba(100, 149, 237, 0.6)',
+                    life: 1,
+                    type: 'rain'
+                });
+            } else if (weather.type === 'snowy' && Math.random() < weather.intensity * 0.5) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: -10,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: 1 + Math.random() * 2,
+                    size: 2 + Math.random() * 3,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    life: 1,
+                    type: 'snow'
+                });
+            }
+            
+            particles = particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                
+                if (particle.type === 'rain' && particle.y > height - 100) {
+                    return false;
+                } else if (particle.type === 'snow') {
+                    particle.x += Math.sin(time * 2 + particle.y * 0.01) * 0.5;
+                    if (particle.y > height - 100) {
+                        return false;
+                    }
+                }
+                
+                particle.life -= 0.01;
+                return particle.life > 0 && particle.y < height;
+            });
+        }
+        
+        function drawWeatherEffects() {
+            particles.forEach(particle => {
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                
+                if (particle.type === 'rain') {
+                    ctx.fillRect(particle.x, particle.y, particle.size, particle.size * 10);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            ctx.globalAlpha = 1;
+            
+            if (weather.type === 'cloudy') {
+                ctx.fillStyle = `rgba(200, 200, 200, ${weather.intensity * 0.3})`;
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+        
+        function drawSeasonIndicator() {
+            const x = width / 2;
+            const y = 50;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(x - 60, y - 20, 120, 40);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(season.toUpperCase(), x, y);
+        }
+        
+        function updateBiodiversity() {
+            const totalCreatures = creatures.length;
+            const uniqueTypes = new Set(creatures.map(c => c.type)).size;
+            const healthAverage = creatures.reduce((sum, c) => sum + c.health, 0) / totalCreatures;
+            
+            biodiversityScore = Math.round((uniqueTypes / 4 * 0.4 + healthAverage / 100 * 0.6) * 100);
+            
+            document.getElementById('biodiversityScore').textContent = biodiversityScore;
+            document.getElementById('biodiversityCircle').style.setProperty('--score', `${biodiversityScore * 3.6}deg`);
+            
+            const statusEl = document.getElementById('healthStatus');
+            if (biodiversityScore > 70) {
+                statusEl.className = 'health-status status-good';
+                statusEl.textContent = '🌳 Thriving ecosystem!';
+            } else if (biodiversityScore > 40) {
+                statusEl.className = 'health-status status-medium';
+                statusEl.textContent = '🌿 Growing steadily';
+            } else {
+                statusEl.className = 'health-status status-poor';
+                statusEl.textContent = '🌱 Needs more diversity';
+            }
+        }
+        
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            selectedCreature = null;
+            creatures.forEach(creature => {
+                const dist = Math.hypot(mouseX - creature.x, mouseY - creature.y);
+                if (dist < creature.size) {
+                    selectedCreature = creature;
+                }
+            });
+            
+            if (selectedCreature) {
+                document.getElementById('creatureInfo').style.display = 'block';
+                document.getElementById('creatureEmoji').textContent = selectedCreature.emoji;
+                document.getElementById('creatureAge').textContent = Math.floor(selectedCreature.age);
+                document.getElementById('creatureHealth').textContent = Math.round(selectedCreature.health);
+                document.getElementById('creatureBehavior').textContent = selectedCreature.behavior;
+                document.getElementById('feedHint').style.display = feedingMode ? 'block' : 'none';
+            } else {
+                document.getElementById('creatureInfo').style.display = 'none';
+            }
+        }
+        
+        function handleClick(e) {
+            if (feedingMode && selectedCreature) {
+                selectedCreature.health = Math.min(100, selectedCreature.health + 20);
+                selectedCreature.size = Math.min(40, selectedCreature.size + 2);
+                
+                // Happy particles
+                for (let i = 0; i < 10; i++) {
+                    const angle = (i / 10) * Math.PI * 2;
+                    particles.push({
+                        x: selectedCreature.x,
+                        y: selectedCreature.y,
+                        vx: Math.cos(angle) * 3,
+                        vy: Math.sin(angle) * 3 - 2,
+                        size: 3,
+                        color: '#FFD700',
+                        life: 1,
+                        type: 'joy'
+                    });
+                }
+            }
+        }
+        
+        function changeSeason() {
+            const seasons = ['spring', 'summer', 'autumn', 'winter'];
+            const currentIndex = seasons.indexOf(season);
+            season = seasons[(currentIndex + 1) % 4];
+            
+            plants.forEach(plant => {
+                if (season === 'autumn') {
+                    plant.color = `hsl(${20 + Math.random() * 40}, 70%, 50%)`;
+                } else if (season === 'winter') {
+                    plant.growth *= 0.5;
+                } else if (season === 'spring') {
+                    plant.growth = Math.min(1, plant.growth + 0.3);
+                    plant.color = `hsl(${100 + Math.random() * 40}, 70%, 40%)`;
+                }
+            });
+        }
+        
+        function toggleFeedMode() {
+            feedingMode = !feedingMode;
+            const btn = document.getElementById('feedBtn');
+            if (feedingMode) {
+                btn.classList.add('active');
+                btn.textContent = 'Feeding Mode ON';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'Feed Creatures';
+            }
+        }
+        
+        function changeWeather() {
+            weather.type = document.getElementById('weatherSelect').value;
+            weather.intensity = 0.5 + Math.random() * 0.5;
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>

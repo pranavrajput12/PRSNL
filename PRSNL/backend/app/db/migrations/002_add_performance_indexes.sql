@@ -6,9 +6,9 @@ CREATE INDEX IF NOT EXISTS idx_items_status_created
     ON items(status, created_at DESC) 
     WHERE status IN ('completed', 'pending', 'failed');
 
--- Index for filtering by item_type (stored in metadata)
+-- Index for filtering by type (stored in metadata)
 CREATE INDEX IF NOT EXISTS idx_items_item_type 
-    ON items((metadata->>'item_type'));
+    ON items((metadata->>'type'));
 
 -- Index for platform filtering (for video items)
 CREATE INDEX IF NOT EXISTS idx_items_platform 
@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS idx_items_recent_tagged
 -- Partial index for video items
 CREATE INDEX IF NOT EXISTS idx_items_videos 
     ON items(created_at DESC) 
-    WHERE metadata->>'item_type' = 'video';
+    WHERE metadata->>'type' = 'video';
 
 -- Index for full-text search with specific languages
 CREATE INDEX IF NOT EXISTS idx_items_search_english 

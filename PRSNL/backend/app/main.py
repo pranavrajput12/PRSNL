@@ -58,7 +58,7 @@ app.add_exception_handler(Exception, generic_error_handler)
 
 # Add custom middleware
 app.add_middleware(ExceptionHandlerMiddleware)
-app.add_middleware(AuthMiddleware)  # Add auth middleware after exception handler
+# app.add_middleware(AuthMiddleware)  # Temporarily disabled for debugging
 app.add_middleware(APIResponseTimeMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
@@ -94,6 +94,17 @@ async def startup_event():
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     logger.info("Worker started in background.")
+
+    # STEP 2: Dump all registered routes to debug routing issue
+    logger.warning("🚀 === ALL REGISTERED ROUTES ===")
+    for route in app.routes:
+        if hasattr(route, 'path') and hasattr(route, 'methods'):
+            logger.warning(f"🚀 ROUTE: {route.path} METHODS: {getattr(route, 'methods', 'N/A')}")
+        elif hasattr(route, 'path_regex'):
+            logger.warning(f"🚀 ROUTE: {route.path_regex.pattern} METHODS: {getattr(route, 'methods', 'N/A')}")
+        else:
+            logger.warning(f"🚀 ROUTE: {route} TYPE: {type(route)}")
+    logger.warning("🚀 === END ROUTES ===")
 
     # Schedule periodic cleanup tasks
     storage_manager = StorageManager()
@@ -144,10 +155,16 @@ from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
-from app.api import insights, import_data, file_upload
+from app.api import insights, import_data, file_upload, content_types
 from app.api.v2 import items as v2_items
 
+# STEP 3: Debug capture router inclusion
+logger.warning(f"🔍 ABOUT TO INCLUDE CAPTURE ROUTER: {capture.router}")
+logger.warning(f"🔍 CAPTURE ROUTER ROUTES: {[r.path for r in capture.router.routes]}")
+logger.warning(f"🔍 API_V1_STR: {settings.API_V1_STR}")
+
 app.include_router(capture.router, prefix=settings.API_V1_STR)
+logger.warning("🔍 CAPTURE ROUTER INCLUDED")
 app.include_router(search.router, prefix=settings.API_V1_STR)
 app.include_router(timeline.router, prefix=settings.API_V1_STR)
 app.include_router(items.router, prefix=settings.API_V1_STR)
@@ -167,6 +184,7 @@ app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(import_data.router, prefix=settings.API_V1_STR)
 app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
+app.include_router(content_types.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

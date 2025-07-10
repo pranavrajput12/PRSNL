@@ -8,6 +8,8 @@
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import TagList from '$lib/components/TagList.svelte';
   import { browser } from '$app/environment';
+  import { contentTypes, getTypeIcon } from '$lib/stores/contentTypes';
+  import type { ContentTypeDefinition } from '$lib/types/api';
 
   type Item = {
     id: string;
@@ -36,10 +38,16 @@
   let page = 1;
   let error: Error | null = null;
   let scrollContainer: HTMLElement | null = null;
-  let filterMode = 'all'; // all, videos, documents, links, today
+  let filterMode = 'all'; // all, [dynamic types], today
+  let availableTypes: ContentTypeDefinition[] = [];
 
   onMount(async () => {
     console.log('🔵 Neural Stream: Mounting timeline...');
+    // Initialize content types
+    await contentTypes.init();
+    contentTypes.subscribe(types => {
+      availableTypes = types;
+    });
     await loadTimeline(true);
   });
 
@@ -143,16 +151,23 @@
   }
 
   function getContentTypeBadge(item: Item) {
-    if (item.item_type === 'video') {
-      return { type: 'video', icon: 'video', label: 'VID' };
-    } else if (item.file_path) {
-      return { type: 'document', icon: 'file', label: 'DOC' };
-    } else if (item.item_type === 'article' || (!item.item_type && item.url && !item.file_path)) {
-      return { type: 'article', icon: 'link', label: 'ART' };
-    } else if (item.url) {
-      return { type: 'link', icon: 'external-link', label: 'LINK' };
+    const itemType = item.type || item.item_type || 'article';
+    const typeDefinition = availableTypes.find(t => t.name === itemType);
+    
+    if (typeDefinition) {
+      return {
+        type: typeDefinition.name,
+        icon: getTypeIcon(typeDefinition.name),
+        label: typeDefinition.display_name.substring(0, 3).toUpperCase()
+      };
     }
-    return null;
+    
+    // Fallback
+    return {
+      type: itemType,
+      icon: 'file',
+      label: itemType.substring(0, 3).toUpperCase()
+    };
   }
 
   async function handleScroll() {
@@ -175,18 +190,18 @@
 
     // Apply filter based on mode
     if (filterMode !== 'all') {
-      if (filterMode === 'videos') {
-        filteredItems = group.items.filter(item => item.item_type === 'video');
-      } else if (filterMode === 'documents') {
-        filteredItems = group.items.filter(item => item.file_path);
-      } else if (filterMode === 'links') {
-        filteredItems = group.items.filter(item => item.url && !item.file_path && item.item_type !== 'video');
-      } else if (filterMode === 'today') {
+      if (filterMode === 'today') {
         const today = new Date().toDateString();
         const itemDate = new Date(group.date).toDateString();
         if (itemDate !== today) {
           filteredItems = [];
         }
+      } else {
+        // Filter by content type
+        filteredItems = group.items.filter(item => {
+          const itemType = item.type || item.item_type;
+          return itemType === filterMode;
+        });
       }
     }
 
@@ -220,24 +235,14 @@
       >
         All Traces
       </button>
-      <button 
-        class="control-button {filterMode === 'videos' ? 'active' : ''}"
-        on:click={() => setFilterMode('videos')}
-      >
-        Videos
-      </button>
-      <button 
-        class="control-button {filterMode === 'documents' ? 'active' : ''}"
-        on:click={() => setFilterMode('documents')}
-      >
-        Documents
-      </button>
-      <button 
-        class="control-button {filterMode === 'links' ? 'active' : ''}"
-        on:click={() => setFilterMode('links')}
-      >
-        Links
-      </button>
+      {#each availableTypes.filter(t => t.count > 0) as contentType}
+        <button 
+          class="control-button {filterMode === contentType.name ? 'active' : ''}"
+          on:click={() => setFilterMode(contentType.name)}
+        >
+          {contentType.display_name}
+        </button>
+      {/each}
       <button 
         class="control-button {filterMode === 'today' ? 'active' : ''}"
         on:click={() => setFilterMode('today')}

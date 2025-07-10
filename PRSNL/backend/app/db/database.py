@@ -14,6 +14,18 @@ _engine = None
 _async_session_maker = None
 
 
+async def setup_connection(conn):
+    """Setup individual connections to disable prepared statement caching"""
+    # The correct way to disable prepared statements in asyncpg
+    try:
+        # Access the underlying connection and disable prepared statements
+        if hasattr(conn, '_con'):
+            conn._con._prepared_stmt_cache_size = 0
+        logger.info("🔍 DISABLED prepared statement cache for connection")
+    except Exception as e:
+        logger.warning(f"Could not disable prepared statement cache: {e}")
+        # Don't fail - just log the issue
+
 async def safe_register_vector(conn):
     """Safely register vector type if pgvector is available"""
     try:
@@ -41,6 +53,8 @@ async def create_db_pool():
         min_size=10,
         max_size=20,
         command_timeout=60,
+        server_settings={'jit': 'off'},  # Disable JIT for stability
+        setup=setup_connection,  # Custom setup to disable prepared statements
         init=safe_register_vector  # Use safe registration
     )
 
@@ -138,6 +152,42 @@ async def apply_migrations():
                 print(f"Applied migration: {migration_file_path}")
             else:
                 print(f"Skipping migration {migration_file_path} - transcription column already exists")
+
+        # Migration 006: Add video fields
+        migration_file_path = os.path.join(base_path, "migrations", "006_add_video_fields.sql")
+        if os.path.exists(migration_file_path):
+            # Check if type column already exists (key column from this migration)
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'items' AND column_name = 'type'
+                )
+            """)
+            if not exists:
+                with open(migration_file_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {migration_file_path}")
+            else:
+                print(f"Skipping migration {migration_file_path} - type column already exists")
+
+        # Migration 009: Add content classification fields
+        migration_file_path = os.path.join(base_path, "migrations", "009_add_content_classification.sql")
+        if os.path.exists(migration_file_path):
+            # Check if content_type column already exists (key column from this migration)
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'items' AND column_name = 'content_type'
+                )
+            """)
+            if not exists:
+                with open(migration_file_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {migration_file_path}")
+            else:
+                print(f"Skipping migration {migration_file_path} - content_type column already exists")
 
 async def update_item_embedding(item_id: str, embedding: List[float]):
     """Update the embedding for a specific item"""

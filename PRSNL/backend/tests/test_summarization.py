@@ -27,13 +27,13 @@ async def populate_summarization_data(db_connection: asyncpg.Connection):
 
 Capabilities of AI include: reasoning, knowledge representation, planning, learning, natural language processing (NLP), perception, and the ability to move and manipulate objects. General intelligence is among the field's long-term goals. To approach this problem, researchers have developed methods for solving problems and making decisions, including search and mathematical optimization, formal logic, artificial neural networks, and methods based on statistics, probability, and economics.
 
-AI is used in various applications including: web search engines (e.g., Google Search), recommendation systems (used by YouTube, Amazon, and Netflix), understanding human speech (such as Siri and Alexa), self-driving cars (e.g., Waymo), and competing at the highest level in strategic game systems (such as chess and Go).""", "item_type": "article", "created_at": datetime.now()},
-        {"id": "d0000000-0000-4000-8000-000000000002", "title": "Short Note on Productivity", "content": "Use the Pomodoro Technique for better focus.", "item_type": "note", "created_at": datetime.now() - timedelta(minutes=1)},
+AI is used in various applications including: web search engines (e.g., Google Search), recommendation systems (used by YouTube, Amazon, and Netflix), understanding human speech (such as Siri and Alexa), self-driving cars (e.g., Waymo), and competing at the highest level in strategic game systems (such as chess and Go).""", "type": "article", "created_at": datetime.now()},
+        {"id": "d0000000-0000-4000-8000-000000000002", "title": "Short Note on Productivity", "content": "Use the Pomodoro Technique for better focus.", "type": "note", "created_at": datetime.now() - timedelta(minutes=1)},
     ]
     for item in test_items:
         await db_connection.execute(
-            "INSERT INTO items (id, title, content, item_type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
-            item["id"], item["title"], item["content"], item["item_type"], item["created_at"]
+            "INSERT INTO items (id, title, content, type, created_at, status) VALUES ($1, $2, $3, $4, $5, 'completed')",
+            item["id"], item["title"], item["content"], item["type"], item["created_at"]
         )
 
 @pytest.mark.asyncio

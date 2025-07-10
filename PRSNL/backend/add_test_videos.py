@@ -73,7 +73,7 @@ for video in videos:
     
     cur.execute("""
         INSERT INTO items (
-            id, title, url, item_type, platform, duration, 
+            id, title, url, type, platform, duration, 
             thumbnail_url, status, created_at, metadata
         ) VALUES (
             %s, %s, %s, 'video', %s, %s, 

@@ -22,8 +22,62 @@ from app.services.websocket_manager import websocket_manager
 from app.utils.media_detector import MediaDetector
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  # Force debug level for capture logging
 
 router = APIRouter()
+
+@router.get("/capture/debug") 
+async def debug_capture():
+    """Debug endpoint to test if routes work"""
+    print("🚨 DEBUG ROUTE CALLED")
+    logger.info("🔍 DEBUG ROUTE CALLED")
+    return {"status": "debug_route_works", "message": "Route is accessible"}
+
+@router.post("/capture/test")
+async def test_capture():
+    """Simple test route to verify routing works"""
+    print("🚨 TEST CAPTURE ROUTE CALLED")
+    return {"status": "test_works", "message": "Test route is working"}
+
+@router.post("/capture/ping")
+async def ping_capture():
+    """Minimal smoke test with direct DB insert"""
+    print("🚨 PING CAPTURE ROUTE CALLED")
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO public.items (id, title, type, content_type, enable_summarization, status) 
+                VALUES (gen_random_uuid(), 'Ping Test', 'article', 'auto', false, 'pending')
+            """)
+            return {"ok": True, "message": "Ping successful - direct insert worked"}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+@router.get("/capture/test-db")
+async def test_database():
+    """Test database connection separately"""
+    logger.info("🔍 DB TEST ROUTE CALLED")
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        try:
+            # Test basic connection
+            result = await conn.fetchval("SELECT 1")
+            logger.info(f"🔍 DB TEST: {result}")
+            
+            # Test columns
+            columns = await conn.fetch("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'items' 
+                ORDER BY column_name
+            """)
+            logger.info(f"🔍 ALL COLUMNS: {[r['column_name'] for r in columns]}")
+            
+            return {"status": "success", "columns": [r['column_name'] for r in columns]}
+        except Exception as e:
+            logger.error(f"🔍 DEBUG ERROR: {e}")
+            return {"status": "error", "error": str(e)}
 
 async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict):
     """Updates the item's metadata with progress information."""
@@ -38,11 +92,16 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
 
 from app.services.cache import invalidate_cache, CacheKeys
 
-@router.post("/capture", status_code=status.HTTP_201_CREATED, response_model=CaptureResponse)
-@capture_limiter
-@invalidate_cache(patterns=[f"{CacheKeys.STATS}:*", f"{CacheKeys.SEARCH}:*"])
-async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, db_connection: asyncpg.Connection = Depends(get_db_connection)):
+@router.post("/capture", status_code=status.HTTP_201_CREATED)
+async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks):
     """Capture a new item (web page, note, file, etc.)."""
+    print(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force print
+    logger.error(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force error level
+    logger.info(f"🔍 CAPTURE API DEBUG: Starting capture for URL: {capture_request.url}")
+    
+    # Use the same database connection method as timeline API
+    pool = await get_db_pool()
+    
     # Check if files are provided in the request
     has_files = hasattr(capture_request, 'uploaded_files') and capture_request.uploaded_files
     
@@ -56,31 +115,85 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
     item_id = uuid4()
     item_type = 'article'
     
-    try:
-        # Check for duplicate URL if URL is provided
-        if capture_request.url:
-            existing_item = await db_connection.fetchrow("""
-                SELECT id, title, created_at, status
-                FROM items
-                WHERE url = $1
-                LIMIT 1
-            """, str(capture_request.url))
-            
-            if existing_item:
-                raise InvalidInput(
-                    f"This URL already exists in your knowledge base. "
-                    f"Item: '{existing_item['title']}' (created {existing_item['created_at'].strftime('%Y-%m-%d')})"
-                )
+    async with pool.acquire() as db_connection:
+        logger.info(f"🔍 DB CONNECTION TYPE: {type(db_connection)}")
+        logger.info(f"🔍 DB CONNECTION INFO: {db_connection.get_server_version() if hasattr(db_connection, 'get_server_version') else 'No version method'}")
+        logger.info(f"🔍 CONNECTION DSN: {getattr(db_connection, '_addr', 'Unknown')}")
+        params = getattr(db_connection, '_params', None)
+        logger.info(f"🔍 CONNECTION PARAMS: {params}")
+        if params:
+            logger.info(f"🔍 CONNECTION DB: {getattr(params, 'database', 'Unknown')}")
+            logger.info(f"🔍 CONNECTION USER: {getattr(params, 'user', 'Unknown')}")
+        else:
+            logger.info("🔍 No connection params available")
         
-        # Detect media type
-        media_info = None
-        item_type = 'article'  # Default to article
-        
-        if capture_request.url:
-            media_info = MediaDetector.detect_media_type(str(capture_request.url))
+        try:
+            # Check for duplicate URL if URL is provided
+            if capture_request.url:
+                existing_item = await db_connection.fetchrow("""
+                    SELECT id, title, created_at, status
+                    FROM items
+                    WHERE url = $1
+                    LIMIT 1
+                """, str(capture_request.url))
+                
+                if existing_item:
+                    raise InvalidInput(
+                        f"This URL already exists in your knowledge base. "
+                        f"Item: '{existing_item['title']}' (created {existing_item['created_at'].strftime('%Y-%m-%d')})"
+                    )
             
-            if media_info['type'] == 'video':
-                item_type = 'video'
+            # Determine item type - prioritize user content_type choice
+            media_info = None
+            item_type = 'article'  # Default fallback
+            
+            # Rule 1: If user explicitly chose content_type, respect it (except 'auto')
+            if capture_request.content_type and capture_request.content_type != 'auto':
+                # Map content_type to item_type
+                if capture_request.content_type == 'video':
+                    item_type = 'video'
+                elif capture_request.content_type == 'document':
+                    item_type = 'document'
+                elif capture_request.content_type == 'image':
+                    item_type = 'image'
+                elif capture_request.content_type == 'note':
+                    item_type = 'note'
+                elif capture_request.content_type == 'tutorial':
+                    item_type = 'tutorial'
+                elif capture_request.content_type == 'article':
+                    item_type = 'article'
+                elif capture_request.content_type == 'link':
+                    item_type = 'link'
+                else:
+                    # For other content types, use the content_type as item_type
+                    item_type = capture_request.content_type
+                    
+                logger.info(f"🎯 Using user-selected content_type: {capture_request.content_type} → type: {item_type}")
+            
+            # Rule 2: Auto-detection only when content_type='auto' or not specified
+            elif capture_request.url and (not capture_request.content_type or capture_request.content_type == 'auto'):
+                media_info = MediaDetector.detect_media_type(str(capture_request.url))
+                
+                if media_info['type'] == 'video':
+                    item_type = 'video'
+                elif media_info['type'] == 'image':
+                    item_type = 'image'
+                elif media_info['type'] == 'article':
+                    item_type = 'article'
+                    
+                logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
+            
+            # Rule 3: Special case - if no summarization requested for URL, treat as simple link
+            if (capture_request.url and not capture_request.enable_summarization and 
+                capture_request.content_type not in ['video', 'document', 'image']):
+                item_type = 'link'
+                logger.info(f"🔗 No summarization requested for URL → type: link")
+            
+            # Handle video processing if item is determined to be video
+            if item_type == 'video' and capture_request.url:
+                if not media_info:
+                    media_info = MediaDetector.detect_media_type(str(capture_request.url))
+                    
                 video_processor = VideoProcessor()
                 video_info = await video_processor.get_video_info(str(capture_request.url))
                 
@@ -92,95 +205,144 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     except ValueError as e:
                         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
                         raise InvalidInput(f"Video validation failed: {e}")
-            elif media_info['type'] == 'image':
-                item_type = 'image'
-            elif media_info['type'] == 'article':
-                item_type = 'article'
-            # Add other media types as needed
         
-        # Insert initial item record with metadata for capture type
-        metadata = {
-            "capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page',
-            "media_info": media_info,
-            "type": item_type,  # Store item type in metadata
-            "content_type": capture_request.content_type  # Store user-selected content type
-        }
-        logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
+            # Insert initial item record with metadata for capture type
+            metadata = {
+                "capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page',
+                "media_info": media_info,
+                "type": item_type,  # Store item type in metadata
+                "content_type": capture_request.content_type  # Store user-selected content type
+            }
+            logger.info(f"Creating item {item_id} with type {item_type}, URL: {capture_request.url}")
+            
+            # For content-only captures, store content in raw_content field
+            # Handle both content and highlight fields (highlight is legacy field name)
+            initial_content = capture_request.content if capture_request.content else capture_request.highlight if hasattr(capture_request, 'highlight') else None
         
-        # For content-only captures, store content in raw_content field
-        # Handle both content and highlight fields (highlight is legacy field name)
-        initial_content = capture_request.content if capture_request.content else capture_request.highlight if hasattr(capture_request, 'highlight') else None
+            # Add detailed debugging for the INSERT statement
+            logger.info(f"🔍 ABOUT TO EXECUTE INSERT:")
+            logger.info(f"🔍 - item_id: {item_id}")
+            logger.info(f"🔍 - url: {capture_request.url}")
+            logger.info(f"🔍 - title: {capture_request.title}")
+            logger.info(f"🔍 - type: {type}")
+            logger.info(f"🔍 - content_type: {capture_request.content_type}")
+            logger.info(f"🔍 - enable_summarization: {capture_request.enable_summarization}")
+            logger.info(f"🔍 - metadata: {json.dumps(metadata)}")
+            
+            # Test the database connection first
+            try:
+                test_result = await db_connection.fetchval("SELECT 1")
+                logger.info(f"🔍 DB CONNECTION TEST: {test_result}")
+            except Exception as e:
+                logger.error(f"🔍 DB CONNECTION TEST FAILED: {e}")
+            
+            # Test if the table exists and columns exist
+            try:
+                columns_check = await db_connection.fetch("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'items' 
+                    AND column_name IN ('content_type', 'enable_summarization')
+                    ORDER BY column_name
+                """)
+                logger.info(f"🔍 COLUMN CHECK RESULT: {[row['column_name'] for row in columns_check]}")
+            except Exception as e:
+                logger.error(f"🔍 COLUMN CHECK FAILED: {e}")
+            
+            # Now try the actual INSERT
+            sql_query = """
+                INSERT INTO public.items (id, url, title, raw_content, status, type, content_type, enable_summarization, metadata)
+                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb)
+            """
+            params = (item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, capture_request.content_type, capture_request.enable_summarization, json.dumps(metadata))
+            
+            logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")
+            logger.info(f"🔍 EXACT PARAMS: {params}")
+            
+            # Step 3: Log search_path and current_schema
+            try:
+                search_path_row = await db_connection.fetchrow("SHOW search_path")
+                logger.warning(f"🔍 search_path = {search_path_row['search_path']}")
+                schema_row = await db_connection.fetchrow("SELECT current_schema()")
+                logger.warning(f"🔍 current_schema = {schema_row['current_schema']}")
+            except Exception as e:
+                logger.error(f"🔍 SCHEMA CHECK FAILED: {e}")
+            
+            # Step 4: Enhanced SQL execution with detailed logging
+            try:
+                await db_connection.execute(sql_query, *params)
+                logger.info(f"🔍 INSERT SUCCESSFUL for item_id: {item_id}")
+            except Exception as e:
+                logger.error("🚨 FAILED SQL: %s — ARGS: %r", sql_query, params)
+                logger.error(f"🔍 INSERT FAILED: {e}")
+                logger.error(f"🔍 INSERT ERROR TYPE: {type(e)}")
+                logger.error(f"🔍 INSERT ERROR DETAILS: {str(e)}")
+                raise
+            
+            logger.info(f"Successfully inserted item {item_id} into database")
+            
+            # Process tags if provided
+            if capture_request.tags:
+                for tag_name in capture_request.tags:
+                    # Get or create tag
+                    tag_id = await db_connection.fetchval("""
+                        INSERT INTO tags (name) VALUES ($1)
+                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                        RETURNING id
+                    """, tag_name.lower())
+                    
+                    # Link tag to item
+                    await db_connection.execute("""
+                        INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                        ON CONFLICT DO NOTHING
+                    """, item_id, tag_id)
         
-        await db_connection.execute("""
-            INSERT INTO items (id, url, title, raw_content, status, type, metadata, content_type, enable_summarization)
-            VALUES ($1, $2, $3, $4, 'pending', $5, $6::jsonb, $7, $8)
-        """, item_id, str(capture_request.url) if capture_request.url else None, capture_request.title or 'Untitled', initial_content, item_type, json.dumps(metadata), capture_request.content_type or 'auto', capture_request.enable_summarization or False)
-        
-        logger.info(f"Successfully inserted item {item_id} into database")
-        
-        # Process tags if provided
-        if capture_request.tags:
-            for tag_name in capture_request.tags:
-                # Get or create tag
-                tag_id = await db_connection.fetchval("""
-                    INSERT INTO tags (name) VALUES ($1)
-                    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                    RETURNING id
-                """, tag_name.lower())
-                
-                # Link tag to item
-                await db_connection.execute("""
-                    INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
-                    ON CONFLICT DO NOTHING
-                """, item_id, tag_id)
-        
-        if item_type == 'video':
-            # Special handling for Instagram
-            if capture_request.url and 'instagram.com' in str(capture_request.url).lower():
-                background_tasks.add_task(process_instagram_bookmark, item_id, str(capture_request.url))
+            if item_type == 'video':
+                # Special handling for Instagram
+                if capture_request.url and 'instagram.com' in str(capture_request.url).lower():
+                    background_tasks.add_task(process_instagram_bookmark, item_id, str(capture_request.url))
+                else:
+                    # Process video metadata quickly, then enhance with AI in background if requested
+                    background_tasks.add_task(process_video_metadata_fast, item_id, str(capture_request.url), capture_request.enable_summarization)
             else:
-                # Process video metadata quickly, then enhance with AI in background
-                background_tasks.add_task(process_video_metadata_fast, item_id, str(capture_request.url))
-        else:
-            # Let the worker handle all non-video processing
-            logger.info(f"Item {item_id} will be processed by worker")
-        
-        VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
-        logger.info(f"Capture initiated successfully for item {item_id}")
-        
-        # No duplicate check needed here - already checked before item creation
-        duplicate_info = None
-        
-        return CaptureResponse(
-            id=item_id,
-            status=ItemStatus.PENDING,
-            message="Item capture initiated",
-            duplicate_info=duplicate_info
-        )
-        
-    except InvalidInput:
-        # Re-raise InvalidInput exceptions without wrapping them
-        raise
-    except Exception as e:
-        logger.error(f"Failed to capture item: {str(e)}", exc_info=True)
-        # Update item status to failed if initial insertion happened
-        try:
-            pool = await get_db_pool()
-            async with pool.acquire() as conn:
-                await conn.execute("""
-                    UPDATE items
-                    SET status = 'failed',
-                        metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
-                    WHERE id = $1
-                """, item_id, str(e))
-        except Exception as update_error:
-            logger.error(f"Failed to update item status: {update_error}")
-        VIDEO_CAPTURE_REQUESTS.labels(status='internal_error').inc()
-        raise InternalServerError(f"Failed to capture item: {e}")
+                # Let the worker handle all non-video processing
+                logger.info(f"Item {item_id} will be processed by worker")
+            
+            VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
+            logger.info(f"Capture initiated successfully for item {item_id}")
+            
+            # No duplicate check needed here - already checked before item creation
+            duplicate_info = None
+            
+            return CaptureResponse(
+                id=item_id,
+                status=ItemStatus.PENDING,
+                message="Item capture initiated",
+                duplicate_info=duplicate_info
+            )
+            
+        except InvalidInput:
+            # Re-raise InvalidInput exceptions without wrapping them
+            raise
+        except Exception as e:
+            logger.error(f"Failed to capture item: {str(e)}", exc_info=True)
+            # Update item status to failed if initial insertion happened
+            try:
+                async with pool.acquire() as conn:
+                    await conn.execute("""
+                        UPDATE items
+                        SET status = 'failed',
+                            metadata = jsonb_set(COALESCE(metadata, '{}'), '{error}', to_jsonb($2::text))
+                        WHERE id = $1
+                    """, item_id, str(e))
+            except Exception as update_error:
+                logger.error(f"Failed to update item status: {update_error}")
+            VIDEO_CAPTURE_REQUESTS.labels(status='internal_error').inc()
+            raise InternalServerError(f"Failed to capture item: {e}")
 
 
-async def process_video_metadata_fast(item_id: uuid4, url: str):
-    """Fast video metadata processing without AI - AI enhancement happens in background"""
+async def process_video_metadata_fast(item_id: uuid4, url: str, enable_summarization: bool = False):
+    """Fast video metadata processing - AI enhancement happens only if requested"""
     video_processor = VideoProcessor()
     pool = await get_db_pool()
     start_time = time.time()
@@ -234,9 +396,13 @@ async def process_video_metadata_fast(item_id: uuid4, url: str):
         
         logger.info(f"🟢 Fast video metadata processing completed for item {item_id} in {time.time() - start_time:.2f}s")
         
-        # Now enhance with AI in background (non-blocking)
-        # We'll use asyncio.create_task to run in background
-        asyncio.create_task(enhance_video_with_ai(item_id, url, video_info, media_info))
+        # Only enhance with AI if summarization is requested
+        if enable_summarization:
+            logger.info(f"🤖 AI summarization enabled for video {item_id}, starting AI enhancement")
+            # Run AI enhancement in background (non-blocking)
+            asyncio.create_task(enhance_video_with_ai(item_id, url, video_info, media_info))
+        else:
+            logger.info(f"🚫 AI summarization disabled for video {item_id}, keeping original metadata")
         
     except Exception as e:
         logger.error(f"🔴 Error in fast video processing for item {item_id}: {str(e)}", exc_info=True)
@@ -305,7 +471,7 @@ Author: {video_info.get('author', 'Unknown')}
                 WHERE id = $1
             """,
                 item_id,
-                processed_content.title or video_info.get('title', 'Unknown'),
+                video_info.get('title', 'Unknown'),  # Always use original video title, not AI-generated
                 processed_content.summary,
                 json.dumps(enhanced_metadata)
             )
@@ -382,8 +548,8 @@ Video Title: {video_data.title}
 Description: {video_data.description}
 Platform: {video_data.platform}
 Duration: {video_data.duration} seconds
-Uploader: {video_data.item_metadata.get('uploader', 'Unknown')}
-View Count: {video_data.item_metadata.get('view_count', 'Unknown')}
+Uploader: {video_data.metadata.get('uploader', 'Unknown')}
+View Count: {video_data.metadata.get('view_count', 'Unknown')}
 
 Full Description:
 {video_data.description or 'No description available'}
@@ -399,7 +565,7 @@ Full Description:
         all_tags = list(set(processed_content.tags))
         
         # Update metadata with AI analysis
-        enhanced_metadata = video_data.item_metadata.copy()
+        enhanced_metadata = video_data.metadata.copy()
         enhanced_metadata['ai_analysis'] = {
             'summary': processed_content.summary,
             'tags': processed_content.tags,
@@ -471,7 +637,7 @@ Full Description:
             """,
                 item_id,
                 video_data.video_path,
-                json.dumps(video_data.item_metadata) if isinstance(video_data.item_metadata, dict) else video_data.item_metadata
+                json.dumps(video_data.metadata) if isinstance(video_data.metadata, dict) else video_data.metadata
             )
             
         logger.info(f"Successfully processed video item {item_id}")

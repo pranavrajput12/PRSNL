@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PRSNL"
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3002", "http://localhost:5173"]
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3002", "http://localhost:3003", "http://localhost:5173"]
     
     # LLM
     AZURE_OPENAI_API_KEY: Optional[str] = None

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { captureItem, getRecentTags, getAISuggestions } from '$lib/api';
-  import type { CaptureRequest } from '$lib/types/api';
+  import type { CaptureRequest, ContentTypeDefinition } from '$lib/types/api';
   import { addNotification } from '$lib/stores/app';
   import { isVideoUrl, getVideoPlatform, estimateDownloadTime, formatTime } from '$lib/utils/url';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -13,6 +13,7 @@
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   import FileUpload from '$lib/components/FileUpload.svelte';
+  import { contentTypes, getTypeIcon } from '$lib/stores/contentTypes';
 
   // Form fields and state
   let url = '';
@@ -51,7 +52,8 @@
   let enableSummarization = false;
   
   // Content type selector
-  let contentType = 'auto'; // auto, document, video, article, tutorial, image, note, link
+  let contentType = 'auto'; // auto or any dynamic type from backend
+  let availableTypes: ContentTypeDefinition[] = [];
   
   // File upload state
   let uploadedFiles = [];
@@ -87,6 +89,12 @@
     loadRecentTags();
     window.addEventListener('paste', handlePaste);
     setupDragAndDrop();
+    
+    // Initialize content types
+    contentTypes.init();
+    contentTypes.subscribe(types => {
+      availableTypes = types;
+    });
     
     // Initialize terminal
     addTerminalLine('> NEURAL PROCESSING TERMINAL v3.0 INITIALIZED');
@@ -167,6 +175,11 @@
       if (suggestions.title && !title) {
         title = suggestions.title;
         addTerminalLine(`> TITLE_EXTRACTED: ${suggestions.title.substring(0, 30)}...`);
+      }
+      
+      if (suggestions.summary && !highlight) {
+        highlight = suggestions.summary;
+        addTerminalLine(`> SUMMARY_EXTRACTED: ${suggestions.summary.substring(0, 50)}...`);
       }
       
       if (suggestions.tags && suggestions.tags.length > 0 && tags.length === 0) {
@@ -426,25 +439,40 @@
           
           <div class="step-content">
             <div class="content-type-grid">
-              {#each [
-                { value: 'auto', label: 'AUTO', icon: '🤖' },
-                { value: 'document', label: 'DOC', icon: '📄' },
-                { value: 'video', label: 'VID', icon: '🎥' },
-                { value: 'article', label: 'ART', icon: '📰' },
-                { value: 'tutorial', label: 'TUT', icon: '🎓' },
-                { value: 'image', label: 'IMG', icon: '🖼️' },
-                { value: 'note', label: 'NOTE', icon: '📝' },
-                { value: 'link', label: 'LINK', icon: '🔗' }
-              ] as option}
+              <!-- Auto option always available -->
+              <button
+                type="button"
+                class="content-type-option"
+                class:active={contentType === 'auto'}
+                on:click={() => selectContentType('auto')}
+                disabled={isSubmitting}
+              >
+                <span class="option-icon">🤖</span>
+                <span class="option-label">AUTO</span>
+              </button>
+              
+              <!-- Dynamic content types from backend -->
+              {#each availableTypes as type}
                 <button
                   type="button"
                   class="content-type-option"
-                  class:active={contentType === option.value}
-                  on:click={() => selectContentType(option.value)}
+                  class:active={contentType === type.name}
+                  on:click={() => selectContentType(type.name)}
                   disabled={isSubmitting}
                 >
-                  <span class="option-icon">{option.icon}</span>
-                  <span class="option-label">{option.label}</span>
+                  <span class="option-icon">
+                    {#if type.name === 'document'}📄
+                    {:else if type.name === 'video'}🎥
+                    {:else if type.name === 'article'}📰
+                    {:else if type.name === 'tutorial'}🎓
+                    {:else if type.name === 'image'}🖼️
+                    {:else if type.name === 'note'}📝
+                    {:else if type.name === 'link'}🔗
+                    {:else if type.name === 'audio'}🎵
+                    {:else if type.name === 'code'}💻
+                    {:else}📋{/if}
+                  </span>
+                  <span class="option-label">{type.display_name.substring(0, 4).toUpperCase()}</span>
                 </button>
               {/each}
             </div>

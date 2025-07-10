@@ -1,0 +1,7 @@
+Simple Project Notes
+
+- Task 1: Update dependencies
+- Task 2: Fix unit tests  
+- Task 3: Deploy to staging
+
+Meeting notes from today's standup. No AI processing needed for this simple document.

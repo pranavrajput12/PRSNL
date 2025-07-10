@@ -191,13 +191,11 @@ class CoreDataManager {
                 var metadata: AttachmentMetadata? = nil
                 if let alt = cdAttachment.value(forKey: "alt") as? String,
                    let title = cdAttachment.value(forKey: "title") as? String,
-                   let isRemote = cdAttachment.value(forKey: "isRemote") as? Bool,
-                   let index = cdAttachment.value(forKey: "index") as? Int32 {
+                   let isRemote = cdAttachment.value(forKey: "isRemote") as? Bool {
                     metadata = AttachmentMetadata(
                         alt: alt,
                         title: title,
-                        isRemote: isRemote,
-                        index: Int(index)
+                        isRemote: isRemote
                     )
                 }
                 
@@ -226,7 +224,14 @@ class CoreDataManager {
             itemType: ItemType(rawValue: itemType) ?? .note,
             attachments: attachments,
             keyPoints: nil, // TODO: Add keyPoints to Core Data model
-            category: nil // TODO: Add category to Core Data model
+            category: nil, // TODO: Add category to Core Data model
+            isFavorite: false,
+            sourceUrl: nil,
+            author: nil,
+            publishedAt: nil,
+            readingTime: nil,
+            imageUrl: nil,
+            source: nil
         )
     }
     
@@ -270,9 +275,6 @@ class CoreDataManager {
                     cdAttachment.setValue(metadata.alt, forKey: "alt")
                     cdAttachment.setValue(metadata.title, forKey: "title")
                     cdAttachment.setValue(metadata.isRemote, forKey: "isRemote")
-                    if let index = metadata.index {
-                        cdAttachment.setValue(Int32(index), forKey: "index")
-                    }
                 }
                 
                 cdAttachment.setValue(cdItem, forKey: "item")
@@ -554,13 +556,11 @@ class CoreDataManager {
                 var metadata: AttachmentMetadata? = nil
                 if let alt = cdAttachment.value(forKey: "alt") as? String,
                    let title = cdAttachment.value(forKey: "title") as? String,
-                   let isRemote = cdAttachment.value(forKey: "isRemote") as? Bool,
-                   let index = cdAttachment.value(forKey: "index") as? Int32 {
+                   let isRemote = cdAttachment.value(forKey: "isRemote") as? Bool {
                     metadata = AttachmentMetadata(
                         alt: alt,
                         title: title,
-                        isRemote: isRemote,
-                        index: Int(index)
+                        isRemote: isRemote
                     )
                 }
                 

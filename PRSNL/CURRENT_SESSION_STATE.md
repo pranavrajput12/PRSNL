@@ -1,5 +1,12 @@
 # 🔄 Current Session State
 
+## ⚠️ CRITICAL ENVIRONMENT INFO
+- **Container Runtime**: RANCHER DESKTOP (NOT Docker)
+- **Frontend Port**: 3002 (NEVER 3003)
+- **Backend Port**: 8000
+- **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
+- **ALWAYS CHECK**: CLAUDE.md for project configuration
+
 ## 📊 Session Status
 **Status**: IDLE
 **Last Updated**: 2025-07-10 22:00

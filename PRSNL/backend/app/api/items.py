@@ -37,12 +37,7 @@ async def get_item_detail(item_id: UUID):
                     i.url,
                     i.summary,
                     i.processed_content as content,
-                    CASE 
-                        WHEN i.url LIKE '%youtube.com%' OR i.url LIKE '%youtu.be%' THEN 'video'
-                        WHEN i.url LIKE '%.pdf' THEN 'pdf'
-                        WHEN i.metadata->>'type' IS NOT NULL THEN i.metadata->>'type'
-                        ELSE 'article'
-                    END as item_type,
+                    i.type as type,
                     i.created_at,
                     i.updated_at,
                     COALESCE(i.thumbnail_url, i.metadata->'video_metadata'->>'thumbnail', i.metadata->>'thumbnail_url') as thumbnail_url,
@@ -69,7 +64,7 @@ async def get_item_detail(item_id: UUID):
             # Debug log
             import logging
             logger = logging.getLogger(__name__)
-            logger.info(f"🔵 Row data for {item_id}: item_type={row.get('item_type')}, platform={row.get('platform')}, thumbnail_url={row.get('thumbnail_url')}, duration={row.get('duration')}")
+            logger.info(f"🔵 Row data for {item_id}: type={row.get('type')}, platform={row.get('platform')}, thumbnail_url={row.get('thumbnail_url')}, duration={row.get('duration')}")
             logger.info(f"🔵 Metadata type: {type(row.get('metadata'))}")
             if row.get('metadata'):
                 logger.info(f"🔵 Metadata keys: {list(row.get('metadata').keys()) if isinstance(row.get('metadata'), dict) else 'Not a dict'}")
@@ -85,7 +80,7 @@ async def get_item_detail(item_id: UUID):
                 "url": row["url"],
                 "content": row["content"],
                 "summary": row["summary"],
-                "item_type": row["item_type"],
+                "type": row["type"],
                 "created_at": row["created_at"].isoformat(),
                 "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
                 "tags": row["tags"],

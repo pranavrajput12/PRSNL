@@ -129,7 +129,7 @@ Content: {content[:3000]}...
 
 Provide analysis in this exact JSON format:
 {{
-    "title": "A clear, descriptive title (max 100 chars)",
+    "title": "The original title or a clear, descriptive title based on the content (max 100 chars, do NOT add 'Analysis' or similar suffixes)",
     "summary": "A concise 2-3 sentence summary",
     "detailed_summary": "A comprehensive paragraph summary",
     "category": "One of: article, tutorial, reference, news, discussion, video, other",

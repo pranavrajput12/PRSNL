@@ -58,7 +58,7 @@ class DynamicInsightsService:
             if user_id:
                 # For now, skip user filtering until we fix the JSON field access
                 pass
-                # query = query.where(Item.item_metadata['user_id'].astext == user_id)
+                # query = query.where(Item.metadata['user_id'].astext == user_id)
             
             logger.debug("About to execute query")
             result = await db.execute(query.order_by(Item.created_at.desc()))
@@ -293,7 +293,7 @@ class DynamicInsightsService:
             
             for item in items:
                 # Determine content type
-                if item.item_metadata.get('video'):
+                if item.metadata.get('video'):
                     content_types['video'] += 1
                 elif 'github.com' in item.url:
                     content_types['code'] += 1
@@ -740,7 +740,7 @@ Format: Topic: Reason (one line each)"""
                 domains.add(self._extract_domain(item.url))
                 
                 # Determine content type
-                if item.item_metadata.get('video'):
+                if item.metadata.get('video'):
                     content_types.add('video')
                 elif 'github.com' in item.url:
                     content_types.add('code')

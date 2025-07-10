@@ -14,7 +14,8 @@ import type {
   UpdateItemRequest,
   APIError,
   TimelineItem,
-  InsightsResponse
+  InsightsResponse,
+  ContentTypesResponse
 } from './types/api';
 
 // Add RequestInit type for fetch API
@@ -201,7 +202,7 @@ export async function searchItems(
         snippet: item.summary || '',
         tags: item.tags || [],
         created_at: item.createdAt || item.created_at,
-        type: item.type || item.item_type || 'article',
+        type: item.type || item.item_type,
         similarity_score: item.similarity_score || item.similarity
       }))
     };
@@ -280,7 +281,7 @@ export async function getTimeline(page: number = 1, limit: number = 20): Promise
       // Preserve summary for the timeline page
       summary: item.summary || '',
       // Include additional fields the timeline might use
-      type: item.item_type || item.type || 'article',
+      type: item.type || item.item_type,
       status: item.status,
       thumbnail_url: item.thumbnail_url,
       duration: item.duration,
@@ -339,7 +340,7 @@ export async function getTimelineCursor(cursor: string | null = null, limit: num
       // Preserve summary for the timeline page
       summary: item.summary || '',
       // Include additional fields the timeline might use
-      type: item.item_type || item.type || 'article',
+      type: item.type || item.item_type,
       status: item.status,
       thumbnail_url: item.thumbnail_url,
       duration: item.duration,
@@ -497,6 +498,28 @@ export async function getPersonalityAnalysis(timeRange: string = '30d'): Promise
   return fetchWithErrorHandling(`/insights/personality-analysis?time_range=${timeRange}`);
 }
 
+
+/**
+ * Content Types API
+ */
+export async function getContentTypes(): Promise<ContentTypesResponse> {
+  return fetchWithErrorHandling<ContentTypesResponse>('/content-types');
+}
+
+export const api = {
+  get: fetchWithErrorHandling,
+  post: <T>(endpoint: string, data: any) => fetchWithErrorHandling<T>(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  delete: <T>(endpoint: string) => fetchWithErrorHandling<T>(endpoint, {
+    method: 'DELETE'
+  }),
+  patch: <T>(endpoint: string, data: any) => fetchWithErrorHandling<T>(endpoint, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  })
+};
 
 /**
  * AI Features API

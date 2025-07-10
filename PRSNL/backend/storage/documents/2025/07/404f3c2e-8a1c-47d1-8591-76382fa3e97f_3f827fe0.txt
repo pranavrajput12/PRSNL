@@ -1,0 +1,15 @@
+Advanced Machine Learning Concepts
+
+1. Neural Networks
+Deep learning architectures for complex pattern recognition.
+
+2. Reinforcement Learning  
+Algorithms that learn through interaction with environments.
+
+3. Natural Language Processing
+Text analysis and generation techniques.
+
+4. Computer Vision
+Image and video processing with AI.
+
+This document covers fundamental AI concepts for testing document upload functionality with AI analysis enabled.

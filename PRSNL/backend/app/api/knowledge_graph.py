@@ -80,7 +80,7 @@ async def create_relationship(
             target_id=request.target_id,
             relationship_type=request.relationship_type,
             confidence=request.confidence,
-            metadata=request.item_metadata,
+            metadata=request.metadata,
             db=db
         )
         
@@ -264,7 +264,7 @@ async def get_item_relationships(
             raise HTTPException(status_code=404, detail="Item not found")
         
         # Get outgoing relationships
-        outgoing = item.item_metadata.get("relationships", []) if item.item_metadata else []
+        outgoing = item.metadata.get("relationships", []) if item.metadata else []
         
         # Get incoming relationships
         import json
@@ -281,7 +281,7 @@ async def get_item_relationships(
         
         incoming = []
         for row in incoming_result.all():
-            relationships = row.item_metadata.get("relationships", []) if row.item_metadata else []
+            relationships = row.metadata.get("relationships", []) if row.metadata else []
             for rel in relationships:
                 if rel["target_id"] == item_id:
                     incoming.append({
@@ -335,7 +335,7 @@ async def delete_relationship(
             raise HTTPException(status_code=404, detail="Source item not found")
         
         # Get relationships
-        relationships = source_item.item_metadata.get("relationships", []) if source_item.item_metadata else []
+        relationships = source_item.metadata.get("relationships", []) if source_item.metadata else []
         
         # Filter out the relationship to delete
         if relationship_type:
@@ -353,9 +353,9 @@ async def delete_relationship(
             raise HTTPException(status_code=404, detail="Relationship not found")
         
         # Update metadata
-        if not source_item.item_metadata:
-            source_item.item_metadata = {}
-        source_item.item_metadata["relationships"] = new_relationships
+        if not source_item.metadata:
+            source_item.metadata = {}
+        source_item.metadata["relationships"] = new_relationships
         
         await db.commit()
         

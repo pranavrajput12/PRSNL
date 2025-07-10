@@ -226,8 +226,8 @@ async def batch_process_videos(
                     Item.url.like('%instagram.com%')
                 ),
                 or_(
-                    Item.item_type == None,
-                    Item.item_type != 'video'
+                    Item.type == None,
+                    Item.type != 'video'
                 )
             )
         ).limit(20)  # Process in batches
@@ -290,7 +290,7 @@ async def get_saved_mini_courses(
                 COUNT(*) as video_count
             FROM items
             WHERE 
-                item_type = 'video'
+                type = 'video'
                 AND category IS NOT NULL
             GROUP BY LOWER(category)
             HAVING COUNT(*) >= 3
@@ -335,7 +335,7 @@ async def get_video_stats(
         from app.models.item import Item
         
         # Total video count
-        total_query = select(func.count(Item.id)).where(Item.item_type == "video")
+        total_query = select(func.count(Item.id)).where(Item.type == "video")
         total_result = await db.execute(total_query)
         total_videos = total_result.scalar() or 0
         
@@ -345,7 +345,7 @@ async def get_video_stats(
                 metadata->'video'->>'platform' as platform,
                 COUNT(*) as count
             FROM items
-            WHERE item_type = 'video'
+            WHERE type = 'video'
             GROUP BY metadata->'video'->>'platform'
         """)
         
@@ -360,7 +360,7 @@ async def get_video_stats(
             SELECT COUNT(*) as count
             FROM items
             WHERE 
-                item_type = 'video'
+                type = 'video'
                 AND (metadata->'video'->>'has_transcript')::boolean = true
         """)
         

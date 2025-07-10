@@ -251,7 +251,7 @@ class Item(ItemBase):
     accessed_at: datetime
     access_count: int = Field(ge=0)
     status: ItemStatus
-    item_type: Optional[str] = None
+    type: Optional[str] = None
     platform: Optional[str] = None
     duration: Optional[int] = None
     file_path: Optional[str] = None

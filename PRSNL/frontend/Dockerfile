@@ -31,13 +31,13 @@ COPY --from=builder /app/svelte.config.js ./
 COPY --from=builder /app/src ./src
 
 # Expose port
-EXPOSE 3002
+EXPOSE 3003
 
 # Set environment variables
-ENV PORT=3002
+ENV PORT=3003
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 ENV PUBLIC_API_URL=http://backend:8000
 
 # For development/preview mode
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3002"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3003"]

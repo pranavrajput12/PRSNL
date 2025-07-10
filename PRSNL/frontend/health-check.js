@@ -5,7 +5,7 @@ const http = require('http');
 const checkHealth = () => {
   const options = {
     hostname: 'localhost',
-    port: 3002,
+    port: 3003,
     path: '/',
     method: 'GET',
     timeout: 5000

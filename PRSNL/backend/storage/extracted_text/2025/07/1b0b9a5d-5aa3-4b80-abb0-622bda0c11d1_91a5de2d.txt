@@ -1,0 +1,10 @@
+Test Document Content
+
+This is a test document to verify that documents are properly categorized and displayed in the PRSNL system.
+
+Key Points:
+- Documents should appear in the document filter
+- They should show with the document type
+- The content type system should be dynamic
+
+This document contains important information for testing purposes.

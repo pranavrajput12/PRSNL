@@ -12,6 +12,7 @@
   import TagList from '$lib/components/TagList.svelte';
   import Calendar3D from '$lib/components/Calendar3D.svelte';
   import Mac3D from '$lib/components/Mac3D.svelte';
+  import { getTypeIcon } from '$lib/stores/contentTypes';
   
   type Item = {
     id: string;
@@ -316,7 +317,7 @@
                   </div>
                   <div class="node-content">
                     <div class="node-icon">
-                      <Icon name={result.item_type === 'video' ? 'video' : 'link'} size="small" />
+                      <Icon name={getTypeIcon(result.type || result.item_type || 'article')} size="small" />
                     </div>
                     <div class="node-info">
                       <h4>{result.title}</h4>

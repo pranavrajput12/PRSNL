@@ -84,7 +84,7 @@ for article in articles:
     
     cur.execute("""
         INSERT INTO items (
-            id, title, url, item_type, platform,
+            id, title, url, type, platform,
             summary, status, created_at, metadata
         ) VALUES (
             %s, %s, %s, 'article', %s,
@@ -117,7 +117,7 @@ for tweet in tweets:
     
     cur.execute("""
         INSERT INTO items (
-            id, title, url, item_type, platform,
+            id, title, url, type, platform,
             processed_content, status, created_at, metadata
         ) VALUES (
             %s, %s, %s, 'tweet', %s,
@@ -163,7 +163,7 @@ for image in images:
     
     cur.execute("""
         INSERT INTO items (
-            id, title, url, item_type, platform,
+            id, title, url, type, platform,
             summary, status, created_at, metadata
         ) VALUES (
             %s, %s, %s, 'image', 'web',

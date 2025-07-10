@@ -11,7 +11,7 @@ fake = Faker()
 embedding_service = EmbeddingService()
 ai_service = UnifiedAIService()
 
-async def create_item(pool, item_type, title, content, url, tags, summary, category, created_at):
+async def create_item(pool, type, title, content, url, tags, summary, category, created_at):
     """Inserts a single item into the database."""
     async with pool.acquire() as conn:
         # Generate embedding for the content
@@ -22,7 +22,7 @@ async def create_item(pool, item_type, title, content, url, tags, summary, categ
 
         # Prepare metadata
         metadata = {
-            "type": item_type,
+            "type": type,
             "tags": tags_str,
             "category": category,
             "source": url.split('/')[2] if url else "manual",
@@ -30,22 +30,22 @@ async def create_item(pool, item_type, title, content, url, tags, summary, categ
         }
         
         # Add type-specific metadata
-        if item_type == "video":
+        if type == "video":
             metadata["duration"] = str(random.randint(60, 3600)) # seconds
             metadata["platform"] = "youtube" if "youtube.com" in url else "other"
             metadata["thumbnail_url"] = fake.image_url()
-        elif item_type == "article":
+        elif type == "article":
             metadata["author"] = fake.name()
             metadata["read_time"] = f"{random.randint(2, 20)} min"
-        elif item_type == "tweet":
+        elif type == "tweet":
             metadata["author"] = fake.user_name()
             metadata["likes"] = random.randint(10, 1000)
             metadata["retweets"] = random.randint(5, 500)
-        elif item_type == "github_repo":
+        elif type == "github_repo":
             metadata["owner"] = fake.user_name()
             metadata["stars"] = random.randint(100, 10000)
             metadata["language"] = random.choice(["Python", "JavaScript", "TypeScript", "Go", "Rust"])
-        elif item_type == "pdf":
+        elif type == "pdf":
             metadata["pages"] = random.randint(5, 100)
             metadata["file_size"] = f"{random.randint(1, 50)}MB"
 
@@ -62,7 +62,7 @@ async def create_item(pool, item_type, title, content, url, tags, summary, categ
             json.dumps(metadata),
             created_at
         )
-    print(f"Added {item_type}: {title}")
+    print(f"Added {type}: {title}")
 
 async def populate_test_data(num_items=50):
     """Populates the database with diverse test data."""
@@ -71,7 +71,7 @@ async def populate_test_data(num_items=50):
     item_types = ["article", "video", "tweet", "github_repo", "pdf"]
     
     for i in range(num_items):
-        item_type = random.choice(item_types)
+        type = random.choice(item_types)
         title = fake.sentence(nb_words=random.randint(3, 8)).replace('.', '')
         content = fake.paragraph(nb_sentences=random.randint(5, 15))
         url = fake.url()
@@ -80,7 +80,7 @@ async def populate_test_data(num_items=50):
         category = random.choice(["Technology", "Science", "News", "Programming", "Education", "Entertainment"])
         created_at = datetime.now() - timedelta(days=random.randint(0, 365))
 
-        await create_item(pool, item_type, title, content, url, tags, summary, category, created_at)
+        await create_item(pool, type, title, content, url, tags, summary, category, created_at)
     
     print(f"Successfully populated {num_items} test items.")
 

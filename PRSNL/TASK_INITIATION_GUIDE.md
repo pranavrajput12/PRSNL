@@ -25,9 +25,16 @@ This is your single source of truth for starting tasks properly. Use these promp
 @TASK_INITIATION_GUIDE.md Improve UI responsiveness
 ```
 
+### ⚠️ CRITICAL ENVIRONMENT INFO
+- **Container Runtime**: RANCHER DESKTOP (NOT Docker)
+- **Frontend Port**: 3002 (NEVER 3003)
+- **Backend Port**: 8000
+- **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
+
 ### 🤖 What AI Will Do Automatically
 When you tag this file, the AI will:
 1. **Read Context Documentation**: Check all required files for full context
+2. **Check CLAUDE.md**: Read critical project configuration (Rancher, ports, etc.)
 2. **Generate Task ID**: Create unique task identifier
 3. **Update CURRENT_SESSION_STATE.md**: Set active task and status
 4. **Update TASK_HISTORY.md**: Add task with IN PROGRESS status

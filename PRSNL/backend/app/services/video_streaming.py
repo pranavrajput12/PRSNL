@@ -310,10 +310,10 @@ class VideoStreamingService:
             analysis = await self.analyze_video_content(metadata, transcript, db)
             
             # Update item with video data
-            if not item.item_metadata:
-                item.item_metadata = {}
+            if not item.metadata:
+                item.metadata = {}
             
-            item.item_metadata["video"] = {
+            item.metadata["video"] = {
                 **metadata,
                 **analysis,
                 "processed_at": datetime.utcnow().isoformat()
@@ -330,7 +330,7 @@ class VideoStreamingService:
                 item.summary = analysis["summary"]
             
             # Set item type
-            item.item_type = "video"
+            item.type = "video"
             
             # Generate embedding for video content
             embed_text = f"{item.title} {analysis.get('summary', '')} {' '.join(analysis.get('key_topics', []))}"
@@ -393,8 +393,8 @@ class VideoStreamingService:
                 )
                 item = result.scalar_one_or_none()
                 
-                if item and item.item_type == "video":
-                    video_data = item.item_metadata.get("video", {}) if item.item_metadata else {}
+                if item and item.type == "video":
+                    video_data = item.metadata.get("video", {}) if item.metadata else {}
                     
                     related_videos.append({
                         "item_id": str(item.id),
@@ -438,7 +438,7 @@ class VideoStreamingService:
                 SELECT i.*, ts_rank(search_vector, plainto_tsquery(:topic)) as relevance
                 FROM items i
                 WHERE 
-                    i.item_type = 'video'
+                    i.type = 'video'
                     AND search_vector @@ plainto_tsquery(:topic)
                 ORDER BY relevance DESC
                 LIMIT :limit
@@ -461,7 +461,7 @@ class VideoStreamingService:
             # Prepare video information for course creation
             video_info = []
             for video in videos:
-                video_metadata = video.item_metadata.get("video", {}) if video.item_metadata else {}
+                video_metadata = video.metadata.get("video", {}) if video.metadata else {}
                 video_info.append({
                     "id": str(video.id),
                     "title": video.title,
@@ -516,7 +516,7 @@ class VideoStreamingService:
                 for module in course_structure.get("modules", []):
                     video = next((v for v in videos if str(v.id) == module["video_id"]), None)
                     if video:
-                        video_metadata = video.item_metadata.get("video", {}) if video.item_metadata else {}
+                        video_metadata = video.metadata.get("video", {}) if video.metadata else {}
                         enriched_modules.append({
                             **module,
                             "video_details": {
@@ -548,7 +548,7 @@ class VideoStreamingService:
                             "title": video.title,
                             "video_details": {
                                 "url": video.url,
-                                "platform": video.item_metadata.get("video", {}).get("platform") if video.item_metadata else None
+                                "platform": video.metadata.get("video", {}).get("platform") if video.metadata else None
                             }
                         }
                         for idx, video in enumerate(videos[:max_videos])
@@ -582,7 +582,7 @@ class VideoStreamingService:
         """
         try:
             # Build query
-            query = select(Item).where(Item.item_type == "video")
+            query = select(Item).where(Item.type == "video")
             
             if category:
                 query = query.where(Item.category == category)
@@ -590,7 +590,7 @@ class VideoStreamingService:
             if platform:
                 # Filter by platform in metadata
                 query = query.where(
-                    Item.item_metadata["video"]["platform"].astext == platform
+                    Item.metadata["video"]["platform"].astext == platform
                 )
             
             # Order by created date
@@ -609,7 +609,7 @@ class VideoStreamingService:
             # Format video data
             video_items = []
             for video in videos:
-                video_metadata = video.item_metadata.get("video", {}) if video.item_metadata else {}
+                video_metadata = video.metadata.get("video", {}) if video.metadata else {}
                 
                 video_items.append({
                     "id": str(video.id),

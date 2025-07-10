@@ -144,8 +144,17 @@ export interface TimelineItem {
   title: string;
   url?: string;
   snippet: string;
+  summary?: string;
+  type?: string;
+  thumbnail_url?: string;
+  duration?: number;
+  platform?: string;
+  file_path?: string;
   tags: string[];
   created_at: string;
+  createdAt?: string; // Alternative field name
+  updatedAt?: string;
+  status?: string;
 }
 
 export interface TimelineResponse {
@@ -211,7 +220,7 @@ export interface ContentTrendPoint {
 export interface KnowledgeGraphNode {
   id: string;
   name: string;
-  type: 'article' | 'video' | 'note' | 'bookmark' | 'topic';
+  type: string; // Dynamic type
   cluster?: string;
   importance?: number;
   connections?: number;

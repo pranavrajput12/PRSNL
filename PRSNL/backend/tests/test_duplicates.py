@@ -22,15 +22,15 @@ async def populate_duplicate_data(db_connection: asyncpg.Connection):
 
     # Insert test items, including duplicates
     test_items = [
-        {"id": "c0000000-0000-4000-8000-000000000001", "title": "Unique Article", "url": "http://example.com/unique", "content": "This is unique content.", "item_type": "article", "created_at": datetime.now()},
-        {"id": "c0000000-0000-4000-8000-000000000002", "title": "Duplicate Article 1", "url": "http://example.com/dup1", "content": "This is duplicate content.", "item_type": "article", "created_at": datetime.now() - timedelta(minutes=1)},
-        {"id": "c0000000-0000-4000-8000-000000000003", "title": "Duplicate Article 2", "url": "http://example.com/dup2", "content": "This is duplicate content.", "item_type": "article", "created_at": datetime.now() - timedelta(minutes=2)},
-        {"id": "c0000000-0000-4000-8000-000000000004", "title": "Another Unique", "url": "http://example.com/unique2", "content": "Another unique piece of content.", "item_type": "note", "created_at": datetime.now() - timedelta(minutes=3)},
+        {"id": "c0000000-0000-4000-8000-000000000001", "title": "Unique Article", "url": "http://example.com/unique", "content": "This is unique content.", "type": "article", "created_at": datetime.now()},
+        {"id": "c0000000-0000-4000-8000-000000000002", "title": "Duplicate Article 1", "url": "http://example.com/dup1", "content": "This is duplicate content.", "type": "article", "created_at": datetime.now() - timedelta(minutes=1)},
+        {"id": "c0000000-0000-4000-8000-000000000003", "title": "Duplicate Article 2", "url": "http://example.com/dup2", "content": "This is duplicate content.", "type": "article", "created_at": datetime.now() - timedelta(minutes=2)},
+        {"id": "c0000000-0000-4000-8000-000000000004", "title": "Another Unique", "url": "http://example.com/unique2", "content": "Another unique piece of content.", "type": "note", "created_at": datetime.now() - timedelta(minutes=3)},
     ]
     for item in test_items:
         await db_connection.execute(
-            "INSERT INTO items (id, title, url, content, item_type, created_at, status) VALUES ($1, $2, $3, $4, $5, $6, 'completed')",
-            item["id"], item["title"], item["url"], item["content"], item["item_type"], item["created_at"]
+            "INSERT INTO items (id, title, url, processed_content, type, created_at, status) VALUES ($1, $2, $3, $4, $5, $6, 'completed')",
+            item["id"], item["title"], item["url"], item["content"], item["type"], item["created_at"]
         )
 
 @pytest.mark.asyncio

@@ -27,7 +27,8 @@ PUBLIC_ROUTES = [
     "/api/health",
     "/docs",
     "/openapi.json",
-    "/media"  # Static files
+    "/media",  # Static files
+    "/api/capture/debug"  # Debug endpoint for testing
 ]
 
 
