@@ -345,7 +345,6 @@
     `);
     
     // Feed data to performance analyzer
-    const connectionInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     performanceAnalyzer.addMetric({
       fps: currentFPS,
       memoryUsed: memoryUsage.used,
