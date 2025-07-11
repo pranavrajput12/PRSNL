@@ -276,7 +276,10 @@ function transformItem(item: any): Item | TimelineItem {
 /**
  * Get timeline items with pagination (legacy page-based)
  */
-export async function getTimeline(_page: number = 1, limit: number = 20): Promise<TimelineResponse> {
+export async function getTimeline(
+  _page: number = 1,
+  limit: number = 20
+): Promise<TimelineResponse> {
   // Legacy page-based pagination - ignores page parameter since backend uses cursor pagination
   const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
 
