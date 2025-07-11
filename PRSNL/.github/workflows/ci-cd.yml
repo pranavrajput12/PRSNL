@@ -98,7 +98,10 @@ jobs:
       run: |
         cd PRSNL/backend
         python -m pip install --upgrade pip
+        echo "🐍 Python version: $(python --version)"
+        echo "📦 Pip version: $(pip --version)"
         pip install -r requirements.txt
+        echo "✅ Dependencies installed successfully"
 
     - name: Run security scan with Bandit
       run: |
@@ -132,7 +135,10 @@ jobs:
     - name: Install dependencies
       run: |
         cd PRSNL/frontend
+        echo "🟢 Node.js version: $(node --version)"
+        echo "📦 npm version: $(npm --version)"
         npm ci
+        echo "✅ Frontend dependencies installed successfully"
 
     - name: Run type checking
       run: |

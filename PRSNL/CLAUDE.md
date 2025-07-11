@@ -94,6 +94,12 @@ docker-compose stop frontend
 - **Priority**: Address after authentication implementation (signup/login pages)
 - **Critical Issues**: SQL injection, pickle deserialization, weak cryptography (MD5), hardcoded temp directories
 
+### Development Environment Standards
+- **Python**: 3.11+ with pip 25.1.1 (latest, auto-upgraded in CI/CD)
+- **Node.js**: 20+ with npm latest (cached in CI/CD)
+- **Package Management**: All dependencies pinned in requirements.txt and package-lock.json
+- **CI/CD**: Version consistency enforced across all environments
+
 ### Future Development Tracking
 - **Next Priority**: User authentication system (signup/login pages)
 - **Security Fixes**: Scheduled after authentication completion
