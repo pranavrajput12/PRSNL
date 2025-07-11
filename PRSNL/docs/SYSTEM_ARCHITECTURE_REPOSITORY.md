@@ -322,10 +322,22 @@ async def process_new_content(data: NewContentInput) -> ProcessedContent:
     # 3. Content extraction
     extracted_content = extract_content(validated_data, content_type)
     
-    # 4. AI processing (if enabled)
+    # 4. AI processing (if enabled) - with automatic validation
     ai_analysis = None
     if validated_data.enable_ai:
-        ai_analysis = await ai_service.analyze(extracted_content)
+        # Uses Guardrails-AI validated analysis
+        ai_analysis = await unified_ai_service.analyze_content(extracted_content)
+        
+    # 4b. Transcription (if audio/video)
+    transcription = None
+    if content_type in ["audio", "video"]:
+        # Uses whisper.cpp for all transcription
+        from app.services.whisper_cpp_transcription import whisper_cpp_service
+        transcription_result = await whisper_cpp_service.transcribe_audio(
+            audio_path=validated_data.file_path,
+            model_name="base"  # Or select based on requirements
+        )
+        transcription = transcription_result.get("text") if transcription_result else None
     
     # 5. Storage
     stored_item = await store_content({
@@ -356,6 +368,63 @@ async def on_content_created(event: ContentCreatedEvent):
 async def on_content_updated(event: ContentUpdatedEvent):
     await search_service.reindex_item(event.item)
     await cache_service.invalidate_item(event.item.id)
+```
+
+### AI Processing Standards
+```python
+# Standard AI integration flow with validation
+async def ai_process_content(content: str, analysis_type: str) -> Dict[str, Any]:
+    # 1. Prepare request
+    request = {
+        "content": content,
+        "type": analysis_type,
+        "enable_validation": True  # Always validate AI outputs
+    }
+    
+    # 2. Get AI analysis
+    raw_response = await unified_ai_service.analyze_content(content)
+    
+    # 3. Automatic validation via Guardrails-AI
+    # (This happens inside unified_ai_service)
+    
+    # 4. Extract validated results
+    return {
+        "title": raw_response.get("title"),
+        "summary": raw_response.get("summary"),
+        "tags": raw_response.get("tags", []),
+        "category": raw_response.get("category"),
+        "sentiment": raw_response.get("sentiment"),
+        "key_points": raw_response.get("key_points", []),
+        "confidence": raw_response.get("confidence", 0.0)
+    }
+```
+
+### Transcription Standards
+```python
+# Standard transcription flow (whisper.cpp only)
+async def transcribe_content(audio_path: str, privacy_sensitive: bool = False) -> Dict[str, Any]:
+    # Use whisper.cpp-based transcription service
+    from app.services.whisper_cpp_transcription import whisper_cpp_service
+    
+    # Select model based on file size and requirements
+    model = "base"  # Default for balance
+    if privacy_sensitive:
+        model = "small"  # Better accuracy for sensitive content
+    
+    result = await whisper_cpp_service.transcribe_audio(
+        audio_path=audio_path,
+        model_name=model,
+        language="en",  # Auto-detect in future
+        word_timestamps=True
+    )
+    
+    return {
+        "text": result.get("text", ""),
+        "confidence": result.get("confidence", 0.0),
+        "duration": result.get("duration", 0),
+        "words": result.get("words", []),
+        "service": "whisper.cpp"
+    }
 ```
 
 ---

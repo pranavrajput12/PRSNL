@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { audioManager } from '$lib/utils/audioManager';
+  import { getAudioManager } from '$lib/utils/audioManager';
 
   export let data = generateMockData();
 
@@ -91,6 +91,7 @@
     ctx = canvas.getContext('2d')!;
     
     // Initialize audio
+    const audioManager = getAudioManager();
     audioManager.init();
     audioManager.createSyntheticSounds();
     audioManager.playBackgroundMusic('lab');
@@ -531,7 +532,7 @@
       if (dist < 20) {
         if (hoveredStrand !== strand) {
           hoveredStrand = strand;
-          audioManager.playSound('bubble', 0.3);
+          getAudioManager().playSound('bubble', 0.3);
         }
         foundHover = true;
       }
@@ -543,7 +544,7 @@
   function handleClick(e: MouseEvent) {
     if (hoveredStrand && mutationMode) {
       // Perform gene splicing
-      audioManager.playSound('bubble', 0.5);
+      getAudioManager().playSound('bubble', 0.5);
       
       // Create a mutation effect
       mutations.push({
@@ -567,7 +568,7 @@
 
   function handleZoomChange(e: Event) {
     zoomLevel = parseFloat((e.target as HTMLInputElement).value);
-    audioManager.playSound('bubble', 0.2);
+    getAudioManager().playSound('bubble', 0.2);
   }
 
   function startSequencing() {
@@ -576,13 +577,13 @@
     
     const sequenceInterval = setInterval(() => {
       sequencePosition += 0.01;
-      audioManager.playSound('bubble', 0.1);
+      getAudioManager().playSound('bubble', 0.1);
       
       if (sequencePosition >= 1) {
         sequencePosition = 1;
         isSequencing = false;
         clearInterval(sequenceInterval);
-        audioManager.playSound('levelup', 0.5);
+        getAudioManager().playSound('levelup', 0.5);
       }
     }, 50);
   }

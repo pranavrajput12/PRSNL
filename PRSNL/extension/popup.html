@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRSNL Capture</title>
+  <title>PRSNL Neural Capture</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap">
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1 class="gradient-text">PRSNL Capture</h1>
-      <div class="header-actions">
-        <button id="settings-btn" class="icon-btn" title="Settings">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
+    <header class="extension-header">
+      <div class="mac-processor">
+        <canvas id="mac-3d-canvas"></canvas>
+        <div class="processing-indicator">
+          <div class="pulse-ring"></div>
+        </div>
+      </div>
+      <div class="header-text">
+        <h1 class="gradient-text">PRSNL</h1>
+        <h2>Neural Capture</h2>
       </div>
     </header>
-    
+
     <div class="capture-form">
+      <!-- URL Preview Section -->
       <div class="url-preview">
         <div id="favicon-container"></div>
         <div id="url-info">
@@ -30,53 +31,94 @@
         </div>
       </div>
       
+      <!-- Content Type Selector -->
+      <div class="form-group">
+        <label for="content-type">Content Type</label>
+        <select id="content-type" class="form-select">
+          <option value="auto">Auto-detect</option>
+          <option value="article">Article</option>
+          <option value="tutorial">Tutorial</option>
+          <option value="video">Video</option>
+          <option value="development">Development</option>
+          <option value="document">Document</option>
+          <option value="note">Note</option>
+          <option value="link">Link</option>
+        </select>
+      </div>
+      
+      <!-- Development-specific fields (hidden by default) -->
+      <div id="development-fields" class="development-section" style="display: none;">
+        <div class="form-group">
+          <label for="programming-language">Programming Language</label>
+          <input type="text" id="programming-language" placeholder="e.g., Python, JavaScript" />
+        </div>
+        
+        <div class="form-group">
+          <label for="project-category">Project Category</label>
+          <input type="text" id="project-category" placeholder="e.g., Web Development, Machine Learning" />
+        </div>
+        
+        <div class="form-group">
+          <label for="difficulty-level">Difficulty Level</label>
+          <div class="difficulty-selector">
+            <input type="range" id="difficulty-level" min="1" max="5" value="3" />
+            <div class="difficulty-labels">
+              <span>Beginner</span>
+              <span>Advanced</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="career-related" />
+            <span>Career/Job Related</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- AI Summarization Toggle -->
+      <div class="form-group">
+        <label class="toggle-label">
+          <input type="checkbox" id="enable-summarization" checked />
+          <span class="toggle-switch"></span>
+          <span>Enable AI Summarization</span>
+        </label>
+      </div>
+      
+      <!-- Tags Section -->
       <div class="tag-input-container">
         <label for="tag-input">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-          </svg>
-          Add Tags (optional)
+          <svg><!-- tag icon --></svg>
+          Add Tags
         </label>
         <div class="tag-input-wrapper">
-          <input 
-            type="text" 
-            id="tag-input" 
-            placeholder="Type tags and press Enter"
-            autocomplete="off"
-          >
+          <input type="text" id="tag-input" placeholder="Type tags and press Enter" />
         </div>
         <div id="tags-container"></div>
       </div>
       
-      <div class="selection-preview" id="selection-container">
-        <label>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          Selected Text
-        </label>
+      <!-- Selection Preview -->
+      <div class="selection-preview" id="selection-container" style="display: none;">
+        <label>Selected Text</label>
         <div id="selection-text" class="selection-text"></div>
       </div>
-      
-      <div class="actions">
-        <button id="capture-btn" class="primary-btn">Capture</button>
-        <button id="cancel-btn" class="secondary-btn">Cancel</button>
-      </div>
-      
-      <div class="shortcut-hint">
-        <span class="keyboard-hint">⌘</span> + <span class="keyboard-hint">↵</span> to capture
-      </div>
     </div>
-    
+
+    <div class="actions">
+        <button id="capture-btn" class="chip-button">
+          <span class="btn-text">Capture</span>
+          <span class="btn-loader" style="display: none;">
+            <svg class="spinner"></svg>
+          </span>
+        </button>
+        <button id="cancel-btn" class="chip-button secondary-btn">Cancel</button>
+    </div>
+
     <div id="status-message" class="status"></div>
+
+    <div class="neural-bg"></div>
   </div>
-  
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>

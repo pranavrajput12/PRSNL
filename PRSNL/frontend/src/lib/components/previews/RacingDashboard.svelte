@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
-  import { audioManager } from '$lib/utils/audioManager';
+  import { getAudioManager } from '$lib/utils/audioManager';
 
   export let data = generateMockData();
 
@@ -77,9 +77,9 @@
     ctx = canvas.getContext('2d')!;
     
     // Initialize audio
-    audioManager.init();
-    audioManager.createSyntheticSounds();
-    audioManager.playBackgroundMusic('racing');
+    getAudioManager().init();
+    getAudioManager().createSyntheticSounds();
+    getAudioManager().playBackgroundMusic('racing');
     
     // Setup canvas
     resizeCanvas();
@@ -531,7 +531,7 @@
       case 'ArrowUp':
         speed.update(s => Math.min(200, s + 10));
         rpm.update(r => Math.min(8000, r + 500));
-        audioManager.playSound('engine', 0.5);
+        getAudioManager().playSound('engine', 0.5);
         break;
       case 'ArrowDown':
         speed.update(s => Math.max(0, s - 10));
@@ -540,7 +540,7 @@
       case ' ':
         turboActive = true;
         speed.update(s => Math.min(200, s + 50));
-        audioManager.playSound('whoosh', 0.7);
+        getAudioManager().playSound('whoosh', 0.7);
         break;
     }
   }
@@ -554,7 +554,7 @@
   function pitStop() {
     fuel.set(100);
     temperature.set(80);
-    audioManager.playSound('levelup', 0.5);
+    getAudioManager().playSound('levelup', 0.5);
   }
 </script>
 

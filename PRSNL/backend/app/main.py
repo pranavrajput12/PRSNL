@@ -180,7 +180,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
-from app.api import insights, import_data, file_upload, content_types, development
+from app.api import insights, import_data, file_upload, content_types, development, ai, rag, firecrawl
 from app.api.v2 import items as v2_items
 
 # STEP 3: Debug capture router inclusion
@@ -211,6 +211,9 @@ app.include_router(import_data.router, prefix=settings.API_V1_STR)
 app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
 app.include_router(content_types.router, prefix=settings.API_V1_STR)
 app.include_router(development.router, prefix=settings.API_V1_STR)
+app.include_router(ai.router, prefix=settings.API_V1_STR)
+app.include_router(rag.router, prefix=settings.API_V1_STR)
+app.include_router(firecrawl.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

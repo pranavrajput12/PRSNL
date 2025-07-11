@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
-  import { audioManager } from '$lib/utils/audioManager';
+  import { getAudioManager } from '$lib/utils/audioManager';
 
   export let data = generateMockData();
 
@@ -85,9 +85,9 @@
     ctx = canvas.getContext('2d')!;
     
     // Initialize audio
-    audioManager.init();
-    audioManager.createSyntheticSounds();
-    audioManager.playBackgroundMusic('nature');
+    getAudioManager().init();
+    getAudioManager().createSyntheticSounds();
+    getAudioManager().playBackgroundMusic('nature');
     
     // Setup canvas
     resizeCanvas();
@@ -430,7 +430,7 @@
           behavior: 'wander',
           target: null
         });
-        audioManager.playSound('chirp', 0.3);
+        getAudioManager().playSound('chirp', 0.3);
       }
     }
   }
@@ -664,7 +664,7 @@
     if (feedingMode && selectedCreature) {
       selectedCreature.health = Math.min(1, selectedCreature.health + 0.2);
       selectedCreature.size = Math.min(40, selectedCreature.size + 2);
-      audioManager.playSound('chirp', 0.5);
+      getAudioManager().playSound('chirp', 0.5);
       
       // Create happy particles
       for (let i = 0; i < 10; i++) {
@@ -704,7 +704,7 @@
   function feedCreatures() {
     feedingMode = !feedingMode;
     if (feedingMode) {
-      audioManager.playSound('chirp', 0.3);
+      getAudioManager().playSound('chirp', 0.3);
     }
   }
 </script>

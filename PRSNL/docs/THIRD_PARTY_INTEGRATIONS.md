@@ -64,11 +64,13 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 ### **AI/ML Services**
 | Service | Purpose | Authentication | Rate Limits | Risk Level |
 |---------|---------|---------------|-------------|------------|
-| `OpenAI API` | Content summarization, embeddings | API Key | Varies by plan | **High** |
+| `Azure OpenAI API` | Content analysis, embeddings, summaries | API Key | Varies by plan | **High** |
 | `scikit-learn` | Local ML processing | - | - | Low |
 
 **Environment Variables:**
-- `OPENAI_API_KEY` - Required for AI features
+- `AZURE_OPENAI_API_KEY` - Required for AI features
+- `AZURE_OPENAI_ENDPOINT` - Azure OpenAI endpoint
+- `AZURE_OPENAI_DEPLOYMENT` - Model deployment name
 
 ## **📊 Data Processing & Analysis**
 
@@ -98,7 +100,8 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `youtube-transcript-api` | 0.6.2 | YouTube transcript extraction | MIT | Medium |
 | `pytesseract` | 0.3.10 | **OCR text extraction (ACTIVE)** | Apache 2.0 | Low |
 | `tesseract-ocr` | Latest | **OCR engine (ACTIVE)** | Apache 2.0 | Low |
-| `vosk` | 0.3.45 | **NEW: Offline speech recognition** | Apache 2.0 | Low |
+| `pywhispercpp` | >=1.2.0 | **High-accuracy offline transcription** | MIT | Low |
+| `whisper.cpp` | Latest | **CPU-optimized speech recognition** | MIT | Low |
 
 ## **🔐 Security & Authentication**
 
@@ -178,6 +181,12 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `numpy` | 1.26.2 | Numerical computing | BSD | Low |
 | `scikit-learn` | 1.3.2 | Machine learning | BSD | Low |
 
+### **NEW: AI Quality & Validation**
+| Library | Version | Purpose | License | Risk Level |
+|---------|---------|---------|---------|------------|
+| `guardrails-ai` | >=0.4.0 | **AI output validation & repair** | Apache 2.0 | Low |
+| `pydantic` | Latest | **Schema validation for AI outputs** | MIT | Low |
+
 ### **Communication (Optional)**
 | Library | Version | Purpose | License | Risk Level |
 |---------|---------|---------|---------|------------|
@@ -207,7 +216,10 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 
 ```env
 # Required for AI features
-OPENAI_API_KEY=your_openai_api_key
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your-instance.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-4
+AZURE_OPENAI_API_VERSION=2024-02-01
 
 # Optional for enhanced GitHub integration
 GITHUB_TOKEN=your_github_personal_access_token
@@ -245,6 +257,41 @@ For issues with specific integrations:
 2. Review API documentation for external services
 3. Monitor service status pages for outages
 4. Check rate limiting and usage quotas
+
+## **🤖 AI Infrastructure Enhancements (v4.2.0)**
+
+### **NEW: Guardrails-AI Integration**
+- **Purpose**: Automatic validation and repair of AI outputs
+- **Features**:
+  - Schema validation for content analysis
+  - Automatic repair of malformed outputs
+  - Type safety for all AI responses
+  - Graceful fallback handling
+- **Configuration**: Automatic, no additional setup required
+
+### **NEW: whisper.cpp Transcription**
+- **Purpose**: High-accuracy offline transcription
+- **Replaces**: Vosk and Azure OpenAI Whisper
+- **Features**:
+  - 99 language support
+  - 5 model sizes (tiny to large)
+  - Word-level timestamps
+  - CPU-optimized performance
+- **Models**: Auto-downloaded on first use
+
+### **Unified AI Service Architecture**
+```
+UnifiedAIService → Guardrails Validation → Consistent Outputs
+whisper.cpp → Simple Transcription → Complete Privacy
+```
+
+### **AI Service Dependencies**
+| Service | Purpose | Configuration | Risk Level |
+|---------|---------|--------------|------------|
+| `Azure OpenAI` | LLM for analysis & summaries | API credentials required | **High** |
+| `Guardrails-AI` | Output validation | Automatic | Low |
+| `whisper.cpp` | Offline transcription | Models auto-download | Low |
+| `pgvector` | Semantic search | Database extension | Low |
 
 **Last Updated:** 2025-07-11  
 **Next Review:** 2025-10-11

@@ -51,6 +51,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
+      PG_CONN_STR: postgresql://postgres:postgres@db:5432/prsnl
       REDIS_URL: redis://redis:6379
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
       AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
@@ -58,6 +59,8 @@ services:
       AZURE_OPENAI_API_VERSION: 2025-01-01-preview
       AZURE_OPENAI_EMBEDDING_DEPLOYMENT: text-embedding-ada-002
       AZURE_OPENAI_WHISPER_DEPLOYMENT: whisper
+      # Additional AI Services
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY}
       # Zero-cache code reloads
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1
@@ -70,7 +73,8 @@ services:
       - "${FRONTEND_PORT:-3003}:3003"
     environment:
       PUBLIC_API_URL: http://backend:8000
-      NODE_ENV: production
+      NODE_ENV: development
+      PORT: 3003
     depends_on:
       - backend
 

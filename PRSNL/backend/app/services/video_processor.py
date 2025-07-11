@@ -23,7 +23,7 @@ from app.services.platforms.twitter import TwitterProcessor
 from app.services.platforms.tiktok import TikTokProcessor
 from app.services.platforms.vimeo import VimeoProcessor
 from app.monitoring.metrics import VIDEO_PROCESSING_DURATION_SECONDS
-from app.services.transcription_service import transcription_service
+from app.services.whisper_only_transcription import transcription_service
 from app.services.websocket_manager import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -308,12 +308,21 @@ class VideoProcessor:
         return generated_thumbnail_path
 
     async def transcribe_video(self, video_path: str) -> Optional[str]:
-        """Transcribes the given video file."""
+        """Transcribes the given video file using whisper.cpp transcription service."""
         logger.info(f"Starting transcription for video: {video_path}")
-        transcription = await transcription_service.transcribe_audio(video_path)
-        if transcription:
+        
+        # Use whisper.cpp with automatic model selection
+        result = await transcription_service.transcribe_audio(
+            audio_path=video_path,
+            language="en",  # Default to English, could be made configurable
+            auto_model_selection=True  # Automatically select best model
+        )
+        
+        if result:
             logger.info(f"Transcription complete for {video_path}")
-            return transcription
+            logger.info(f"Model used: {result.get('model_used', 'unknown')}")
+            logger.info(f"Confidence: {result.get('confidence', 0):.2f}")
+            return result.get('text', '')
         else:
             logger.error(f"Transcription failed for {video_path}")
             return None

@@ -1,3 +1,11 @@
+"""
+Azure OpenAI Whisper Cloud Transcription Service
+
+This is the cloud-only transcription service using Azure OpenAI Whisper.
+For production use, please use HybridTranscriptionService which provides
+intelligent routing between cloud and offline transcription.
+"""
+
 import os
 import httpx
 from typing import Optional

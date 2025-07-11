@@ -48,6 +48,14 @@ class Settings(BaseSettings):
     # Additional settings from .env
     ENVIRONMENT: str = "development"
     PRSNL_API_KEY: Optional[str] = None
+    
+    # Firecrawl Web Scraping
+    FIRECRAWL_API_KEY: Optional[str] = None
+    FIRECRAWL_BASE_URL: str = "https://api.firecrawl.dev"
+    
+    # OpenCLIP Vision
+    OPENCLIP_MODEL: str = "ViT-B-32"
+    OPENCLIP_PRETRAINED: str = "openai"
     RATE_LIMITING_ENABLED: bool = True
     
     # Service Port Configuration (Exclusive Port Ownership)

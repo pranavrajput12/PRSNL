@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
-  import { audioManager } from '$lib/utils/audioManager';
+  import { getAudioManager } from '$lib/utils/audioManager';
 
   export let personalityData = generateMockPersonality();
 
@@ -106,6 +106,7 @@
     ctx = canvas.getContext('2d')!;
     
     // Initialize audio
+    const audioManager = getAudioManager();
     audioManager.init();
     audioManager.createSyntheticSounds();
     audioManager.playBackgroundMusic('rpg');
@@ -599,7 +600,7 @@
     if (selectedSkill && selectedSkill.unlocked && selectedSkill.level < selectedSkill.maxLevel) {
       selectedSkill.level++;
       experience.update(exp => exp + 100);
-      audioManager.playSound('levelup', 0.5);
+      getAudioManager().playSound('levelup', 0.5);
       
       // Check for level up
       if ($experience >= 1000) {
@@ -652,7 +653,7 @@
     </button>
     <button on:click={() => {
       achievements[3].unlocked = true;
-      audioManager.playSound('levelup', 0.7);
+      getAudioManager().playSound('levelup', 0.7);
     }}>
       Unlock Achievement
     </button>

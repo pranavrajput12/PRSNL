@@ -1,13 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "PRSNL Capture",
-  "version": "1.0.0",
-  "description": "Capture web content to your PRSNL knowledge vault",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
+  "name": "PRSNL Neural Capture",
+  "version": "2.0.0",
+  "description": "A futuristic AI-powered capture tool for PRSNL.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "notifications",
+    "contextMenus",
+    "scripting",
+    "clipboardRead",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://localhost:3003/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -17,8 +25,7 @@
     }
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
@@ -27,32 +34,19 @@
       "css": ["content.css"]
     }
   ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "options_page": "options.html",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "tabs",
-    "notifications",
-    "contextMenus"
-  ],
-  "host_permissions": [
-    "http://localhost:8000/*"
-  ],
   "commands": {
     "capture-page": {
       "suggested_key": {
         "default": "Ctrl+Shift+S",
         "mac": "Command+Shift+S"
       },
-      "description": "Capture current page to PRSNL"
-    },
-    "capture-selection": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+E",
-        "mac": "Command+Shift+E"
-      },
-      "description": "Capture selected text to PRSNL"
+      "description": "Capture the current page"
     }
   }
 }

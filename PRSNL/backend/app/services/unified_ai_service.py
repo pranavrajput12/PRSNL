@@ -12,6 +12,7 @@ import numpy as np
 from app.config import settings
 from app.services.cache import cache_service, CacheKeys
 import hashlib
+from app.services.ai_validation_service import ai_validation_service
 
 logger = logging.getLogger(__name__)
 
@@ -153,21 +154,15 @@ Provide analysis in this exact JSON format:
                 temperature=0.3,
                 response_format={"type": "json_object"}
             )
-            return json.loads(response)
+            
+            # Validate the AI output
+            validated_response = await ai_validation_service.validate_content_analysis(response)
+            return validated_response
+            
         except Exception as e:
             logger.error(f"Content analysis failed: {e}")
-            # Return minimal analysis on failure
-            return {
-                "title": content[:100],
-                "summary": content[:200],
-                "category": "article",
-                "tags": ["uncategorized"],
-                "key_points": [],
-                "entities": {},
-                "sentiment": "neutral",
-                "difficulty_level": "intermediate",
-                "estimated_reading_time": 5
-            }
+            # Return validated default analysis on failure
+            return await ai_validation_service.validate_content_analysis(None)
     
     async def find_duplicates_semantic(
         self,
@@ -194,6 +189,51 @@ Provide analysis in this exact JSON format:
                 })
         
         return sorted(duplicates, key=lambda x: x["similarity"], reverse=True)
+    
+    async def generate_tags(
+        self, 
+        content: str, 
+        limit: int = 10,
+        existing_tags: Optional[List[str]] = None
+    ) -> List[str]:
+        """Generate validated tags for content"""
+        system_prompt = """You are an expert at generating relevant, searchable tags for content. 
+        Generate specific, lowercase tags that capture the essence of the content."""
+        
+        existing_tags_str = f"\nExisting tags in system: {', '.join(existing_tags)}" if existing_tags else ""
+        
+        prompt = f"""Generate {limit} relevant tags for this content:{existing_tags_str}
+
+Content: {content[:2000]}
+
+Rules:
+1. Tags should be lowercase, single or compound words
+2. Be specific rather than generic
+3. Include technical terms if relevant
+4. Consider the content type and domain
+
+Respond in JSON format:
+{{
+    "tags": ["tag1", "tag2", "tag3", ...],
+    "confidence_scores": {{"tag1": 0.9, "tag2": 0.8, ...}}
+}}"""
+        
+        try:
+            response = await self.complete(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                temperature=0.3,
+                max_tokens=200,
+                response_format={"type": "json_object"}
+            )
+            
+            # Validate tags
+            validated_tags = await ai_validation_service.validate_tags(response)
+            return validated_tags[:limit]
+            
+        except Exception as e:
+            logger.error(f"Tag generation failed: {e}")
+            return ["general", "content"]
     
     async def generate_summary(
         self,
@@ -223,14 +263,36 @@ Provide analysis in this exact JSON format:
             context_str = f"\n\nContext: {json.dumps(context)}\n"
             prompts[summary_type] = prompts[summary_type].replace("\n\n", context_str + "\n\n", 1)
         
-        response = await self.complete(
-            prompt=prompts.get(summary_type, prompts["brief"]),
-            system_prompt=system_prompts.get(summary_type, system_prompts["brief"]),
-            temperature=0.3,
-            max_tokens=500
-        )
-        
-        return response.strip()
+        try:
+            # For structured summary types, request JSON format
+            if summary_type in ["key_points", "technical"]:
+                prompt_with_format = prompts.get(summary_type, prompts["brief"]) + \
+                    '\n\nProvide response in JSON format: {"brief": "2-3 sentence summary", "detailed": "detailed summary", "key_takeaways": ["point1", "point2", "point3"]}'
+                
+                response = await self.complete(
+                    prompt=prompt_with_format,
+                    system_prompt=system_prompts.get(summary_type, system_prompts["brief"]),
+                    temperature=0.3,
+                    max_tokens=500,
+                    response_format={"type": "json_object"}
+                )
+                
+                # Validate structured summary
+                validated = await ai_validation_service.validate_summary(response)
+                return validated.get('brief', response.strip())
+            else:
+                # For simple summaries, return plain text
+                response = await self.complete(
+                    prompt=prompts.get(summary_type, prompts["brief"]),
+                    system_prompt=system_prompts.get(summary_type, system_prompts["brief"]),
+                    temperature=0.3,
+                    max_tokens=500
+                )
+                return response.strip()
+                
+        except Exception as e:
+            logger.error(f"Summary generation failed: {e}")
+            return "Unable to generate summary at this time."
     
     async def discover_relationships(
         self,
