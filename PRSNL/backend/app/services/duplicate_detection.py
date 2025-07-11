@@ -10,6 +10,7 @@ import asyncio
 from app.db.database import get_db_pool
 from app.services.unified_ai_service import unified_ai_service
 from app.config import settings
+from app.utils.fingerprint import calculate_content_fingerprint
 import json
 import numpy as np
 
@@ -52,12 +53,8 @@ class DuplicateDetectionService:
     
     def content_hash(self, content: str) -> str:
         """Generate hash of content for exact duplicate detection"""
-        if not content:
-            return ""
-        
-        # Normalize content
-        normalized = ' '.join(content.lower().split())
-        return hashlib.sha256(normalized.encode()).hexdigest()
+        # Use the unified fingerprint calculation
+        return calculate_content_fingerprint(content)
     
     async def check_duplicate(self, url: Optional[str], title: str, content: Optional[str]) -> Dict[str, Any]:
         """
@@ -91,15 +88,26 @@ class DuplicateDetectionService:
             
             # 2. Check for content hash match (exact content duplicate)
             if content and len(content) > 100:
-                content_hash_value = self.content_hash(content)
+                content_fingerprint = self.content_hash(content)
                 
+                # First try the dedicated content_fingerprint column
                 hash_matches = await conn.fetch("""
                     SELECT id, title, url, created_at
                     FROM items
-                    WHERE metadata->>'content_hash' = $1
+                    WHERE content_fingerprint = $1
                     ORDER BY created_at DESC
                     LIMIT 5
-                """, content_hash_value)
+                """, content_fingerprint)
+                
+                # Fallback to metadata for backward compatibility
+                if not hash_matches:
+                    hash_matches = await conn.fetch("""
+                        SELECT id, title, url, created_at
+                        FROM items
+                        WHERE metadata->>'content_hash' = $1
+                        ORDER BY created_at DESC
+                        LIMIT 5
+                    """, content_fingerprint)
                 
                 for match in hash_matches:
                     if not any(d['id'] == str(match['id']) for d in duplicates):

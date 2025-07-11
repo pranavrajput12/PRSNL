@@ -42,8 +42,9 @@ pywhispercpp>=1.2.0  # whisper.cpp Python bindings
 # AI Validation & Quality
 guardrails-ai>=0.4.0
 
-# Logging
+# Logging & Monitoring
 structlog==24.1.0
+sentry-sdk[fastapi]==2.19.2
 
 # Media Processing
 yt-dlp

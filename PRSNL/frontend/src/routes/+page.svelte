@@ -51,6 +51,11 @@
   let searchMode: 'keyword' | 'semantic' | 'hybrid' = 'semantic';
   let showSearchResults = false;
   
+  // Enhanced search options
+  let searchThreshold = 0.3;
+  let includeDuplicates = false;
+  let searchStats: any = null;
+  
   onMount(async () => {
     mounted = true;
     await loadData();
@@ -133,24 +138,44 @@
     try {
       const response = await searchItems(searchQuery, {
         mode: searchMode,
-        limit: 10
+        limit: 12,
+        threshold: searchThreshold,
+        include_duplicates: includeDuplicates
       });
+      
+      // Store search metadata for debugging
+      searchStats = {
+        total: response.total,
+        searchType: response.search_type,
+        deduplication: response.deduplication,
+        weights: response.weights
+      };
       
       // Transform results to match Item type
       searchResults = response.results.map(result => ({
         id: result.id,
         title: result.title,
         url: result.url || '',
-        summary: result.snippet,
-        tags: result.tags,
+        summary: result.snippet || '',
+        tags: result.tags || [],
         createdAt: result.created_at,
         type: result.type,
         item_type: result.type,
-        similarity_score: result.similarity_score
+        similarity_score: result.similarity || result.score || 0,
+        search_metadata: result.search_metadata,
+        component_scores: result.component_scores
       }));
+      
+      console.log('Enhanced search results:', {
+        query: searchQuery,
+        mode: searchMode,
+        results: searchResults.length,
+        stats: searchStats
+      });
     } catch (err) {
-      console.error('Search error:', err);
+      console.error('Enhanced search error:', err);
       searchResults = [];
+      searchStats = null;
     } finally {
       isSearching = false;
     }
@@ -328,6 +353,16 @@
                             <div class="wave-strength" style="width: {result.similarity_score * 100}%"></div>
                           </div>
                           <span class="similarity-strength">{Math.round(result.similarity_score * 100)}% neural match</span>
+                          {#if result.component_scores && searchMode === 'hybrid'}
+                            <div class="component-scores">
+                              {#if result.component_scores.semantic}
+                                <span class="score-component semantic">S: {Math.round(result.component_scores.semantic * 100)}%</span>
+                              {/if}
+                              {#if result.component_scores.keyword}
+                                <span class="score-component keyword">K: {Math.round(result.component_scores.keyword * 100)}%</span>
+                              {/if}
+                            </div>
+                          {/if}
                         </div>
                       {/if}
                     </div>
@@ -3139,6 +3174,34 @@
     font-size: 0.75rem;
     color: #DC143C;
     font-weight: 600;
+  }
+  
+  .component-scores {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    flex-wrap: wrap;
+  }
+  
+  .score-component {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .score-component.semantic {
+    color: #00ff64;
+    border-color: rgba(0, 255, 100, 0.3);
+    background: rgba(0, 255, 100, 0.1);
+  }
+  
+  .score-component.keyword {
+    color: #0096ff;
+    border-color: rgba(0, 150, 255, 0.3);
+    background: rgba(0, 150, 255, 0.1);
   }
   
   .node-transmission {

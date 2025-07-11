@@ -61,6 +61,10 @@ class Item(Base):
     
     # Embedding support
     embedding = Column(Vector(1536))
+    embed_vector_id = Column(UUID(as_uuid=True))  # Direct pointer to pgvector table
+    
+    # Content fingerprint for duplicate detection
+    content_fingerprint = Column(String(64))  # SHA-256 hash of raw_content
     
     # Transcription support
     transcription = Column(Text)

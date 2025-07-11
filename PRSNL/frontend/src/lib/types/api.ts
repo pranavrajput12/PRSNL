@@ -115,6 +115,23 @@ export interface SearchRequest {
   offset?: number;
 }
 
+// Enhanced Search API types
+export interface EnhancedSearchRequest {
+  query: string;
+  search_type: 'semantic' | 'keyword' | 'hybrid';
+  limit?: number;
+  threshold?: number;
+  include_duplicates?: boolean;
+  filters?: {
+    type?: string;
+    date_range?: {
+      start: string;
+      end: string;
+    };
+    [key: string]: any;
+  };
+}
+
 export interface UpdateItemRequest {
   title?: string;
   summary?: string;
@@ -136,12 +153,41 @@ export interface SearchResult {
   tags: string[];
   created_at: string;
   score?: number;
+  similarity?: number;
+  search_metadata?: {
+    has_embedding: boolean;
+    search_timestamp: string;
+  };
+  search_type?: string;
+  component_scores?: {
+    semantic?: number;
+    keyword?: number;
+  };
 }
 
 export interface SearchResponse {
   results: SearchResult[];
   total: number;
-  took_ms: number;
+  took_ms?: number;
+  query: string;
+  search_type: string;
+  weights?: {
+    semantic: number;
+    keyword: number;
+  };
+  timestamp: string;
+  deduplication?: {
+    original_count: number;
+    deduplicated_count: number;
+    removed_duplicates: number;
+  };
+  user_id: string;
+  request_params: {
+    search_type: string;
+    limit: number;
+    threshold: number;
+    include_duplicates: boolean;
+  };
 }
 
 export interface TimelineItem {
@@ -266,4 +312,31 @@ export interface InsightsResponse {
   knowledgeGraph: KnowledgeGraph;
   topContent: Item[];
   tagAnalysis: TagAnalysis[];
+}
+
+export interface ContentTypesResponse {
+  content_types: {
+    type: string;
+    count: number;
+    description?: string;
+  }[];
+  total: number;
+}
+
+export interface ContentTypeDefinition {
+  type: string;
+  count: number;
+  description?: string;
+}
+
+export interface KnowledgeGraphData {
+  nodes: KnowledgeGraphNode[];
+  links: KnowledgeGraphLink[];
+}
+
+export interface TopContentItem {
+  id: string;
+  title: string;
+  score: number;
+  type: string;
 }

@@ -12,7 +12,9 @@ This repository serves as the **single source of truth** for building new featur
 4. How to maintain data consistency
 
 ## 🆕 **Recent Major Upgrade (2025-07-11)**
-**Svelte 5 Full Migration v2.3** - Complete upgrade with breaking changes:
+**Advanced Integrations & Architecture v2.4** - Complete system enhancement:
+
+### **Frontend Modernization**
 - **Svelte**: 4.2.20 → 5.35.6 (Runes system replaces stores for local state)
 - **SvelteKit**: 2.22.2 → 2.22.5 
 - **Vite**: 6.0.2 → 7.0.4
@@ -20,7 +22,14 @@ This repository serves as the **single source of truth** for building new featur
 - **Frontend Port**: 3003 → 3004 (development server)
 - **Security**: All vulnerabilities resolved, dependencies updated
 
-**Migration Impact**: All frontend patterns now support both traditional stores (for shared state) and Svelte 5 runes (for component-local state). See updated patterns below.
+### **New Architectural Components**
+- **Content Fingerprinting**: SHA-256 based duplicate detection and change tracking
+- **Normalized Embeddings**: Separate embeddings table with optimized vector storage
+- **Enhanced Search**: Multi-modal search with semantic, keyword, and hybrid modes
+- **Sentry Integration**: Complete error monitoring and performance tracking
+- **Svelte-Query**: Advanced data fetching with caching and synchronization
+
+**Migration Impact**: All frontend patterns now support both traditional stores (for shared state) and Svelte 5 runes (for component-local state). New backend patterns include fingerprint-based operations and normalized embedding workflows.
 
 ---
 
@@ -119,6 +128,57 @@ async def filter_items(
     return await conn.fetch(query, *params)
 ```
 
+### **NEW: Enhanced Search API Pattern**
+```python
+# Multi-modal search endpoint with deduplication
+@router.post("/search/")
+async def enhanced_search(request: SearchRequest):
+    """Semantic, keyword, or hybrid search with automatic deduplication."""
+    
+    # Choose search method
+    if request.search_type == "semantic":
+        results = await enhanced_search_service.semantic_search(
+            query=request.query,
+            limit=request.limit,
+            threshold=request.threshold
+        )
+    elif request.search_type == "keyword":
+        results = await enhanced_search_service.keyword_search(
+            query=request.query,
+            limit=request.limit
+        )
+    else:  # hybrid
+        results = await enhanced_search_service.hybrid_search(
+            query=request.query,
+            limit=request.limit
+        )
+    
+    # Apply deduplication based on content fingerprints
+    if not request.include_duplicates:
+        results = await enhanced_search_service.search_with_deduplication(
+            query=request.query,
+            search_type=request.search_type,
+            limit=request.limit
+        )
+    
+    return results
+
+# Duplicate detection endpoint
+@router.post("/search/duplicates")
+async def find_duplicates(request: DuplicateSearchRequest):
+    """Find exact duplicates using content fingerprint."""
+    duplicates = await enhanced_search_service.find_duplicates_by_fingerprint(
+        content=request.content,
+        exclude_id=request.exclude_id
+    )
+    
+    return {
+        "duplicates": duplicates,
+        "total": len(duplicates),
+        "content_fingerprint": calculate_content_fingerprint(request.content)
+    }
+```
+
 ---
 
 ## 🗄️ **Database Schema Patterns**
@@ -177,6 +237,66 @@ ALTER TABLE items ALTER COLUMN new_field SET NOT NULL;
 CREATE INDEX idx_items_new_field ON items(new_field);
 
 COMMIT;
+```
+
+### **NEW: Content Fingerprinting Pattern**
+```sql
+-- Add content fingerprinting to any table with content
+ALTER TABLE items ADD COLUMN content_fingerprint VARCHAR(64);
+CREATE INDEX idx_items_content_fingerprint ON items(content_fingerprint);
+
+-- Usage in application
+from app.utils.fingerprint import calculate_content_fingerprint
+
+# Generate fingerprint
+fingerprint = calculate_content_fingerprint(content)
+
+# Check for duplicates (O(1) lookup)
+existing = await conn.fetchrow(
+    "SELECT id FROM items WHERE content_fingerprint = $1", 
+    fingerprint
+)
+
+# Detect content changes
+if old_fingerprint != new_fingerprint:
+    # Content has changed, reprocess
+    await process_content(content)
+```
+
+### **NEW: Normalized Embedding Pattern**
+```sql
+-- Create separate embeddings table for optimized vector storage
+CREATE TABLE embeddings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    model_name VARCHAR(100) NOT NULL DEFAULT 'text-embedding-ada-002',
+    model_version VARCHAR(50) NOT NULL DEFAULT 'v1',
+    vector vector(1536) NOT NULL,
+    vector_norm FLOAT, -- Pre-calculated for faster similarity
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add foreign key to main table
+ALTER TABLE items ADD COLUMN embed_vector_id UUID REFERENCES embeddings(id);
+CREATE INDEX idx_items_embed_vector_id ON items(embed_vector_id);
+CREATE INDEX idx_embeddings_vector ON embeddings USING ivfflat (vector vector_cosine_ops);
+
+-- Usage pattern
+from app.services.embedding_manager import embedding_manager
+
+# Create embedding
+result = await embedding_manager.create_embedding(
+    item_id=str(item.id),
+    content=f"{item.title} {item.content}",
+    update_item=True  # Updates item.embed_vector_id
+)
+
+# Search similar items (faster than direct vector search)
+similar = await embedding_manager.search_similar(
+    query_embedding=query_vector,
+    limit=20,
+    threshold=0.7
+)
 ```
 
 ### Relationship Patterns

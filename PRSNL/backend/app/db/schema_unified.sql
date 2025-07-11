@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS items (
     
     -- Embedding support (from migration 003)
     embedding vector(1536),
+    embed_vector_id UUID, -- Direct pointer to pgvector table (from migration 010)
+    
+    -- Content fingerprint for duplicate detection (from migration 010)
+    content_fingerprint VARCHAR(64), -- SHA-256 hash of raw_content
     
     -- Transcription support (from migration 004)
     transcription TEXT,
@@ -231,6 +235,8 @@ CREATE INDEX IF NOT EXISTS idx_items_content_type ON items(content_type);
 CREATE INDEX IF NOT EXISTS idx_items_url ON items(url) WHERE url IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_items_platform ON items(platform) WHERE platform IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_items_has_files ON items(has_files) WHERE has_files = true;
+CREATE INDEX IF NOT EXISTS idx_items_content_fingerprint ON items(content_fingerprint);
+CREATE INDEX IF NOT EXISTS idx_items_embed_vector_id ON items(embed_vector_id);
 
 -- Tags table indexes
 CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);

@@ -10,6 +10,9 @@ import logging
 import sys
 import socket
 
+# Import Sentry
+# from app.core.sentry import init_sentry
+
 # Import observability
 from app.core.observability import instrument_fastapi_app
 
@@ -30,6 +33,9 @@ logging.getLogger("app.db.database").setLevel(logging.DEBUG)
 logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
 
 logger = logging.getLogger(__name__)
+
+# Initialize Sentry before other imports
+# init_sentry()  # Temporarily disabled
 
 from app.config import settings
 from app.worker import listen_for_notifications
@@ -178,6 +184,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 
 from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
+from app.api import enhanced_search
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
 from app.api import insights, import_data, file_upload, content_types, development, ai, rag, firecrawl
@@ -230,6 +237,7 @@ app.include_router(development.router, prefix=settings.API_V1_STR)
 app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(rag.router, prefix=settings.API_V1_STR)
 app.include_router(firecrawl.router, prefix=settings.API_V1_STR)
+app.include_router(enhanced_search.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

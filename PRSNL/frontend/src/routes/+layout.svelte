@@ -8,6 +8,19 @@
   import AnimatedToast from '$lib/components/AnimatedToast.svelte';
   import { preferences } from '$lib/stores/app';
   import { goto } from '$app/navigation';
+  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+  
+  // Create QueryClient instance
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        cacheTime: 1000 * 60 * 10, // 10 minutes
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    },
+  });
   
   let toasts = [];
   let toastId = 0;
@@ -87,7 +100,8 @@
   });
 </script>
 
-<div class="app-layout">
+<QueryClientProvider client={queryClient}>
+  <div class="app-layout">
   <!-- Universal neural motherboard background for all pages except homepage -->
   <div class="neural-motherboard-bg {$page.url.pathname === '/' ? 'hide-bg' : ''}">
     <div class="pcb-traces"></div>
@@ -385,7 +399,8 @@
       />
     {/each}
   </ErrorBoundary>
-</div>
+  </div>
+</QueryClientProvider>
 
 <style>
   .app-layout {

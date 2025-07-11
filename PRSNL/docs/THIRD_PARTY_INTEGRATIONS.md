@@ -3,12 +3,30 @@
 This document catalogs all third-party libraries, APIs, and integrations used in the PRSNL knowledge management system.
 
 ## **🆕 Recent Major Update (2025-07-11)**
-**Svelte 5 Full Migration v2.3** completed with zero security vulnerabilities:
-- All frontend dependencies updated to latest secure versions
-- Resolved 14 security vulnerabilities through dependency updates
-- Breaking changes handled with backward compatibility for stores
+**Advanced Integrations & Architecture v2.4** completed:
+- **Sentry Integration**: Complete error monitoring for frontend and backend
+- **Svelte-Query Integration**: Advanced data fetching with caching and synchronization
+- **Content Fingerprint System**: SHA-256 based duplicate detection and change tracking
+- **Normalized Embedding Architecture**: Separate embeddings table with embed_vector_id
+- **Enhanced Search API**: Semantic, keyword, and hybrid search with deduplication
+- **Svelte 5 Full Migration v2.3**: Zero security vulnerabilities, all dependencies updated
 - Frontend port changed from 3003 to 3004 for development
 - All integrations tested and verified working
+
+## **✅ Completed Integrations (2025-07-11)**
+| Integration | Status | Purpose | Priority | Implementation Details |
+|-------------|--------|---------|----------|------------------------|
+| **Sentry** | ✅ Added | Error monitoring & performance tracking | High | Frontend + Backend integration, 5k events/month free |
+| **Svelte-Query** | ✅ Added | Data fetching, caching & synchronization | High | TanStack Query v5, QueryClient setup, utility functions |
+| **Content Fingerprinting** | ✅ Added | Duplicate detection & change tracking | High | SHA-256 hashing, database field, indexed |
+| **Normalized Embeddings** | ✅ Added | Vector storage optimization | High | Separate embeddings table, embed_vector_id foreign key |
+| **Enhanced Search** | ✅ Added | Multi-modal search capabilities | High | Semantic, keyword, hybrid search with deduplication |
+
+## **🚧 Future Integrations**
+| Integration | Status | Purpose | Priority | Notes |
+|-------------|--------|---------|----------|-------|
+| **Web-Workerize-Svelte** | 🔵 Later Stage | Offload heavy processing to Web Workers | Medium | For Markdown parsing & embeddings |
+| **UnoCSS** | ⚪ Considered | Atomic CSS with minimal bundle size | Low | High effort, defer until needed |
 
 ## **🏗️ Core Infrastructure**
 
@@ -48,6 +66,13 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `D3.js` | **7.9.0** | Data visualizations | BSD | Low |
 | `DOMPurify` | **3.2.6** | XSS prevention | Apache 2.0 | **Critical** |
 | `cookie` | **1.0.2** | Cookie handling | MIT | Low |
+
+### **NEW: Data Fetching & Caching**
+| Library | Version | Purpose | License | Risk Level |
+|---------|---------|---------|---------|------------|
+| `@tanstack/svelte-query` | **5.82.0** | **✅ Advanced data fetching & caching** | MIT | Low |
+| **Features** | Query invalidation, background refetch, optimistic updates | **✅ Operational** | Low |
+| **Benefits** | Reduces API calls, improves UX, automatic error handling | **✅ Active** | Low |
 
 ### **Markdown & Code Highlighting**
 | Library | Version | Purpose | License | Risk Level |
@@ -135,7 +160,30 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `Auth0` | User authentication | Planned | Medium |
 | `JWT` | Token-based auth | Planned | Medium |
 
-## **📈 Monitoring & Logging**
+## **📈 Monitoring, Logging & Data Management**
+
+### **NEW: Content Fingerprinting System**
+| Component | Version | Purpose | Implementation | Risk Level |
+|-----------|---------|---------|----------------|------------|
+| `content_fingerprint` | Database field | SHA-256 content hashing | **✅ Active** | Low |
+| `fingerprint.py` | Utility module | Duplicate detection & change tracking | **✅ Active** | Low |
+| **Benefits** | O(1) duplicate detection, content versioning, processing optimization | **✅ Operational** | Low |
+
+### **NEW: Normalized Embedding Architecture**
+| Component | Version | Purpose | Implementation | Risk Level |
+|-----------|---------|---------|----------------|------------|
+| `embeddings` table | PostgreSQL | Normalized vector storage | **✅ Active** | Low |
+| `embed_vector_id` | UUID field | Foreign key to embeddings | **✅ Active** | Low |
+| `embedding_manager.py` | Service | Vector lifecycle management | **✅ Active** | Low |
+| **Benefits** | Query performance, model versioning, memory efficiency | **✅ Operational** | Low |
+
+### **NEW: Enhanced Search System**
+| Component | Version | Purpose | Implementation | Risk Level |
+|-----------|---------|---------|----------------|------------|
+| `enhanced_search_service.py` | Service | Multi-modal search | **✅ Active** | Low |
+| `/api/search/*` | REST API | Search endpoints | **✅ Active** | Low |
+| **Search Types** | Semantic, keyword, hybrid | With automatic deduplication | **✅ Operational** | Low |
+| **Features** | Fingerprint deduplication, similarity search, stats | **✅ Active** | Low |
 
 ### **Logging & Monitoring**
 | Library | Version | Purpose | License | Risk Level |
@@ -164,11 +212,19 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `Promtail` | **Log collection agent** | **Implemented** | Low |
 | `OTEL Collector` | **Traces & metrics pipeline** | **Implemented** | Low |
 
-### **External Monitoring (Optional)**
+### **External Monitoring (Active)**
 | Service | Purpose | Implementation Status | Risk Level |
 |---------|---------|---------------------|------------|
-| `Sentry` | Error tracking | Not implemented | Low |
+| `Sentry` | Error tracking & performance monitoring | **✅ Implemented** | Low |
 | `DataDog` | APM monitoring | Not implemented | Low |
+
+### **NEW: Sentry Integration Details**
+| Component | Implementation | Configuration |
+|-----------|----------------|---------------|
+| **Frontend** | `@sentry/sveltekit` | Client-side error tracking, session replay, performance monitoring |
+| **Backend** | `sentry-sdk[fastapi]` | Server-side error tracking, performance tracing, request monitoring |
+| **Features** | Error filtering, release tracking, environment separation | Dev/prod environment separation |
+| **Free Tier** | 5,000 events/month | Sufficient for small-medium deployments |
 
 ## **🧪 Development & Testing**
 

@@ -6,8 +6,10 @@ from uuid import UUID
 from app.services.scraper import WebScraper
 from app.services.llm_processor import LLMProcessor
 from app.services.embedding_service import EmbeddingService
+from app.services.embedding_manager import embedding_manager
 from app.db.database import get_db_pool, update_item_embedding
 from app.utils.content_fingerprint import generate_content_fingerprint, ContentFingerprintManager
+from app.utils.fingerprint import calculate_content_fingerprint
 import logging
 
 logger = logging.getLogger(__name__)
@@ -117,8 +119,8 @@ class CaptureEngine:
                             existing_metadata = {}
                     logger.info(f"🔍 Preserving existing metadata keys: {list(existing_metadata.keys())}")
             
-            # Generate content fingerprint for deduplication
-            content_fingerprint = generate_content_fingerprint(scraped_data.content)
+            # Generate content fingerprint for deduplication (use unified method)
+            content_fingerprint = calculate_content_fingerprint(scraped_data.content)
             
             # Build metadata - merge with existing
             metadata = existing_metadata.copy()
@@ -186,6 +188,18 @@ class CaptureEngine:
                             ON CONFLICT DO NOTHING
                         """, item_id, tag)
                 
+                # Create embedding using the new embedding manager
+                embed_content = f"{processed.title or scraped_data.title} {processed.content or scraped_data.content}"
+                embedding_result = await embedding_manager.create_embedding(
+                    str(item_id),
+                    embed_content[:2000],  # Limit content length for embedding
+                    update_item=True
+                )
+                if embedding_result:
+                    logger.info(f"Created embedding {embedding_result['embedding_id']} for item {item_id}")
+                else:
+                    logger.warning(f"Failed to create embedding for item {item_id}")
+                
                 # Save images as attachments
                 if hasattr(scraped_data, 'images') and scraped_data.images:
                     for idx, img in enumerate(scraped_data.images[:5]):  # Limit to 5 images
@@ -211,12 +225,12 @@ class CaptureEngine:
                         except Exception as e:
                             logger.warning(f"Failed to save image attachment: {e}")
                 
-                # Generate and store embedding
+                # Legacy embedding generation (keeping for backward compatibility)
                 if processed.summary:
                     embedding = await self.embedding_service.generate_embedding(processed.summary)
                     if embedding:
                         await update_item_embedding(str(item_id), embedding)
-                        logger.info(f"Generated and stored embedding for item {item_id}")
+                        logger.info(f"Generated and stored legacy embedding for item {item_id}")
             
             logger.info(f"Successfully processed item {item_id}")
             

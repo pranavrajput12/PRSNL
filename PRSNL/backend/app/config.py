@@ -64,6 +64,15 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     
+    # Sentry Error Tracking & Performance Monitoring
+    SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", None)
+    SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))  # 10% of transactions
+    SENTRY_PROFILES_SAMPLE_RATE: float = float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1"))  # 10% of transactions
+    SENTRY_ENABLE_IN_DEV: bool = os.getenv("SENTRY_ENABLE_IN_DEV", "false").lower() == "true"
+    
+    # Version tracking
+    VERSION: str = os.getenv("VERSION", "2.3.0")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

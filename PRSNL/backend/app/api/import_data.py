@@ -12,6 +12,8 @@ import io
 from app.db.database import get_db_connection
 from app.core.capture_engine import CaptureEngine
 from app.models.schemas import ItemCreate
+from app.utils.fingerprint import calculate_content_fingerprint
+from app.services.embedding_manager import embedding_manager
 import logging
 import asyncio
 from pydantic import BaseModel, HttpUrl
@@ -132,9 +134,11 @@ async def import_json(
                 else:
                     # Create new item - insert directly then process
                     item_id = uuid4()
+                    content_fingerprint = calculate_content_fingerprint(item_create.content or '')
+                    
                     await conn.execute("""
-                        INSERT INTO items (id, url, title, type, raw_content, summary, status, metadata)
-                        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7::jsonb)
+                        INSERT INTO items (id, url, title, type, raw_content, summary, status, metadata, content_fingerprint)
+                        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7::jsonb, $8)
                     """, 
                         item_id,
                         str(item_create.url) if item_create.url else None,
@@ -142,8 +146,17 @@ async def import_json(
                         item_create.type,
                         item_create.content,
                         item_create.summary,
-                        json.dumps(item_data.get('metadata', {}))
+                        json.dumps(item_data.get('metadata', {})),
+                        content_fingerprint
                     )
+                    
+                    # Create embedding if content exists
+                    if item_create.content:
+                        await embedding_manager.create_embedding(
+                            str(item_id),
+                            f"{item_create.title} {item_create.content}"[:2000],
+                            update_item=True
+                        )
                     
                     # Process tags
                     for tag_name in item_create.tags:

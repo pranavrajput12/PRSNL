@@ -15,7 +15,8 @@ import type {
   APIError,
   TimelineItem,
   InsightsResponse,
-  ContentTypesResponse
+  ContentTypesResponse,
+  EnhancedSearchRequest
 } from './types/api';
 
 // Add RequestInit type for fetch API
@@ -140,10 +141,12 @@ export async function captureItem(
     if (data.enable_summarization) formData.append('enable_summarization', data.enable_summarization.toString());
     if (data.tags) formData.append('tags', JSON.stringify(data.tags));
     
-    // Add files
-    data.uploaded_files.forEach((file, index) => {
-      formData.append('files', file);
-    });
+    // Add files if they exist
+    if (data.uploaded_files) {
+      data.uploaded_files.forEach((file, index) => {
+        formData.append('files', file);
+      });
+    }
     
     // Use fetch directly for file uploads (no JSON content-type)
     const response = await fetch(`${API_BASE_URL}/file/upload`, {
@@ -204,7 +207,18 @@ export async function searchItems(
         created_at: item.createdAt || item.created_at,
         type: item.type || item.item_type,
         similarity_score: item.similarity_score || item.similarity
-      }))
+      })),
+      total: response.items?.length || 0,
+      query: query,
+      search_type: filters.mode || 'semantic',
+      timestamp: new Date().toISOString(),
+      user_id: 'current',
+      request_params: {
+        search_type: filters.mode || 'semantic',
+        limit: filters.limit || 10,
+        threshold: filters.threshold || 0.3,
+        include_duplicates: filters.include_duplicates || false
+      }
     };
   }
   
