@@ -1,0 +1,114 @@
+# Monitoring stack for PRSNL with Grafana + Loki + Prometheus
+# Works with Rancher Desktop containers
+
+version: '3.8'
+
+services:
+  # Grafana for dashboards and visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: prsnl-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: prsnl-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+      - ./monitoring/loki/config.yml:/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Promtail for log collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: prsnl-promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - ./monitoring/promtail/config.yml:/etc/promtail/config.yml
+      - ./backend/logs:/app/logs:ro  # PRSNL application logs
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prsnl-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./monitoring/prometheus/config.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # OTEL Collector for traces and metrics
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: prsnl-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./monitoring/otel/collector-config.yml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Node Exporter for system metrics (optional)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: prsnl-node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+volumes:
+  grafana-data:
+  loki-data:
+  prometheus-data:
+
+networks:
+  monitoring:
+    driver: bridge
+    name: prsnl-monitoring

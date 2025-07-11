@@ -66,6 +66,7 @@ docker-compose stop frontend
 - **Rule**: ALL new development must follow the patterns in this repository
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **NEW: Advanced Integrations v2.2 (2025-07-11)** - Vosk offline transcription, OpenTelemetry monitoring, pre-commit hooks
 - System Architecture Repository (2025-07-10) - Foundation for consistent development
 - Expert Engineer Development Tools (2025-07-10) - Port management, health checks, debugging
 - Fan3D component (commit b383191)

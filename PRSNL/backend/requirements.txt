@@ -12,7 +12,6 @@ pgvector==0.2.0
 
 # Caching
 redis==5.0.1
-aioredis==2.0.1
 
 # Web Scraping
 beautifulsoup4==4.12.3
@@ -32,6 +31,12 @@ flake8==7.0.0
 mypy==1.8.0
 pytest==7.4.4
 pytest-asyncio==0.23.3
+pre-commit==3.6.0
+bandit==1.7.5
+pydocstyle==6.3.0
+
+# Voice Recognition (Offline)
+vosk==0.3.45
 
 # Logging
 structlog==24.1.0
@@ -46,12 +51,23 @@ pytesseract==0.3.10
 aiofiles==23.2.1
 python-multipart==0.0.6
 
-# Monitoring
+# Monitoring & Observability
 prometheus-client==0.19.0
 starlette-exporter==0.21.0
 python-telegram-bot==20.8
 tenacity==8.2.3
 psutil==5.9.0
+
+# OpenTelemetry for traces, metrics, and logs
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-asyncpg==0.42b0
+opentelemetry-instrumentation-aiohttp-client==0.42b0
+opentelemetry-instrumentation-requests==0.42b0
+opentelemetry-exporter-otlp==1.21.0
+opentelemetry-exporter-prometheus==1.12.0rc1
+prometheus-fastapi-instrumentator==6.1.0
 
 # AI/ML
 openai==1.35.3

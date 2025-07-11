@@ -116,21 +116,122 @@
     </div>
     
     <div class="sidebar-header terminal-header">
-      <a href="/" class="logo">
-        {#if !sidebarCollapsed}
-          <span class="prsnl-logo-text">PRSNL</span>
-        {:else}
-          <span class="prsnl-logo-text">P</span>
-        {/if}
-      </a>
-      
       {#if !sidebarCollapsed}
+        <div class="brain-logo-center">
+          <div class="brain-circuit-container">
+            <img src="/thug-brain-logo.png" alt="PRSNL Brain" class="brain-logo-main" />
+            <div class="brain-circuits">
+              <div class="brain-circuit brain-circuit-1"></div>
+              <div class="brain-circuit brain-circuit-2"></div>
+              <div class="brain-circuit brain-circuit-3"></div>
+              <div class="brain-circuit brain-circuit-4"></div>
+              <div class="brain-circuit brain-circuit-5"></div>
+              <div class="brain-circuit brain-circuit-6"></div>
+            </div>
+          </div>
+          <div class="dot-matrix-text">
+            <div class="dot-matrix-letter letter-p">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+            </div>
+            <div class="dot-matrix-letter letter-r">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+            </div>
+            <div class="dot-matrix-letter letter-s">
+              <div class="dot empty"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot empty"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+            </div>
+            <div class="dot-matrix-letter letter-n">
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+            </div>
+            <div class="dot-matrix-letter letter-l">
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+          </div>
+        </div>
         <div class="system-info">NEURAL OS v3.0 - BRAIN COMPUTER INTERFACE</div>
         <div class="boot-sequence">
           <div class="boot-line">[ OK ] Neural pathways initialized</div>
           <div class="boot-line">[ OK ] Cognitive processes loaded</div>
           <div class="boot-line">[ OK ] Memory banks online</div>
           <div class="boot-line">[ OK ] Ready for neural interface</div>
+        </div>
+      {:else}
+        <div class="brain-logo-center">
+          <div class="brain-circuit-container">
+            <img src="/thug-brain-logo.png" alt="PRSNL Brain" class="brain-logo-collapsed" />
+            <div class="brain-circuits collapsed">
+              <div class="brain-circuit brain-circuit-1"></div>
+              <div class="brain-circuit brain-circuit-2"></div>
+              <div class="brain-circuit brain-circuit-3"></div>
+              <div class="brain-circuit brain-circuit-4"></div>
+            </div>
+          </div>
+          <div class="dot-matrix-text collapsed">
+            <div class="dot-matrix-letter letter-p">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+            </div>
+            <div class="dot-matrix-letter letter-r">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+            </div>
+            <div class="dot-matrix-letter letter-s">
+              <div class="dot empty"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot empty"></div><div class="dot"></div><div class="dot empty"></div>
+              <div class="dot empty"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot empty"></div>
+            </div>
+            <div class="dot-matrix-letter letter-n">
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot"></div>
+            </div>
+            <div class="dot-matrix-letter letter-l">
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot empty"></div><div class="dot empty"></div>
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+          </div>
         </div>
       {/if}
       
@@ -381,6 +482,211 @@
   
   .logo:hover .logo-icon::before {
     opacity: 0.3;
+  }
+
+  /* Brain Logo Styling */
+  .brain-logo-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 1rem 0 0.5rem 0;
+  }
+  
+  .brain-circuit-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+  
+  
+  .brain-circuits {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform, opacity;
+  }
+  
+  .brain-circuits.collapsed {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .brain-circuit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.8), rgba(0, 255, 136, 0.1), transparent);
+    transform-origin: 0% 50%;
+    opacity: 0.6;
+    animation: circuit-pulse 3s ease-in-out infinite;
+    will-change: transform, opacity, background;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .brain-circuit-1 {
+    transform: translate(-50%, -50%) rotate(0deg);
+    animation-delay: 0s;
+  }
+  
+  .brain-circuit-2 {
+    transform: translate(-50%, -50%) rotate(60deg);
+    animation-delay: 0.5s;
+  }
+  
+  .brain-circuit-3 {
+    transform: translate(-50%, -50%) rotate(120deg);
+    animation-delay: 1s;
+  }
+  
+  .brain-circuit-4 {
+    transform: translate(-50%, -50%) rotate(180deg);
+    animation-delay: 1.5s;
+  }
+  
+  .brain-circuit-5 {
+    transform: translate(-50%, -50%) rotate(240deg);
+    animation-delay: 2s;
+  }
+  
+  .brain-circuit-6 {
+    transform: translate(-50%, -50%) rotate(300deg);
+    animation-delay: 2.5s;
+  }
+  
+  /* Hover state with specific rotations for fast animation */
+  .brain-circuit-container:hover .brain-circuit-1 {
+    animation: circuit-pulse-fast-0 1.5s ease-in-out infinite;
+  }
+  
+  .brain-circuit-container:hover .brain-circuit-2 {
+    animation: circuit-pulse-fast-60 1.5s ease-in-out infinite;
+  }
+  
+  .brain-circuit-container:hover .brain-circuit-3 {
+    animation: circuit-pulse-fast-120 1.5s ease-in-out infinite;
+  }
+  
+  .brain-circuit-container:hover .brain-circuit-4 {
+    animation: circuit-pulse-fast-180 1.5s ease-in-out infinite;
+  }
+  
+  .brain-circuit-container:hover .brain-circuit-5 {
+    animation: circuit-pulse-fast-240 1.5s ease-in-out infinite;
+  }
+  
+  .brain-circuit-container:hover .brain-circuit-6 {
+    animation: circuit-pulse-fast-300 1.5s ease-in-out infinite;
+  }
+  
+  /* Collapsed state circuits */
+  .brain-circuits.collapsed .brain-circuit {
+    width: 80px;
+  }
+  
+  /* Dot Matrix Text Styling */
+  .dot-matrix-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    z-index: 2;
+    position: relative;
+  }
+  
+  .dot-matrix-text.collapsed {
+    gap: 4px;
+    margin-top: 12px;
+  }
+  
+  .dot-matrix-letter {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+    width: 30px;
+    height: 42px;
+  }
+  
+  .dot-matrix-text.collapsed .dot-matrix-letter {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 1px;
+    width: 20px;
+    height: 25px;
+  }
+  
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #00ff88;
+    animation: dot-wave 3s ease-in-out infinite;
+    will-change: background-color;
+  }
+  
+  .dot-matrix-text.collapsed .dot {
+    width: 3px;
+    height: 3px;
+  }
+  
+  .dot.empty {
+    background: transparent;
+    animation: none;
+  }
+  
+  /* Wave animation delays - color sweeps P→R→S→N→L */
+  .letter-p .dot { animation-delay: 0s; }
+  .letter-r .dot { animation-delay: 0.6s; }
+  .letter-s .dot { animation-delay: 1.2s; }
+  .letter-n .dot { animation-delay: 1.8s; }
+  .letter-l .dot { animation-delay: 2.4s; }
+
+  .brain-logo-main {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    background: transparent;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.4)) drop-shadow(0 0 25px rgba(220, 20, 60, 0.3));
+    transition: all 0.3s ease;
+    animation: brain-breathing 4s ease-in-out infinite;
+    will-change: transform;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brain-logo-main:hover {
+    animation: brain-breathing-fast 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6)) drop-shadow(0 0 30px rgba(220, 20, 60, 0.5));
+  }
+
+  .brain-logo-collapsed {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    background: transparent;
+    filter: drop-shadow(0 0 12px rgba(0, 255, 136, 0.4)) drop-shadow(0 0 20px rgba(220, 20, 60, 0.3));
+    transition: all 0.3s ease;
+    animation: brain-breathing 4s ease-in-out infinite;
+    will-change: transform;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brain-logo-collapsed:hover {
+    animation: brain-breathing-fast 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.6)) drop-shadow(0 0 25px rgba(220, 20, 60, 0.5));
   }
   
   .sidebar-toggle {
@@ -757,6 +1063,135 @@
   @keyframes status-pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.2); opacity: 0.8; }
+  }
+  
+  /* Brain Logo Animations */
+  @keyframes brain-breathing {
+    0%, 100% { 
+      transform: scale(1); 
+      filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.4)) drop-shadow(0 0 25px rgba(220, 20, 60, 0.3));
+    }
+    50% { 
+      transform: scale(1.05); 
+      filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.5)) drop-shadow(0 0 28px rgba(220, 20, 60, 0.4));
+    }
+  }
+  
+  @keyframes brain-breathing-fast {
+    0%, 100% { 
+      transform: scale(1.05); 
+      filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6)) drop-shadow(0 0 30px rgba(220, 20, 60, 0.5));
+    }
+    50% { 
+      transform: scale(1.15); 
+      filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.8)) drop-shadow(0 0 35px rgba(220, 20, 60, 0.7));
+    }
+  }
+  
+  @keyframes circuit-pulse {
+    0%, 100% { 
+      opacity: 0.3;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.4), rgba(0, 255, 136, 0.1), transparent);
+    }
+    50% { 
+      opacity: 0.8;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(0, 255, 136, 0.3), transparent);
+    }
+  }
+  
+  /* Fast pulse animations for each circuit rotation */
+  @keyframes circuit-pulse-fast-0 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(0deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(0deg) scaleX(1.3);
+    }
+  }
+  
+  @keyframes circuit-pulse-fast-60 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(60deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(60deg) scaleX(1.3);
+    }
+  }
+  
+  @keyframes circuit-pulse-fast-120 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(120deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(120deg) scaleX(1.3);
+    }
+  }
+  
+  @keyframes circuit-pulse-fast-180 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(180deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(180deg) scaleX(1.3);
+    }
+  }
+  
+  @keyframes circuit-pulse-fast-240 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(240deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(240deg) scaleX(1.3);
+    }
+  }
+  
+  @keyframes circuit-pulse-fast-300 {
+    0%, 100% { 
+      opacity: 0.6;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 0.9), rgba(220, 20, 60, 0.3), transparent);
+      transform: translate(-50%, -50%) rotate(300deg) scaleX(1);
+    }
+    50% { 
+      opacity: 1;
+      background: linear-gradient(90deg, rgba(0, 255, 136, 1), rgba(220, 20, 60, 0.6), transparent);
+      transform: translate(-50%, -50%) rotate(300deg) scaleX(1.3);
+    }
+  }
+  
+  /* Dot Matrix Wave Animation */
+  @keyframes dot-wave {
+    0% { 
+      background: #00ff88;
+      box-shadow: 0 0 4px rgba(0, 255, 136, 0.8);
+    }
+    50% { 
+      background: #DC143C;
+      box-shadow: 0 0 8px rgba(220, 20, 60, 1);
+    }
+    100% { 
+      background: #00ff88;
+      box-shadow: 0 0 4px rgba(0, 255, 136, 0.8);
+    }
   }
   
   /* Terminal Header Styles */

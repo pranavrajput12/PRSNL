@@ -10,6 +10,9 @@ import logging
 import sys
 import socket
 
+# Import observability
+from app.core.observability import instrument_fastapi_app
+
 # Configure comprehensive logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -45,7 +48,10 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Add Prometheus middleware
+# 🔍 Two-line drop-in observability setup
+instrument_fastapi_app(app)
+
+# Add legacy Prometheus middleware (enhanced by observability)
 app.add_middleware(PrometheusMiddleware, app_name="prsnl_backend", group_paths=True)
 app.add_route("/metrics", handle_metrics)
 

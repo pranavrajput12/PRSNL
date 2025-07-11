@@ -262,6 +262,8 @@ class Item(ItemBase):
     file_path: Optional[str] = None
     thumbnail_url: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    content_fingerprint: Optional[str] = Field(None, description="SHA-256 hash of raw content for deduplication")
+    embed_vector_id: Optional[UUID] = Field(None, description="Direct pointer to pgvector embedding table")
     
     class Config:
         from_attributes = True

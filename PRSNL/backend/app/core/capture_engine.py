@@ -7,6 +7,7 @@ from app.services.scraper import WebScraper
 from app.services.llm_processor import LLMProcessor
 from app.services.embedding_service import EmbeddingService
 from app.db.database import get_db_pool, update_item_embedding
+from app.utils.content_fingerprint import generate_content_fingerprint, ContentFingerprintManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -98,15 +99,38 @@ class CaptureEngine:
                     'sentiment': None
                 })()
             
-            # Build metadata
-            metadata = {
+            # First, fetch existing metadata to preserve it
+            existing_metadata = {}
+            async with pool.acquire() as conn:
+                existing_row = await conn.fetchrow("""
+                    SELECT metadata FROM items WHERE id = $1
+                """, item_id)
+                if existing_row and existing_row['metadata']:
+                    # Handle both dict and string types
+                    if isinstance(existing_row['metadata'], dict):
+                        existing_metadata = existing_row['metadata']
+                    elif isinstance(existing_row['metadata'], str):
+                        try:
+                            existing_metadata = json.loads(existing_row['metadata'])
+                        except json.JSONDecodeError:
+                            logger.warning(f"Could not parse existing metadata as JSON: {existing_row['metadata']}")
+                            existing_metadata = {}
+                    logger.info(f"🔍 Preserving existing metadata keys: {list(existing_metadata.keys())}")
+            
+            # Generate content fingerprint for deduplication
+            content_fingerprint = generate_content_fingerprint(scraped_data.content)
+            
+            # Build metadata - merge with existing
+            metadata = existing_metadata.copy()
+            metadata.update({
                 "author": scraped_data.author,
                 "published_date": scraped_data.published_date,
                 "word_count": len(processed.content.split()) if processed.content else 0,
                 "scraped_at": scraped_data.scraped_at.isoformat() if scraped_data.scraped_at else None,
                 "summarization_enabled": enable_summarization,
-                "content_type": content_type
-            }
+                "content_type": content_type,
+                "content_fingerprint": content_fingerprint
+            })
             
             # Only include ai_analysis if AI processing actually occurred
             if enable_summarization and content_type != "link":
@@ -132,6 +156,7 @@ class CaptureEngine:
                         processed_content = $5,
                         search_vector = to_tsvector('english', $2 || ' ' || COALESCE($3, '') || ' ' || COALESCE($5, '')),
                         metadata = $6::jsonb,
+                        content_fingerprint = $7,
                         status = 'completed',
                         updated_at = NOW()
                     WHERE id = $1
@@ -141,7 +166,8 @@ class CaptureEngine:
                     processed.summary,
                     scraped_data.html,
                     processed.content,
-                    json.dumps(metadata)
+                    json.dumps(metadata),
+                    content_fingerprint
                 )
                 
                 # Add auto-generated tags

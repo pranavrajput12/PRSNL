@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import logging
 
 from app.utils.url_classifier import URLClassifier
+from app.services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,9 @@ class PreviewService:
                     },
                     'readme': {
                         'snippet': readme_content.get('snippet') if readme_content else None,
-                        'full_length': readme_content.get('full_length') if readme_content else 0
+                        'full_content': readme_content.get('full_content') if readme_content else None,
+                        'full_length': readme_content.get('full_length') if readme_content else 0,
+                        'format': readme_content.get('format', 'markdown') if readme_content else 'markdown'
                     },
                     'recent_commits': commits,
                     'languages': languages,
@@ -143,7 +146,14 @@ class PreviewService:
             return await self._generate_basic_preview(url)
     
     async def _fetch_github_repo_data(self, session: aiohttp.ClientSession, owner: str, repo: str) -> Optional[Dict[str, Any]]:
-        """Fetch repository data from GitHub API."""
+        """Fetch repository data from GitHub API with caching."""
+        
+        # Try cache first
+        cached_data = await cache_service.get_github_repo(owner, repo)
+        if cached_data:
+            logger.info(f"🎯 Using cached GitHub data for {owner}/{repo}")
+            return cached_data
+        
         try:
             api_url = f"https://api.github.com/repos/{owner}/{repo}"
             headers = {'Accept': 'application/vnd.github.v3+json'}
@@ -153,7 +163,18 @@ class PreviewService:
             
             async with session.get(api_url, headers=headers, timeout=10) as response:
                 if response.status == 200:
-                    return await response.json()
+                    repo_data = await response.json()
+                    
+                    # Cache the successful response for 1 hour
+                    await cache_service.cache_github_repo(owner, repo, repo_data, ttl=3600)
+                    logger.info(f"💾 Cached GitHub data for {owner}/{repo}")
+                    
+                    return repo_data
+                elif response.status == 404:
+                    # Cache 404s for shorter time to avoid repeated requests
+                    error_data = {"error": "Repository not found", "status": 404}
+                    await cache_service.cache_github_repo(owner, repo, error_data, ttl=300)
+                    logger.warning(f"Repository {owner}/{repo} not found (404)")
                 else:
                     logger.warning(f"GitHub API returned status {response.status} for {owner}/{repo}")
                     
@@ -187,8 +208,10 @@ class PreviewService:
                             
                             return {
                                 'snippet': snippet,
+                                'full_content': content,
                                 'full_length': len(content),
-                                'file_name': readme_file
+                                'file_name': readme_file,
+                                'format': 'markdown' if readme_file.lower().endswith('.md') else 'text'
                             }
                             
             except Exception as e:

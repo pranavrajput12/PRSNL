@@ -52,7 +52,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
       REDIS_URL: redis://redis:6379
-      AZURE_OPENAI_API_KEY: 1U6RGbb4XrVh4LUqG5qrNLHd1hvHeCDqseSThAayqhclju9nUCtTJQQJ99BAACHYHv6XJ3w3AAABACOG6tdK
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
       AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
       AZURE_OPENAI_DEPLOYMENT: gpt-4.1
       AZURE_OPENAI_API_VERSION: 2025-01-01-preview

@@ -8,6 +8,8 @@
   import ErrorMessage from '$lib/components/ErrorMessage.svelte';
   import KnowledgeCard from '$lib/components/KnowledgeCard.svelte';
   import AsyncBoundary from '$lib/components/AsyncBoundary.svelte';
+  import SafeHTML from '$lib/components/SafeHTML.svelte';
+  import MarkdownViewer from '$lib/components/development/MarkdownViewer.svelte';
   import type { Item } from '$lib/types/api';
   import { getItem } from '$lib/api';
   
@@ -49,26 +51,7 @@
     setTimeout(() => copiedNotification = false, 2000);
   }
   
-  function formatContent(content: string): string {
-    if (!content) return '';
-    
-    // Convert numbered lists to proper HTML
-    content = content.replace(/^(\d+)\.\s+(.+)$/gm, '<li class="numbered">$2</li>');
-    content = content.replace(/(<li class="numbered">.*<\/li>\n?)+/g, '<ol class="formatted-list">$&</ol>');
-    
-    // Convert bullet points to proper HTML
-    content = content.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
-    content = content.replace(/(<li>.*<\/li>\n?)+/g, '<ul class="formatted-list">$&</ul>');
-    
-    // Convert headers (lines ending with :)
-    content = content.replace(/^(.+):$/gm, '<h4 class="content-header">$1</h4>');
-    
-    // Convert paragraphs
-    content = content.replace(/\n\n/g, '</p><p>');
-    content = '<p>' + content + '</p>';
-    
-    return content;
-  }
+  // Removed formatContent - now using unified MarkdownViewer with highlight.js
   
   function getDifficultyColor(difficulty: string): string {
     switch(difficulty?.toLowerCase()) {
@@ -324,7 +307,7 @@
               <KnowledgeCard title="Transcript" icon="file-text">
                 {#if hasTranscript}
                   <div class="formatted-content">
-                    {@html formatContent(item.transcription || '')}
+                    <MarkdownViewer content={item.transcription || ''} theme="neural" />
                   </div>
                 {:else}
                   <div class="transcript-placeholder">
@@ -357,7 +340,7 @@
             {:else if item.content || item.transcription}
               <KnowledgeCard title="Full Content" icon="file-text">
                 <div class="formatted-content">
-                  {@html formatContent(item.content || item.transcription || '')}
+                  <MarkdownViewer content={item.content || item.transcription || ''} theme="neural" />
                 </div>
               </KnowledgeCard>
             {:else if isBookmark}
