@@ -45,7 +45,7 @@
     console.log('🔵 Neural Stream: Mounting timeline...');
     // Initialize content types
     await contentTypes.init();
-    contentTypes.subscribe(types => {
+    contentTypes.subscribe((types) => {
       availableTypes = types;
     });
     await loadTimeline(true);
@@ -53,11 +53,11 @@
 
   async function loadTimeline(reset = false) {
     if (isLoading) return;
-    
+
     try {
       isLoading = true;
       error = null;
-      
+
       if (reset) {
         page = 1;
         groups = [];
@@ -66,13 +66,13 @@
       console.log('🔵 Neural Stream: Loading timeline page', page);
       const response = await getTimeline(page);
       console.log('🔵 Neural Stream: Timeline response:', response);
-      
+
       if (response && response.items) {
         console.log('🔵 Neural Stream: Found', response.items.length, 'items');
-        
+
         // Group items by date
         const newGroups: { [key: string]: Item[] } = {};
-        
+
         response.items.forEach((item: Item) => {
           // Handle the date format properly
           const itemDate = new Date(item.createdAt);
@@ -85,10 +85,14 @@
         });
 
         // Convert to array and sort by date
-        const groupArray: TimelineGroup[] = Object.entries(newGroups).map(([date, items]) => ({
-          date,
-          items: items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const groupArray: TimelineGroup[] = Object.entries(newGroups)
+          .map(([date, items]) => ({
+            date,
+            items: items.sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            ),
+          }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         console.log('🔵 Neural Stream: Created', groupArray.length, 'groups');
 
@@ -100,7 +104,7 @@
 
         hasMore = response.items.length >= 20;
         page++;
-        
+
         console.log('🔵 Neural Stream: Total groups now:', groups.length);
       } else {
         console.log('🔴 Neural Stream: No response or items');
@@ -128,7 +132,7 @@
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     }
   }
@@ -140,39 +144,39 @@
 
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return date.toLocaleDateString();
   }
 
   function getContentTypeBadge(item: Item) {
     const itemType = item.type || item.item_type || 'article';
-    const typeDefinition = availableTypes.find(t => t.name === itemType);
-    
+    const typeDefinition = availableTypes.find((t) => t.name === itemType);
+
     if (typeDefinition) {
       return {
         type: typeDefinition.name,
         icon: getTypeIcon(typeDefinition.name),
-        label: typeDefinition.display_name.substring(0, 3).toUpperCase()
+        label: typeDefinition.display_name.substring(0, 3).toUpperCase(),
       };
     }
-    
+
     // Fallback
     return {
       type: itemType,
       icon: 'file',
-      label: itemType.substring(0, 3).toUpperCase()
+      label: itemType.substring(0, 3).toUpperCase(),
     };
   }
 
   async function handleScroll() {
     if (!scrollContainer || isLoading || !hasMore) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
     if (scrollTop + clientHeight >= scrollHeight - 200) {
       await loadTimeline(false);
@@ -185,31 +189,33 @@
   }
 
   // Computed property to filter groups based on selected mode
-  $: filteredGroups = groups.map(group => {
-    let filteredItems = group.items;
+  $: filteredGroups = groups
+    .map((group) => {
+      let filteredItems = group.items;
 
-    // Apply filter based on mode
-    if (filterMode !== 'all') {
-      if (filterMode === 'today') {
-        const today = new Date().toDateString();
-        const itemDate = new Date(group.date).toDateString();
-        if (itemDate !== today) {
-          filteredItems = [];
+      // Apply filter based on mode
+      if (filterMode !== 'all') {
+        if (filterMode === 'today') {
+          const today = new Date().toDateString();
+          const itemDate = new Date(group.date).toDateString();
+          if (itemDate !== today) {
+            filteredItems = [];
+          }
+        } else {
+          // Filter by content type
+          filteredItems = group.items.filter((item) => {
+            const itemType = item.type || item.item_type;
+            return itemType === filterMode;
+          });
         }
-      } else {
-        // Filter by content type
-        filteredItems = group.items.filter(item => {
-          const itemType = item.type || item.item_type;
-          return itemType === filterMode;
-        });
       }
-    }
 
-    return {
-      ...group,
-      items: filteredItems
-    };
-  }).filter(group => group.items.length > 0); // Remove empty groups
+      return {
+        ...group,
+        items: filteredItems,
+      };
+    })
+    .filter((group) => group.items.length > 0); // Remove empty groups
 </script>
 
 <svelte:head>
@@ -229,21 +235,21 @@
   <div class="stream-header">
     <h1 class="stream-title">Neural Thought Stream</h1>
     <div class="stream-controls">
-      <button 
+      <button
         class="control-button {filterMode === 'all' ? 'active' : ''}"
         on:click={() => setFilterMode('all')}
       >
         All Traces
       </button>
-      {#each availableTypes.filter(t => t.count > 0) as contentType}
-        <button 
+      {#each availableTypes.filter((t) => t.count > 0) as contentType}
+        <button
           class="control-button {filterMode === contentType.name ? 'active' : ''}"
           on:click={() => setFilterMode(contentType.name)}
         >
           {contentType.display_name}
         </button>
       {/each}
-      <button 
+      <button
         class="control-button {filterMode === 'today' ? 'active' : ''}"
         on:click={() => setFilterMode('today')}
       >
@@ -256,17 +262,15 @@
   <div class="neural-flow-line"></div>
 
   <!-- Timeline content -->
-  <div 
-    class="stream-content" 
-    bind:this={scrollContainer}
-    on:scroll={handleScroll}
-  >
+  <div class="stream-content" bind:this={scrollContainer} on:scroll={handleScroll}>
     {#if error}
-      <ErrorMessage 
-        message="Failed to load thought stream" 
-        details={error.message} 
-        retry={() => loadTimeline(true)} 
-        dismiss={() => { error = null; }} 
+      <ErrorMessage
+        message="Failed to load thought stream"
+        details={error.message}
+        retry={() => loadTimeline(true)}
+        dismiss={() => {
+          error = null;
+        }}
       />
     {:else if isLoading && groups.length === 0}
       <div class="loading-section">
@@ -281,7 +285,11 @@
           <Icon name="brain" size="large" color="var(--text-muted)" />
         </div>
         <h3>{filterMode === 'all' ? 'No neural traces detected' : `No ${filterMode} found`}</h3>
-        <p>{filterMode === 'all' ? 'Start capturing content to build your thought stream' : `Try switching to "All Traces" or capture more ${filterMode} content`}</p>
+        <p>
+          {filterMode === 'all'
+            ? 'Start capturing content to build your thought stream'
+            : `Try switching to "All Traces" or capture more ${filterMode} content`}
+        </p>
         <a href="/capture" class="btn-primary">
           <Icon name="plus" size="small" />
           Begin neural capture
@@ -301,7 +309,7 @@
             {@const badge = getContentTypeBadge(item)}
             <div class="memory-trace">
               <div class="trace-connection"></div>
-              
+
               <div class="trace-header">
                 <div class="trace-main">
                   <a href="/item/{item.id}" class="trace-title">
@@ -317,7 +325,7 @@
                     <div class="trace-summary">{item.summary}</div>
                   {/if}
                 </div>
-                
+
                 <div class="trace-badges">
                   {#if badge}
                     <div class="trace-badge {badge.type}">
@@ -330,8 +338,8 @@
 
               {#if item.item_type === 'video' && item.thumbnail_url && item.url}
                 <div class="trace-video">
-                  <VideoPlayer 
-                    src={item.url} 
+                  <VideoPlayer
+                    src={item.url}
                     thumbnailUrl={item.thumbnail_url}
                     title={item.title || 'Untitled'}
                     duration={item.duration}
@@ -396,24 +404,40 @@
   }
 
   @keyframes pulse-activity {
-    0% { 
+    0% {
       opacity: 0;
       transform: scale(0.5);
     }
-    50% { 
+    50% {
       opacity: 1;
       transform: scale(1);
     }
-    100% { 
+    100% {
       opacity: 0;
       transform: scale(0.5);
     }
   }
 
-  .activity-pulse:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-  .activity-pulse:nth-child(2) { top: 40%; left: 85%; animation-delay: 1s; }
-  .activity-pulse:nth-child(3) { top: 70%; left: 20%; animation-delay: 2s; }
-  .activity-pulse:nth-child(4) { top: 60%; left: 70%; animation-delay: 3s; }
+  .activity-pulse:nth-child(1) {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+  .activity-pulse:nth-child(2) {
+    top: 40%;
+    left: 85%;
+    animation-delay: 1s;
+  }
+  .activity-pulse:nth-child(3) {
+    top: 70%;
+    left: 20%;
+    animation-delay: 2s;
+  }
+  .activity-pulse:nth-child(4) {
+    top: 60%;
+    left: 70%;
+    animation-delay: 3s;
+  }
 
   .stream-header {
     text-align: center;
@@ -425,7 +449,7 @@
     font-family: 'Space Grotesk', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #DC143C, #00ff64);
+    background: linear-gradient(135deg, #dc143c, #00ff64);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -453,15 +477,15 @@
   }
 
   .control-button:hover {
-    border-color: #DC143C;
-    color: #DC143C;
+    border-color: #dc143c;
+    color: #dc143c;
     box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
   }
 
   .control-button.active {
     background: rgba(220, 20, 60, 0.2);
-    border-color: #DC143C;
-    color: #DC143C;
+    border-color: #dc143c;
+    color: #dc143c;
   }
 
   .neural-flow-line {
@@ -470,17 +494,24 @@
     top: 200px;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(180deg, 
-      transparent 0%, 
-      rgba(0, 255, 100, 0.5) 20%, 
-      rgba(220, 20, 60, 0.5) 80%, 
-      transparent 100%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 255, 100, 0.5) 20%,
+      rgba(220, 20, 60, 0.5) 80%,
+      transparent 100%
+    );
     animation: flow-pulse 3s ease-in-out infinite;
   }
 
   @keyframes flow-pulse {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .stream-content {
@@ -507,7 +538,7 @@
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
-    background: #DC143C;
+    background: #dc143c;
     border-radius: 50%;
     border: 3px solid #0a0a0a;
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
@@ -515,8 +546,13 @@
   }
 
   @keyframes node-pulse {
-    0%, 100% { transform: translateY(-50%) scale(1); }
-    50% { transform: translateY(-50%) scale(1.2); }
+    0%,
+    100% {
+      transform: translateY(-50%) scale(1);
+    }
+    50% {
+      transform: translateY(-50%) scale(1.2);
+    }
   }
 
   .date-label {
@@ -561,8 +597,12 @@
   }
 
   @keyframes connection-flow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
   }
 
   .trace-header {
@@ -587,7 +627,7 @@
   }
 
   .trace-title:hover {
-    color: #DC143C;
+    color: #dc143c;
   }
 
   .processing-indicator {
@@ -625,7 +665,7 @@
 
   .trace-badge.video {
     background: rgba(220, 20, 60, 0.2);
-    color: #DC143C;
+    color: #dc143c;
     border: 1px solid rgba(220, 20, 60, 0.3);
   }
 
@@ -709,7 +749,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #DC143C, #B91C3C);
+    background: linear-gradient(135deg, #dc143c, #b91c3c);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
@@ -719,7 +759,7 @@
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #B91C3C, #991B1B);
+    background: linear-gradient(135deg, #b91c3c, #991b1b);
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
     transform: translateY(-2px);
   }

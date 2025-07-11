@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
-  
+
   export let videoId: string;
   export let title: string = '';
   export let thumbnail: string | undefined = undefined;
   export let duration: number | undefined = undefined;
   export let platform: string | undefined = undefined;
   export let showControls: boolean = true;
-  
+
   let videoData: any = null;
   let isLoading = true;
   let isError = false;
@@ -18,28 +18,34 @@
   let embedUrl = '';
   let streamUrl = '';
   let isDownloaded = false;
-  
+
   onMount(async () => {
     await loadVideoData();
   });
-  
+
   async function loadVideoData() {
     try {
       console.log('🔵 StreamingVideoPlayer - Loading video data for ID:', videoId);
-      console.log('🔵 StreamingVideoPlayer - Input props:', { videoId, title, thumbnail, duration, platform });
-      
+      console.log('🔵 StreamingVideoPlayer - Input props:', {
+        videoId,
+        title,
+        thumbnail,
+        duration,
+        platform,
+      });
+
       const response = await fetch(`/api/videos/${videoId}/stream-url`);
       console.log('🔵 StreamingVideoPlayer - API Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('🔴 StreamingVideoPlayer - API Error:', response.status, errorText);
         throw new Error(`Failed to get video stream URL: ${response.status} ${errorText}`);
       }
-      
+
       videoData = await response.json();
       console.log('🟢 StreamingVideoPlayer - Video data received:', videoData);
-      
+
       if (videoData.type === 'local') {
         // Video is downloaded, use local file
         streamUrl = videoData.url;
@@ -52,7 +58,7 @@
         embedUrl = videoData.embed_url;
         isDownloaded = false;
         console.log('🔵 StreamingVideoPlayer - Using streaming video:', { streamUrl, embedUrl });
-        
+
         // For YouTube, prefer embed for better UX
         if (platform === 'youtube' && embedUrl) {
           useEmbed = true;
@@ -62,15 +68,15 @@
           console.log('🔵 StreamingVideoPlayer - Using direct video stream');
         }
       }
-      
+
       console.log('🟢 StreamingVideoPlayer - Final configuration:', {
         useEmbed,
         streamUrl,
         embedUrl,
         isDownloaded,
-        platform
+        platform,
       });
-      
+
       isLoading = false;
     } catch (error) {
       console.error('🔴 StreamingVideoPlayer - Error loading video data:', error);
@@ -79,31 +85,35 @@
       isLoading = false;
     }
   }
-  
+
   function togglePlay() {
     if (useEmbed) {
       // For embedded videos, we can't control playback directly
       // The embed player will handle it
       return;
     }
-    
+
     isPlaying = !isPlaying;
   }
-  
+
   function formatDuration(seconds: number): string {
     if (!seconds) return '0:00';
-    
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
-  
+
   function getPlatformIcon(platform: string) {
     switch (platform) {
-      case 'youtube': return 'youtube';
-      case 'twitter': return 'twitter';
-      case 'instagram': return 'instagram';
-      default: return 'video';
+      case 'youtube':
+        return 'youtube';
+      case 'twitter':
+        return 'twitter';
+      case 'instagram':
+        return 'instagram';
+      default:
+        return 'video';
     }
   }
 </script>
@@ -123,9 +133,9 @@
   {:else if useEmbed && embedUrl}
     <!-- YouTube or other platform embed -->
     <div class="embed-container">
-      <iframe 
+      <iframe
         src={embedUrl}
-        title={title}
+        {title}
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
@@ -143,18 +153,18 @@
               <Icon name="play" size="medium" color="white" />
             </div>
           </div>
-          
+
           {#if duration}
             <div class="duration">{formatDuration(duration)}</div>
           {/if}
-          
+
           {#if platform}
             <div class="platform-badge">
               <Icon name={getPlatformIcon(platform)} size="small" color="white" />
               {platform}
             </div>
           {/if}
-          
+
           {#if isDownloaded}
             <div class="download-badge">
               <Icon name="download" size="small" color="white" />
@@ -168,12 +178,12 @@
           {/if}
         </div>
       {:else}
-        <video 
+        <video
           controls={showControls}
           autoplay={isPlaying}
-          on:play={() => isPlaying = true}
-          on:pause={() => isPlaying = false}
-          on:ended={() => isPlaying = false}
+          on:play={() => (isPlaying = true)}
+          on:pause={() => (isPlaying = false)}
+          on:ended={() => (isPlaying = false)}
         >
           <source src={streamUrl} type="video/mp4" />
           Your browser does not support the video tag.
@@ -192,7 +202,7 @@
     overflow: hidden;
     aspect-ratio: 16 / 9;
   }
-  
+
   .loading-container {
     display: flex;
     flex-direction: column;
@@ -202,7 +212,7 @@
     height: 100%;
     color: white;
   }
-  
+
   .spinner {
     width: 40px;
     height: 40px;
@@ -212,11 +222,13 @@
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 1rem;
   }
-  
+
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
-  
+
   .error-container {
     display: flex;
     flex-direction: column;
@@ -228,7 +240,7 @@
     text-align: center;
     padding: 1rem;
   }
-  
+
   .retry-btn {
     background: var(--man-united-red);
     color: white;
@@ -240,30 +252,30 @@
     transition: all var(--transition-base);
     margin-top: 1rem;
   }
-  
+
   .retry-btn:hover {
     background: var(--accent-red-hover);
     transform: translateY(-2px);
   }
-  
+
   .embed-container {
     position: relative;
     width: 100%;
     height: 100%;
   }
-  
+
   .embed-container iframe {
     width: 100%;
     height: 100%;
     border: none;
   }
-  
+
   .video-container {
     position: relative;
     width: 100%;
     height: 100%;
   }
-  
+
   .video-thumbnail {
     position: relative;
     cursor: pointer;
@@ -271,17 +283,17 @@
     width: 100%;
     height: 100%;
   }
-  
+
   .video-thumbnail:hover {
     opacity: 0.9;
   }
-  
+
   .video-thumbnail img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
+
   .play-overlay {
     position: absolute;
     top: 50%;
@@ -296,17 +308,17 @@
     justify-content: center;
     transition: all var(--transition-base);
   }
-  
+
   .video-thumbnail:hover .play-overlay {
     background: var(--man-united-red);
     transform: translate(-50%, -50%) scale(1.1);
   }
-  
+
   .play-icon {
     color: white;
     margin-left: 3px;
   }
-  
+
   .duration {
     position: absolute;
     bottom: 8px;
@@ -318,7 +330,7 @@
     font-size: 0.875rem;
     font-weight: 600;
   }
-  
+
   .platform-badge {
     position: absolute;
     top: 8px;
@@ -333,7 +345,7 @@
     align-items: center;
     gap: 4px;
   }
-  
+
   .download-badge {
     position: absolute;
     top: 8px;
@@ -348,7 +360,7 @@
     align-items: center;
     gap: 4px;
   }
-  
+
   .streaming-badge {
     position: absolute;
     top: 8px;
@@ -363,19 +375,21 @@
     align-items: center;
     gap: 4px;
   }
-  
+
   video {
     width: 100%;
     height: 100%;
     object-fit: contain;
   }
-  
+
   @media (max-width: 768px) {
     .streaming-video-player {
       aspect-ratio: 16 / 10;
     }
-    
-    .platform-badge, .download-badge, .streaming-badge {
+
+    .platform-badge,
+    .download-badge,
+    .streaming-badge {
       font-size: 0.7rem;
       padding: 2px 6px;
     }

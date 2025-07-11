@@ -16,14 +16,17 @@
     <h1>Neural Galaxy Explorer Preview</h1>
     <div class="preview-badge">PREVIEW MODE</div>
   </header>
-  
+
   <div class="preview-content">
     <NeuralGalaxy />
   </div>
-  
+
   <div class="preview-info">
     <h2>🌌 Neural Galaxy Explorer</h2>
-    <p>Navigate through your knowledge constellation in 3D space. Each topic forms a solar system with orbiting content planets.</p>
+    <p>
+      Navigate through your knowledge constellation in 3D space. Each topic forms a solar system
+      with orbiting content planets.
+    </p>
     <ul>
       <li>🎮 Use the zoom slider to navigate from galaxy view to individual planets</li>
       <li>⏰ Travel through time to see how your knowledge evolved</li>
@@ -40,7 +43,7 @@
     background: #0a0a0a;
     overflow: hidden;
   }
-  
+
   .preview-header {
     position: absolute;
     top: 0;
@@ -55,7 +58,7 @@
     z-index: 100;
     border-bottom: 1px solid #333;
   }
-  
+
   .back-button {
     display: flex;
     align-items: center;
@@ -65,21 +68,21 @@
     font-family: 'Space Grotesk';
     transition: all 0.3s ease;
   }
-  
+
   .back-button:hover {
-    color: #DC143C;
+    color: #dc143c;
     transform: translateX(-5px);
   }
-  
+
   .preview-header h1 {
     font-family: 'Space Grotesk';
     font-size: 24px;
     color: white;
     margin: 0;
   }
-  
+
   .preview-badge {
-    background: #DC143C;
+    background: #dc143c;
     color: white;
     padding: 5px 15px;
     border-radius: 20px;
@@ -88,12 +91,12 @@
     font-weight: 700;
     letter-spacing: 1px;
   }
-  
+
   .preview-content {
     width: 100%;
     height: 100%;
   }
-  
+
   .preview-info {
     position: absolute;
     bottom: 20px;
@@ -107,25 +110,25 @@
     max-width: 400px;
     backdrop-filter: blur(10px);
   }
-  
+
   .preview-info h2 {
     margin: 0 0 10px 0;
     color: #00ff64;
     font-size: 20px;
   }
-  
+
   .preview-info p {
     margin: 0 0 15px 0;
     color: #ccc;
     line-height: 1.6;
   }
-  
+
   .preview-info ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  
+
   .preview-info li {
     padding: 5px 0;
     color: #999;

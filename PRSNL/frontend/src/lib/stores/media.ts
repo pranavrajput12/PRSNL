@@ -19,11 +19,14 @@ export interface MediaSettings {
 
 export interface PerformanceMetrics {
   loadTimes: Record<string, number>;
-  playbackStats: Record<string, {
-    bufferingEvents: number;
-    playbackStartTime: number;
-    totalBufferingTime: number;
-  }>;
+  playbackStats: Record<
+    string,
+    {
+      bufferingEvents: number;
+      playbackStartTime: number;
+      totalBufferingTime: number;
+    }
+  >;
   memoryUsage: number[];
   timestamps: number[];
 }
@@ -36,7 +39,7 @@ const DEFAULT_SETTINGS: MediaSettings = {
   enableProgressiveLoading: true,
   autoplayInViewport: false,
   networkSavingMode: false,
-  logPerformanceMetrics: true
+  logPerformanceMetrics: true,
 };
 
 // Load settings from localStorage if available
@@ -62,21 +65,18 @@ export const performanceMetrics = writable<PerformanceMetrics>({
   loadTimes: {},
   playbackStats: {},
   memoryUsage: [],
-  timestamps: []
+  timestamps: [],
 });
 
 // Save settings to localStorage when they change
 if (browser) {
-  mediaSettings.subscribe(value => {
+  mediaSettings.subscribe((value) => {
     localStorage.setItem('prsnl-media-settings', JSON.stringify(value));
   });
 }
 
 // Derived store for current preload strategy
-export const preloadStrategy = derived(
-  mediaSettings,
-  $settings => $settings.preloadStrategy
-);
+export const preloadStrategy = derived(mediaSettings, ($settings) => $settings.preloadStrategy);
 
 // Derived store to determine if we should load a video based on active count
 export const canLoadMoreVideos = derived(
@@ -87,29 +87,26 @@ export const canLoadMoreVideos = derived(
 );
 
 // Helper functions for media settings
-export function updateMediaSetting<K extends keyof MediaSettings>(
-  key: K, 
-  value: MediaSettings[K]
-) {
-  mediaSettings.update(settings => ({ ...settings, [key]: value }));
+export function updateMediaSetting<K extends keyof MediaSettings>(key: K, value: MediaSettings[K]) {
+  mediaSettings.update((settings) => ({ ...settings, [key]: value }));
 }
 
 export function toggleNetworkSavingMode() {
-  mediaSettings.update(settings => {
+  mediaSettings.update((settings) => {
     const networkSavingMode = !settings.networkSavingMode;
-    return { 
-      ...settings, 
+    return {
+      ...settings,
       networkSavingMode,
       preloadStrategy: networkSavingMode ? 'none' : 'metadata',
       maxConcurrentVideos: networkSavingMode ? 1 : 3,
-      thumbnailQuality: networkSavingMode ? 'low' : 'medium'
+      thumbnailQuality: networkSavingMode ? 'low' : 'medium',
     };
   });
 }
 
 // Video tracking functions
 export function registerVideoView(videoId: string) {
-  visibleVideoIds.update(ids => {
+  visibleVideoIds.update((ids) => {
     const newIds = new Set(ids);
     newIds.add(videoId);
     return newIds;
@@ -117,7 +114,7 @@ export function registerVideoView(videoId: string) {
 }
 
 export function unregisterVideoView(videoId: string) {
-  visibleVideoIds.update(ids => {
+  visibleVideoIds.update((ids) => {
     const newIds = new Set(ids);
     newIds.delete(videoId);
     return newIds;
@@ -127,15 +124,18 @@ export function unregisterVideoView(videoId: string) {
 export function activateVideo(videoId: string) {
   const $mediaSettings = get(mediaSettings);
   const $activeVideoIds = get(activeVideoIds);
-  
+
   // If we've reached max concurrent videos and network saving is on,
   // deactivate the oldest video
-  if ($activeVideoIds.size >= $mediaSettings.maxConcurrentVideos && $mediaSettings.networkSavingMode) {
+  if (
+    $activeVideoIds.size >= $mediaSettings.maxConcurrentVideos &&
+    $mediaSettings.networkSavingMode
+  ) {
     const oldestId = Array.from($activeVideoIds)[0];
     deactivateVideo(oldestId);
   }
-  
-  activeVideoIds.update(ids => {
+
+  activeVideoIds.update((ids) => {
     const newIds = new Set(ids);
     newIds.add(videoId);
     return newIds;
@@ -143,7 +143,7 @@ export function activateVideo(videoId: string) {
 }
 
 export function deactivateVideo(videoId: string) {
-  activeVideoIds.update(ids => {
+  activeVideoIds.update((ids) => {
     const newIds = new Set(ids);
     newIds.delete(videoId);
     return newIds;
@@ -153,53 +153,53 @@ export function deactivateVideo(videoId: string) {
 // Performance monitoring functions
 export function recordLoadTime(videoId: string, loadTimeMs: number) {
   if (!get(mediaSettings).logPerformanceMetrics) return;
-  
-  performanceMetrics.update(metrics => {
+
+  performanceMetrics.update((metrics) => {
     return {
       ...metrics,
       loadTimes: {
         ...metrics.loadTimes,
-        [videoId]: loadTimeMs
-      }
+        [videoId]: loadTimeMs,
+      },
     };
   });
 }
 
 export function recordBufferingEvent(videoId: string) {
   if (!get(mediaSettings).logPerformanceMetrics) return;
-  
-  performanceMetrics.update(metrics => {
+
+  performanceMetrics.update((metrics) => {
     const videoStats = metrics.playbackStats[videoId] || {
       bufferingEvents: 0,
       playbackStartTime: Date.now(),
-      totalBufferingTime: 0
+      totalBufferingTime: 0,
     };
-    
+
     return {
       ...metrics,
       playbackStats: {
         ...metrics.playbackStats,
         [videoId]: {
           ...videoStats,
-          bufferingEvents: videoStats.bufferingEvents + 1
-        }
-      }
+          bufferingEvents: videoStats.bufferingEvents + 1,
+        },
+      },
     };
   });
 }
 
 export function recordMemoryUsage() {
   if (!get(mediaSettings).logPerformanceMetrics || !browser) return;
-  
+
   // Use performance API to get memory info if available
   const memory = (performance as any).memory?.usedJSHeapSize;
-  
+
   if (memory) {
-    performanceMetrics.update(metrics => {
+    performanceMetrics.update((metrics) => {
       return {
         ...metrics,
         memoryUsage: [...metrics.memoryUsage, memory],
-        timestamps: [...metrics.timestamps, Date.now()]
+        timestamps: [...metrics.timestamps, Date.now()],
       };
     });
   }
@@ -208,7 +208,7 @@ export function recordMemoryUsage() {
 // Start periodic memory usage monitoring
 if (browser && get(mediaSettings).logPerformanceMetrics) {
   const memoryMonitoringInterval = setInterval(recordMemoryUsage, 30000); // Every 30 seconds
-  
+
   // Clean up on page unload
   window.addEventListener('beforeunload', () => {
     clearInterval(memoryMonitoringInterval);
@@ -219,13 +219,16 @@ if (browser && get(mediaSettings).logPerformanceMetrics) {
 export function getPerformanceReport(): string {
   const metrics = get(performanceMetrics);
   const settings = get(mediaSettings);
-  
-  const avgLoadTime = Object.values(metrics.loadTimes).reduce((sum, time) => sum + time, 0) / 
+
+  const avgLoadTime =
+    Object.values(metrics.loadTimes).reduce((sum, time) => sum + time, 0) /
     (Object.values(metrics.loadTimes).length || 1);
-  
-  const totalBufferingEvents = Object.values(metrics.playbackStats)
-    .reduce((sum, stat) => sum + stat.bufferingEvents, 0);
-  
+
+  const totalBufferingEvents = Object.values(metrics.playbackStats).reduce(
+    (sum, stat) => sum + stat.bufferingEvents,
+    0
+  );
+
   return `
 Performance Report:
 ------------------

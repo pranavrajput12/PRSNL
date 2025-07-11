@@ -1,353 +1,375 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neural Network Hub - Menu Preview</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow-x: hidden;
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        overflow-x: hidden;
+      }
+
+      .preview-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      .neural-sidebar {
+        width: 280px;
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+        border-right: 2px solid rgba(0, 255, 100, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .neural-sidebar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 8px,
+          rgba(0, 255, 100, 0.03) 8px,
+          rgba(0, 255, 100, 0.03) 10px
+        );
+        pointer-events: none;
+      }
+
+      .neural-network {
+        position: relative;
+        padding: 2rem 1rem;
+        height: 100%;
+      }
+
+      .neural-logo {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 10;
+      }
+
+      .neural-logo h1 {
+        color: #dc143c;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        font-family: 'JetBrains Mono', monospace;
+        text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+      }
+
+      .neural-nodes {
+        position: relative;
+        height: calc(100% - 200px);
+      }
+
+      .neural-node {
+        position: relative;
+        margin: 2rem 0;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 5;
+      }
+
+      .node-core {
+        width: 60px;
+        height: 60px;
+        background: radial-gradient(circle, #dc143c, #b91c3c);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        position: relative;
+        border: 2px solid rgba(220, 20, 60, 0.5);
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.3);
+      }
+
+      .node-core::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(220, 20, 60, 0.3), transparent 70%);
+        animation: neural-pulse 2s ease-in-out infinite;
+      }
+
+      .node-label {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-shadow: 0 0 10px rgba(220, 20, 60, 0.5);
+      }
+
+      .neural-node:hover .node-core {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px rgba(220, 20, 60, 0.6);
+      }
+
+      .neural-node.active .node-core {
+        background: radial-gradient(circle, #00ff00, #00cc00);
+        border-color: #00ff00;
+        box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+      }
+
+      .neural-node.active .node-label {
+        color: #00ff00;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      }
+
+      /* Neural Connections */
+      .neural-connections {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .connection-line {
+        position: absolute;
+        width: 2px;
+        background: linear-gradient(180deg, rgba(220, 20, 60, 0.6), rgba(0, 255, 100, 0.6));
+        left: 50%;
+        transform: translateX(-50%);
+        animation: data-flow 3s ease-in-out infinite;
+      }
+
+      .connection-line.line-1 {
+        top: 120px;
+        height: 60px;
+        animation-delay: 0s;
+      }
+
+      .connection-line.line-2 {
+        top: 240px;
+        height: 60px;
+        animation-delay: 0.5s;
+      }
+
+      .connection-line.line-3 {
+        top: 360px;
+        height: 60px;
+        animation-delay: 1s;
+      }
+
+      .connection-line.line-4 {
+        top: 480px;
+        height: 60px;
+        animation-delay: 1.5s;
+      }
+
+      .connection-line.line-5 {
+        top: 600px;
+        height: 60px;
+        animation-delay: 2s;
+      }
+
+      /* Synaptic Sparks */
+      .synaptic-spark {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: #00ff00;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+        animation: spark-travel 2s ease-in-out infinite;
+      }
+
+      .spark-1 {
+        left: 48%;
+        animation-delay: 0s;
+      }
+
+      .spark-2 {
+        left: 52%;
+        animation-delay: 0.3s;
+      }
+
+      .spark-3 {
+        left: 50%;
+        animation-delay: 0.6s;
+      }
+
+      .main-preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          );
+      }
+
+      .preview-title {
+        background: linear-gradient(135deg, #dc143c, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        margin-bottom: 1rem;
+      }
+
+      .preview-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        font-weight: 400;
+      }
+
+      @keyframes neural-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.7;
         }
-        
-        .preview-container {
-            display: flex;
-            height: 100vh;
+        50% {
+          transform: scale(1.3);
+          opacity: 0.3;
         }
-        
-        .neural-sidebar {
-            width: 280px;
-            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
-            border-right: 2px solid rgba(0, 255, 100, 0.3);
-            position: relative;
-            overflow: hidden;
+      }
+
+      @keyframes data-flow {
+        0% {
+          opacity: 0;
         }
-        
-        .neural-sidebar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 8px,
-                    rgba(0, 255, 100, 0.03) 8px,
-                    rgba(0, 255, 100, 0.03) 10px
-                );
-            pointer-events: none;
+        50% {
+          opacity: 1;
         }
-        
-        .neural-network {
-            position: relative;
-            padding: 2rem 1rem;
-            height: 100%;
+        100% {
+          opacity: 0;
         }
-        
-        .neural-logo {
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            z-index: 10;
+      }
+
+      @keyframes spark-travel {
+        0% {
+          top: 0;
+          opacity: 1;
         }
-        
-        .neural-logo h1 {
-            color: #DC143C;
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 0;
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+        100% {
+          top: 100%;
+          opacity: 0;
         }
-        
-        .neural-nodes {
-            position: relative;
-            height: calc(100% - 200px);
-        }
-        
-        .neural-node {
-            position: relative;
-            margin: 2rem 0;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 5;
-        }
-        
-        .node-core {
-            width: 60px;
-            height: 60px;
-            background: radial-gradient(circle, #DC143C, #B91C3C);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            position: relative;
-            border: 2px solid rgba(220, 20, 60, 0.5);
-            box-shadow: 0 0 20px rgba(220, 20, 60, 0.3);
-        }
-        
-        .node-core::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(220, 20, 60, 0.3), transparent 70%);
-            animation: neural-pulse 2s ease-in-out infinite;
-        }
-        
-        .node-label {
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-            text-shadow: 0 0 10px rgba(220, 20, 60, 0.5);
-        }
-        
-        .neural-node:hover .node-core {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(220, 20, 60, 0.6);
-        }
-        
-        .neural-node.active .node-core {
-            background: radial-gradient(circle, #00ff00, #00cc00);
-            border-color: #00ff00;
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
-        }
-        
-        .neural-node.active .node-label {
-            color: #00ff00;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-        
-        /* Neural Connections */
-        .neural-connections {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .connection-line {
-            position: absolute;
-            width: 2px;
-            background: linear-gradient(180deg, rgba(220, 20, 60, 0.6), rgba(0, 255, 100, 0.6));
-            left: 50%;
-            transform: translateX(-50%);
-            animation: data-flow 3s ease-in-out infinite;
-        }
-        
-        .connection-line.line-1 {
-            top: 120px;
-            height: 60px;
-            animation-delay: 0s;
-        }
-        
-        .connection-line.line-2 {
-            top: 240px;
-            height: 60px;
-            animation-delay: 0.5s;
-        }
-        
-        .connection-line.line-3 {
-            top: 360px;
-            height: 60px;
-            animation-delay: 1s;
-        }
-        
-        .connection-line.line-4 {
-            top: 480px;
-            height: 60px;
-            animation-delay: 1.5s;
-        }
-        
-        .connection-line.line-5 {
-            top: 600px;
-            height: 60px;
-            animation-delay: 2s;
-        }
-        
-        /* Synaptic Sparks */
-        .synaptic-spark {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #00ff00;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
-            animation: spark-travel 2s ease-in-out infinite;
-        }
-        
-        .spark-1 {
-            left: 48%;
-            animation-delay: 0s;
-        }
-        
-        .spark-2 {
-            left: 52%;
-            animation-delay: 0.3s;
-        }
-        
-        .spark-3 {
-            left: 50%;
-            animation-delay: 0.6s;
-        }
-        
-        .main-preview {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            text-align: center;
-            background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                );
-        }
-        
-        .preview-title {
-            background: linear-gradient(135deg, #DC143C, #FF6B6B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            margin-bottom: 1rem;
-        }
-        
-        .preview-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            font-weight: 400;
-        }
-        
-        @keyframes neural-pulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.3); opacity: 0.3; }
-        }
-        
-        @keyframes data-flow {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-        
-        @keyframes spark-travel {
-            0% { top: 0; opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        
-        /* Icon placeholders */
-        .node-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: white;
-            opacity: 0.9;
-        }
+      }
+
+      /* Icon placeholders */
+      .node-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: white;
+        opacity: 0.9;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="preview-container">
-        <div class="neural-sidebar">
-            <div class="neural-network">
-                <div class="neural-logo">
-                    <h1>PRSNL</h1>
-                </div>
-                
-                <div class="neural-nodes">
-                    <div class="neural-connections">
-                        <div class="connection-line line-1"></div>
-                        <div class="connection-line line-2"></div>
-                        <div class="connection-line line-3"></div>
-                        <div class="connection-line line-4"></div>
-                        <div class="connection-line line-5"></div>
-                        
-                        <div class="synaptic-spark spark-1"></div>
-                        <div class="synaptic-spark spark-2"></div>
-                        <div class="synaptic-spark spark-3"></div>
-                    </div>
-                    
-                    <div class="neural-node active">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Neural Nest</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Ingest</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Thought Stream</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Cognitive Map</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Mind Palace</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Visual Cortex</div>
-                    </div>
-                    
-                    <div class="neural-node">
-                        <div class="node-core">
-                            <div class="node-icon"></div>
-                        </div>
-                        <div class="node-label">Knowledge Sync</div>
-                    </div>
-                </div>
+      <div class="neural-sidebar">
+        <div class="neural-network">
+          <div class="neural-logo">
+            <h1>PRSNL</h1>
+          </div>
+
+          <div class="neural-nodes">
+            <div class="neural-connections">
+              <div class="connection-line line-1"></div>
+              <div class="connection-line line-2"></div>
+              <div class="connection-line line-3"></div>
+              <div class="connection-line line-4"></div>
+              <div class="connection-line line-5"></div>
+
+              <div class="synaptic-spark spark-1"></div>
+              <div class="synaptic-spark spark-2"></div>
+              <div class="synaptic-spark spark-3"></div>
             </div>
-        </div>
-        
-        <div class="main-preview">
-            <div>
-                <div class="preview-title">Neural Network Hub</div>
-                <div class="preview-subtitle">Interconnected neural nodes with synaptic connections</div>
+
+            <div class="neural-node active">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Neural Nest</div>
             </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Ingest</div>
+            </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Thought Stream</div>
+            </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Cognitive Map</div>
+            </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Mind Palace</div>
+            </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Visual Cortex</div>
+            </div>
+
+            <div class="neural-node">
+              <div class="node-core">
+                <div class="node-icon"></div>
+              </div>
+              <div class="node-label">Knowledge Sync</div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="main-preview">
+        <div>
+          <div class="preview-title">Neural Network Hub</div>
+          <div class="preview-subtitle">Interconnected neural nodes with synaptic connections</div>
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

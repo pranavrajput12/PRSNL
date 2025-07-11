@@ -9,7 +9,7 @@ export enum ConnectionState {
   DISCONNECTED = 'disconnected',
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 // WebSocket message types
@@ -17,7 +17,7 @@ export enum MessageType {
   AI_REQUEST = 'ai_request',
   AI_RESPONSE = 'ai_response',
   PROGRESS = 'progress',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 // Message interfaces
@@ -51,72 +51,73 @@ const createWebSocketStore = () => {
   let reconnectAttempts = 0;
   let reconnectTimer: number | null = null;
   let messageQueue: OutgoingMessage[] = [];
-  
+
   // Create the store
   const { subscribe, set, update } = writable({
     state: ConnectionState.DISCONNECTED,
     lastMessage: null as IncomingMessage | null,
     messages: [] as IncomingMessage[],
-    error: null as Error | null
+    error: null as Error | null,
   });
-  
+
   // Event handlers
   const handleOpen = () => {
     console.log('WebSocket connected');
     reconnectAttempts = 0;
-    
-    update(state => ({
+
+    update((state) => ({
       ...state,
       state: ConnectionState.CONNECTED,
-      error: null
+      error: null,
     }));
-    
+
     // Send any queued messages
     if (messageQueue.length > 0 && socket) {
-      messageQueue.forEach(msg => {
+      messageQueue.forEach((msg) => {
         socket?.send(JSON.stringify(msg));
       });
       messageQueue = [];
     }
   };
-  
+
   const handleMessage = (event: MessageEvent) => {
     try {
       const message = JSON.parse(event.data) as IncomingMessage;
-      
-      update(state => ({
+
+      update((state) => ({
         ...state,
         lastMessage: message,
-        messages: [...state.messages, message]
+        messages: [...state.messages, message],
       }));
-      
+
       // Dispatch custom event for components to listen to
-      window.dispatchEvent(new CustomEvent('ws-message', { 
-        detail: message 
-      }));
-      
+      window.dispatchEvent(
+        new CustomEvent('ws-message', {
+          detail: message,
+        })
+      );
     } catch (err) {
       console.error('Error parsing WebSocket message:', err);
     }
   };
-  
+
   const handleError = (event: Event) => {
     console.error('WebSocket error:', event);
-    update(state => ({
+    update((state) => ({
       ...state,
       state: ConnectionState.ERROR,
-      error: new Error('WebSocket connection error')
+      error: new Error('WebSocket connection error'),
     }));
   };
-  
+
   const handleClose = (event: CloseEvent) => {
     console.log('WebSocket closed:', event.code, event.reason);
-    
-    update(state => ({
+
+    update((state) => ({
       ...state,
-      state: ConnectionState.DISCONNECTED
+      state: ConnectionState.DISCONNECTED,
     }));
-    
+
     // Attempt to reconnect if not closed cleanly
     if (!event.wasClean && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       reconnectTimer = window.setTimeout(() => {
@@ -125,18 +126,18 @@ const createWebSocketStore = () => {
       }, RECONNECT_INTERVAL);
     }
   };
-  
+
   // Connect to WebSocket
   const connect = () => {
     if (socket) {
       socket.close();
     }
-    
-    update(state => ({
+
+    update((state) => ({
       ...state,
-      state: ConnectionState.CONNECTING
+      state: ConnectionState.CONNECTING,
     }));
-    
+
     try {
       socket = new WebSocket(WS_URL);
       socket.addEventListener('open', handleOpen);
@@ -145,21 +146,21 @@ const createWebSocketStore = () => {
       socket.addEventListener('close', handleClose);
     } catch (err) {
       console.error('Failed to create WebSocket:', err);
-      update(state => ({
+      update((state) => ({
         ...state,
         state: ConnectionState.ERROR,
-        error: err instanceof Error ? err : new Error('Failed to create WebSocket')
+        error: err instanceof Error ? err : new Error('Failed to create WebSocket'),
       }));
     }
   };
-  
+
   // Disconnect from WebSocket
   const disconnect = () => {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
     }
-    
+
     if (socket) {
       socket.removeEventListener('open', handleOpen);
       socket.removeEventListener('message', handleMessage);
@@ -168,15 +169,15 @@ const createWebSocketStore = () => {
       socket.close();
       socket = null;
     }
-    
+
     set({
       state: ConnectionState.DISCONNECTED,
       lastMessage: null,
       messages: [],
-      error: null
+      error: null,
     });
   };
-  
+
   // Send a message through WebSocket
   const sendMessage = (message: OutgoingMessage): boolean => {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -185,7 +186,7 @@ const createWebSocketStore = () => {
     } else {
       // Queue message to send when connected
       messageQueue.push(message);
-      
+
       // If disconnected, try to connect
       if (!socket || socket.readyState === WebSocket.CLOSED) {
         connect();
@@ -193,22 +194,22 @@ const createWebSocketStore = () => {
       return false;
     }
   };
-  
+
   // Clear message history
   const clearMessages = () => {
-    update(state => ({
+    update((state) => ({
       ...state,
       messages: [],
-      lastMessage: null
+      lastMessage: null,
     }));
   };
-  
+
   return {
     subscribe,
     connect,
     disconnect,
     sendMessage,
-    clearMessages
+    clearMessages,
   };
 };
 
@@ -216,13 +217,10 @@ const createWebSocketStore = () => {
 export const websocketStore = createWebSocketStore();
 
 // Derived store for connection status
-export const connectionStatus = derived(
-  websocketStore,
-  $websocketStore => $websocketStore.state
-);
+export const connectionStatus = derived(websocketStore, ($websocketStore) => $websocketStore.state);
 
 // Derived store for latest message
 export const latestMessage = derived(
   websocketStore,
-  $websocketStore => $websocketStore.lastMessage
+  ($websocketStore) => $websocketStore.lastMessage
 );

@@ -26,7 +26,7 @@
   let message = '';
   let messageType = '';
   let error: Error | null = null;
-  
+
   // Development-specific fields
   let programmingLanguage = '';
   let projectCategory = '';
@@ -36,11 +36,11 @@
   let isDragging = false;
   let progress = 0;
   let progressInterval: number | null = null;
-  
+
   // AI suggestions state
   let isLoadingSuggestions = false;
   let suggestionsError: string | null = null;
-  
+
   // Video-specific variables
   let isVideoDetected = false;
   let videoPlatform: string | null = null;
@@ -54,14 +54,14 @@
 
   // Debounced AI suggestions timeout
   let aiSuggestionsTimeout: number | undefined;
-  
+
   // Summarization toggle
   let enableSummarization = false;
-  
+
   // Content type selector
   let contentType = 'auto'; // auto or any dynamic type from backend
   let availableTypes: ContentTypeDefinition[] = [];
-  
+
   // File upload state
   let uploadedFiles = [];
 
@@ -71,11 +71,11 @@
     1: 'active', // active, completed, pending
     2: 'pending',
     3: 'pending',
-    4: 'pending'
+    4: 'pending',
   };
   let terminalLines: string[] = [];
   let isAnalyzing = false;
-  
+
   // Watch for URL changes to detect video URLs and get AI suggestions
   $: {
     if (url) {
@@ -96,13 +96,13 @@
     loadRecentTags();
     window.addEventListener('paste', handlePaste);
     setupDragAndDrop();
-    
+
     // Initialize content types
     contentTypes.init();
-    contentTypes.subscribe(types => {
+    contentTypes.subscribe((types) => {
       availableTypes = types;
     });
-    
+
     // Initialize terminal
     addTerminalLine('> NEURAL PROCESSING TERMINAL v3.0 INITIALIZED');
     addTerminalLine('> MEMORY TRACE CAPTURE SYSTEM: ONLINE');
@@ -122,7 +122,10 @@
     }
   }
 
-  function updateStepStatus(step: number, status: 'active' | 'completed' | 'pending' | 'processing') {
+  function updateStepStatus(
+    step: number,
+    status: 'active' | 'completed' | 'pending' | 'processing'
+  ) {
     stepStatus = { ...stepStatus, [step]: status };
     currentStep = step;
   }
@@ -132,7 +135,7 @@
    */
   function detectVideoUrl(urlToCheck: string): void {
     isVideoDetected = isVideoUrl(urlToCheck);
-    
+
     if (isVideoDetected) {
       videoPlatform = getVideoPlatform(urlToCheck);
       estimatedDownloadTimeSeconds = estimateDownloadTime(urlToCheck);
@@ -140,13 +143,13 @@
       addTerminalLine(`> VIDEO DETECTED: ${videoPlatform?.toUpperCase()}`);
       addTerminalLine(`> ESTIMATED_DOWNLOAD_TIME: ${formatTime(estimatedDownloadTimeSeconds)}`);
     }
-    
+
     // Auto-detect GitHub URLs and set to development
     if (urlToCheck.includes('github.com')) {
       contentType = 'development';
       addTerminalLine(`> GITHUB DETECTED: AUTO_SET_TO_DEVELOPMENT`);
       addTerminalLine(`> CONTENT_TYPE: DEVELOPMENT_SELECTED`);
-      
+
       // Extract repository name from URL
       const urlParts = urlToCheck.split('/');
       if (urlParts.length >= 5) {
@@ -157,7 +160,7 @@
         }
       }
     }
-    
+
     if (urlToCheck) {
       updateStepStatus(1, 'processing');
       addTerminalLine(`> SCANNING_URL: ${urlToCheck.substring(0, 50)}...`);
@@ -193,26 +196,25 @@
       isLoadingSuggestions = true;
       isAnalyzing = true;
       addTerminalLine('> AI_ANALYSIS: INITIATED');
-      
+
       const suggestions = await getAISuggestions(urlToAnalyze);
-      
+
       if (suggestions.title && !title) {
         title = suggestions.title;
         addTerminalLine(`> TITLE_EXTRACTED: ${suggestions.title.substring(0, 30)}...`);
       }
-      
+
       if (suggestions.summary && !highlight) {
         highlight = suggestions.summary;
         addTerminalLine(`> SUMMARY_EXTRACTED: ${suggestions.summary.substring(0, 50)}...`);
       }
-      
+
       if (suggestions.tags && suggestions.tags.length > 0 && tags.length === 0) {
         tags = suggestions.tags.slice(0, 5);
         addTerminalLine(`> TAGS_GENERATED: ${suggestions.tags.join(', ')}`);
       }
-      
+
       addTerminalLine('> AI_ANALYSIS: COMPLETE');
-      
     } catch (err) {
       console.error('AI suggestions failed:', err);
       suggestionsError = 'AI analysis failed';
@@ -267,14 +269,18 @@
 
   function autoDetectDevelopmentMetadata(content: string): void {
     if (!content) return;
-    
+
     const lowerContent = content.toLowerCase();
-    
+
     // Detect programming language
     if (!programmingLanguage) {
       if (content.includes('import ') && content.includes('from ')) {
         programmingLanguage = 'python';
-      } else if (content.includes('function') || content.includes('const ') || content.includes('let ')) {
+      } else if (
+        content.includes('function') ||
+        content.includes('const ') ||
+        content.includes('let ')
+      ) {
         programmingLanguage = 'javascript';
       } else if (content.includes('interface ') || content.includes('type ')) {
         programmingLanguage = 'typescript';
@@ -284,16 +290,32 @@
         programmingLanguage = 'go';
       }
     }
-    
+
     // Detect project category
     if (!projectCategory) {
-      if (lowerContent.includes('react') || lowerContent.includes('vue') || lowerContent.includes('frontend')) {
+      if (
+        lowerContent.includes('react') ||
+        lowerContent.includes('vue') ||
+        lowerContent.includes('frontend')
+      ) {
         projectCategory = 'Frontend';
-      } else if (lowerContent.includes('api') || lowerContent.includes('server') || lowerContent.includes('backend')) {
+      } else if (
+        lowerContent.includes('api') ||
+        lowerContent.includes('server') ||
+        lowerContent.includes('backend')
+      ) {
         projectCategory = 'Backend';
-      } else if (lowerContent.includes('docker') || lowerContent.includes('kubernetes') || lowerContent.includes('deployment')) {
+      } else if (
+        lowerContent.includes('docker') ||
+        lowerContent.includes('kubernetes') ||
+        lowerContent.includes('deployment')
+      ) {
         projectCategory = 'DevOps';
-      } else if (lowerContent.includes('tutorial') || lowerContent.includes('guide') || lowerContent.includes('how to')) {
+      } else if (
+        lowerContent.includes('tutorial') ||
+        lowerContent.includes('guide') ||
+        lowerContent.includes('how to')
+      ) {
         projectCategory = 'Tutorials';
       } else {
         projectCategory = 'Documentation';
@@ -325,7 +347,7 @@
     try {
       isSubmitting = true;
       error = null;
-      
+
       addTerminalLine('> INITIATING_MEMORY_TRACE_CAPTURE...');
       startProgressAnimation();
 
@@ -341,31 +363,30 @@
         programming_language: programmingLanguage || undefined,
         project_category: projectCategory || undefined,
         difficulty_level: difficultyLevel || undefined,
-        is_career_related: contentType === 'development' && (
-          title?.toLowerCase().includes('career') ||
-          title?.toLowerCase().includes('job') ||
-          content?.toLowerCase().includes('career') ||
-          content?.toLowerCase().includes('professional')
-        )
+        is_career_related:
+          contentType === 'development' &&
+          (title?.toLowerCase().includes('career') ||
+            title?.toLowerCase().includes('job') ||
+            content?.toLowerCase().includes('career') ||
+            content?.toLowerCase().includes('professional')),
       };
 
       const result = await captureItem(captureRequest);
-      
+
       addTerminalLine('> MEMORY_TRACE_CAPTURED_SUCCESSFULLY');
       addTerminalLine(`> TRACE_ID: ${result.item_id}`);
       addTerminalLine('> NEURAL_NETWORK_UPDATED');
-      
+
       message = 'Memory trace captured successfully!';
       messageType = 'success';
-      
+
       addNotification({
         type: 'success',
-        message: 'Content captured successfully!'
+        message: 'Content captured successfully!',
       });
 
       // Reset form
       resetForm();
-      
     } catch (err) {
       console.error('Capture failed:', err);
       error = err as Error;
@@ -408,9 +429,9 @@
     currentStep = 1;
     stepStatus = {
       1: 'active',
-      2: 'pending', 
+      2: 'pending',
       3: 'pending',
-      4: 'pending'
+      4: 'pending',
     };
     // Focus on the dynamic input component instead
     // urlInput?.focus();
@@ -419,7 +440,10 @@
 
 <svelte:head>
   <title>Ingest - Neural Processing Terminal</title>
-  <meta name="description" content="Neural interface for capturing and processing memory traces into your knowledge network" />
+  <meta
+    name="description"
+    content="Neural interface for capturing and processing memory traces into your knowledge network"
+  />
 </svelte:head>
 
 <div class="neural-terminal-page">
@@ -473,9 +497,12 @@
 
       <!-- Processing Steps -->
       <form on:submit|preventDefault={handleSubmit} class="processing-steps">
-        
         <!-- Step 1: Input Source Detection -->
-        <div class="step-section" class:active={currentStep === 1} class:completed={stepStatus[1] === 'completed'}>
+        <div
+          class="step-section"
+          class:active={currentStep === 1}
+          class:completed={stepStatus[1] === 'completed'}
+        >
           <div class="step-header">
             <div class="step-indicator">
               {#if stepStatus[1] === 'completed'}
@@ -488,7 +515,7 @@
             </div>
             <span class="step-title">[STEP 1] INPUT SOURCE DETECTION</span>
           </div>
-          
+
           <div class="step-content">
             <DynamicCaptureInput
               {contentType}
@@ -505,7 +532,7 @@
               on:tagsUpdate={handleTagsUpdate}
               on:fileUpload={handleFileUpload}
             />
-            
+
             {#if isLoadingSuggestions}
               <div class="input-status">
                 <Spinner size="small" />
@@ -517,18 +544,24 @@
                 <span>{videoPlatform} Video Detected</span>
               </div>
             {/if}
-            
+
             {#if url && stepStatus[1] === 'processing'}
               <div class="progress-bar">
                 <div class="progress-fill"></div>
               </div>
-              <div class="status-text">Status: <span class="status-processing">SCANNING...</span></div>
+              <div class="status-text">
+                Status: <span class="status-processing">SCANNING...</span>
+              </div>
             {/if}
           </div>
         </div>
 
         <!-- Step 2: Cognitive Classification -->
-        <div class="step-section" class:active={currentStep === 2} class:completed={stepStatus[2] === 'completed'}>
+        <div
+          class="step-section"
+          class:active={currentStep === 2}
+          class:completed={stepStatus[2] === 'completed'}
+        >
           <div class="step-header">
             <div class="step-indicator">
               {#if stepStatus[2] === 'completed'}
@@ -539,7 +572,7 @@
             </div>
             <span class="step-title">[STEP 2] COGNITIVE CLASSIFICATION</span>
           </div>
-          
+
           <div class="step-content">
             <div class="content-type-grid">
               <!-- Auto option always available -->
@@ -553,7 +586,7 @@
                 <span class="option-icon">🤖</span>
                 <span class="option-label">AUTO</span>
               </button>
-              
+
               <!-- Dynamic content types from backend -->
               {#each availableTypes as type}
                 <button
@@ -576,21 +609,28 @@
                     {:else if type.name === 'development'}⚡
                     {:else}📋{/if}
                   </span>
-                  <span class="option-label">{type.display_name.substring(0, 4).toUpperCase()}</span>
+                  <span class="option-label">{type.display_name.substring(0, 4).toUpperCase()}</span
+                  >
                 </button>
               {/each}
             </div>
-            
+
             {#if stepStatus[2] === 'completed'}
               <div class="status-text">
-                Classification: <span class="status-complete">{contentType.toUpperCase()}_SELECTED</span>
+                Classification: <span class="status-complete"
+                  >{contentType.toUpperCase()}_SELECTED</span
+                >
               </div>
             {/if}
           </div>
         </div>
 
         <!-- Step 3: Neural Enhancement Protocols -->
-        <div class="step-section" class:active={currentStep === 3} class:completed={stepStatus[3] === 'completed'}>
+        <div
+          class="step-section"
+          class:active={currentStep === 3}
+          class:completed={stepStatus[3] === 'completed'}
+        >
           <div class="step-header">
             <div class="step-indicator">
               {#if stepStatus[3] === 'completed'}
@@ -601,7 +641,7 @@
             </div>
             <span class="step-title">[STEP 3] NEURAL ENHANCEMENT PROTOCOLS</span>
           </div>
-          
+
           <div class="step-content">
             <div class="enhancement-toggles">
               <div class="enhancement-option">
@@ -615,32 +655,24 @@
                   <div class="switch-slider"></div>
                 </button>
                 <span class="option-text">
-                  AI Summarization Engine: 
+                  AI Summarization Engine:
                   <span class="status-indicator" class:active={enableSummarization}>
                     {enableSummarization ? 'ENABLED' : 'DISABLED'}
                   </span>
                 </span>
               </div>
-              
+
               <div class="enhancement-option">
-                <button
-                  type="button"
-                  class="toggle-switch active"
-                  disabled
-                >
+                <button type="button" class="toggle-switch active" disabled>
                   <div class="switch-slider"></div>
                 </button>
                 <span class="option-text">
                   Pattern Recognition: <span class="status-indicator active">ACTIVE</span>
                 </span>
               </div>
-              
+
               <div class="enhancement-option">
-                <button
-                  type="button"
-                  class="toggle-switch"
-                  disabled
-                >
+                <button type="button" class="toggle-switch" disabled>
                   <div class="switch-slider"></div>
                 </button>
                 <span class="option-text">
@@ -659,7 +691,7 @@
             </div>
             <span class="step-title">[STEP 4] MEMORY TRACE METADATA</span>
           </div>
-          
+
           <div class="step-content">
             <div class="metadata-inputs">
               <input
@@ -669,7 +701,7 @@
                 placeholder="Title (auto-generated if empty)"
                 disabled={isSubmitting}
               />
-              
+
               <textarea
                 bind:value={highlight}
                 class="terminal-textarea"
@@ -677,7 +709,7 @@
                 rows="3"
                 disabled={isSubmitting}
               ></textarea>
-              
+
               <TagAutocomplete
                 value=""
                 placeholder="Tags: #tech #ai #neural"
@@ -696,8 +728,8 @@
               <span class="step-title">[OPTIONAL] FILE UPLOAD</span>
             </div>
             <div class="step-content">
-              <FileUpload 
-                contentType={contentType}
+              <FileUpload
+                {contentType}
                 multiple={false}
                 disabled={isSubmitting}
                 on:files={handleFileUpload}
@@ -747,7 +779,7 @@
               > EXECUTE_MEMORY_CAPTURE()
             {/if}
           </button>
-          
+
           <div class="command-hint">
             <Icon name="keyboard" size="small" color="#666" />
             <span>Cmd+Enter to execute</span>
@@ -784,21 +816,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 40px,
-        #00ff64 40px,
-        #00ff64 42px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 40px,
-        #00ff64 40px,
-        #00ff64 42px
-      );
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px);
   }
 
   .circuit-nodes {
@@ -813,21 +833,44 @@
     position: absolute;
     width: 20px;
     height: 20px;
-    background: radial-gradient(circle, #DC143C, #B91C3C);
+    background: radial-gradient(circle, #dc143c, #b91c3c);
     border-radius: 50%;
-    border: 2px solid #DC143C;
+    border: 2px solid #dc143c;
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
     animation: node-pulse 3s ease-in-out infinite;
   }
 
-  .node-1 { top: 20%; left: 15%; animation-delay: 0s; }
-  .node-2 { top: 60%; left: 80%; animation-delay: 1s; }
-  .node-3 { top: 30%; left: 70%; animation-delay: 2s; }
-  .node-4 { top: 80%; left: 25%; animation-delay: 1.5s; }
+  .node-1 {
+    top: 20%;
+    left: 15%;
+    animation-delay: 0s;
+  }
+  .node-2 {
+    top: 60%;
+    left: 80%;
+    animation-delay: 1s;
+  }
+  .node-3 {
+    top: 30%;
+    left: 70%;
+    animation-delay: 2s;
+  }
+  .node-4 {
+    top: 80%;
+    left: 25%;
+    animation-delay: 1.5s;
+  }
 
   @keyframes node-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.6; }
-    50% { transform: scale(1.3); opacity: 0.9; }
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.3);
+      opacity: 0.9;
+    }
   }
 
   .terminal-container {
@@ -837,7 +880,7 @@
     border: 2px solid #00ff64;
     border-radius: var(--radius-lg);
     backdrop-filter: blur(15px);
-    box-shadow: 
+    box-shadow:
       0 0 30px rgba(0, 255, 100, 0.2),
       inset 0 0 100px rgba(0, 0, 0, 0.5);
     overflow: hidden;
@@ -869,8 +912,12 @@
   }
 
   @keyframes scan {
-    0% { left: -100%; }
-    100% { left: 100%; }
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
   }
 
   .terminal-title {
@@ -954,8 +1001,14 @@
   }
 
   @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+    0%,
+    50% {
+      opacity: 1;
+    }
+    51%,
+    100% {
+      opacity: 0;
+    }
   }
 
   .processing-steps {
@@ -1027,7 +1080,8 @@
     position: relative;
   }
 
-  .terminal-input, .terminal-textarea {
+  .terminal-input,
+  .terminal-textarea {
     width: 100%;
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid #333;
@@ -1039,7 +1093,8 @@
     transition: all var(--transition-base);
   }
 
-  .terminal-input:focus, .terminal-textarea:focus {
+  .terminal-input:focus,
+  .terminal-textarea:focus {
     outline: none;
     border-color: #00ff64;
     box-shadow: 0 0 15px rgba(0, 255, 100, 0.3);
@@ -1061,7 +1116,7 @@
   }
 
   .input-status.video {
-    color: #DC143C;
+    color: #dc143c;
   }
 
   .progress-bar {
@@ -1073,7 +1128,7 @@
   }
 
   .progress-fill {
-    background: linear-gradient(90deg, #00ff64, #DC143C);
+    background: linear-gradient(90deg, #00ff64, #dc143c);
     height: 100%;
     width: 70%;
     animation: progress-pulse 2s ease-in-out infinite;
@@ -1084,8 +1139,13 @@
   }
 
   @keyframes progress-pulse {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .status-text {
@@ -1132,9 +1192,9 @@
   }
 
   .content-type-option.active {
-    border-color: #DC143C;
+    border-color: #dc143c;
     background: rgba(220, 20, 60, 0.2);
-    color: #DC143C;
+    color: #dc143c;
   }
 
   .option-icon {
@@ -1169,7 +1229,7 @@
   }
 
   .toggle-switch.active {
-    background: #DC143C;
+    background: #dc143c;
   }
 
   .toggle-switch:disabled {
@@ -1229,7 +1289,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #DC143C;
+    color: #dc143c;
     font-weight: 600;
     margin-bottom: 0.5rem;
   }
@@ -1271,7 +1331,7 @@
   }
 
   .execute-button {
-    background: linear-gradient(135deg, #DC143C, #B91C3C);
+    background: linear-gradient(135deg, #dc143c, #b91c3c);
     color: white;
     border: none;
     padding: 1rem 3rem;
@@ -1289,7 +1349,7 @@
   }
 
   .execute-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, #B91C3C, #991B1B);
+    background: linear-gradient(135deg, #b91c3c, #991b1b);
     box-shadow: 0 0 25px rgba(220, 20, 60, 0.4);
     transform: translateY(-2px);
   }

@@ -86,9 +86,11 @@ export async function getDevelopmentCategories(): Promise<DevelopmentCategory[]>
   return response.json();
 }
 
-export async function getDevelopmentDocs(filters?: DevelopmentDocsFilters): Promise<DevelopmentItem[]> {
+export async function getDevelopmentDocs(
+  filters?: DevelopmentDocsFilters
+): Promise<DevelopmentItem[]> {
   const params = new URLSearchParams();
-  
+
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -96,18 +98,20 @@ export async function getDevelopmentDocs(filters?: DevelopmentDocsFilters): Prom
       }
     });
   }
-  
+
   const url = `${API_BASE_URL}/development/docs${params.toString() ? `?${params.toString()}` : ''}`;
   const response = await fetch(url);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch development docs: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
-export async function getProgrammingLanguages(): Promise<{ languages: Array<{ name: string; count: number }> }> {
+export async function getProgrammingLanguages(): Promise<{
+  languages: Array<{ name: string; count: number }>;
+}> {
   const response = await fetch(`${API_BASE_URL}/development/languages`);
   if (!response.ok) {
     throw new Error(`Failed to fetch programming languages: ${response.statusText}`);
@@ -115,13 +119,15 @@ export async function getProgrammingLanguages(): Promise<{ languages: Array<{ na
   return response.json();
 }
 
-export async function getLearningPaths(): Promise<{ learning_paths: Array<{ 
-  name: string; 
-  total_items: number; 
-  completed_items: number;
-  progress_percentage: number;
-  avg_difficulty: number;
-}> }> {
+export async function getLearningPaths(): Promise<{
+  learning_paths: Array<{
+    name: string;
+    total_items: number;
+    completed_items: number;
+    progress_percentage: number;
+    avg_difficulty: number;
+  }>;
+}> {
   const response = await fetch(`${API_BASE_URL}/development/learning-paths`);
   if (!response.ok) {
     throw new Error(`Failed to fetch learning paths: ${response.statusText}`);
@@ -139,35 +145,35 @@ export async function saveCodeSnippet(snippet: {
   const response = await fetch(`${API_BASE_URL}/development/snippet`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(snippet)
+    body: JSON.stringify(snippet),
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to save code snippet: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
-export async function autoCategorizeContent(itemId: string): Promise<{ 
-  success: boolean; 
-  message: string; 
-  category: string 
+export async function autoCategorizeContent(itemId: string): Promise<{
+  success: boolean;
+  message: string;
+  category: string;
 }> {
   const response = await fetch(`${API_BASE_URL}/development/categorize`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ item_id: itemId })
+    body: JSON.stringify({ item_id: itemId }),
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to categorize content: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
@@ -192,7 +198,7 @@ export async function searchDevelopmentContent(
   searchStats: any;
 }> {
   const { searchMode = 'semantic', limit = 20, filters = {} } = options;
-  
+
   // Build enhanced search request
   const searchRequest = {
     query: query,
@@ -206,25 +212,25 @@ export async function searchDevelopmentContent(
       // Add custom filters for development content
       programming_language: filters.language,
       difficulty_level: filters.difficulty,
-      is_career_related: filters.career_related
-    }
+      is_career_related: filters.career_related,
+    },
   };
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/search/`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(searchRequest)
+      body: JSON.stringify(searchRequest),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Enhanced search failed: ${response.statusText}`);
     }
-    
+
     const searchResponse = await response.json();
-    
+
     // Transform search results to DevelopmentItem format
     const results: DevelopmentItem[] = searchResponse.results.map((result: any) => ({
       id: result.id,
@@ -244,9 +250,9 @@ export async function searchDevelopmentContent(
       // Add search-specific metadata
       similarity_score: result.similarity,
       search_metadata: result.search_metadata,
-      component_scores: result.component_scores
+      component_scores: result.component_scores,
     }));
-    
+
     return {
       results: results,
       total: searchResponse.total,
@@ -254,8 +260,8 @@ export async function searchDevelopmentContent(
         searchType: searchResponse.search_type,
         deduplication: searchResponse.deduplication,
         weights: searchResponse.weights,
-        timestamp: searchResponse.timestamp
-      }
+        timestamp: searchResponse.timestamp,
+      },
     };
   } catch (error) {
     console.error('Enhanced development search failed:', error);
@@ -266,9 +272,9 @@ export async function searchDevelopmentContent(
       category: filters.category,
       language: filters.language,
       difficulty: filters.difficulty,
-      career_related: filters.career_related
+      career_related: filters.career_related,
     };
-    
+
     const fallbackResults = await getDevelopmentDocs(fallbackFilters);
     return {
       results: fallbackResults,
@@ -277,8 +283,8 @@ export async function searchDevelopmentContent(
         searchType: 'fallback',
         deduplication: null,
         weights: null,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 }

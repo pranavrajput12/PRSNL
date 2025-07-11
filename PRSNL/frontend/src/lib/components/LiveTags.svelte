@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * LiveTags component
-   * 
+   *
    * Displays and manages tags with real-time AI suggestions
    * Supports adding, removing, and filtering tags
    * Optimized for performance and accessibility
@@ -11,24 +11,24 @@
   import { slide } from 'svelte/transition';
   import Icon from './Icon.svelte';
   import { websocketStore, connectionStatus, MessageType } from '$lib/stores/websocket';
-  
+
   // Props with TypeScript types and default values
-  export let tags: string[] = [];                // Current tags
-  export let suggestedTags: string[] = [];       // AI suggested tags
-  export let maxTags: number = 20;               // Maximum number of tags
-  export let maxTagLength: number = 30;          // Maximum tag length
+  export let tags: string[] = []; // Current tags
+  export let suggestedTags: string[] = []; // AI suggested tags
+  export let maxTags: number = 20; // Maximum number of tags
+  export let maxTagLength: number = 30; // Maximum tag length
   export let placeholder: string = 'Add a tag...'; // Input placeholder
   export let size: 'small' | 'default' | 'large' = 'default'; // Component size
-  export let showHeader: boolean = true;         // Show header with title
-  export let title: string = 'Tags';             // Header title
-  export let loading: boolean = false;           // Loading state
-  export let connected: boolean = false;         // WebSocket connection status
-  export let errorMsg: string = '';              // Error message
-  export let allowCustomTags: boolean = true;    // Allow custom tags
-  export let allowRemoval: boolean = true;       // Allow tag removal
-  export let maxVisibleTags: number = 15;        // Max visible tags before "more" indicator
-  export let itemId: string | null = null;       // Optional item ID for direct WebSocket requests
-  
+  export let showHeader: boolean = true; // Show header with title
+  export let title: string = 'Tags'; // Header title
+  export let loading: boolean = false; // Loading state
+  export let connected: boolean = false; // WebSocket connection status
+  export let errorMsg: string = ''; // Error message
+  export let allowCustomTags: boolean = true; // Allow custom tags
+  export let allowRemoval: boolean = true; // Allow tag removal
+  export let maxVisibleTags: number = 15; // Max visible tags before "more" indicator
+  export let itemId: string | null = null; // Optional item ID for direct WebSocket requests
+
   // Set up event dispatcher
   const dispatch = createEventDispatcher<{
     update: { tags: string[] };
@@ -47,13 +47,13 @@
   let connectionUnsubscribe: (() => void) | null = null;
   let wsLastUpdated = 0;
   let debounceMs = 300;
-  
+
   // Compute visible tags based on maxVisibleTags
   $: visibleTags = tags.slice(0, maxVisibleTags);
-  
+
   // Check for reduced motion preference
   let isReducedMotion = false;
-  
+
   // Debounced filter function for input changes with memoization
   let lastInput = '';
   let lastTags: string[] = [];
@@ -61,33 +61,38 @@
   function updateFilteredSuggestions() {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      filteredSuggestions = uniqueSuggestedTags.filter(tag => typeof tag === 'string' && !tags.includes(tag) && tag.toLowerCase().includes(newTagInput.toLowerCase()));
+      filteredSuggestions = uniqueSuggestedTags.filter(
+        (tag) =>
+          typeof tag === 'string' &&
+          !tags.includes(tag) &&
+          tag.toLowerCase().includes(newTagInput.toLowerCase())
+      );
     }, debounceMs);
   }
-  
+
   // Handle input changes
   function handleInput() {
     updateFilteredSuggestions();
     showSuggestions = newTagInput.length > 0;
     selectedSuggestionIndex = -1;
   }
-  
+
   // WebSocket message handler
   function handleWebSocketMessage(event: CustomEvent) {
     const message = event.detail;
     wsLastUpdated = Date.now();
-    
+
     if (message.type === MessageType.AI_RESPONSE && message.data.content) {
       try {
         const responseData = JSON.parse(message.data.content);
-        
+
         // Handle tag suggestions
         if (responseData.tags && Array.isArray(responseData.tags) && itemId) {
           // Only update if this message is for our item
           if (responseData.item_id === itemId) {
             // Deduplicate tags
             const newSuggestions = [...new Set(responseData.tags)];
-            
+
             // Only update if there are actual changes to avoid unnecessary renders
             if (JSON.stringify(newSuggestions) !== JSON.stringify(suggestedTags)) {
               suggestedTags = newSuggestions;
@@ -95,7 +100,7 @@
             }
           }
         }
-        
+
         // Handle tag updates
         if (responseData.updated_tags && Array.isArray(responseData.updated_tags) && itemId) {
           // Only update if this message is for our item
@@ -112,51 +117,51 @@
       }
     }
   }
-  
+
   // Set up WebSocket connection and listeners
   onMount(() => {
     // Create message handler
     wsMessageHandler = (event: CustomEvent) => handleWebSocketMessage(event);
-    
+
     // Add event listener for WebSocket messages
     window.addEventListener('ws-message', wsMessageHandler);
-    
+
     // Subscribe to connection status
-    connectionUnsubscribe = connectionStatus.subscribe(state => {
+    connectionUnsubscribe = connectionStatus.subscribe((state) => {
       const isConnected = state === 'connected';
       if (isConnected !== wsConnected) {
         wsConnected = isConnected;
         dispatch('connectionChange', { connected: wsConnected });
       }
     });
-    
+
     // Initial filter of suggestions
     updateFilteredSuggestions();
   });
-  
+
   // Clean up event listeners and subscriptions
   onDestroy(() => {
     if (wsMessageHandler) {
       window.removeEventListener('ws-message', wsMessageHandler);
     }
-    
+
     if (connectionUnsubscribe) {
       connectionUnsubscribe();
     }
-    
+
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
   });
-  
+
   // Add a tag with WebSocket integration
   function addTag(tag: string) {
     if (!tag || tags.includes(tag) || tags.length >= maxTags) return;
-    
+
     // Optimistic UI update
     tags = [...tags, tag];
     dispatch('update', { tags });
-    
+
     // If we have an itemId, we can directly update via WebSocket
     if (itemId && wsConnected) {
       websocketStore.sendMessage({
@@ -164,21 +169,21 @@
         data: {
           task: 'update_tags',
           content: JSON.stringify({ action: 'add', tag }),
-          item_id: itemId
-        }
+          item_id: itemId,
+        },
       });
     }
   }
-  
+
   // Remove a tag with WebSocket integration
   function removeTag(tag: string) {
     if (!allowRemoval) return;
-    
+
     // Optimistic UI update
     const previousTags = [...tags];
-    tags = tags.filter(t => t !== tag);
+    tags = tags.filter((t) => t !== tag);
     dispatch('update', { tags });
-    
+
     // If we have an itemId, we can directly update via WebSocket
     if (itemId && wsConnected) {
       websocketStore.sendMessage({
@@ -186,17 +191,17 @@
         data: {
           task: 'update_tags',
           content: JSON.stringify({ action: 'remove', tag }),
-          item_id: itemId
-        }
+          item_id: itemId,
+        },
       });
     }
   }
-  
+
   // Handle input keydown events
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' && newTagInput) {
       event.preventDefault();
-      
+
       // If a suggestion is selected, add that
       if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < filteredSuggestions.length) {
         addTag(filteredSuggestions[selectedSuggestionIndex]);
@@ -207,7 +212,7 @@
           addTag(trimmedTag);
         }
       }
-      
+
       newTagInput = '';
       selectedSuggestionIndex = -1;
       showSuggestions = false;
@@ -230,13 +235,13 @@
 <div class="live-tags-container {size}" aria-live="polite">
   <!-- Screen reader only announcement area -->
   <div class="sr-only" aria-live="assertive" id="tag-announcer">{srAnnouncement}</div>
-  
+
   {#if showHeader}
     <div class="tags-header">
       <div class="header-title">
         <Icon name="tag" size="small" />
         <h3 id="tags-heading">{title}</h3>
-        
+
         {#if loading}
           <div class="status-indicator loading" role="status" aria-label="Loading tags">
             <Icon name="loader" size="small" />
@@ -249,29 +254,40 @@
           </div>
         {/if}
       </div>
-      
+
       {#if errorMsg}
-        <div class="error-message" transition:fade|local={{ duration: isReducedMotion ? 0 : 200 }} role="alert" aria-live="assertive">
+        <div
+          class="error-message"
+          transition:fade|local={{ duration: isReducedMotion ? 0 : 200 }}
+          role="alert"
+          aria-live="assertive"
+        >
           <Icon name="alert-circle" size="small" />
           <span>{errorMsg}</span>
         </div>
       {/if}
     </div>
   {/if}
-  
+
   <div class="tags-container" aria-labelledby="tags-heading">
     {#if tags.length > 0}
       <div class="tags-list" role="list" bind:this={tagListElement}>
         {#each visibleTags as tag, i (tag)}
-          <div class="tag" role="listitem" 
-            in:fly|local={{ y: 10, duration: isReducedMotion ? 0 : 150, delay: isReducedMotion ? 0 : i * 30 }}
+          <div
+            class="tag"
+            role="listitem"
+            in:fly|local={{
+              y: 10,
+              duration: isReducedMotion ? 0 : 150,
+              delay: isReducedMotion ? 0 : i * 30,
+            }}
             out:fade|local={{ duration: isReducedMotion ? 0 : 100 }}
           >
             <span>{tag}</span>
-            
+
             {#if allowRemoval}
-              <button 
-                class="remove-tag" 
+              <button
+                class="remove-tag"
                 on:click={() => removeTag(tag)}
                 aria-label="Remove tag {tag}"
               >
@@ -280,7 +296,7 @@
             {/if}
           </div>
         {/each}
-        
+
         {#if tags.length > maxVisibleTags}
           <div class="tag more-tag" role="status" aria-live="polite">
             +{tags.length - maxVisibleTags} more
@@ -288,7 +304,7 @@
         {/if}
       </div>
     {/if}
-    
+
     <div class="tag-input-wrapper">
       <div class="tag-input-container">
         <div class="input-wrapper">
@@ -296,23 +312,25 @@
             type="text"
             bind:value={newTagInput}
             bind:this={tagInputRef}
-            placeholder={placeholder}
-            on:focus={() => showSuggestions = true}
-            on:blur={() => setTimeout(() => showSuggestions = false, 200)}
+            {placeholder}
+            on:focus={() => (showSuggestions = true)}
+            on:blur={() => setTimeout(() => (showSuggestions = false), 200)}
             on:keydown={handleKeydown}
             on:input={handleInput}
             aria-label="Add a tag"
             aria-controls="tag-suggestions"
             aria-autocomplete="list"
-            aria-activedescendant={selectedSuggestionIndex >= 0 ? `suggestion-${selectedSuggestionIndex}` : ''}
+            aria-activedescendant={selectedSuggestionIndex >= 0
+              ? `suggestion-${selectedSuggestionIndex}`
+              : ''}
             autocomplete="off"
             role="combobox"
             aria-expanded={showSuggestions}
           />
-          
+
           {#if newTagInput && allowCustomTags}
-            <button 
-              class="add-tag-btn" 
+            <button
+              class="add-tag-btn"
               on:click={() => addTag(newTagInput.trim())}
               aria-label="Add tag {newTagInput.trim()}"
               type="button"
@@ -321,10 +339,10 @@
             </button>
           {/if}
         </div>
-        
+
         {#if showSuggestions && filteredSuggestions.length > 0}
-          <div 
-            class="suggestions" 
+          <div
+            class="suggestions"
             id="tag-suggestions"
             transition:fade|local={{ duration: isReducedMotion ? 0 : 150 }}
             role="listbox"
@@ -336,7 +354,7 @@
                 class="suggestion-item"
                 class:selected={i === selectedSuggestionIndex}
                 on:click={() => addTag(suggestion)}
-                on:mouseenter={() => selectedSuggestionIndex = i}
+                on:mouseenter={() => (selectedSuggestionIndex = i)}
                 role="option"
                 aria-selected={i === selectedSuggestionIndex}
                 id={`suggestion-${i}`}
@@ -349,9 +367,8 @@
         {/if}
       </div>
     </div>
-    
   </div>
-  
+
   {#if loading && !uniqueSuggestedTags.length}
     <!-- Skeleton loader for suggested tags -->
     <div class="suggested-tags skeleton-container" aria-hidden="true">
@@ -359,7 +376,7 @@
         <div class="skeleton-icon"></div>
         <div class="skeleton-text"></div>
       </div>
-      
+
       <div class="suggestions-list">
         {#each Array(5) as _}
           <div class="skeleton-tag"></div>
@@ -372,7 +389,7 @@
         <Icon name="zap" size="small" />
         <span>AI Suggested Tags</span>
       </div>
-      
+
       <div class="suggestions-list" role="list" aria-labelledby="suggested-tags-heading">
         {#each filteredSuggestions.slice(0, 10) as suggestion}
           <div role="listitem">
@@ -401,36 +418,36 @@
     padding: 1rem;
     margin-bottom: 1rem;
   }
-  
+
   .live-tags-container.small {
     font-size: 0.75rem;
     padding: 0.5rem;
   }
-  
+
   .live-tags-container.large {
     font-size: 1rem;
     padding: 1.25rem;
   }
-  
+
   .tags-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.75rem;
   }
-  
+
   .header-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   .header-title h3 {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
   }
-  
+
   .status-indicator {
     display: flex;
     align-items: center;
@@ -441,21 +458,21 @@
     font-weight: 500;
     margin-left: 0.5rem;
   }
-  
+
   .status-indicator.loading {
     background-color: rgba(var(--info-rgb), 0.1);
     color: var(--info);
   }
-  
+
   .status-indicator.loading :global(svg) {
     animation: spin 2s linear infinite;
   }
-  
+
   .status-indicator.connected {
     background-color: rgba(var(--success-rgb), 0.1);
     color: var(--success);
   }
-  
+
   .error-message {
     display: flex;
     align-items: center;
@@ -463,18 +480,18 @@
     color: var(--error);
     font-size: 0.875rem;
   }
-  
+
   .tags-container {
     position: relative;
   }
-  
+
   .tags-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .tag {
     display: flex;
     align-items: center;
@@ -486,17 +503,17 @@
     font-size: 0.75rem;
     font-weight: 500;
   }
-  
+
   .small .tag {
     padding: 0.15rem 0.35rem;
     font-size: 0.7rem;
   }
-  
+
   .large .tag {
     padding: 0.35rem 0.75rem;
     font-size: 0.875rem;
   }
-  
+
   .remove-tag {
     display: flex;
     align-items: center;
@@ -508,20 +525,20 @@
     color: inherit;
     opacity: 0.7;
   }
-  
+
   .remove-tag:hover {
     opacity: 1;
   }
-  
+
   .more-tag {
     background: rgba(var(--text-muted-rgb), 0.1);
     color: var(--text-muted);
   }
-  
+
   .tag-input-wrapper {
     position: relative;
   }
-  
+
   .tag-input-container {
     display: flex;
     align-items: center;
@@ -531,11 +548,11 @@
     border-radius: var(--radius);
     transition: all var(--transition-fast);
   }
-  
+
   .tag-input-container:focus-within {
     border-color: var(--accent);
   }
-  
+
   .tag-input-container input {
     background: none;
     border: none;
@@ -545,15 +562,15 @@
     color: var(--text-primary);
     padding: 0.25rem 0;
   }
-  
+
   .small .tag-input-container input {
     font-size: 0.75rem;
   }
-  
+
   .large .tag-input-container input {
     font-size: 1rem;
   }
-  
+
   .suggestions {
     position: absolute;
     top: calc(100% + 0.25rem);
@@ -567,7 +584,7 @@
     max-height: 200px;
     overflow-y: auto;
   }
-  
+
   .suggestion-item {
     display: flex;
     align-items: center;
@@ -582,22 +599,22 @@
     border-bottom: 1px solid var(--border);
     font-size: 0.875rem;
   }
-  
+
   .suggestion-item:last-child {
     border-bottom: none;
   }
-  
+
   .suggestion-item:hover,
   .suggestion-item.selected {
     background: var(--bg-hover);
   }
-  
+
   .suggested-tags {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
   }
-  
+
   .suggested-header {
     display: flex;
     align-items: center;
@@ -607,13 +624,13 @@
     font-size: 0.875rem;
     font-weight: 500;
   }
-  
+
   .suggestions-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  
+
   .suggestion-tag {
     display: flex;
     align-items: center;
@@ -628,7 +645,7 @@
     cursor: pointer;
     transition: all var(--transition-fast);
   }
-  
+
   .add-tag-btn {
     display: flex;
     align-items: center;
@@ -643,28 +660,28 @@
     transition: all var(--transition-fast);
     margin-left: 4px;
   }
-  
+
   .add-tag-btn:hover {
     background: var(--accent-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   .add-tag-btn:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-  
+
   .suggestion-tag:hover {
     background: rgba(var(--accent-rgb), 0.1);
     color: var(--accent);
   }
-  
+
   /* Skeleton loader styles */
   .skeleton-container {
     opacity: 0.7;
   }
-  
+
   .skeleton-icon {
     width: 16px;
     height: 16px;
@@ -672,7 +689,7 @@
     background: var(--bg-tertiary);
     animation: pulse 1.5s infinite ease-in-out;
   }
-  
+
   .skeleton-text {
     width: 100px;
     height: 14px;
@@ -680,7 +697,7 @@
     border-radius: 4px;
     animation: pulse 1.5s infinite ease-in-out;
   }
-  
+
   .skeleton-tag {
     width: 80px;
     height: 24px;
@@ -688,7 +705,7 @@
     border-radius: 100px;
     animation: pulse 1.5s infinite ease-in-out;
   }
-  
+
   .loading-progress {
     width: 100%;
     height: 2px;
@@ -697,7 +714,7 @@
     margin-top: 4px;
     overflow: hidden;
   }
-  
+
   .loading-bar {
     height: 100%;
     width: 30%;
@@ -705,23 +722,37 @@
     border-radius: 2px;
     animation: loading-progress 1.5s infinite ease-in-out;
   }
-  
+
   @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 0.8; }
-    100% { opacity: 0.6; }
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.6;
+    }
   }
-  
+
   @keyframes loading-progress {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(400%); }
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(400%);
+    }
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
+
   /* Screen reader only class */
   .sr-only {
     position: absolute;
@@ -734,24 +765,31 @@
     white-space: nowrap;
     border-width: 0;
   }
-  
+
   /* Performance optimizations */
-  .tag, .suggestion-tag, .tag-input-container {
+  .tag,
+  .suggestion-tag,
+  .tag-input-container {
     will-change: transform, opacity;
   }
-  
+
   /* Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
-    .tag, .suggestions, .suggested-tags, .loading-bar {
+    .tag,
+    .suggestions,
+    .suggested-tags,
+    .loading-bar {
       transition: none !important;
       animation: none !important;
     }
-    
+
     .status-indicator.loading :global(svg) {
       animation: none !important;
     }
-    
-    .skeleton-icon, .skeleton-text, .skeleton-tag {
+
+    .skeleton-icon,
+    .skeleton-text,
+    .skeleton-tag {
       animation: none !important;
       opacity: 0.7;
     }

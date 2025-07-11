@@ -1,5 +1,11 @@
 import { writable, derived } from 'svelte/store';
-import type { InsightsResponse, TopicCluster, ContentTrendPoint, KnowledgeGraphData, TopContentItem } from '$lib/types/api';
+import type {
+  InsightsResponse,
+  TopicCluster,
+  ContentTrendPoint,
+  KnowledgeGraphData,
+  TopContentItem,
+} from '$lib/types/api';
 import { getInsights } from '$lib/api';
 
 // Define types for the store
@@ -21,7 +27,7 @@ const initialState: InsightsState = {
   timeRange: 'week',
   selectedCluster: null,
   exportFormat: null,
-  exportInProgress: false
+  exportInProgress: false,
 };
 
 // Create the writable store
@@ -30,22 +36,22 @@ function createInsightsStore() {
 
   // Load insights data for a specific time range
   async function loadInsights(timeRange: string) {
-    update(state => ({ ...state, isLoading: true, error: null }));
-    
+    update((state) => ({ ...state, isLoading: true, error: null }));
+
     try {
       const response = await getInsights({ timeRange });
-      update(state => ({ 
-        ...state, 
-        data: response, 
-        isLoading: false, 
-        timeRange 
+      update((state) => ({
+        ...state,
+        data: response,
+        isLoading: false,
+        timeRange,
       }));
       return response;
     } catch (error) {
-      update(state => ({ 
-        ...state, 
-        error: error as Error, 
-        isLoading: false 
+      update((state) => ({
+        ...state,
+        error: error as Error,
+        isLoading: false,
       }));
       throw error;
     }
@@ -53,7 +59,7 @@ function createInsightsStore() {
 
   // Set selected cluster
   function setSelectedCluster(clusterId: string | null) {
-    update(state => ({ ...state, selectedCluster: clusterId }));
+    update((state) => ({ ...state, selectedCluster: clusterId }));
   }
 
   // Reset the store to initial state
@@ -63,23 +69,23 @@ function createInsightsStore() {
 
   // Export insights data in the specified format
   async function exportInsights(format: 'pdf' | 'csv' | 'json') {
-    update(state => ({ ...state, exportFormat: format, exportInProgress: true }));
-    
+    update((state) => ({ ...state, exportFormat: format, exportInProgress: true }));
+
     try {
       // This would normally call a backend API for generating exports
       // For now, we'll simulate the export process
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const data = await getFormattedData(format);
       downloadData(data, `insights-export-${new Date().toISOString().split('T')[0]}.${format}`);
-      
-      update(state => ({ ...state, exportInProgress: false, exportFormat: null }));
+
+      update((state) => ({ ...state, exportInProgress: false, exportFormat: null }));
     } catch (error) {
-      update(state => ({ 
-        ...state, 
-        error: error as Error, 
-        exportInProgress: false, 
-        exportFormat: null 
+      update((state) => ({
+        ...state,
+        error: error as Error,
+        exportInProgress: false,
+        exportFormat: null,
       }));
       throw error;
     }
@@ -89,14 +95,16 @@ function createInsightsStore() {
   async function getFormattedData(format: string) {
     let result: string = '';
     let state: InsightsState;
-    
+
     // Get current state from the store
-    subscribe(s => { state = s; })();
-    
+    subscribe((s) => {
+      state = s;
+    })();
+
     if (!state.data) {
       throw new Error('No insights data available to export');
     }
-    
+
     switch (format) {
       case 'json':
         result = JSON.stringify(state.data, null, 2);
@@ -104,10 +112,12 @@ function createInsightsStore() {
       case 'csv':
         // Create CSV format for trend data
         const headers = 'Date,Articles,Videos,Notes,Bookmarks,Total\n';
-        const rows = state.data.contentTrends?.map(point => {
-          const total = point.articles + point.videos + point.notes + point.bookmarks;
-          return `${point.date},${point.articles},${point.videos},${point.notes},${point.bookmarks},${total}`;
-        }).join('\n');
+        const rows = state.data.contentTrends
+          ?.map((point) => {
+            const total = point.articles + point.videos + point.notes + point.bookmarks;
+            return `${point.date},${point.articles},${point.videos},${point.notes},${point.bookmarks},${total}`;
+          })
+          .join('\n');
         result = headers + rows;
         break;
       case 'pdf':
@@ -118,7 +128,7 @@ function createInsightsStore() {
       default:
         throw new Error(`Unsupported export format: ${format}`);
     }
-    
+
     return result;
   }
 
@@ -127,7 +137,7 @@ function createInsightsStore() {
     // In a browser environment, this would create a download
     // For development purposes, we'll log the data
     console.log(`Downloading ${filename} with data:`, data.substring(0, 100) + '...');
-    
+
     // In a real implementation, we would use:
     const blob = new Blob([data], { type: getMimeType(filename) });
     const url = URL.createObjectURL(blob);
@@ -153,7 +163,7 @@ function createInsightsStore() {
     loadInsights,
     setSelectedCluster,
     reset,
-    exportInsights
+    exportInsights,
   };
 }
 
@@ -161,47 +171,23 @@ function createInsightsStore() {
 export const insights = createInsightsStore();
 
 // Create derived stores for specific pieces of data
-export const topicClusters = derived(
-  insights,
-  $insights => $insights.data?.topicClusters || []
-);
+export const topicClusters = derived(insights, ($insights) => $insights.data?.topicClusters || []);
 
-export const contentTrends = derived(
-  insights,
-  $insights => $insights.data?.contentTrends || []
-);
+export const contentTrends = derived(insights, ($insights) => $insights.data?.contentTrends || []);
 
 export const knowledgeGraph = derived(
   insights,
-  $insights => $insights.data?.knowledgeGraph || { nodes: [], links: [] }
+  ($insights) => $insights.data?.knowledgeGraph || { nodes: [], links: [] }
 );
 
-export const topContent = derived(
-  insights,
-  $insights => $insights.data?.topContent || []
-);
+export const topContent = derived(insights, ($insights) => $insights.data?.topContent || []);
 
-export const isLoading = derived(
-  insights,
-  $insights => $insights.isLoading
-);
+export const isLoading = derived(insights, ($insights) => $insights.isLoading);
 
-export const error = derived(
-  insights,
-  $insights => $insights.error
-);
+export const error = derived(insights, ($insights) => $insights.error);
 
-export const selectedCluster = derived(
-  insights,
-  $insights => $insights.selectedCluster
-);
+export const selectedCluster = derived(insights, ($insights) => $insights.selectedCluster);
 
-export const timeRange = derived(
-  insights,
-  $insights => $insights.timeRange
-);
+export const timeRange = derived(insights, ($insights) => $insights.timeRange);
 
-export const exportInProgress = derived(
-  insights,
-  $insights => $insights.exportInProgress
-);
+export const exportInProgress = derived(insights, ($insights) => $insights.exportInProgress);

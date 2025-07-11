@@ -2,29 +2,29 @@
   import { createEventDispatcher } from 'svelte';
   import Icon from './Icon.svelte';
   import { insights, exportInProgress } from '$lib/stores/insights';
-  
+
   // Props
   export let disabled: boolean = false;
-  
+
   // State
   let isOpen: boolean = false;
   let exportFormats = [
     { id: 'pdf', label: 'PDF Report', icon: 'file-text' },
     { id: 'csv', label: 'CSV Data', icon: 'file' },
-    { id: 'json', label: 'JSON Data', icon: 'code' }
+    { id: 'json', label: 'JSON Data', icon: 'code' },
   ];
-  
+
   // Event dispatcher
   const dispatch = createEventDispatcher<{
     exportStart: { format: string };
     exportComplete: { format: string };
     exportError: { error: Error };
   }>();
-  
+
   // Handle export request
   async function handleExport(format: 'pdf' | 'csv' | 'json') {
     isOpen = false;
-    
+
     try {
       dispatch('exportStart', { format });
       await insights.exportInsights(format);
@@ -34,14 +34,14 @@
       dispatch('exportError', { error });
     }
   }
-  
+
   // Handle dropdown toggle
   function toggleDropdown() {
     if (!disabled && !$exportInProgress) {
       isOpen = !isOpen;
     }
   }
-  
+
   // Close dropdown when clicking outside
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as Node;
@@ -49,7 +49,7 @@
       isOpen = false;
     }
   }
-  
+
   // DOM references
   let dropdownMenu: HTMLDivElement;
   let exportBtn: HTMLButtonElement;
@@ -59,10 +59,10 @@
 <svelte:window on:click={handleClickOutside} />
 
 <div class="export-button-container">
-  <button 
+  <button
     bind:this={exportBtn}
-    class="export-button" 
-    class:disabled 
+    class="export-button"
+    class:disabled
     on:click={toggleDropdown}
     aria-haspopup="true"
     aria-expanded={isOpen}
@@ -75,16 +75,12 @@
       Export
     {/if}
   </button>
-  
+
   {#if isOpen}
-    <div 
-      bind:this={dropdownMenu}
-      class="dropdown-menu"
-      role="menu"
-    >
+    <div bind:this={dropdownMenu} class="dropdown-menu" role="menu">
       {#each exportFormats as format}
-        <button 
-          class="dropdown-item" 
+        <button
+          class="dropdown-item"
           on:click={() => handleExport(format.id as 'pdf' | 'csv' | 'json')}
           role="menuitem"
         >
@@ -100,7 +96,7 @@
   .export-button-container {
     position: relative;
   }
-  
+
   .export-button {
     display: inline-flex;
     align-items: center;
@@ -115,16 +111,16 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
-  
+
   .export-button:hover:not(.disabled) {
     background-color: var(--accent-dark);
   }
-  
+
   .export-button.disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   .dropdown-menu {
     position: absolute;
     top: calc(100% + 0.5rem);
@@ -137,7 +133,7 @@
     overflow: hidden;
     animation: slideDown 0.2s ease;
   }
-  
+
   @keyframes slideDown {
     from {
       opacity: 0;
@@ -148,7 +144,7 @@
       transform: translateY(0);
     }
   }
-  
+
   .dropdown-item {
     display: flex;
     align-items: center;
@@ -162,15 +158,15 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
-  
+
   .dropdown-item:hover {
     background-color: var(--bg-hover);
   }
-  
+
   .dropdown-item:not(:last-child) {
     border-bottom: 1px solid var(--border);
   }
-  
+
   .spinner {
     width: 16px;
     height: 16px;
@@ -180,8 +176,10 @@
     animation: spin 0.8s linear infinite;
     display: inline-block;
   }
-  
+
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

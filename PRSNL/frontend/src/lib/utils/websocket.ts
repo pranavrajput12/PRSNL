@@ -35,7 +35,7 @@ export class StreamingWebSocket {
       onMessage: () => {},
       onError: () => {},
       onClose: () => {},
-      ...options
+      ...options,
     };
   }
 
@@ -54,7 +54,7 @@ export class StreamingWebSocket {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.options.onOpen();
-        
+
         // Send queued messages
         while (this.messageQueue.length > 0) {
           const message = this.messageQueue.shift();
@@ -81,7 +81,7 @@ export class StreamingWebSocket {
         console.log('WebSocket disconnected');
         this.isConnecting = false;
         this.options.onClose();
-        
+
         if (this.options.reconnect && this.reconnectAttempts < this.options.maxReconnectAttempts) {
           this.scheduleReconnect();
         }
@@ -89,7 +89,7 @@ export class StreamingWebSocket {
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
       this.isConnecting = false;
-      
+
       if (this.options.reconnect && this.reconnectAttempts < this.options.maxReconnectAttempts) {
         this.scheduleReconnect();
       }
@@ -103,9 +103,9 @@ export class StreamingWebSocket {
 
     this.reconnectAttempts++;
     const delay = this.options.reconnectInterval * Math.pow(1.5, this.reconnectAttempts - 1);
-    
+
     console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+
     this.reconnectTimeout = setTimeout(() => {
       this.connect();
     }, delay);
@@ -117,7 +117,7 @@ export class StreamingWebSocket {
     } else {
       // Queue message if not connected
       this.messageQueue.push(data);
-      
+
       // Try to connect if not already
       if (!this.isConnecting) {
         this.connect();
@@ -127,12 +127,12 @@ export class StreamingWebSocket {
 
   close(): void {
     this.options.reconnect = false;
-    
+
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -168,7 +168,7 @@ export function createStreamingConnection(
   // In production, use port 8001 (NGINX proxy)
   const port = import.meta.env.MODE === 'production' ? 8001 : window.location.port;
   const url = `${protocol}//${host}:${port}${endpoint}`;
-  
+
   console.debug('[WebSocket] Creating connection to:', url);
 
   return new StreamingWebSocket({
@@ -179,45 +179,45 @@ export function createStreamingConnection(
     },
     onMessage: (message) => {
       console.debug('[WebSocket] Message received:', message);
-      
+
       switch (message.type) {
         case 'connection':
           console.debug('[WebSocket] Connection established:', message);
           break;
-          
+
         case 'status':
           console.debug('[WebSocket] Status update:', message.message);
           handlers.onTyping?.();
           break;
-          
+
         case 'chunk':
           handlers.onChunk?.(message.content);
           break;
-          
+
         case 'complete':
           handlers.onComplete?.({
             citations: message.citations,
             context_count: message.context_count,
             conversation_id: message.conversation_id,
             suggested_items: message.suggested_items,
-            insights: message.insights
+            insights: message.insights,
           });
           break;
-          
+
         case 'error':
           console.error('[WebSocket] Error:', message.message);
           handlers.onError?.({ message: message.message });
           break;
-          
+
         case 'typing':
           handlers.onTyping?.();
           break;
-          
+
         case 'response_chunk':
           // Legacy format support
           handlers.onChunk?.(message.data?.text || '');
           break;
-          
+
         case 'context':
           handlers.onContext?.(message.data);
           break;
@@ -229,7 +229,7 @@ export function createStreamingConnection(
     },
     onClose: () => {
       console.debug('[WebSocket] Connection closed');
-    }
+    },
   });
 }
 

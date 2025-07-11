@@ -1,5 +1,10 @@
 // Svelte Query utilities for API calls
-import { createQuery, createMutation, type CreateQueryOptions, type CreateMutationOptions } from '@tanstack/svelte-query';
+import {
+  createQuery,
+  createMutation,
+  type CreateQueryOptions,
+  type CreateMutationOptions,
+} from '@tanstack/svelte-query';
 import type { Readable } from 'svelte/store';
 
 // Base API configuration
@@ -14,12 +19,9 @@ export const defaultQueryOptions = {
 } satisfies Partial<CreateQueryOptions<any, any, any, any>>;
 
 // Generic fetch wrapper with error handling
-export async function fetchApi<T = any>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+export async function fetchApi<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +63,7 @@ export const queryKeys = {
 export function createCapturesQuery(params?: Record<string, any>) {
   const searchParams = new URLSearchParams(params);
   const queryString = searchParams.toString();
-  
+
   return createQuery({
     queryKey: queryString ? queryKeys.captureSearch(queryString) : queryKeys.captures(),
     queryFn: () => fetchApi(`/captures${queryString ? `?${queryString}` : ''}`),
@@ -89,10 +91,11 @@ export function createInsightsQuery() {
 export function createTimelineQuery(params?: { start_date?: string; end_date?: string }) {
   return createQuery({
     queryKey: queryKeys.timeline(),
-    queryFn: () => fetchApi('/timeline', {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
+    queryFn: () =>
+      fetchApi('/timeline', {
+        method: 'POST',
+        body: JSON.stringify(params || {}),
+      }),
     ...defaultQueryOptions,
   });
 }
@@ -109,10 +112,11 @@ export function createTagsQuery() {
 export function createAIAnalysisQuery(content: string, options?: { url?: string }) {
   return createQuery({
     queryKey: queryKeys.ai.analyze(content),
-    queryFn: () => fetchApi('/ai/analyze', {
-      method: 'POST',
-      body: JSON.stringify({ content, ...options }),
-    }),
+    queryFn: () =>
+      fetchApi('/ai/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ content, ...options }),
+      }),
     enabled: !!content,
     ...defaultQueryOptions,
   });
@@ -130,27 +134,30 @@ export function createAISummaryQuery(captureId: string) {
 // Mutations
 export function createCaptureMutation() {
   return createMutation({
-    mutationFn: (capture: any) => fetchApi('/captures', {
-      method: 'POST',
-      body: JSON.stringify(capture),
-    }),
+    mutationFn: (capture: any) =>
+      fetchApi('/captures', {
+        method: 'POST',
+        body: JSON.stringify(capture),
+      }),
   });
 }
 
 export function createUpdateCaptureMutation() {
   return createMutation({
-    mutationFn: ({ id, ...data }: any) => fetchApi(`/captures/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: ({ id, ...data }: any) =>
+      fetchApi(`/captures/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
   });
 }
 
 export function createDeleteCaptureMutation() {
   return createMutation({
-    mutationFn: (id: string) => fetchApi(`/captures/${id}`, {
-      method: 'DELETE',
-    }),
+    mutationFn: (id: string) =>
+      fetchApi(`/captures/${id}`, {
+        method: 'DELETE',
+      }),
   });
 }
 
@@ -158,10 +165,11 @@ export function createDeleteCaptureMutation() {
 export function createRAGSearchQuery(query: string, options?: { limit?: number }) {
   return createQuery({
     queryKey: queryKeys.rag.search(query),
-    queryFn: () => fetchApi('/rag/search', {
-      method: 'POST',
-      body: JSON.stringify({ query, limit: options?.limit || 10 }),
-    }),
+    queryFn: () =>
+      fetchApi('/rag/search', {
+        method: 'POST',
+        body: JSON.stringify({ query, limit: options?.limit || 10 }),
+      }),
     enabled: !!query,
     ...defaultQueryOptions,
   });

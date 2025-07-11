@@ -10,12 +10,14 @@
  */
 export function isInstagramUrl(url: string): boolean {
   if (!url) return false;
-  
+
   try {
     const urlObj = new URL(url);
-    return urlObj.hostname === 'instagram.com' || 
-           urlObj.hostname === 'www.instagram.com' ||
-           urlObj.hostname.endsWith('.instagram.com');
+    return (
+      urlObj.hostname === 'instagram.com' ||
+      urlObj.hostname === 'www.instagram.com' ||
+      urlObj.hostname.endsWith('.instagram.com')
+    );
   } catch (e) {
     return false;
   }
@@ -28,29 +30,27 @@ export function isInstagramUrl(url: string): boolean {
  */
 export function isVideoUrl(url: string): boolean {
   if (!url) return false;
-  
+
   // Check for Instagram video patterns
   if (isInstagramUrl(url)) {
-    return url.includes('/reel/') || 
-           url.includes('/tv/') || 
-           url.includes('/p/');  // Instagram posts can be videos too
+    return url.includes('/reel/') || url.includes('/tv/') || url.includes('/p/'); // Instagram posts can be videos too
   }
-  
+
   // Check for YouTube
   if (isYouTubeUrl(url)) {
     return true;
   }
-  
+
   // Check for Twitter videos
   if (isTwitterUrl(url)) {
     return url.includes('/video/');
   }
-  
+
   // Check for TikTok
   if (isTikTokUrl(url)) {
     return true;
   }
-  
+
   return false;
 }
 
@@ -61,12 +61,14 @@ export function isVideoUrl(url: string): boolean {
  */
 export function isYouTubeUrl(url: string): boolean {
   if (!url) return false;
-  
+
   try {
     const urlObj = new URL(url);
-    return urlObj.hostname === 'youtube.com' || 
-           urlObj.hostname === 'www.youtube.com' ||
-           urlObj.hostname === 'youtu.be';
+    return (
+      urlObj.hostname === 'youtube.com' ||
+      urlObj.hostname === 'www.youtube.com' ||
+      urlObj.hostname === 'youtu.be'
+    );
   } catch (e) {
     return false;
   }
@@ -79,13 +81,15 @@ export function isYouTubeUrl(url: string): boolean {
  */
 export function isTwitterUrl(url: string): boolean {
   if (!url) return false;
-  
+
   try {
     const urlObj = new URL(url);
-    return urlObj.hostname === 'twitter.com' || 
-           urlObj.hostname === 'www.twitter.com' ||
-           urlObj.hostname === 'x.com' ||
-           urlObj.hostname === 'www.x.com';
+    return (
+      urlObj.hostname === 'twitter.com' ||
+      urlObj.hostname === 'www.twitter.com' ||
+      urlObj.hostname === 'x.com' ||
+      urlObj.hostname === 'www.x.com'
+    );
   } catch (e) {
     return false;
   }
@@ -98,12 +102,14 @@ export function isTwitterUrl(url: string): boolean {
  */
 export function isTikTokUrl(url: string): boolean {
   if (!url) return false;
-  
+
   try {
     const urlObj = new URL(url);
-    return urlObj.hostname === 'tiktok.com' || 
-           urlObj.hostname === 'www.tiktok.com' ||
-           urlObj.hostname.endsWith('.tiktok.com');
+    return (
+      urlObj.hostname === 'tiktok.com' ||
+      urlObj.hostname === 'www.tiktok.com' ||
+      urlObj.hostname.endsWith('.tiktok.com')
+    );
   } catch (e) {
     return false;
   }
@@ -116,12 +122,12 @@ export function isTikTokUrl(url: string): boolean {
  */
 export function getVideoPlatform(url: string): string | null {
   if (!url) return null;
-  
+
   if (isInstagramUrl(url)) return 'Instagram';
   if (isYouTubeUrl(url)) return 'YouTube';
   if (isTwitterUrl(url)) return 'Twitter';
   if (isTikTokUrl(url)) return 'TikTok';
-  
+
   return null;
 }
 
@@ -133,22 +139,22 @@ export function getVideoPlatform(url: string): string | null {
  */
 export function estimateDownloadTime(url: string, networkSpeedMbps: number = 5): number {
   if (!isVideoUrl(url)) return 0;
-  
+
   // Average video sizes by platform in MB
   const avgSizes: Record<string, number> = {
-    'Instagram': 15,
-    'YouTube': 30,
-    'Twitter': 10,
-    'TikTok': 12
+    Instagram: 15,
+    YouTube: 30,
+    Twitter: 10,
+    TikTok: 12,
   };
-  
+
   const platform = getVideoPlatform(url);
   if (!platform || !avgSizes[platform]) return 0;
-  
+
   // Convert Mbps to MBps (divide by 8) and calculate time in seconds
   const speedMBps = networkSpeedMbps / 8;
   const estimatedTimeSeconds = avgSizes[platform] / speedMBps;
-  
+
   return Math.round(estimatedTimeSeconds);
 }
 
@@ -161,13 +167,13 @@ export function formatTime(seconds: number): string {
   if (seconds < 60) {
     return `${seconds}s`;
   }
-  
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  
+
   if (remainingSeconds === 0) {
     return `${minutes}m`;
   }
-  
+
   return `${minutes}m ${remainingSeconds}s`;
 }

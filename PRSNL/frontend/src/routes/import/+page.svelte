@@ -5,7 +5,7 @@
   import Spinner from '$lib/components/Spinner.svelte';
   import ProcessingProgress from '$lib/components/ProcessingProgress.svelte';
   import AnimatedButton from '$lib/components/AnimatedButton.svelte';
-  
+
   let files = [];
   let isDragging = false;
   let isProcessing = false;
@@ -16,72 +16,76 @@
   let progress = 0;
   let currentItem = '';
   let fileInput;
-  
+
   function handleDragOver(e) {
     e.preventDefault();
     isDragging = true;
   }
-  
+
   function handleDragLeave(e) {
     e.preventDefault();
     isDragging = false;
   }
-  
+
   function handleDrop(e) {
     e.preventDefault();
     isDragging = false;
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     handleFiles(droppedFiles);
   }
-  
+
   function handleFileSelect(e) {
     const selectedFiles = Array.from(e.target.files);
     handleFiles(selectedFiles);
   }
-  
+
   function handleFiles(newFiles) {
-    files = newFiles.filter(file => {
+    files = newFiles.filter((file) => {
       if (importType === 'bookmarks') {
         return file.type === 'text/html' || file.name.endsWith('.html');
       } else if (importType === 'json') {
         return file.type === 'application/json' || file.name.endsWith('.json');
       } else if (importType === 'notes') {
-        return file.type === 'text/plain' || file.type === 'text/markdown' || 
-               file.name.endsWith('.txt') || file.name.endsWith('.md');
+        return (
+          file.type === 'text/plain' ||
+          file.type === 'text/markdown' ||
+          file.name.endsWith('.txt') ||
+          file.name.endsWith('.md')
+        );
       }
       return false;
     });
-    
+
     if (files.length === 0 && newFiles.length > 0) {
       error = `Please select valid ${importType} files`;
     } else {
       error = null;
     }
   }
-  
+
   async function importData() {
     if (files.length === 0) return;
-    
+
     isProcessing = true;
     error = null;
     progress = 0;
-    
+
     try {
       const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
+      files.forEach((file) => formData.append('files', file));
       formData.append('type', importType);
       formData.append('auto_fetch', autoFetch.toString());
-      
+
       const response = await fetch(`${API_BASE_URL}/api/import-data`, {
         method: 'POST',
-        body: formData
+        body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error(`Import failed: ${response.statusText}`);
       }
-      
+
       importResults = await response.json();
       files = [];
     } catch (err) {
@@ -91,7 +95,7 @@
       progress = 0;
     }
   }
-  
+
   function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -99,7 +103,7 @@
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   function removeFile(index) {
     files = files.filter((_, i) => i !== index);
   }
@@ -109,9 +113,9 @@
   <!-- Import Type Selection - RAM-style modules -->
   <div class="import-type-selector">
     <div class="type-ram-slots">
-      <button 
+      <button
         class="ram-module {importType === 'bookmarks' ? 'active' : ''}"
-        on:click={() => importType = 'bookmarks'}
+        on:click={() => (importType = 'bookmarks')}
       >
         <div class="ram-body">
           <div class="ram-label">BOOKMARKS</div>
@@ -124,10 +128,10 @@
         </div>
         <div class="ram-notch"></div>
       </button>
-      
-      <button 
+
+      <button
         class="ram-module {importType === 'json' ? 'active' : ''}"
-        on:click={() => importType = 'json'}
+        on:click={() => (importType = 'json')}
       >
         <div class="ram-body">
           <div class="ram-label">PRSNL EXPORT</div>
@@ -140,10 +144,10 @@
         </div>
         <div class="ram-notch"></div>
       </button>
-      
-      <button 
+
+      <button
         class="ram-module {importType === 'notes' ? 'active' : ''}"
-        on:click={() => importType = 'notes'}
+        on:click={() => (importType = 'notes')}
       >
         <div class="ram-body">
           <div class="ram-label">NOTES</div>
@@ -165,8 +169,8 @@
       <div class="socket-label">DATA IMPORT SOCKET</div>
       <div class="socket-type">LGA-{importType.toUpperCase()}</div>
     </div>
-    
-    <div 
+
+    <div
       class="cpu-socket {isDragging ? 'receiving' : ''} {files.length > 0 ? 'loaded' : ''}"
       on:dragover={handleDragOver}
       on:dragleave={handleDragLeave}
@@ -177,7 +181,7 @@
           <div class="socket-pin" style="--index: {i}"></div>
         {/each}
       </div>
-      
+
       <div class="drop-zone-content">
         {#if files.length === 0}
           <div class="drop-icon">
@@ -185,18 +189,19 @@
           </div>
           <h3>Drop {importType} files here</h3>
           <p>or click to browse files</p>
-          <input 
-            type="file" 
-            multiple 
-            accept={importType === 'bookmarks' ? '.html' : importType === 'json' ? '.json' : '.txt,.md'}
+          <input
+            type="file"
+            multiple
+            accept={importType === 'bookmarks'
+              ? '.html'
+              : importType === 'json'
+                ? '.json'
+                : '.txt,.md'}
             on:change={handleFileSelect}
             style="display: none;"
             bind:this={fileInput}
-          >
-          <AnimatedButton 
-            variant="secondary" 
-            on:click={() => fileInput?.click()}
-          >
+          />
+          <AnimatedButton variant="secondary" on:click={() => fileInput?.click()}>
             Browse Files
           </AnimatedButton>
         {:else}
@@ -221,7 +226,7 @@
     <div class="circuit-trace"></div>
     <div class="option-component">
       <label class="switch-component">
-        <input type="checkbox" bind:checked={autoFetch}>
+        <input type="checkbox" bind:checked={autoFetch} />
         <div class="switch-slider"></div>
         <span class="component-label">AUTO-FETCH CONTENT</span>
       </label>
@@ -230,7 +235,7 @@
 
   <!-- Process Button - Power button style -->
   <div class="power-section">
-    <button 
+    <button
       class="power-button {isProcessing ? 'processing' : ''}"
       disabled={files.length === 0 || isProcessing}
       on:click={importData}
@@ -559,11 +564,11 @@
     transition: all 0.3s ease;
   }
 
-  input[type="checkbox"]:checked + .switch-slider {
+  input[type='checkbox']:checked + .switch-slider {
     background: #4a9eff;
   }
 
-  input[type="checkbox"]:checked + .switch-slider::before {
+  input[type='checkbox']:checked + .switch-slider::before {
     transform: translateX(30px);
     background: white;
   }
@@ -633,7 +638,8 @@
   }
 
   /* Status Panels */
-  .status-panel, .error-panel {
+  .status-panel,
+  .error-panel {
     background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
     border: 1px solid #333;
     border-radius: 8px;
@@ -690,8 +696,13 @@
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 
   /* Responsive Design */

@@ -5,27 +5,27 @@
   import Icon from './Icon.svelte';
   import RelevanceScore from './RelevanceScore.svelte';
   import { getTypeIcon } from '$lib/stores/contentTypes';
-  
+
   // Props
   export let itemId: string;
   export let limit: number = 5;
   export let isOpen: boolean = false;
-  
+
   // State
   let isLoading = false;
   let error: Error | null = null;
   let similarItems: any[] = [];
-  
+
   // Event dispatcher
   const dispatch = createEventDispatcher<{
     close: void;
     select: { item: ContentItem };
   }>();
-  
+
   // Load similar items
   async function loadSimilarItems() {
     if (!itemId) return;
-    
+
     try {
       isLoading = true;
       error = null;
@@ -37,17 +37,17 @@
       isLoading = false;
     }
   }
-  
+
   // Handle item selection
   function selectItem(item: ContentItem) {
     dispatch('select', { item });
   }
-  
+
   // Handle close
   function close() {
     dispatch('close');
   }
-  
+
   // Load data when component mounts or itemId changes
   $: if (isOpen && itemId) {
     loadSimilarItems();
@@ -64,7 +64,7 @@
       <Icon name="x" />
     </button>
   </div>
-  
+
   <div class="similar-items-content">
     {#if isLoading}
       <div class="loading-state">
@@ -124,11 +124,11 @@
     transform: translateX(100%);
     transition: transform 0.3s ease;
   }
-  
+
   .similar-items.open {
     transform: translateX(0);
   }
-  
+
   .similar-items-header {
     display: flex;
     justify-content: space-between;
@@ -136,7 +136,7 @@
     padding: 1rem;
     border-bottom: 1px solid var(--border);
   }
-  
+
   .similar-items-header h2 {
     font-size: 1.1rem;
     font-weight: 600;
@@ -145,7 +145,7 @@
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   .close-button {
     background: none;
     border: none;
@@ -158,18 +158,18 @@
     justify-content: center;
     transition: background 0.2s ease;
   }
-  
+
   .close-button:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
   }
-  
+
   .similar-items-content {
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
   }
-  
+
   .loading-state,
   .error-state,
   .empty-state {
@@ -181,7 +181,7 @@
     padding: 3rem 1rem;
     color: var(--text-secondary);
   }
-  
+
   .spinner {
     width: 24px;
     height: 24px;
@@ -191,11 +191,13 @@
     animation: spin 0.8s linear infinite;
     margin-bottom: 1rem;
   }
-  
+
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
-  
+
   .error-state button,
   .empty-state button {
     margin-top: 1rem;
@@ -207,13 +209,13 @@
     cursor: pointer;
     font-size: 0.9rem;
   }
-  
+
   .similar-items-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  
+
   .similar-item {
     display: flex;
     align-items: center;
@@ -227,11 +229,11 @@
     transition: background 0.2s ease;
     margin-bottom: 0.5rem;
   }
-  
+
   .similar-item:hover {
     background: var(--bg-hover);
   }
-  
+
   .item-icon {
     display: flex;
     align-items: center;
@@ -244,12 +246,12 @@
     margin-right: 0.75rem;
     flex-shrink: 0;
   }
-  
+
   .item-content {
     flex: 1;
     overflow: hidden;
   }
-  
+
   .item-content h3 {
     font-size: 0.95rem;
     font-weight: 500;
@@ -259,7 +261,7 @@
     text-overflow: ellipsis;
     color: var(--text-primary);
   }
-  
+
   .item-excerpt {
     font-size: 0.85rem;
     color: var(--text-secondary);
@@ -270,7 +272,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  
+
   .similarity-score {
     font-size: 0.85rem;
     font-weight: 500;

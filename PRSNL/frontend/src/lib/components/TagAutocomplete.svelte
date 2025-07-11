@@ -1,13 +1,13 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
   import { getRecentTags } from '$lib/api';
-  
+
   export let value = '';
   export let placeholder = 'Add tags...';
   export let disabled = false;
-  
+
   const dispatch = createEventDispatcher();
-  
+
   let inputElement;
   let tags = [];
   let suggestions = [];
@@ -15,16 +15,16 @@
   let showSuggestions = false;
   let isLoading = false;
   let error = null;
-  
+
   onMount(async () => {
     await loadRecentTags();
   });
-  
+
   async function loadRecentTags() {
     try {
       isLoading = true;
       const data = await getRecentTags();
-      suggestions = Array.isArray(data) ? data : (data.tags || []);
+      suggestions = Array.isArray(data) ? data : data.tags || [];
     } catch (err) {
       error = err;
       console.error('Failed to load tags:', err);
@@ -34,45 +34,49 @@
       isLoading = false;
     }
   }
-  
+
   function handleInput() {
     const tagInput = value.trim();
     showSuggestions = tagInput.length > 0;
-    
+
     if (tagInput) {
       // Filter suggestions based on input
-      const filtered = suggestions.filter(tag => 
-        typeof tag === 'string' && tag.toLowerCase().includes(tagInput.toLowerCase()) && 
-        !tags.includes(tag)
+      const filtered = suggestions.filter(
+        (tag) =>
+          typeof tag === 'string' &&
+          tag.toLowerCase().includes(tagInput.toLowerCase()) &&
+          !tags.includes(tag)
       );
-      
+
       // Sort by relevance (starts with input first)
       filtered.sort((a, b) => {
-        const aStartsWith = typeof a === 'string' && a.toLowerCase().startsWith(tagInput.toLowerCase());
-        const bStartsWith = typeof b === 'string' && b.toLowerCase().startsWith(tagInput.toLowerCase());
-        
+        const aStartsWith =
+          typeof a === 'string' && a.toLowerCase().startsWith(tagInput.toLowerCase());
+        const bStartsWith =
+          typeof b === 'string' && b.toLowerCase().startsWith(tagInput.toLowerCase());
+
         if (aStartsWith && !bStartsWith) return -1;
         if (!aStartsWith && bStartsWith) return 1;
         return 0;
       });
-      
+
       suggestions = filtered.slice(0, 5); // Limit to 5 suggestions
       activeSuggestion = suggestions.length > 0 ? 0 : -1;
     } else {
       activeSuggestion = -1;
     }
-    
+
     dispatch('input', { value });
   }
-  
+
   function handleKeydown(event) {
     if (disabled) return;
-    
+
     const tagInput = value.trim();
-    
+
     if (event.key === 'Enter' && tagInput) {
       event.preventDefault();
-      
+
       if (activeSuggestion >= 0 && suggestions[activeSuggestion]) {
         addTag(suggestions[activeSuggestion]);
       } else if (tagInput) {
@@ -92,7 +96,7 @@
       addTag(tagInput);
     }
   }
-  
+
   function addTag(tag) {
     tag = tag.trim();
     if (tag && !tags.includes(tag)) {
@@ -102,17 +106,17 @@
       dispatch('tags', { tags });
     }
   }
-  
+
   function removeTag(index) {
     tags = tags.filter((_, i) => i !== index);
     dispatch('tags', { tags });
   }
-  
+
   function handleSuggestionClick(tag) {
     addTag(tag);
     inputElement.focus();
   }
-  
+
   function handleBlur() {
     // Small delay to allow click events on suggestions
     setTimeout(() => {
@@ -126,18 +130,18 @@
     {#each tags as tag, i}
       <div class="tag">
         {tag}
-        <button 
-          type="button" 
-          class="tag-remove" 
+        <button
+          type="button"
+          class="tag-remove"
           on:click={() => removeTag(i)}
           aria-label="Remove tag"
-          disabled={disabled}
+          {disabled}
         >
           ×
         </button>
       </div>
     {/each}
-    
+
     <input
       bind:this={inputElement}
       bind:value
@@ -146,11 +150,11 @@
       on:blur={handleBlur}
       on:focus={() => handleInput()}
       placeholder={tags.length ? '' : placeholder}
-      disabled={disabled}
+      {disabled}
       class="tag-input"
     />
   </div>
-  
+
   {#if showSuggestions && suggestions.length > 0}
     <div class="suggestions">
       {#each suggestions as suggestion, i}
@@ -172,7 +176,7 @@
     position: relative;
     width: 100%;
   }
-  
+
   .tag-input-container {
     display: flex;
     flex-wrap: wrap;
@@ -185,11 +189,11 @@
     align-items: center;
     transition: border-color 0.2s ease;
   }
-  
+
   .tag-input-container:focus-within {
     border-color: var(--accent);
   }
-  
+
   .tag {
     display: flex;
     align-items: center;
@@ -201,7 +205,7 @@
     font-size: 0.875rem;
     animation: fadeIn 0.2s ease;
   }
-  
+
   .tag-remove {
     background: none;
     border: none;
@@ -214,11 +218,11 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .tag-remove:hover {
     color: var(--text-primary);
   }
-  
+
   .tag-input {
     flex: 1;
     min-width: 100px;
@@ -229,7 +233,7 @@
     outline: none;
     padding: 0.25rem 0;
   }
-  
+
   .suggestions {
     position: absolute;
     top: 100%;
@@ -245,7 +249,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation: fadeIn 0.2s ease;
   }
-  
+
   .suggestion {
     display: block;
     width: 100%;
@@ -257,12 +261,12 @@
     cursor: pointer;
     transition: background 0.2s ease;
   }
-  
+
   .suggestion:hover,
   .suggestion.active {
     background: var(--bg-hover);
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;

@@ -8,13 +8,13 @@
   import { Button } from '$lib/components/ui/button';
   import { Spinner } from '$lib/components/ui/spinner';
   import type { Item } from '$lib/types/api';
-  
+
   export let url: string = '';
   export let title: string = '';
   export let content: string = '';
   export let checkOnMount: boolean = true;
   export let autoCheck: boolean = false;
-  
+
   let loading = false;
   let duplicates: Array<{
     id: string;
@@ -29,35 +29,35 @@
   let selectedDuplicate: string | null = null;
   let compareMode = false;
   let debounceTimer: NodeJS.Timeout;
-  
+
   const dispatch = createEventDispatcher<{
     duplicatesFound: { duplicates: typeof duplicates };
-    merge: { keepId: string, duplicateIds: string[] };
+    merge: { keepId: string; duplicateIds: string[] };
   }>();
-  
+
   $: if (autoCheck && (url || title) && !loading) {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       checkDuplicates();
     }, 500);
   }
-  
+
   onMount(async () => {
     if (checkOnMount && url && title) {
       await checkDuplicates();
     }
   });
-  
+
   async function checkDuplicates() {
     if (!url && !title) return;
-    
+
     loading = true;
     error = null;
-    
+
     try {
       const response = await aiApi.duplicates.check(url, title, content);
       duplicates = response.duplicates || [];
-      
+
       if (duplicates.length > 0) {
         dispatch('duplicatesFound', { duplicates });
       }
@@ -68,7 +68,7 @@
       loading = false;
     }
   }
-  
+
   function toggleCompareMode(id: string) {
     if (selectedDuplicate === id) {
       selectedDuplicate = null;
@@ -78,23 +78,23 @@
       compareMode = true;
     }
   }
-  
+
   function handleMerge(keepId: string, duplicateId: string) {
     dispatch('merge', { keepId, duplicateIds: [duplicateId] });
   }
-  
+
   function getSimilarityColor(score: number): string {
     if (score >= 0.9) return 'var(--ai-error)';
     if (score >= 0.7) return 'var(--ai-warning)';
     return 'var(--ai-success)';
   }
-  
+
   function formatDate(dateString: string | undefined): string {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   }
 </script>
@@ -119,8 +119,10 @@
     </div>
   {:else if duplicates.length > 0}
     <div class="duplicates-found">
-      <p class="warning">⚠️ {duplicates.length} potential {duplicates.length === 1 ? 'duplicate' : 'duplicates'} found</p>
-      
+      <p class="warning">
+        ⚠️ {duplicates.length} potential {duplicates.length === 1 ? 'duplicate' : 'duplicates'} found
+      </p>
+
       <div class="duplicate-list">
         {#each duplicates as dup}
           <div class="duplicate-item">
@@ -129,19 +131,21 @@
                 <h4>{dup.title}</h4>
                 <span class="date">{formatDate(dup.created_at || dup.createdAt)}</span>
               </div>
-              <div class="similarity-badge" 
-                   style="background-color: {getSimilarityColor(dup.similarity)}">
+              <div
+                class="similarity-badge"
+                style="background-color: {getSimilarityColor(dup.similarity)}"
+              >
                 {Math.round(dup.similarity * 100)}%
               </div>
             </div>
-            
+
             <div class="duplicate-content">
               <div class="url">{dup.url}</div>
               {#if dup.summary}
                 <div class="summary">{dup.summary}</div>
               {/if}
             </div>
-            
+
             <div class="duplicate-actions">
               <Button variant="outline" size="sm" on:click={() => toggleCompareMode(dup.id)}>
                 {selectedDuplicate === dup.id ? 'Hide Comparison' : 'Compare'}
@@ -153,7 +157,7 @@
                 Keep My Version
               </Button>
             </div>
-            
+
             {#if selectedDuplicate === dup.id && compareMode}
               <div class="comparison-view">
                 <div class="comparison-column">
@@ -198,35 +202,35 @@
     background-color: var(--card-bg);
     max-width: 800px;
   }
-  
+
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
   }
-  
+
   h3 {
     margin: 0;
     color: var(--text-color);
   }
-  
+
   h4 {
     margin: 0;
     font-size: 1rem;
   }
-  
+
   h5 {
     margin: 0 0 0.5rem 0;
     font-size: 0.9rem;
     color: var(--text-color-lighter);
   }
-  
+
   h6 {
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
   }
-  
+
   .loading-container {
     display: flex;
     flex-direction: column;
@@ -234,44 +238,44 @@
     justify-content: center;
     padding: 2rem;
   }
-  
+
   .warning {
     color: var(--ai-warning);
     font-weight: 500;
     margin: 0 0 1rem 0;
   }
-  
+
   .duplicate-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .duplicate-item {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 1rem;
     background-color: var(--background-color);
   }
-  
+
   .duplicate-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.75rem;
   }
-  
+
   .duplicate-title {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .date {
     font-size: 0.8rem;
     color: var(--text-color-lighter);
   }
-  
+
   .similarity-badge {
     padding: 0.25rem 0.5rem;
     border-radius: 1rem;
@@ -281,30 +285,30 @@
     min-width: 3rem;
     text-align: center;
   }
-  
+
   .duplicate-content {
     margin-bottom: 1rem;
   }
-  
+
   .url {
     font-size: 0.85rem;
     color: var(--text-color-lighter);
     margin-bottom: 0.5rem;
     word-break: break-all;
   }
-  
+
   .summary {
     font-size: 0.9rem;
     color: var(--text-color);
     line-height: 1.4;
   }
-  
+
   .duplicate-actions {
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
   }
-  
+
   .comparison-view {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
@@ -312,23 +316,23 @@
     display: flex;
     gap: 1rem;
   }
-  
+
   .comparison-column {
     flex: 1;
   }
-  
+
   .comparison-content {
     padding: 0.75rem;
     background-color: var(--background-color-darker);
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
   }
-  
+
   .comparison-divider {
     width: 1px;
     background-color: var(--border-color);
   }
-  
+
   .error {
     padding: 1rem;
     border-left: 4px solid var(--ai-error);
@@ -338,18 +342,18 @@
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .no-duplicates {
     display: flex;
     justify-content: center;
     padding: 1.5rem;
   }
-  
+
   :global(:root) {
-    --ai-primary: #6366f1;      /* Indigo for AI features */
-    --ai-success: #10b981;      /* Green for high confidence */
-    --ai-warning: #f59e0b;      /* Amber for medium confidence */
-    --ai-error: #ef4444;        /* Red for low confidence */
+    --ai-primary: #6366f1; /* Indigo for AI features */
+    --ai-success: #10b981; /* Green for high confidence */
+    --ai-warning: #f59e0b; /* Amber for medium confidence */
+    --ai-error: #ef4444; /* Red for low confidence */
     --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
 </style>

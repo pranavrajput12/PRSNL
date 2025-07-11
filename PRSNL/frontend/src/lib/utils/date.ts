@@ -44,9 +44,11 @@ export function isToday(date: Date | string | null | undefined): boolean {
   if (!date) return false;
   const d = new Date(date);
   const today = new Date();
-  return d.getDate() === today.getDate() &&
-         d.getMonth() === today.getMonth() &&
-         d.getFullYear() === today.getFullYear();
+  return (
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth() &&
+    d.getFullYear() === today.getFullYear()
+  );
 }
 
 /**

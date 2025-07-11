@@ -11,7 +11,7 @@ export default defineConfig({
         authToken: process.env.SENTRY_AUTH_TOKEN,
       },
     }),
-    sveltekit()
+    sveltekit(),
   ],
   server: {
     port: 3003,
@@ -19,17 +19,17 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:8000',
-        changeOrigin: true
+        changeOrigin: true,
       },
       '/media': {
         target: process.env.VITE_API_URL || 'http://localhost:8000',
-        changeOrigin: true
+        changeOrigin: true,
       },
       '/ws': {
         target: (process.env.VITE_API_URL || 'http://localhost:8000').replace('http', 'ws'),
         ws: true,
-        changeOrigin: true
-      }
-    }
-  }
+        changeOrigin: true,
+      },
+    },
+  },
 });

@@ -1,54 +1,54 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Icon from './Icon.svelte';
-  
+
   // Props
   export let mode: 'keyword' | 'semantic' | 'hybrid' = 'keyword';
   export let disabled: boolean = false;
-  
+
   // Event dispatcher
   const dispatch = createEventDispatcher<{
     change: { mode: 'keyword' | 'semantic' | 'hybrid' };
   }>();
-  
+
   // Mode definitions
   const modes = [
-    { 
+    {
       id: 'keyword',
-      label: 'Keyword', 
+      label: 'Keyword',
       icon: 'hash',
-      description: 'Match exact words and phrases'
+      description: 'Match exact words and phrases',
     },
-    { 
-      id: 'semantic', 
-      label: 'Semantic', 
+    {
+      id: 'semantic',
+      label: 'Semantic',
       icon: 'lightbulb',
-      description: 'Match similar meanings and concepts'
+      description: 'Match similar meanings and concepts',
     },
-    { 
-      id: 'hybrid', 
-      label: 'Hybrid', 
+    {
+      id: 'hybrid',
+      label: 'Hybrid',
       icon: 'layers',
-      description: 'Combine both keyword and semantic matching'
-    }
+      description: 'Combine both keyword and semantic matching',
+    },
   ];
-  
+
   // Handle mode change
   function handleChange(newMode: 'keyword' | 'semantic' | 'hybrid') {
     if (disabled || newMode === mode) return;
     mode = newMode;
     dispatch('change', { mode: newMode });
   }
-  
+
   // Toggle tooltip visibility
   let activeTooltip: string | null = null;
-  
+
   function showTooltip(id: string) {
     if (!disabled) {
       activeTooltip = id;
     }
   }
-  
+
   function hideTooltip() {
     activeTooltip = null;
   }
@@ -56,19 +56,19 @@
 
 <div class="search-mode-toggle" class:disabled>
   {#each modes as { id, label, icon, description }}
-    <button 
-      class="mode-button" 
+    <button
+      class="mode-button"
       class:active={mode === id}
       on:click={() => handleChange(id)}
       on:mouseenter={() => showTooltip(id)}
       on:mouseleave={hideTooltip}
-      disabled={disabled}
+      {disabled}
       aria-pressed={mode === id}
       aria-label={`Switch to ${label} search mode`}
     >
       <Icon name={icon} />
       <span class="label">{label}</span>
-      
+
       {#if activeTooltip === id}
         <div class="tooltip" role="tooltip">
           {description}
@@ -86,12 +86,12 @@
     border: 1px solid var(--border);
     background: var(--bg-tertiary);
   }
-  
+
   .search-mode-toggle.disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   .mode-button {
     display: flex;
     align-items: center;
@@ -105,26 +105,26 @@
     transition: all 0.2s ease;
     position: relative;
   }
-  
+
   .mode-button:last-child {
     border-right: none;
   }
-  
+
   .mode-button.active {
     background: var(--accent);
     color: var(--text-on-accent);
     font-weight: 500;
   }
-  
+
   .mode-button:not(.active):hover {
     background: var(--bg-hover);
     color: var(--text-primary);
   }
-  
+
   .label {
     margin-left: 0.5rem;
   }
-  
+
   .tooltip {
     position: absolute;
     top: calc(100% + 8px);
@@ -141,7 +141,7 @@
     pointer-events: none;
     animation: fadeIn 0.2s ease;
   }
-  
+
   .tooltip::before {
     content: '';
     position: absolute;
@@ -151,17 +151,23 @@
     border: 6px solid transparent;
     border-bottom-color: var(--bg-tooltip);
   }
-  
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -4px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+    from {
+      opacity: 0;
+      transform: translate(-50%, -4px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
   }
-  
+
   @media (max-width: 480px) {
     .label {
       display: none;
     }
-    
+
     .mode-button {
       padding: 0.5rem;
     }

@@ -73,46 +73,40 @@ export const notifications = writable<Notification[]>([]);
 
 // Save preferences to localStorage when they change
 if (browser) {
-  preferences.subscribe(value => {
+  preferences.subscribe((value) => {
     localStorage.setItem('prsnl-preferences', JSON.stringify(value));
   });
-  
-  recentSearches.subscribe(value => {
+
+  recentSearches.subscribe((value) => {
     localStorage.setItem('prsnl-recent-searches', JSON.stringify(value));
   });
 }
 
 // Derived store for dark mode
-export const darkMode = derived(
-  preferences,
-  $preferences => $preferences.darkMode
-);
+export const darkMode = derived(preferences, ($preferences) => $preferences.darkMode);
 
 // Helper functions for preferences
 export function toggleDarkMode() {
-  preferences.update(prefs => ({ ...prefs, darkMode: !prefs.darkMode }));
+  preferences.update((prefs) => ({ ...prefs, darkMode: !prefs.darkMode }));
 }
 
 export function toggleSidebar() {
-  preferences.update(prefs => ({ ...prefs, sidebarCollapsed: !prefs.sidebarCollapsed }));
+  preferences.update((prefs) => ({ ...prefs, sidebarCollapsed: !prefs.sidebarCollapsed }));
 }
 
 export function setDefaultView(view: UserPreferences['defaultView']) {
-  preferences.update(prefs => ({ ...prefs, defaultView: view }));
+  preferences.update((prefs) => ({ ...prefs, defaultView: view }));
 }
 
 // Helper functions for recent searches
 export function addRecentSearch(query: string) {
-  recentSearches.update(searches => {
+  recentSearches.update((searches) => {
     // Remove duplicates
-    const filtered = searches.filter(s => s.query !== query);
-    
+    const filtered = searches.filter((s) => s.query !== query);
+
     // Add new search at the beginning
-    const newSearches = [
-      { query, timestamp: Date.now() },
-      ...filtered
-    ];
-    
+    const newSearches = [{ query, timestamp: Date.now() }, ...filtered];
+
     // Keep only the 10 most recent searches
     return newSearches.slice(0, 10);
   });
@@ -126,21 +120,21 @@ export function clearRecentSearches() {
 export function addNotification(notification: Omit<Notification, 'id'>) {
   const id = Math.random().toString(36).substring(2, 9);
   const newNotification = { ...notification, id };
-  
-  notifications.update(items => [...items, newNotification]);
-  
+
+  notifications.update((items) => [...items, newNotification]);
+
   // Auto-remove notification after timeout (default: 5000ms)
   if (notification.timeout !== 0) {
     setTimeout(() => {
       removeNotification(id);
     }, notification.timeout || 5000);
   }
-  
+
   return id;
 }
 
 export function removeNotification(id: string) {
-  notifications.update(items => items.filter(item => item.id !== id));
+  notifications.update((items) => items.filter((item) => item.id !== id));
 }
 
 export function clearNotifications() {

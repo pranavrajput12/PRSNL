@@ -7,7 +7,7 @@ declare global {
       code?: string;
       status?: number;
     }
-    
+
     interface Locals {
       user?: {
         id: string;
@@ -15,28 +15,28 @@ declare global {
       };
       apiKey?: string;
     }
-    
+
     interface PageData {
       title?: string;
       description?: string;
     }
-    
+
     interface PageState {
       search?: {
         query: string;
         filters: Record<string, string>;
       };
     }
-    
+
     // interface Platform {}
   }
-  
+
   // Add support for environment variables
   interface ImportMetaEnv {
     readonly PUBLIC_API_URL: string;
     readonly PUBLIC_WS_URL: string;
   }
-  
+
   interface ImportMeta {
     readonly env: ImportMetaEnv;
   }

@@ -1,12 +1,12 @@
 <script>
   import Icon from './Icon.svelte';
-  
+
   export let tags = [];
   export let maxTags = 5;
   export let itemId = '';
-  
+
   let expanded = false;
-  
+
   $: visibleTags = expanded ? tags : tags.slice(0, maxTags);
   $: remainingCount = tags.length - maxTags;
   $: hasMore = tags.length > maxTags;
@@ -20,11 +20,11 @@
         {tag}
       </span>
     {/each}
-    
+
     {#if hasMore}
-      <button 
+      <button
         class="more-tags-btn"
-        on:click|stopPropagation={() => expanded = !expanded}
+        on:click|stopPropagation={() => (expanded = !expanded)}
         title={expanded ? 'Show less' : `Show ${remainingCount} more`}
       >
         {#if expanded}
@@ -46,7 +46,7 @@
     gap: 0.5rem;
     align-items: center;
   }
-  
+
   .tag {
     display: inline-flex;
     align-items: center;
@@ -59,7 +59,7 @@
     color: var(--text-secondary);
     white-space: nowrap;
   }
-  
+
   .more-tags-btn {
     display: inline-flex;
     align-items: center;
@@ -74,7 +74,7 @@
     transition: all var(--transition-fast);
     font-weight: 500;
   }
-  
+
   .more-tags-btn:hover {
     background: var(--accent);
     color: white;

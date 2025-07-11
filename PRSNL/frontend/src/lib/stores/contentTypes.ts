@@ -5,16 +5,16 @@ import { api } from '$lib/api';
 // Store for content types
 function createContentTypesStore() {
   const { subscribe, set, update } = writable<ContentTypeDefinition[]>([]);
-  
+
   let initialized = false;
-  
+
   return {
     subscribe,
-    
+
     // Initialize content types from backend
     async init() {
       if (initialized) return;
-      
+
       try {
         const response = await api.get<ContentTypesResponse>('/content-types');
         set(response.content_types);
@@ -25,22 +25,24 @@ function createContentTypesStore() {
         set(getDefaultTypes());
       }
     },
-    
+
     // Get a specific content type definition
     getType(typeName: string): ContentTypeDefinition | undefined {
       let types: ContentTypeDefinition[] = [];
-      const unsubscribe = subscribe(t => types = t);
+      const unsubscribe = subscribe((t) => (types = t));
       unsubscribe();
-      
-      return types.find(t => t.name === typeName) || {
-        name: typeName,
-        display_name: typeName.charAt(0).toUpperCase() + typeName.slice(1),
-        icon: 'file',
-        description: `${typeName} content`,
-        color: '#6B7280'
-      };
+
+      return (
+        types.find((t) => t.name === typeName) || {
+          name: typeName,
+          display_name: typeName.charAt(0).toUpperCase() + typeName.slice(1),
+          icon: 'file',
+          description: `${typeName} content`,
+          color: '#6B7280',
+        }
+      );
     },
-    
+
     // Refresh content types from backend
     async refresh() {
       try {
@@ -49,7 +51,7 @@ function createContentTypesStore() {
       } catch (error) {
         console.error('Failed to refresh content types:', error);
       }
-    }
+    },
   };
 }
 
@@ -61,43 +63,43 @@ function getDefaultTypes(): ContentTypeDefinition[] {
       display_name: 'Article',
       icon: 'file-text',
       description: 'Written articles and blog posts',
-      color: '#3B82F6'
+      color: '#3B82F6',
     },
     {
       name: 'video',
       display_name: 'Video',
       icon: 'play-circle',
       description: 'Video content from various platforms',
-      color: '#EF4444'
+      color: '#EF4444',
     },
     {
       name: 'document',
       display_name: 'Document',
       icon: 'file',
       description: 'PDF files and other documents',
-      color: '#10B981'
+      color: '#10B981',
     },
     {
       name: 'image',
       display_name: 'Image',
       icon: 'image',
       description: 'Images and visual content',
-      color: '#8B5CF6'
+      color: '#8B5CF6',
     },
     {
       name: 'note',
       display_name: 'Note',
       icon: 'edit',
       description: 'Personal notes and highlights',
-      color: '#F59E0B'
+      color: '#F59E0B',
     },
     {
       name: 'link',
       display_name: 'Link',
       icon: 'link',
       description: 'Simple bookmarked links',
-      color: '#6B7280'
-    }
+      color: '#6B7280',
+    },
   ];
 }
 
@@ -105,14 +107,11 @@ function getDefaultTypes(): ContentTypeDefinition[] {
 export const contentTypes = createContentTypesStore();
 
 // Derived store for type map (for quick lookups)
-export const contentTypeMap = derived(
-  contentTypes,
-  $types => {
-    const map = new Map<string, ContentTypeDefinition>();
-    $types.forEach(type => map.set(type.name, type));
-    return map;
-  }
-);
+export const contentTypeMap = derived(contentTypes, ($types) => {
+  const map = new Map<string, ContentTypeDefinition>();
+  $types.forEach((type) => map.set(type.name, type));
+  return map;
+});
 
 // Helper function to get icon for a type
 export function getTypeIcon(typeName: string): string {
@@ -125,9 +124,9 @@ export function getTypeIcon(typeName: string): string {
     ['link', 'link'],
     ['tutorial', 'book-open'],
     ['audio', 'headphones'],
-    ['code', 'code']
+    ['code', 'code'],
   ]);
-  
+
   return typeMap.get(typeName) || 'file';
 }
 
@@ -142,8 +141,8 @@ export function getTypeColor(typeName: string): string {
     ['link', '#6B7280'],
     ['tutorial', '#06B6D4'],
     ['audio', '#EC4899'],
-    ['code', '#84CC16']
+    ['code', '#84CC16'],
   ]);
-  
+
   return colorMap.get(typeName) || '#6B7280';
 }

@@ -16,14 +16,17 @@
     <h1>Metabolic Racing Dashboard Preview</h1>
     <div class="preview-badge">PREVIEW MODE</div>
   </header>
-  
+
   <div class="preview-content">
     <RacingDashboard />
   </div>
-  
+
   <div class="preview-info">
     <h2>🏎️ Metabolic Racing Dashboard</h2>
-    <p>Experience your learning velocity through an F1-inspired racing dashboard. Track your mental performance like a high-speed race.</p>
+    <p>
+      Experience your learning velocity through an F1-inspired racing dashboard. Track your mental
+      performance like a high-speed race.
+    </p>
     <ul>
       <li>🏁 Monitor your learning speed in real-time</li>
       <li>⛽ Track mental fuel levels and efficiency</li>
@@ -40,7 +43,7 @@
     background: #000;
     overflow: hidden;
   }
-  
+
   .preview-header {
     position: absolute;
     top: 0;
@@ -53,33 +56,33 @@
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
     z-index: 100;
-    border-bottom: 1px solid #DC143C;
+    border-bottom: 1px solid #dc143c;
   }
-  
+
   .back-button {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #DC143C;
+    color: #dc143c;
     text-decoration: none;
     font-family: 'Space Grotesk';
     transition: all 0.3s ease;
   }
-  
+
   .back-button:hover {
     color: #00ff64;
     transform: translateX(-5px);
   }
-  
+
   .preview-header h1 {
     font-family: 'Space Grotesk';
     font-size: 24px;
     color: white;
     margin: 0;
   }
-  
+
   .preview-badge {
-    background: #DC143C;
+    background: #dc143c;
     color: white;
     padding: 5px 15px;
     border-radius: 20px;
@@ -88,12 +91,12 @@
     font-weight: 700;
     letter-spacing: 1px;
   }
-  
+
   .preview-content {
     width: 100%;
     height: 100%;
   }
-  
+
   .preview-info {
     position: absolute;
     top: 80px;
@@ -101,31 +104,31 @@
     background: rgba(0, 0, 0, 0.9);
     padding: 20px;
     border-radius: 15px;
-    border: 1px solid #DC143C;
+    border: 1px solid #dc143c;
     color: white;
     font-family: 'Space Grotesk';
     max-width: 400px;
     backdrop-filter: blur(10px);
   }
-  
+
   .preview-info h2 {
     margin: 0 0 10px 0;
-    color: #DC143C;
+    color: #dc143c;
     font-size: 20px;
   }
-  
+
   .preview-info p {
     margin: 0 0 15px 0;
     color: #ccc;
     line-height: 1.6;
   }
-  
+
   .preview-info ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  
+
   .preview-info li {
     padding: 5px 0;
     color: #999;

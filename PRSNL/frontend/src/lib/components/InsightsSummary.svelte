@@ -9,7 +9,8 @@
   let summary: string = '';
   let isLoading: boolean = true;
   let error: Error | null = null;
-  let keyMetrics: {label: string; value: number | string; icon: string; trend: number | null}[] = [];
+  let keyMetrics: { label: string; value: number | string; icon: string; trend: number | null }[] =
+    [];
 
   $: if (data) {
     calculateKeyMetrics(data);
@@ -19,76 +20,81 @@
   function calculateKeyMetrics(data: InsightsResponse) {
     isLoading = true;
     error = null;
-    
+
     try {
       // Total items count
-      const totalItems = data.contentTrends && data.contentTrends.length > 0 
-        ? data.contentTrends[data.contentTrends.length - 1].articles +
-          data.contentTrends[data.contentTrends.length - 1].videos +
-          data.contentTrends[data.contentTrends.length - 1].notes +
-          data.contentTrends[data.contentTrends.length - 1].bookmarks
-        : 0;
+      const totalItems =
+        data.contentTrends && data.contentTrends.length > 0
+          ? data.contentTrends[data.contentTrends.length - 1].articles +
+            data.contentTrends[data.contentTrends.length - 1].videos +
+            data.contentTrends[data.contentTrends.length - 1].notes +
+            data.contentTrends[data.contentTrends.length - 1].bookmarks
+          : 0;
 
       // Growth calculation
       let growth = 0;
       if (data.contentTrends && data.contentTrends.length > 1) {
         const current = data.contentTrends[data.contentTrends.length - 1];
         const previous = data.contentTrends[data.contentTrends.length - 2];
-        
+
         const currentTotal = current.articles + current.videos + current.notes + current.bookmarks;
-        const previousTotal = previous.articles + previous.videos + previous.notes + previous.bookmarks;
-        
+        const previousTotal =
+          previous.articles + previous.videos + previous.notes + previous.bookmarks;
+
         growth = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : 0;
       }
 
       // Top topic size
-      const topTopicSize = data.topicClusters && data.topicClusters.length > 0
-        ? Math.max(...data.topicClusters.map(c => c.count))
-        : 0;
+      const topTopicSize =
+        data.topicClusters && data.topicClusters.length > 0
+          ? Math.max(...data.topicClusters.map((c) => c.count))
+          : 0;
 
       // Connection density
-      const connectionDensity = data.knowledgeGraph?.links && data.knowledgeGraph?.nodes
-        ? data.knowledgeGraph.links.length / Math.max(1, data.knowledgeGraph.nodes.length)
-        : 0;
+      const connectionDensity =
+        data.knowledgeGraph?.links && data.knowledgeGraph?.nodes
+          ? data.knowledgeGraph.links.length / Math.max(1, data.knowledgeGraph.nodes.length)
+          : 0;
 
       // Top content score
-      const topContentScore = data.topContent && data.topContent.length > 0
-        ? Math.max(...data.topContent.map(item => 
-            (item.metadata?.ai_analysis?.score || 0) * 100
-          ))
-        : 0;
+      const topContentScore =
+        data.topContent && data.topContent.length > 0
+          ? Math.max(
+              ...data.topContent.map((item) => (item.metadata?.ai_analysis?.score || 0) * 100)
+            )
+          : 0;
 
       keyMetrics = [
         {
           label: 'Total Items',
           value: totalItems,
           icon: 'database',
-          trend: growth
+          trend: growth,
         },
         {
           label: 'Topics',
           value: data.topicClusters?.length || 0,
           icon: 'pie-chart',
-          trend: null
+          trend: null,
         },
         {
           label: 'Largest Topic',
           value: `${topTopicSize} items`,
           icon: 'target',
-          trend: null
+          trend: null,
         },
         {
           label: 'Connections',
           value: connectionDensity.toFixed(2),
           icon: 'git-branch',
-          trend: null
+          trend: null,
         },
         {
           label: 'Top Content Score',
           value: `${Math.round(topContentScore)}%`,
           icon: 'award',
-          trend: null
-        }
+          trend: null,
+        },
       ];
     } catch (e) {
       error = e as Error;
@@ -101,47 +107,49 @@
   function generateSummary(data: InsightsResponse) {
     try {
       // Generate a summary based on the data
-      const topCluster = data.topicClusters && data.topicClusters.length > 0
-        ? data.topicClusters.reduce((prev, current) => 
-            (prev.count > current.count) ? prev : current
-          )
-        : null;
+      const topCluster =
+        data.topicClusters && data.topicClusters.length > 0
+          ? data.topicClusters.reduce((prev, current) =>
+              prev.count > current.count ? prev : current
+            )
+          : null;
 
-      const contentTrend = data.contentTrends && data.contentTrends.length > 1
-        ? ((data.contentTrends[data.contentTrends.length - 1].articles + 
-            data.contentTrends[data.contentTrends.length - 1].videos + 
-            data.contentTrends[data.contentTrends.length - 1].notes + 
-            data.contentTrends[data.contentTrends.length - 1].bookmarks) - 
-           (data.contentTrends[data.contentTrends.length - 2].articles + 
-            data.contentTrends[data.contentTrends.length - 2].videos + 
-            data.contentTrends[data.contentTrends.length - 2].notes + 
-            data.contentTrends[data.contentTrends.length - 2].bookmarks))
-        : 0;
-      
-      const trendDirection = contentTrend > 0 ? 'growing' : contentTrend < 0 ? 'shrinking' : 'stable';
-      
-      const topContentTitle = data.topContent && data.topContent.length > 0
-        ? data.topContent[0].title
-        : '';
+      const contentTrend =
+        data.contentTrends && data.contentTrends.length > 1
+          ? data.contentTrends[data.contentTrends.length - 1].articles +
+            data.contentTrends[data.contentTrends.length - 1].videos +
+            data.contentTrends[data.contentTrends.length - 1].notes +
+            data.contentTrends[data.contentTrends.length - 1].bookmarks -
+            (data.contentTrends[data.contentTrends.length - 2].articles +
+              data.contentTrends[data.contentTrends.length - 2].videos +
+              data.contentTrends[data.contentTrends.length - 2].notes +
+              data.contentTrends[data.contentTrends.length - 2].bookmarks)
+          : 0;
+
+      const trendDirection =
+        contentTrend > 0 ? 'growing' : contentTrend < 0 ? 'shrinking' : 'stable';
+
+      const topContentTitle =
+        data.topContent && data.topContent.length > 0 ? data.topContent[0].title : '';
 
       const timeRangeText = {
-        'day': 'today',
-        'week': 'this week',
-        'month': 'this month',
-        'year': 'this year',
-        'all': 'overall'
+        day: 'today',
+        week: 'this week',
+        month: 'this month',
+        year: 'this year',
+        all: 'overall',
       }[timeRange];
 
       summary = `Your knowledge base is ${trendDirection} ${timeRangeText}. `;
-      
+
       if (topCluster) {
         summary += `Your largest topic cluster is "${topCluster.name}" with ${topCluster.count} items. `;
       }
-      
+
       if (topContentTitle) {
         summary += `Your highest value content is "${topContentTitle}". `;
       }
-      
+
       if (data.knowledgeGraph?.nodes && data.knowledgeGraph.nodes.length > 0) {
         summary += `Your knowledge graph has ${data.knowledgeGraph.nodes.length} nodes with ${data.knowledgeGraph.links?.length || 0} connections.`;
       }
@@ -168,7 +176,7 @@
       <h3>AI Summary</h3>
       <p>{summary}</p>
     </div>
-    
+
     <div class="metrics-grid">
       {#each keyMetrics as metric}
         <div class="metric-card">
@@ -180,8 +188,18 @@
             <div class="metric-value">
               <span>{metric.value}</span>
               {#if metric.trend !== null}
-                <span class="trend" class:positive={metric.trend > 0} class:negative={metric.trend < 0}>
-                  <Icon name={metric.trend > 0 ? 'trending-up' : metric.trend < 0 ? 'trending-down' : 'minus'} />
+                <span
+                  class="trend"
+                  class:positive={metric.trend > 0}
+                  class:negative={metric.trend < 0}
+                >
+                  <Icon
+                    name={metric.trend > 0
+                      ? 'trending-up'
+                      : metric.trend < 0
+                        ? 'trending-down'
+                        : 'minus'}
+                  />
                   {Math.abs(metric.trend).toFixed(1)}%
                 </span>
               {/if}
@@ -277,7 +295,8 @@
     color: var(--error);
   }
 
-  .loading, .error {
+  .loading,
+  .error {
     text-align: center;
     padding: 2rem;
   }
@@ -294,6 +313,8 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

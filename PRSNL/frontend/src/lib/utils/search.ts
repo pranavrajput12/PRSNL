@@ -20,7 +20,10 @@ function escapeHtml(str: string): string {
  * @param query - The search query to highlight.
  * @returns The text with search terms highlighted.
  */
-export function highlightText(text: string | null | undefined, query: string | null | undefined): string {
+export function highlightText(
+  text: string | null | undefined,
+  query: string | null | undefined
+): string {
   if (!text || !query) return text || '';
   const escapedText = escapeHtml(text);
   const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape regex special chars
@@ -35,13 +38,11 @@ export function highlightText(text: string | null | undefined, query: string | n
  * @returns The filtered list of items.
  */
 export function filterByTags<T extends { tags?: string[] }>(
-  items: T[] | null | undefined, 
+  items: T[] | null | undefined,
   tags: string[] | null | undefined
 ): T[] {
   if (!items || !tags || tags.length === 0) return items || [];
-  return items.filter(item => 
-    tags.every(tag => item.tags && item.tags.includes(tag))
-  );
+  return items.filter((item) => tags.every((tag) => item.tags && item.tags.includes(tag)));
 }
 
 /**
@@ -52,23 +53,27 @@ export function filterByTags<T extends { tags?: string[] }>(
  * @returns The sorted list of search results.
  */
 export function sortByRelevance<T extends { title?: string; content?: string; snippet?: string }>(
-  results: T[] | null | undefined, 
+  results: T[] | null | undefined,
   query: string | null | undefined
 ): T[] {
   if (!results || !query) return results || [];
   const lowerQuery = query.toLowerCase();
-  
+
   return [...results].sort((a, b) => {
-    const aRelevance = 
+    const aRelevance =
       (a.title && a.title.toLowerCase().includes(lowerQuery) ? 2 : 0) +
-      ((a.content && a.content.toLowerCase().includes(lowerQuery)) || 
-       (a.snippet && a.snippet.toLowerCase().includes(lowerQuery)) ? 1 : 0);
-    
-    const bRelevance = 
+      ((a.content && a.content.toLowerCase().includes(lowerQuery)) ||
+      (a.snippet && a.snippet.toLowerCase().includes(lowerQuery))
+        ? 1
+        : 0);
+
+    const bRelevance =
       (b.title && b.title.toLowerCase().includes(lowerQuery) ? 2 : 0) +
-      ((b.content && b.content.toLowerCase().includes(lowerQuery)) || 
-       (b.snippet && b.snippet.toLowerCase().includes(lowerQuery)) ? 1 : 0);
-    
+      ((b.content && b.content.toLowerCase().includes(lowerQuery)) ||
+      (b.snippet && b.snippet.toLowerCase().includes(lowerQuery))
+        ? 1
+        : 0);
+
     return bRelevance - aRelevance;
   });
 }
@@ -80,11 +85,11 @@ export function sortByRelevance<T extends { title?: string; content?: string; sn
  * @returns The debounced function
  */
 export function debounce<T extends (...args: any[]) => any>(
-  func: T, 
+  func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  
+
   return function (...args: Parameters<T>) {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);

@@ -1,366 +1,383 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brain Hemisphere Control Center - Menu Preview</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow-x: hidden;
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        overflow-x: hidden;
+      }
+
+      .preview-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      .brain-sidebar {
+        width: 320px;
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+        border-right: 2px solid rgba(0, 255, 100, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .brain-sidebar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 8px,
+          rgba(0, 255, 100, 0.03) 8px,
+          rgba(0, 255, 100, 0.03) 10px
+        );
+        pointer-events: none;
+      }
+
+      .brain-container {
+        position: relative;
+        padding: 2rem 1rem;
+        height: 100%;
+      }
+
+      .brain-logo {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 10;
+      }
+
+      .brain-logo h1 {
+        color: #dc143c;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        font-family: 'JetBrains Mono', monospace;
+        text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+      }
+
+      .brain-hemispheres {
+        display: flex;
+        gap: 1rem;
+        height: calc(100% - 150px);
+      }
+
+      .hemisphere {
+        flex: 1;
+        position: relative;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        border: 2px solid rgba(220, 20, 60, 0.3);
+        padding: 1rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .hemisphere.left {
+        background: linear-gradient(135deg, rgba(0, 150, 255, 0.1), rgba(26, 26, 26, 0.9));
+        border-color: rgba(0, 150, 255, 0.3);
+      }
+
+      .hemisphere.right {
+        background: linear-gradient(135deg, rgba(255, 100, 0, 0.1), rgba(26, 26, 26, 0.9));
+        border-color: rgba(255, 100, 0, 0.3);
+      }
+
+      .hemisphere::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(220, 20, 60, 0.1), transparent 50%),
+          radial-gradient(circle at 70% 70%, rgba(220, 20, 60, 0.1), transparent 50%);
+        border-radius: inherit;
+        pointer-events: none;
+      }
+
+      .hemisphere-label {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .left .hemisphere-label {
+        color: rgba(0, 150, 255, 0.8);
+      }
+
+      .right .hemisphere-label {
+        color: rgba(255, 100, 0, 0.8);
+      }
+
+      .hemisphere-nodes {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        height: calc(100% - 50px);
+        justify-content: center;
+      }
+
+      .brain-node {
+        position: relative;
+        padding: 0.8rem;
+        background: rgba(26, 26, 26, 0.8);
+        border-radius: 12px;
+        border: 1px solid rgba(220, 20, 60, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .brain-node:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
+        border-color: rgba(220, 20, 60, 0.5);
+      }
+
+      .brain-node.active {
+        background: rgba(220, 20, 60, 0.1);
+        border-color: #dc143c;
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
+      }
+
+      .left .brain-node {
+        border-color: rgba(0, 150, 255, 0.2);
+      }
+
+      .left .brain-node:hover {
+        border-color: rgba(0, 150, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(0, 150, 255, 0.3);
+      }
+
+      .right .brain-node {
+        border-color: rgba(255, 100, 0, 0.2);
+      }
+
+      .right .brain-node:hover {
+        border-color: rgba(255, 100, 0, 0.5);
+        box-shadow: 0 8px 25px rgba(255, 100, 0, 0.3);
+      }
+
+      .node-label {
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      .corpus-callosum {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 6px;
+        height: 200px;
+        background: linear-gradient(180deg, #dc143c, #ff6b6b, #dc143c);
+        border-radius: 3px;
+        z-index: 5;
+        box-shadow: 0 0 15px rgba(220, 20, 60, 0.5);
+        animation: neural-bridge 3s ease-in-out infinite;
+      }
+
+      .corpus-callosum::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle, #dc143c, #b91c3c);
+        border-radius: 50%;
+        border: 2px solid rgba(220, 20, 60, 0.5);
+        box-shadow: 0 0 25px rgba(220, 20, 60, 0.6);
+      }
+
+      .corpus-callosum::after {
+        content: 'HOME';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        z-index: 10;
+      }
+
+      .neural-activity {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .activity-pulse {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: radial-gradient(circle, rgba(220, 20, 60, 0.6), transparent 70%);
+        border-radius: 50%;
+        animation: brain-pulse 2s ease-in-out infinite;
+      }
+
+      .pulse-1 {
+        top: 20%;
+        left: 20%;
+        animation-delay: 0s;
+      }
+
+      .pulse-2 {
+        top: 60%;
+        left: 70%;
+        animation-delay: 0.5s;
+      }
+
+      .pulse-3 {
+        top: 40%;
+        left: 40%;
+        animation-delay: 1s;
+      }
+
+      .main-preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          );
+      }
+
+      .preview-title {
+        background: linear-gradient(135deg, #dc143c, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        margin-bottom: 1rem;
+      }
+
+      .preview-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        font-weight: 400;
+      }
+
+      @keyframes neural-bridge {
+        0%,
+        100% {
+          box-shadow: 0 0 15px rgba(220, 20, 60, 0.5);
         }
-        
-        .preview-container {
-            display: flex;
-            height: 100vh;
+        50% {
+          box-shadow: 0 0 25px rgba(220, 20, 60, 0.8);
         }
-        
-        .brain-sidebar {
-            width: 320px;
-            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
-            border-right: 2px solid rgba(0, 255, 100, 0.3);
-            position: relative;
-            overflow: hidden;
+      }
+
+      @keyframes brain-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.6;
         }
-        
-        .brain-sidebar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 8px,
-                    rgba(0, 255, 100, 0.03) 8px,
-                    rgba(0, 255, 100, 0.03) 10px
-                );
-            pointer-events: none;
+        50% {
+          transform: scale(1.5);
+          opacity: 0.9;
         }
-        
-        .brain-container {
-            position: relative;
-            padding: 2rem 1rem;
-            height: 100%;
-        }
-        
-        .brain-logo {
-            text-align: center;
-            margin-bottom: 2rem;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .brain-logo h1 {
-            color: #DC143C;
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 0;
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
-        }
-        
-        .brain-hemispheres {
-            display: flex;
-            gap: 1rem;
-            height: calc(100% - 150px);
-        }
-        
-        .hemisphere {
-            flex: 1;
-            position: relative;
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            border: 2px solid rgba(220, 20, 60, 0.3);
-            padding: 1rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .hemisphere.left {
-            background: linear-gradient(135deg, rgba(0, 150, 255, 0.1), rgba(26, 26, 26, 0.9));
-            border-color: rgba(0, 150, 255, 0.3);
-        }
-        
-        .hemisphere.right {
-            background: linear-gradient(135deg, rgba(255, 100, 0, 0.1), rgba(26, 26, 26, 0.9));
-            border-color: rgba(255, 100, 0, 0.3);
-        }
-        
-        .hemisphere::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 30% 30%, rgba(220, 20, 60, 0.1), transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(220, 20, 60, 0.1), transparent 50%);
-            border-radius: inherit;
-            pointer-events: none;
-        }
-        
-        .hemisphere-label {
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .left .hemisphere-label {
-            color: rgba(0, 150, 255, 0.8);
-        }
-        
-        .right .hemisphere-label {
-            color: rgba(255, 100, 0, 0.8);
-        }
-        
-        .hemisphere-nodes {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            height: calc(100% - 50px);
-            justify-content: center;
-        }
-        
-        .brain-node {
-            position: relative;
-            padding: 0.8rem;
-            background: rgba(26, 26, 26, 0.8);
-            border-radius: 12px;
-            border: 1px solid rgba(220, 20, 60, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-        
-        .brain-node:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
-            border-color: rgba(220, 20, 60, 0.5);
-        }
-        
-        .brain-node.active {
-            background: rgba(220, 20, 60, 0.1);
-            border-color: #DC143C;
-            box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
-        }
-        
-        .left .brain-node {
-            border-color: rgba(0, 150, 255, 0.2);
-        }
-        
-        .left .brain-node:hover {
-            border-color: rgba(0, 150, 255, 0.5);
-            box-shadow: 0 8px 25px rgba(0, 150, 255, 0.3);
-        }
-        
-        .right .brain-node {
-            border-color: rgba(255, 100, 0, 0.2);
-        }
-        
-        .right .brain-node:hover {
-            border-color: rgba(255, 100, 0, 0.5);
-            box-shadow: 0 8px 25px rgba(255, 100, 0, 0.3);
-        }
-        
-        .node-label {
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        
-        .corpus-callosum {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 6px;
-            height: 200px;
-            background: linear-gradient(180deg, #DC143C, #FF6B6B, #DC143C);
-            border-radius: 3px;
-            z-index: 5;
-            box-shadow: 0 0 15px rgba(220, 20, 60, 0.5);
-            animation: neural-bridge 3s ease-in-out infinite;
-        }
-        
-        .corpus-callosum::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, #DC143C, #B91C3C);
-            border-radius: 50%;
-            border: 2px solid rgba(220, 20, 60, 0.5);
-            box-shadow: 0 0 25px rgba(220, 20, 60, 0.6);
-        }
-        
-        .corpus-callosum::after {
-            content: 'HOME';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-            z-index: 10;
-        }
-        
-        .neural-activity {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .activity-pulse {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, rgba(220, 20, 60, 0.6), transparent 70%);
-            border-radius: 50%;
-            animation: brain-pulse 2s ease-in-out infinite;
-        }
-        
-        .pulse-1 {
-            top: 20%;
-            left: 20%;
-            animation-delay: 0s;
-        }
-        
-        .pulse-2 {
-            top: 60%;
-            left: 70%;
-            animation-delay: 0.5s;
-        }
-        
-        .pulse-3 {
-            top: 40%;
-            left: 40%;
-            animation-delay: 1s;
-        }
-        
-        .main-preview {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            text-align: center;
-            background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                );
-        }
-        
-        .preview-title {
-            background: linear-gradient(135deg, #DC143C, #FF6B6B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            margin-bottom: 1rem;
-        }
-        
-        .preview-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            font-weight: 400;
-        }
-        
-        @keyframes neural-bridge {
-            0%, 100% { box-shadow: 0 0 15px rgba(220, 20, 60, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(220, 20, 60, 0.8); }
-        }
-        
-        @keyframes brain-pulse {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.5); opacity: 0.9; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="preview-container">
-        <div class="brain-sidebar">
-            <div class="brain-container">
-                <div class="brain-logo">
-                    <h1>PRSNL</h1>
+      <div class="brain-sidebar">
+        <div class="brain-container">
+          <div class="brain-logo">
+            <h1>PRSNL</h1>
+          </div>
+
+          <div class="brain-hemispheres">
+            <div class="hemisphere left">
+              <div class="hemisphere-label">Left Brain • Logical</div>
+              <div class="hemisphere-nodes">
+                <div class="brain-node">
+                  <div class="node-label">Ingest</div>
                 </div>
-                
-                <div class="brain-hemispheres">
-                    <div class="hemisphere left">
-                        <div class="hemisphere-label">Left Brain • Logical</div>
-                        <div class="hemisphere-nodes">
-                            <div class="brain-node">
-                                <div class="node-label">Ingest</div>
-                            </div>
-                            <div class="brain-node">
-                                <div class="node-label">Thought Stream</div>
-                            </div>
-                            <div class="brain-node">
-                                <div class="node-label">Knowledge Sync</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="hemisphere right">
-                        <div class="hemisphere-label">Right Brain • Creative</div>
-                        <div class="hemisphere-nodes">
-                            <div class="brain-node">
-                                <div class="node-label">Mind Palace</div>
-                            </div>
-                            <div class="brain-node active">
-                                <div class="node-label">Cognitive Map</div>
-                            </div>
-                            <div class="brain-node">
-                                <div class="node-label">Visual Cortex</div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="brain-node">
+                  <div class="node-label">Thought Stream</div>
                 </div>
-                
-                <div class="corpus-callosum"></div>
-                
-                <div class="neural-activity">
-                    <div class="activity-pulse pulse-1"></div>
-                    <div class="activity-pulse pulse-2"></div>
-                    <div class="activity-pulse pulse-3"></div>
+                <div class="brain-node">
+                  <div class="node-label">Knowledge Sync</div>
                 </div>
+              </div>
             </div>
-        </div>
-        
-        <div class="main-preview">
-            <div>
-                <div class="preview-title">Brain Hemisphere Control Center</div>
-                <div class="preview-subtitle">Left brain (logical) + Right brain (creative) with neural bridge</div>
+
+            <div class="hemisphere right">
+              <div class="hemisphere-label">Right Brain • Creative</div>
+              <div class="hemisphere-nodes">
+                <div class="brain-node">
+                  <div class="node-label">Mind Palace</div>
+                </div>
+                <div class="brain-node active">
+                  <div class="node-label">Cognitive Map</div>
+                </div>
+                <div class="brain-node">
+                  <div class="node-label">Visual Cortex</div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div class="corpus-callosum"></div>
+
+          <div class="neural-activity">
+            <div class="activity-pulse pulse-1"></div>
+            <div class="activity-pulse pulse-2"></div>
+            <div class="activity-pulse pulse-3"></div>
+          </div>
         </div>
+      </div>
+
+      <div class="main-preview">
+        <div>
+          <div class="preview-title">Brain Hemisphere Control Center</div>
+          <div class="preview-subtitle">
+            Left brain (logical) + Right brain (creative) with neural bridge
+          </div>
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

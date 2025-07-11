@@ -85,22 +85,22 @@
 
   onMount(() => {
     ctx = canvas.getContext('2d')!;
-    
+
     // Initialize audio
     const audioManager = getAudioManager();
     audioManager.init();
     audioManager.createSyntheticSounds();
     audioManager.playBackgroundMusic('space');
-    
+
     // Setup canvas
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
+
     // Initialize galaxy
     createGalaxyStructure();
     createNebula();
     animate();
-    
+
     // Mouse interactions
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
@@ -125,17 +125,17 @@
   function createGalaxyStructure() {
     galaxyNodes = [];
     connections = [];
-    
+
     // Create central galaxy hub
     const centerX = 0;
     const centerY = 0;
     const centerZ = 0;
-    
+
     // Create topic clusters as solar systems
     data.forEach((topic, i) => {
       const angle = (i / data.length) * Math.PI * 2;
       const radius = 200 + Math.random() * 100;
-      
+
       const system: GalaxyNode = {
         id: topic.id,
         name: topic.name,
@@ -152,15 +152,15 @@
         pulsePhase: Math.random() * Math.PI * 2,
         orbitRadius: radius,
         orbitSpeed: 0.0002 + Math.random() * 0.0003,
-        orbitAngle: angle
+        orbitAngle: angle,
       };
-      
+
       // Create planets (individual items) for each system
       const planetCount = Math.min(topic.count, 8);
       for (let j = 0; j < planetCount; j++) {
         const planetAngle = (j / planetCount) * Math.PI * 2;
         const planetRadius = 30 + j * 10;
-        
+
         const planet: GalaxyNode = {
           id: `${topic.id}-${j}`,
           name: `Item ${j + 1}`,
@@ -177,24 +177,24 @@
           pulsePhase: Math.random() * Math.PI * 2,
           orbitRadius: planetRadius,
           orbitSpeed: 0.001 + Math.random() * 0.002,
-          orbitAngle: planetAngle
+          orbitAngle: planetAngle,
         };
-        
+
         system.children.push(planet);
         galaxyNodes.push(planet);
       }
-      
+
       galaxyNodes.push(system);
-      
+
       // Create connections between related systems
       if (i > 0) {
-        const prevSystem = galaxyNodes.find(n => n.id === data[i - 1].id);
+        const prevSystem = galaxyNodes.find((n) => n.id === data[i - 1].id);
         if (prevSystem) {
           connections.push({
             from: system,
             to: prevSystem,
             strength: 0.5 + Math.random() * 0.5,
-            pulseOffset: Math.random() * Math.PI * 2
+            pulseOffset: Math.random() * Math.PI * 2,
           });
         }
       }
@@ -214,7 +214,7 @@
         size: Math.random() * 3,
         color: `hsl(${280 + Math.random() * 60}, 70%, ${40 + Math.random() * 20}%)`,
         life: 1,
-        maxLife: 1
+        maxLife: 1,
       });
     }
   }
@@ -223,7 +223,7 @@
     const colors = {
       major: '#DC143C',
       medium: '#4a9eff',
-      minor: '#00ff64'
+      minor: '#00ff64',
     };
     return colors[group] || '#ffffff';
   }
@@ -231,49 +231,49 @@
   function project3D(x: number, y: number, z: number) {
     const perspective = 800;
     const scale = perspective / (perspective + z * zoomLevel);
-    
+
     return {
       x: x * scale + width / 2,
       y: y * scale + height / 2,
-      scale: scale
+      scale: scale,
     };
   }
 
   function animate() {
     time += 0.016;
-    
+
     // Clear canvas
     ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
     ctx.fillRect(0, 0, width, height);
-    
+
     // Draw nebula background
     drawNebula();
-    
+
     // Update rotation
     if (autoRotate) {
       rotation.y += rotationSpeed;
     }
-    
+
     // Sort nodes by depth for proper rendering
     const sortedNodes = [...galaxyNodes].sort((a, b) => {
       const aRotated = rotatePoint(a.x, a.y, a.z);
       const bRotated = rotatePoint(b.x, b.y, b.z);
       return bRotated.z - aRotated.z;
     });
-    
+
     // Draw connections
     drawConnections();
-    
+
     // Draw nodes
-    sortedNodes.forEach(node => {
+    sortedNodes.forEach((node) => {
       updateNode(node);
       drawNode(node);
     });
-    
+
     // Draw UI
     drawZoomIndicator();
     drawTimelineIndicator();
-    
+
     animationFrame = requestAnimationFrame(animate);
   }
 
@@ -283,13 +283,13 @@
     const sinY = Math.sin(rotation.y);
     const x1 = x * cosY - z * sinY;
     const z1 = x * sinY + z * cosY;
-    
+
     // Rotate around X axis
     const cosX = Math.cos(rotation.x);
     const sinX = Math.sin(rotation.x);
     const y1 = y * cosX - z1 * sinX;
     const z2 = y * sinX + z1 * cosX;
-    
+
     return { x: x1, y: y1, z: z2 };
   }
 
@@ -307,7 +307,7 @@
       node.y = Math.sin(node.orbitAngle) * node.orbitRadius * 0.5;
       node.z = Math.sin(node.orbitAngle) * node.orbitRadius * 0.3;
     }
-    
+
     // Update pulse
     node.glowIntensity = 0.5 + Math.sin(time * 2 + node.pulsePhase) * 0.3;
   }
@@ -315,32 +315,36 @@
   function drawNode(node: GalaxyNode) {
     const rotated = rotatePoint(node.x, node.y, node.z);
     const projected = project3D(rotated.x, rotated.y, rotated.z);
-    
+
     // Skip if behind camera
     if (projected.scale <= 0) return;
-    
+
     const size = node.size * projected.scale;
-    
+
     // Draw glow
     const gradient = ctx.createRadialGradient(
-      projected.x, projected.y, 0,
-      projected.x, projected.y, size * 3
+      projected.x,
+      projected.y,
+      0,
+      projected.x,
+      projected.y,
+      size * 3
     );
     gradient.addColorStop(0, node.color + 'ff');
     gradient.addColorStop(0.5, node.color + '40');
     gradient.addColorStop(1, node.color + '00');
-    
+
     ctx.fillStyle = gradient;
     ctx.globalAlpha = node.glowIntensity;
     ctx.fillRect(projected.x - size * 3, projected.y - size * 3, size * 6, size * 6);
-    
+
     // Draw core
     ctx.globalAlpha = 1;
     ctx.fillStyle = node.color;
     ctx.beginPath();
     ctx.arc(projected.x, projected.y, size, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Draw label for systems when zoomed in
     if (node.type === 'system' && zoomLevel > 1.5) {
       ctx.font = `${12 * projected.scale}px 'Space Grotesk'`;
@@ -348,7 +352,7 @@
       ctx.textAlign = 'center';
       ctx.fillText(node.name, projected.x, projected.y - size - 10);
     }
-    
+
     // Highlight on hover
     if (node === hoveredNode) {
       ctx.strokeStyle = '#ffffff';
@@ -361,16 +365,16 @@
 
   function drawConnections() {
     ctx.globalAlpha = 0.3;
-    
-    connections.forEach(conn => {
+
+    connections.forEach((conn) => {
       const from = rotatePoint(conn.from.x, conn.from.y, conn.from.z);
       const to = rotatePoint(conn.to.x, conn.to.y, conn.to.z);
-      
+
       const projFrom = project3D(from.x, from.y, from.z);
       const projTo = project3D(to.x, to.y, to.z);
-      
+
       if (projFrom.scale <= 0 || projTo.scale <= 0) return;
-      
+
       // Draw connection line with pulse
       const pulse = Math.sin(time * 3 + conn.pulseOffset) * 0.5 + 0.5;
       ctx.strokeStyle = `rgba(220, 20, 60, ${conn.strength * pulse})`;
@@ -380,35 +384,35 @@
       ctx.lineTo(projTo.x, projTo.y);
       ctx.stroke();
     });
-    
+
     ctx.globalAlpha = 1;
   }
 
   function drawNebula() {
     // Update and draw nebula particles
-    particles.forEach(particle => {
+    particles.forEach((particle) => {
       particle.x += particle.vx;
       particle.y += particle.vy;
       particle.z += particle.vz;
-      
+
       // Wrap around
       if (particle.x < -width) particle.x = width;
       if (particle.x > width) particle.x = -width;
       if (particle.y < -height) particle.y = height;
       if (particle.y > height) particle.y = -height;
-      
+
       const rotated = rotatePoint(particle.x, particle.y, particle.z);
       const projected = project3D(rotated.x, rotated.y, rotated.z);
-      
+
       if (projected.scale <= 0) return;
-      
+
       ctx.fillStyle = particle.color;
       ctx.globalAlpha = 0.3 * particle.life;
       ctx.beginPath();
       ctx.arc(projected.x, projected.y, particle.size * projected.scale, 0, Math.PI * 2);
       ctx.fill();
     });
-    
+
     ctx.globalAlpha = 1;
   }
 
@@ -416,7 +420,7 @@
     const x = width - 100;
     const y = height / 2;
     const height = 200;
-    
+
     // Draw track
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 4;
@@ -424,14 +428,14 @@
     ctx.moveTo(x, y - height / 2);
     ctx.lineTo(x, y + height / 2);
     ctx.stroke();
-    
+
     // Draw handle
     const handleY = y - height / 2 + (1 - (zoomLevel - 0.5) / 2.5) * height;
     ctx.fillStyle = '#DC143C';
     ctx.beginPath();
     ctx.arc(x, handleY, 10, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Labels
     ctx.fillStyle = '#666';
     ctx.font = '12px Space Grotesk';
@@ -444,7 +448,7 @@
     const x = width / 2;
     const y = height - 50;
     const width = 300;
-    
+
     // Draw track
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 4;
@@ -452,14 +456,14 @@
     ctx.moveTo(x - width / 2, y);
     ctx.lineTo(x + width / 2, y);
     ctx.stroke();
-    
+
     // Draw handle
     const handleX = x - width / 2 + timeProgress * width;
     ctx.fillStyle = '#00ff64';
     ctx.beginPath();
     ctx.arc(handleX, y, 10, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Labels
     ctx.fillStyle = '#666';
     ctx.font = '12px Space Grotesk';
@@ -472,19 +476,19 @@
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     // Check hover on nodes
     let foundHover = false;
-    galaxyNodes.forEach(node => {
+    galaxyNodes.forEach((node) => {
       const rotated = rotatePoint(node.x, node.y, node.z);
       const projected = project3D(rotated.x, rotated.y, rotated.z);
-      
+
       if (projected.scale <= 0) return;
-      
+
       const dx = mouseX - projected.x;
       const dy = mouseY - projected.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
+
       if (dist < node.size * projected.scale + 10) {
         if (hoveredNode !== node) {
           hoveredNode = node;
@@ -493,7 +497,7 @@
         foundHover = true;
       }
     });
-    
+
     if (!foundHover) hoveredNode = null;
   }
 
@@ -501,7 +505,7 @@
     if (hoveredNode) {
       selectedNode = hoveredNode;
       getAudioManager().playSound('whoosh', 0.5);
-      
+
       // Zoom to selected node
       if (hoveredNode.type === 'system') {
         zoomLevel = 2;
@@ -529,15 +533,15 @@
 
 <div class="galaxy-container" bind:this={container}>
   <canvas bind:this={canvas}></canvas>
-  
+
   <div class="controls">
     <div class="control-group zoom-control">
       <label>Zoom Level</label>
-      <input 
-        type="range" 
-        min="0.5" 
-        max="3" 
-        step="0.1" 
+      <input
+        type="range"
+        min="0.5"
+        max="3"
+        step="0.1"
         bind:value={zoomLevel}
         on:input={handleZoomChange}
       />
@@ -547,14 +551,14 @@
         <span>Planet</span>
       </div>
     </div>
-    
+
     <div class="control-group time-control">
       <label>Time Travel</label>
-      <input 
-        type="range" 
-        min="0" 
-        max="1" 
-        step="0.01" 
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
         bind:value={timeProgress}
         on:input={handleTimeChange}
       />
@@ -563,12 +567,12 @@
         <span>Present</span>
       </div>
     </div>
-    
-    <button class="toggle-rotation" on:click={() => autoRotate = !autoRotate}>
+
+    <button class="toggle-rotation" on:click={() => (autoRotate = !autoRotate)}>
       {autoRotate ? 'Pause' : 'Resume'} Rotation
     </button>
   </div>
-  
+
   {#if hoveredNode}
     <div class="info-panel">
       <h3>{hoveredNode.name}</h3>
@@ -576,7 +580,7 @@
       <p>Items: {hoveredNode.value}</p>
     </div>
   {/if}
-  
+
   <div class="achievement" class:show={selectedNode}>
     <span class="icon">🌟</span>
     <span>New constellation discovered!</span>
@@ -591,13 +595,13 @@
     background: #000;
     overflow: hidden;
   }
-  
+
   canvas {
     width: 100%;
     height: 100%;
     cursor: crosshair;
   }
-  
+
   .controls {
     position: absolute;
     bottom: 20px;
@@ -611,13 +615,13 @@
     border: 1px solid #333;
     backdrop-filter: blur(10px);
   }
-  
+
   .control-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .control-group label {
     color: #00ff64;
     font-family: 'Space Grotesk';
@@ -625,8 +629,8 @@
     text-transform: uppercase;
     letter-spacing: 1px;
   }
-  
-  .control-group input[type="range"] {
+
+  .control-group input[type='range'] {
     width: 200px;
     height: 6px;
     background: #333;
@@ -634,17 +638,17 @@
     outline: none;
     -webkit-appearance: none;
   }
-  
-  .control-group input[type="range"]::-webkit-slider-thumb {
+
+  .control-group input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 20px;
     height: 20px;
-    background: #DC143C;
+    background: #dc143c;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 10px #DC143C;
+    box-shadow: 0 0 10px #dc143c;
   }
-  
+
   .zoom-labels,
   .time-labels {
     display: flex;
@@ -653,9 +657,9 @@
     font-size: 12px;
     font-family: 'Space Grotesk';
   }
-  
+
   .toggle-rotation {
-    background: #DC143C;
+    background: #dc143c;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -664,12 +668,12 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .toggle-rotation:hover {
-    background: #B91C3C;
+    background: #b91c3c;
     transform: translateY(-2px);
   }
-  
+
   .info-panel {
     position: absolute;
     top: 20px;
@@ -677,23 +681,23 @@
     background: rgba(0, 0, 0, 0.8);
     padding: 20px;
     border-radius: 15px;
-    border: 1px solid #DC143C;
+    border: 1px solid #dc143c;
     color: white;
     font-family: 'Space Grotesk';
     backdrop-filter: blur(10px);
   }
-  
+
   .info-panel h3 {
     margin: 0 0 10px 0;
     color: #00ff64;
   }
-  
+
   .info-panel p {
     margin: 5px 0;
     color: #ccc;
     font-size: 14px;
   }
-  
+
   .achievement {
     position: absolute;
     top: 50%;
@@ -710,11 +714,11 @@
     gap: 15px;
     transition: transform 0.5s ease;
   }
-  
+
   .achievement.show {
     transform: translate(-50%, -50%) scale(1);
   }
-  
+
   .achievement .icon {
     font-size: 30px;
   }

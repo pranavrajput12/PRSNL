@@ -1,363 +1,380 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neural Spinal Interface - Menu Preview</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow-x: hidden;
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0f1f0f, #1a2f1a);
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        overflow-x: hidden;
+      }
+
+      .preview-container {
+        display: flex;
+        height: 100vh;
+      }
+
+      .spinal-sidebar {
+        width: 300px;
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+        border-right: 2px solid rgba(0, 255, 100, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .spinal-sidebar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 8px,
+          rgba(0, 255, 100, 0.03) 8px,
+          rgba(0, 255, 100, 0.03) 10px
+        );
+        pointer-events: none;
+      }
+
+      .spinal-container {
+        position: relative;
+        padding: 2rem 1rem;
+        height: 100%;
+      }
+
+      .spinal-logo {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 10;
+      }
+
+      .spinal-logo h1 {
+        color: #dc143c;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0;
+        font-family: 'JetBrains Mono', monospace;
+        text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+      }
+
+      .spinal-column {
+        position: relative;
+        height: calc(100% - 150px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .vertebrae-spine {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 100%;
+        background: linear-gradient(180deg, #dc143c, #00ff00, #dc143c);
+        border-radius: 6px;
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+        z-index: 1;
+      }
+
+      .vertebrae-spine::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 100%;
+        background: repeating-linear-gradient(
+          180deg,
+          transparent,
+          transparent 40px,
+          rgba(0, 255, 100, 0.3) 40px,
+          rgba(0, 255, 100, 0.3) 44px
+        );
+        border-radius: 10px;
+      }
+
+      .neural-nodes {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        z-index: 5;
+        width: 100%;
+        padding: 1rem 0;
+      }
+
+      .spinal-node {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(26, 26, 26, 0.8);
+        border-radius: 12px;
+        border: 1px solid rgba(220, 20, 60, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .spinal-node:hover {
+        transform: translateX(8px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
+        border-color: rgba(220, 20, 60, 0.5);
+      }
+
+      .spinal-node.active {
+        background: rgba(220, 20, 60, 0.1);
+        border-color: #dc143c;
+        box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
+      }
+
+      .node-vertebra {
+        position: absolute;
+        left: -20px;
+        width: 40px;
+        height: 40px;
+        background: radial-gradient(circle, #dc143c, #b91c3c);
+        border-radius: 50%;
+        border: 2px solid rgba(220, 20, 60, 0.5);
+        box-shadow: 0 0 15px rgba(220, 20, 60, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+
+      .node-vertebra::before {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        background: radial-gradient(circle, rgba(220, 20, 60, 0.2), transparent 70%);
+        border-radius: 50%;
+        animation: vertebra-pulse 2s ease-in-out infinite;
+      }
+
+      .spinal-node.active .node-vertebra {
+        background: radial-gradient(circle, #00ff00, #00cc00);
+        border-color: #00ff00;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+      }
+
+      .node-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        opacity: 0.9;
+        z-index: 15;
+      }
+
+      .node-content {
+        flex: 1;
+        margin-left: 2rem;
+      }
+
+      .node-label {
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0;
+      }
+
+      .neural-impulse {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #00ff00;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+        z-index: 3;
+        animation: impulse-travel 3s ease-in-out infinite;
+      }
+
+      .impulse-1 {
+        left: 48%;
+        animation-delay: 0s;
+      }
+
+      .impulse-2 {
+        left: 52%;
+        animation-delay: 1s;
+      }
+
+      .impulse-3 {
+        left: 50%;
+        animation-delay: 2s;
+      }
+
+      .main-preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 255, 100, 0.03) 40px,
+            rgba(0, 255, 100, 0.03) 42px
+          );
+      }
+
+      .preview-title {
+        background: linear-gradient(135deg, #dc143c, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        margin-bottom: 1rem;
+      }
+
+      .preview-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        font-weight: 400;
+      }
+
+      @keyframes vertebra-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.7;
         }
-        
-        .preview-container {
-            display: flex;
-            height: 100vh;
+        50% {
+          transform: scale(1.2);
+          opacity: 0.3;
         }
-        
-        .spinal-sidebar {
-            width: 300px;
-            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
-            border-right: 2px solid rgba(0, 255, 100, 0.3);
-            position: relative;
-            overflow: hidden;
+      }
+
+      @keyframes impulse-travel {
+        0% {
+          top: 0;
+          opacity: 1;
         }
-        
-        .spinal-sidebar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 8px,
-                    rgba(0, 255, 100, 0.03) 8px,
-                    rgba(0, 255, 100, 0.03) 10px
-                );
-            pointer-events: none;
+        100% {
+          top: 100%;
+          opacity: 0;
         }
-        
-        .spinal-container {
-            position: relative;
-            padding: 2rem 1rem;
-            height: 100%;
-        }
-        
-        .spinal-logo {
-            text-align: center;
-            margin-bottom: 2rem;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .spinal-logo h1 {
-            color: #DC143C;
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 0;
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
-        }
-        
-        .spinal-column {
-            position: relative;
-            height: calc(100% - 150px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .vertebrae-spine {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px;
-            height: 100%;
-            background: linear-gradient(180deg, #DC143C, #00ff00, #DC143C);
-            border-radius: 6px;
-            box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
-            z-index: 1;
-        }
-        
-        .vertebrae-spine::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 100%;
-            background: 
-                repeating-linear-gradient(
-                    180deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.3) 40px,
-                    rgba(0, 255, 100, 0.3) 44px
-                );
-            border-radius: 10px;
-        }
-        
-        .neural-nodes {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            z-index: 5;
-            width: 100%;
-            padding: 1rem 0;
-        }
-        
-        .spinal-node {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
-            background: rgba(26, 26, 26, 0.8);
-            border-radius: 12px;
-            border: 1px solid rgba(220, 20, 60, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .spinal-node:hover {
-            transform: translateX(8px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
-            border-color: rgba(220, 20, 60, 0.5);
-        }
-        
-        .spinal-node.active {
-            background: rgba(220, 20, 60, 0.1);
-            border-color: #DC143C;
-            box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
-        }
-        
-        .node-vertebra {
-            position: absolute;
-            left: -20px;
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle, #DC143C, #B91C3C);
-            border-radius: 50%;
-            border: 2px solid rgba(220, 20, 60, 0.5);
-            box-shadow: 0 0 15px rgba(220, 20, 60, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-        
-        .node-vertebra::before {
-            content: '';
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: radial-gradient(circle, rgba(220, 20, 60, 0.2), transparent 70%);
-            border-radius: 50%;
-            animation: vertebra-pulse 2s ease-in-out infinite;
-        }
-        
-        .spinal-node.active .node-vertebra {
-            background: radial-gradient(circle, #00ff00, #00cc00);
-            border-color: #00ff00;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
-        }
-        
-        .node-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            opacity: 0.9;
-            z-index: 15;
-        }
-        
-        .node-content {
-            flex: 1;
-            margin-left: 2rem;
-        }
-        
-        .node-label {
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            margin: 0;
-        }
-        
-        .neural-impulse {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #00ff00;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
-            z-index: 3;
-            animation: impulse-travel 3s ease-in-out infinite;
-        }
-        
-        .impulse-1 {
-            left: 48%;
-            animation-delay: 0s;
-        }
-        
-        .impulse-2 {
-            left: 52%;
-            animation-delay: 1s;
-        }
-        
-        .impulse-3 {
-            left: 50%;
-            animation-delay: 2s;
-        }
-        
-        .main-preview {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            text-align: center;
-            background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 40px,
-                    rgba(0, 255, 100, 0.03) 40px,
-                    rgba(0, 255, 100, 0.03) 42px
-                );
-        }
-        
-        .preview-title {
-            background: linear-gradient(135deg, #DC143C, #FF6B6B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            margin-bottom: 1rem;
-        }
-        
-        .preview-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            font-weight: 400;
-        }
-        
-        @keyframes vertebra-pulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.2); opacity: 0.3; }
-        }
-        
-        @keyframes impulse-travel {
-            0% { top: 0; opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="preview-container">
-        <div class="spinal-sidebar">
-            <div class="spinal-container">
-                <div class="spinal-logo">
-                    <h1>PRSNL</h1>
+      <div class="spinal-sidebar">
+        <div class="spinal-container">
+          <div class="spinal-logo">
+            <h1>PRSNL</h1>
+          </div>
+
+          <div class="spinal-column">
+            <div class="vertebrae-spine"></div>
+
+            <div class="neural-impulse impulse-1"></div>
+            <div class="neural-impulse impulse-2"></div>
+            <div class="neural-impulse impulse-3"></div>
+
+            <div class="neural-nodes">
+              <div class="spinal-node active">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
                 </div>
-                
-                <div class="spinal-column">
-                    <div class="vertebrae-spine"></div>
-                    
-                    <div class="neural-impulse impulse-1"></div>
-                    <div class="neural-impulse impulse-2"></div>
-                    <div class="neural-impulse impulse-3"></div>
-                    
-                    <div class="neural-nodes">
-                        <div class="spinal-node active">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Neural Nest</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Ingest</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Thought Stream</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Cognitive Map</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Mind Palace</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Visual Cortex</div>
-                            </div>
-                        </div>
-                        
-                        <div class="spinal-node">
-                            <div class="node-vertebra">
-                                <div class="node-icon"></div>
-                            </div>
-                            <div class="node-content">
-                                <div class="node-label">Knowledge Sync</div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="node-content">
+                  <div class="node-label">Neural Nest</div>
                 </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Ingest</div>
+                </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Thought Stream</div>
+                </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Cognitive Map</div>
+                </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Mind Palace</div>
+                </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Visual Cortex</div>
+                </div>
+              </div>
+
+              <div class="spinal-node">
+                <div class="node-vertebra">
+                  <div class="node-icon"></div>
+                </div>
+                <div class="node-content">
+                  <div class="node-label">Knowledge Sync</div>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
-        
-        <div class="main-preview">
-            <div>
-                <div class="preview-title">Neural Spinal Interface</div>
-                <div class="preview-subtitle">Vertical spine with neural nodes and electrical impulses</div>
-            </div>
+      </div>
+
+      <div class="main-preview">
+        <div>
+          <div class="preview-title">Neural Spinal Interface</div>
+          <div class="preview-subtitle">
+            Vertical spine with neural nodes and electrical impulses
+          </div>
         </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

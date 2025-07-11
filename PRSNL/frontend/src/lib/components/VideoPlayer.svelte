@@ -1,17 +1,17 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Icon from './Icon.svelte';
-  import { 
-    mediaSettings, 
-    activateVideo, 
-    deactivateVideo, 
-    registerVideoView, 
+  import {
+    mediaSettings,
+    activateVideo,
+    deactivateVideo,
+    registerVideoView,
     unregisterVideoView,
     recordLoadTime,
     recordBufferingEvent,
-    canLoadMoreVideos
+    canLoadMoreVideos,
   } from '$lib/stores/media';
-  
+
   export let src: string;
   export let thumbnail: string | undefined = undefined;
   export let thumbnailUrl: string | undefined = thumbnail;
@@ -22,29 +22,29 @@
   export let lazyLoad: boolean = true;
   export let videoId: string = src.split('/').pop() || Math.random().toString(36).substring(2, 9);
   export let showControls: boolean = true;
-  
+
   // Helper function to ensure thumbnail URLs are properly formatted
   function formatThumbnailUrl(url: string | undefined): string | undefined {
     if (!url) return undefined;
-    
+
     // If it's already a full URL or starts with /media/, return as is
     if (url.startsWith('http') || url.startsWith('/media/')) {
       return url;
     }
-    
+
     // If it starts with /app/media/, convert to /media/
     if (url.startsWith('/app/media/')) {
       return url.replace('/app/media/', '/media/');
     }
-    
+
     // Fallback: don't use invalid thumbnail URLs
     return undefined;
   }
-  
+
   // Process thumbnail URLs
   $: processedThumbnail = formatThumbnailUrl(thumbnail);
   $: processedThumbnailUrl = formatThumbnailUrl(thumbnailUrl);
-  
+
   let isPlaying = false;
   let isLoading = false;
   let isError = false;
@@ -65,7 +65,7 @@
   let canLoad = true;
   let retryCount = 0;
   let maxRetries = 3;
-  
+
   // Subscribe to canLoadMoreVideos store
   $: canLoad = $canLoadMoreVideos;
 
@@ -76,39 +76,38 @@
       isInViewport = true;
       registerVideoView(videoId);
     }
-    
+
     if (processedThumbnailUrl && $mediaSettings.enableProgressiveLoading) {
       loadProgressiveImage();
     }
-    
+
     if (autoplay && isInViewport && canLoad) {
       setTimeout(() => {
         if (videoElement) {
           activateVideo(videoId);
           isActive = true;
-          videoElement.play()
-            .catch(err => {
-              console.error('Autoplay failed:', err);
-            });
+          videoElement.play().catch((err) => {
+            console.error('Autoplay failed:', err);
+          });
         }
       }, 100);
     }
-    
+
     // Add keyboard event listener
     document.addEventListener('keydown', handleKeydown);
-    
+
     // Add buffering detection
     if (videoElement) {
       videoElement.addEventListener('waiting', handleBuffering);
     }
-    
+
     return () => {
       if (videoElement) {
         videoElement.removeEventListener('waiting', handleBuffering);
       }
     };
   });
-  
+
   onDestroy(() => {
     document.removeEventListener('keydown', handleKeydown);
     if (observer) {
@@ -119,35 +118,35 @@
     }
     unregisterVideoView(videoId);
   });
-  
+
   function setupIntersectionObserver() {
     observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
         const wasInViewport = isInViewport;
         isInViewport = entry.isIntersecting;
-        
+
         // Register/unregister video view for performance tracking
         if (isInViewport && !wasInViewport) {
           registerVideoView(videoId);
-          
+
           // Preload video if autoplay is enabled and we can load more videos
           if ($mediaSettings.autoplayInViewport && canLoad && !isPlaying) {
             activateVideo(videoId);
             isActive = true;
             if (videoElement) {
-              videoElement.play().catch(err => console.error('Autoplay failed:', err));
+              videoElement.play().catch((err) => console.error('Autoplay failed:', err));
             }
           }
         } else if (!isInViewport && wasInViewport) {
           unregisterVideoView(videoId);
         }
-        
+
         // Pause video when out of viewport
         if (!isInViewport && isPlaying && videoElement) {
           videoElement.pause();
           isPlaying = false;
-          
+
           // If network saving mode is on, unload video when out of viewport
           if ($mediaSettings.networkSavingMode && isActive) {
             deactivateVideo(videoId);
@@ -162,37 +161,37 @@
       },
       { threshold: 0.2, rootMargin: '100px' }
     );
-    
+
     if (videoContainer) {
       observer.observe(videoContainer);
     }
   }
-  
+
   function formatDuration(seconds: number): string {
     if (!seconds) return '0:00';
-    
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
-  
+
   function loadProgressiveImage() {
     if (!processedThumbnailUrl) return;
-    
+
     progressiveImg = new Image();
     progressiveImg.onload = () => {
       progressiveLoaded = true;
     };
     progressiveImg.src = processedThumbnailUrl;
   }
-  
+
   function handleBuffering() {
     recordBufferingEvent(videoId);
   }
-  
+
   function togglePlay() {
     if (!videoElement || !isInViewport) return;
-    
+
     if (isPlaying) {
       videoElement.pause();
     } else {
@@ -201,42 +200,47 @@
         activateVideo(videoId);
         isActive = true;
       }
-      
-      videoElement.play()
-        .catch(err => {
-          isError = true;
-          errorMessage = 'Failed to play video. Please try again.';
-          console.error('Play error:', err);
-          
-          // Retry logic for common network errors
-          if (retryCount < maxRetries && 
-              (err instanceof Error && (err.name === 'NetworkError' || err.name === 'AbortError'))) {
-            retryCount++;
-            setTimeout(() => {
-              isError = false;
-              if (videoElement) {
-                videoElement.load();
-                videoElement.play().catch(e => console.error('Retry failed:', e));
-              }
-            }, 1000 * retryCount); // Exponential backoff
-          }
-        });
+
+      videoElement.play().catch((err) => {
+        isError = true;
+        errorMessage = 'Failed to play video. Please try again.';
+        console.error('Play error:', err);
+
+        // Retry logic for common network errors
+        if (
+          retryCount < maxRetries &&
+          err instanceof Error &&
+          (err.name === 'NetworkError' || err.name === 'AbortError')
+        ) {
+          retryCount++;
+          setTimeout(() => {
+            isError = false;
+            if (videoElement) {
+              videoElement.load();
+              videoElement.play().catch((e) => console.error('Retry failed:', e));
+            }
+          }, 1000 * retryCount); // Exponential backoff
+        }
+      });
     }
   }
-  
+
   function handleKeydown(e: KeyboardEvent) {
     // Only handle events when video is in viewport and focused
-    if (!isInViewport || document.activeElement?.tagName === 'INPUT' || 
-        document.activeElement?.tagName === 'TEXTAREA') {
+    if (
+      !isInViewport ||
+      document.activeElement?.tagName === 'INPUT' ||
+      document.activeElement?.tagName === 'TEXTAREA'
+    ) {
       return;
     }
-    
+
     // Space to play/pause
     if (e.key === ' ' && videoElement && videoContainer.matches(':hover')) {
       e.preventDefault();
       togglePlay();
     }
-    
+
     // Arrow keys for seeking when video is focused or hovered
     if (videoElement && videoContainer.matches(':hover')) {
       if (e.key === 'ArrowRight') {
@@ -263,34 +267,36 @@
       }
     }
   }
-  
+
   function updateProgress() {
     if (videoElement && videoElement.duration) {
       progress = (videoElement.currentTime / videoElement.duration) * 100;
-      
+
       // Update buffered
       if (videoElement.buffered.length > 0) {
-        buffered = (videoElement.buffered.end(videoElement.buffered.length - 1) / videoElement.duration) * 100;
+        buffered =
+          (videoElement.buffered.end(videoElement.buffered.length - 1) / videoElement.duration) *
+          100;
       }
     }
   }
-  
+
   function handleLoadStart() {
     isLoading = true;
     loadStartTime = performance.now();
   }
-  
+
   function handleCanPlay() {
     isLoading = false;
     const loadTime = performance.now() - loadStartTime;
     recordLoadTime(videoId, loadTime);
   }
-  
+
   function handleError() {
     isLoading = false;
     isError = true;
     errorMessage = 'Failed to load video. Please try again.';
-    
+
     // If we have retries left, try again with exponential backoff
     if (retryCount < maxRetries) {
       retryCount++;
@@ -305,12 +311,12 @@
       isActive = false;
     }
   }
-  
+
   function toggleFullscreen() {
     if (!videoContainer) return;
-    
+
     if (!document.fullscreenElement) {
-      videoContainer.requestFullscreen().catch(err => {
+      videoContainer.requestFullscreen().catch((err) => {
         console.error('Error attempting to enable fullscreen:', err);
       });
       isFullscreen = true;
@@ -319,16 +325,16 @@
       isFullscreen = false;
     }
   }
-  
+
   function handleSeek(e: MouseEvent) {
     if (!videoElement) return;
-    
+
     const progressBar = e.currentTarget as HTMLDivElement;
     const rect = progressBar.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
     videoElement.currentTime = pos * (videoElement.duration || 0);
   }
-  
+
   // handleProgressClick is now merged with handleSeek
 </script>
 
@@ -337,25 +343,23 @@
     <div class="video-thumbnail" on:click={togglePlay}>
       <!-- Use progressive loading for thumbnails if enabled -->
       {#if processedThumbnailUrl && $mediaSettings.enableProgressiveLoading}
-        <img 
-          src={processedThumbnailUrl} 
+        <img
+          src={processedThumbnailUrl}
           alt={title}
           loading="lazy"
-          style="filter: ${progressiveLoaded ? 'none' : 'blur(10px)'}; transition: filter 0.3s ease-in-out;"
+          style="filter: ${progressiveLoaded
+            ? 'none'
+            : 'blur(10px)'}; transition: filter 0.3s ease-in-out;"
         />
       {:else if processedThumbnail}
-        <img 
-          src={processedThumbnail} 
-          alt={title}
-          loading="lazy"
-        />
+        <img src={processedThumbnail} alt={title} loading="lazy" />
       {:else}
         <!-- Placeholder when no thumbnail is available -->
         <div class="thumbnail-placeholder">
           <Icon name="video" size="large" color="var(--text-muted)" />
         </div>
       {/if}
-      
+
       {#if isLoading}
         <div class="loading-overlay">
           <div class="spinner"></div>
@@ -367,18 +371,18 @@
           </div>
         </div>
       {/if}
-      
+
       {#if duration}
         <div class="duration">{formatDuration(duration)}</div>
       {/if}
-      
+
       {#if platform}
         <div class="platform-badge">
           <Icon name="video" size="small" color="white" />
           {platform}
         </div>
       {/if}
-      
+
       <!-- Show network saving indicator when active -->
       {#if $mediaSettings.networkSavingMode}
         <div class="network-saving-badge">
@@ -388,27 +392,30 @@
       {/if}
     </div>
   {/if}
-  
+
   {#if isError}
     <div class="error-container">
       <Icon name="alert-circle" size="large" />
       <p>{errorMessage}</p>
-      <button class="retry-btn" on:click={() => {
-        isError = false;
-        if (videoElement) {
-          videoElement.load();
-        }
-      }}>Retry</button>
+      <button
+        class="retry-btn"
+        on:click={() => {
+          isError = false;
+          if (videoElement) {
+            videoElement.load();
+          }
+        }}>Retry</button
+      >
     </div>
   {/if}
-  
+
   <video
     bind:this={videoElement}
     class:hidden={thumbnail && !isPlaying}
     preload={$mediaSettings.preloadStrategy}
-    on:play={() => isPlaying = true}
-    on:pause={() => isPlaying = false}
-    on:ended={() => isPlaying = false}
+    on:play={() => (isPlaying = true)}
+    on:pause={() => (isPlaying = false)}
+    on:ended={() => (isPlaying = false)}
     on:timeupdate={updateProgress}
     on:loadstart={handleLoadStart}
     on:canplay={handleCanPlay}
@@ -417,11 +424,11 @@
     on:waiting={handleBuffering}
   >
     {#if isInViewport || !$mediaSettings.networkSavingMode}
-      <source src={src} type="video/mp4" />
+      <source {src} type="video/mp4" />
     {/if}
     Your browser does not support the video tag.
   </video>
-  
+
   {#if isPlaying || (!thumbnail && !isError)}
     <div class="custom-controls">
       <div class="progress-container" on:click={handleSeek}>
@@ -430,7 +437,7 @@
           <div class="progress" style="width: {progress}%"></div>
         </div>
       </div>
-      
+
       <div class="controls-row">
         <button class="control-btn" on:click={togglePlay}>
           {#if isPlaying}
@@ -439,28 +446,33 @@
             <Icon name="play" size="small" />
           {/if}
         </button>
-        
-        <button class="control-btn" on:click={() => {
-          if (videoElement) {
-            videoElement.muted = !videoElement.muted;
-            isMuted = videoElement.muted;
-          }
-        }}>
+
+        <button
+          class="control-btn"
+          on:click={() => {
+            if (videoElement) {
+              videoElement.muted = !videoElement.muted;
+              isMuted = videoElement.muted;
+            }
+          }}
+        >
           {#if isMuted}
             <Icon name="volume-x" size="small" />
           {:else}
             <Icon name="volume-2" size="small" />
           {/if}
         </button>
-        
+
         {#if videoElement}
           <div class="time-display">
-            {formatDuration(videoElement.currentTime || 0)} / {formatDuration(videoElement.duration || 0)}
+            {formatDuration(videoElement.currentTime || 0)} / {formatDuration(
+              videoElement.duration || 0
+            )}
           </div>
         {/if}
-        
+
         <div class="spacer"></div>
-        
+
         <button class="control-btn" on:click={toggleFullscreen}>
           {#if isFullscreen}
             <Icon name="minimize" size="small" />
@@ -471,7 +483,7 @@
       </div>
     </div>
   {/if}
-  
+
   {#if isLoading && (!thumbnail || isPlaying)}
     <div class="loading-overlay">
       <div class="spinner"></div>
@@ -488,7 +500,7 @@
     overflow: hidden;
     aspect-ratio: 16 / 9;
   }
-  
+
   .video-thumbnail {
     position: relative;
     cursor: pointer;
@@ -496,18 +508,18 @@
     width: 100%;
     height: 100%;
   }
-  
+
   .video-thumbnail:hover {
     opacity: 0.9;
   }
-  
+
   .video-thumbnail img {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: cover;
   }
-  
+
   .thumbnail-placeholder {
     width: 100%;
     height: 100%;
@@ -516,7 +528,7 @@
     justify-content: center;
     background: var(--bg-tertiary);
   }
-  
+
   .play-overlay {
     position: absolute;
     top: 50%;
@@ -531,19 +543,19 @@
     justify-content: center;
     transition: all var(--transition-base);
   }
-  
+
   .video-thumbnail:hover .play-overlay {
     background: var(--man-united-red);
     transform: translate(-50%, -50%) scale(1.1);
   }
-  
+
   .play-icon {
     width: 24px;
     height: 24px;
     color: white;
     margin-left: 3px;
   }
-  
+
   .duration {
     position: absolute;
     bottom: 8px;
@@ -556,7 +568,7 @@
     font-weight: 600;
     z-index: 2;
   }
-  
+
   .platform-badge {
     position: absolute;
     top: 8px;
@@ -572,7 +584,7 @@
     gap: 4px;
     z-index: 2;
   }
-  
+
   .loading-overlay {
     position: absolute;
     top: 0;
@@ -585,7 +597,7 @@
     justify-content: center;
     z-index: 3;
   }
-  
+
   .spinner {
     width: 40px;
     height: 40px;
@@ -594,11 +606,13 @@
     border-top-color: var(--man-united-red);
     animation: spin 1s ease-in-out infinite;
   }
-  
+
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
-  
+
   .error-container {
     position: absolute;
     top: 0;
@@ -615,11 +629,11 @@
     text-align: center;
     z-index: 4;
   }
-  
+
   .error-container p {
     margin: 1rem 0;
   }
-  
+
   .retry-btn {
     background: var(--man-united-red);
     color: white;
@@ -630,23 +644,23 @@
     cursor: pointer;
     transition: all var(--transition-base);
   }
-  
+
   .retry-btn:hover {
     background: var(--accent-red-hover);
     transform: translateY(-2px);
   }
-  
+
   video {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: contain;
   }
-  
+
   video.hidden {
     display: none;
   }
-  
+
   .custom-controls {
     position: absolute;
     bottom: 0;
@@ -658,18 +672,18 @@
     transition: opacity var(--transition-base);
     z-index: 2;
   }
-  
+
   .video-player:hover .custom-controls {
     opacity: 1;
   }
-  
+
   .progress-container {
     width: 100%;
     height: 8px;
     cursor: pointer;
     padding: 4px 0;
   }
-  
+
   .progress-bar {
     position: relative;
     height: 4px;
@@ -677,7 +691,7 @@
     border-radius: 2px;
     overflow: hidden;
   }
-  
+
   .buffered {
     position: absolute;
     top: 0;
@@ -686,7 +700,7 @@
     background: rgba(255, 255, 255, 0.4);
     transition: width 0.2s ease;
   }
-  
+
   .progress {
     position: absolute;
     top: 0;
@@ -695,13 +709,13 @@
     background: var(--man-united-red);
     transition: width 0.1s ease;
   }
-  
+
   .controls-row {
     display: flex;
     align-items: center;
     padding: 0.5rem 0;
   }
-  
+
   .control-btn {
     background: transparent;
     border: none;
@@ -712,31 +726,31 @@
     opacity: 0.8;
     transition: opacity var(--transition-fast);
   }
-  
+
   .control-btn:hover {
     opacity: 1;
   }
-  
+
   .time-display {
     color: white;
     font-size: 0.75rem;
     margin-right: 0.5rem;
   }
-  
+
   .spacer {
     flex: 1;
   }
-  
+
   @media (max-width: 768px) {
     .video-player {
       aspect-ratio: 16 / 10;
     }
-    
+
     .platform-badge {
       font-size: 0.7rem;
       padding: 2px 6px;
     }
-    
+
     .time-display {
       display: none;
     }

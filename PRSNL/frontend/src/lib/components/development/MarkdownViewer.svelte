@@ -2,30 +2,30 @@
   import { onMount } from 'svelte';
   import SafeHTML from '$lib/components/SafeHTML.svelte';
   import { lazyLoadMarkdownProcessor, loadingStates } from '$lib/utils/lazyLoad';
-  
+
   export let content: string = '';
   export let enableSyntaxHighlight: boolean = true;
   export let enableLineNumbers: boolean = false;
   export let theme: 'dark' | 'neural' = 'neural';
-  
+
   let renderedHTML: string = '';
   let copyNotifications: { [key: string]: boolean } = {};
   let markdownProcessor: any = null;
   let isProcessorLoading = false;
-  
+
   $: isLoading = $loadingStates['markdown-processor'] || isProcessorLoading;
-  
+
   $: if (content && markdownProcessor) {
     renderMarkdown();
   }
-  
+
   async function loadProcessor() {
     if (markdownProcessor || isProcessorLoading) return;
-    
+
     try {
       isProcessorLoading = true;
       markdownProcessor = await lazyLoadMarkdownProcessor();
-      
+
       if (content) {
         renderMarkdown();
       }
@@ -37,10 +37,10 @@
       isProcessorLoading = false;
     }
   }
-  
+
   function renderMarkdown() {
     if (!markdownProcessor || !content) return;
-    
+
     try {
       renderedHTML = markdownProcessor.marked(content);
     } catch (e) {
@@ -48,14 +48,12 @@
       renderedHTML = `<pre>${content}</pre>`;
     }
   }
-  
+
   function addLineNumbers(code: string): string {
     const lines = code.split('\n');
-    return lines.map((line, i) => 
-      `<span class="line-number">${i + 1}</span>${line}`
-    ).join('\n');
+    return lines.map((line, i) => `<span class="line-number">${i + 1}</span>${line}`).join('\n');
   }
-  
+
   async function copyCode(codeBlock: HTMLElement, blockId: string) {
     const code = codeBlock.textContent || '';
     try {
@@ -68,41 +66,42 @@
       console.error('Failed to copy:', err);
     }
   }
-  
+
   onMount(async () => {
     // Load markdown processor when component mounts
     await loadProcessor();
-    
+
     // Add copy buttons to code blocks
     const codeBlocks = document.querySelectorAll('.markdown-viewer pre code');
     codeBlocks.forEach((block, index) => {
       const blockId = `code-block-${index}`;
       const pre = block.parentElement;
       if (!pre) return;
-      
+
       // Add line numbers if enabled
       if (enableLineNumbers && block.innerHTML) {
         block.innerHTML = addLineNumbers(block.innerHTML);
       }
-      
+
       // Create copy button
       const copyBtn = document.createElement('button');
       copyBtn.className = 'copy-button';
-      copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      copyBtn.innerHTML =
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
       copyBtn.title = 'Copy code';
-      
+
       copyBtn.addEventListener('click', () => copyCode(block as HTMLElement, blockId));
-      
+
       // Add notification span
       const notification = document.createElement('span');
       notification.className = 'copy-notification';
       notification.textContent = 'Copied!';
       notification.style.display = 'none';
-      
+
       pre.style.position = 'relative';
       pre.appendChild(copyBtn);
       pre.appendChild(notification);
-      
+
       // Update notification visibility
       $: if (copyNotifications[blockId]) {
         notification.style.display = 'block';
@@ -131,7 +130,7 @@
     font-size: 1rem;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  
+
   /* Neural theme specific styles */
   .markdown-viewer.neural {
     --code-bg: rgba(0, 255, 136, 0.05);
@@ -140,9 +139,9 @@
     --inline-code-bg: rgba(0, 255, 136, 0.1);
     --inline-code-text: #00ff88;
     --link-color: #00ff88;
-    --link-hover: #DC143C;
+    --link-hover: #dc143c;
   }
-  
+
   /* Dark theme */
   .markdown-viewer.dark {
     --code-bg: #1e1e1e;
@@ -153,7 +152,7 @@
     --link-color: #4a9eff;
     --link-hover: #6bb6ff;
   }
-  
+
   /* Headings */
   .markdown-viewer :global(h1),
   .markdown-viewer :global(h2),
@@ -166,39 +165,47 @@
     font-weight: 600;
     line-height: 1.25;
   }
-  
-  .markdown-viewer :global(h1) { font-size: 2em; }
-  .markdown-viewer :global(h2) { font-size: 1.5em; }
-  .markdown-viewer :global(h3) { font-size: 1.25em; }
-  .markdown-viewer :global(h4) { font-size: 1em; }
-  
+
+  .markdown-viewer :global(h1) {
+    font-size: 2em;
+  }
+  .markdown-viewer :global(h2) {
+    font-size: 1.5em;
+  }
+  .markdown-viewer :global(h3) {
+    font-size: 1.25em;
+  }
+  .markdown-viewer :global(h4) {
+    font-size: 1em;
+  }
+
   /* Paragraphs and lists */
   .markdown-viewer :global(p) {
     margin-bottom: 1em;
   }
-  
+
   .markdown-viewer :global(ul),
   .markdown-viewer :global(ol) {
     margin-bottom: 1em;
     padding-left: 2em;
   }
-  
+
   .markdown-viewer :global(li) {
     margin-bottom: 0.25em;
   }
-  
+
   /* Links */
   .markdown-viewer :global(a) {
     color: var(--link-color);
     text-decoration: none;
     transition: color 0.2s ease;
   }
-  
+
   .markdown-viewer :global(a:hover) {
     color: var(--link-hover);
     text-decoration: underline;
   }
-  
+
   /* Inline code */
   .markdown-viewer :global(code:not(pre code)) {
     background: var(--inline-code-bg);
@@ -208,7 +215,7 @@
     font-size: 0.875em;
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
-  
+
   /* Code blocks */
   .markdown-viewer :global(pre) {
     background: var(--code-bg);
@@ -219,7 +226,7 @@
     overflow-x: auto;
     position: relative;
   }
-  
+
   .markdown-viewer :global(pre code) {
     background: transparent;
     color: var(--code-text);
@@ -228,7 +235,7 @@
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     line-height: 1.5;
   }
-  
+
   /* Copy button */
   .markdown-viewer :global(.copy-button) {
     position: absolute;
@@ -243,16 +250,16 @@
     transition: all 0.2s ease;
     color: #00ff88;
   }
-  
+
   .markdown-viewer :global(pre:hover .copy-button) {
     opacity: 1;
   }
-  
+
   .markdown-viewer :global(.copy-button:hover) {
     background: rgba(0, 255, 136, 0.2);
     transform: translateY(-1px);
   }
-  
+
   .markdown-viewer :global(.copy-notification) {
     position: absolute;
     top: 0.5rem;
@@ -265,7 +272,7 @@
     font-weight: 600;
     animation: fadeIn 0.2s ease;
   }
-  
+
   /* Line numbers */
   .markdown-viewer :global(.line-number) {
     display: inline-block;
@@ -275,7 +282,7 @@
     color: rgba(255, 255, 255, 0.3);
     user-select: none;
   }
-  
+
   /* Blockquotes */
   .markdown-viewer :global(blockquote) {
     border-left: 4px solid var(--code-border);
@@ -284,41 +291,64 @@
     margin-bottom: 1em;
     color: rgba(255, 255, 255, 0.7);
   }
-  
+
   /* Tables */
   .markdown-viewer :global(table) {
     border-collapse: collapse;
     width: 100%;
     margin-bottom: 1em;
   }
-  
+
   .markdown-viewer :global(th),
   .markdown-viewer :global(td) {
     border: 1px solid var(--code-border);
     padding: 0.5em 1em;
     text-align: left;
   }
-  
+
   .markdown-viewer :global(th) {
     background: var(--code-bg);
     font-weight: 600;
   }
-  
+
   /* Syntax highlighting */
-  .markdown-viewer.neural :global(.hljs-keyword) { color: #ff6b6b; }
-  .markdown-viewer.neural :global(.hljs-string) { color: #4ecdc4; }
-  .markdown-viewer.neural :global(.hljs-function) { color: #ffe66d; }
-  .markdown-viewer.neural :global(.hljs-number) { color: #ff8cc8; }
-  .markdown-viewer.neural :global(.hljs-comment) { color: #666; font-style: italic; }
-  .markdown-viewer.neural :global(.hljs-class) { color: #a8e6cf; }
-  .markdown-viewer.neural :global(.hljs-variable) { color: #ffd93d; }
-  .markdown-viewer.neural :global(.hljs-type) { color: #95e1d3; }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+  .markdown-viewer.neural :global(.hljs-keyword) {
+    color: #ff6b6b;
   }
-  
+  .markdown-viewer.neural :global(.hljs-string) {
+    color: #4ecdc4;
+  }
+  .markdown-viewer.neural :global(.hljs-function) {
+    color: #ffe66d;
+  }
+  .markdown-viewer.neural :global(.hljs-number) {
+    color: #ff8cc8;
+  }
+  .markdown-viewer.neural :global(.hljs-comment) {
+    color: #666;
+    font-style: italic;
+  }
+  .markdown-viewer.neural :global(.hljs-class) {
+    color: #a8e6cf;
+  }
+  .markdown-viewer.neural :global(.hljs-variable) {
+    color: #ffd93d;
+  }
+  .markdown-viewer.neural :global(.hljs-type) {
+    color: #95e1d3;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* Loading state */
   .markdown-loading {
     display: flex;
@@ -329,7 +359,7 @@
     gap: 1rem;
     color: rgba(0, 255, 136, 0.7);
   }
-  
+
   .loading-pulse {
     width: 24px;
     height: 24px;
@@ -338,18 +368,22 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
+
   /* Responsive */
   @media (max-width: 768px) {
     .markdown-viewer {
       font-size: 0.95rem;
     }
-    
+
     .markdown-viewer :global(pre) {
       padding: 0.75em;
       font-size: 0.8rem;

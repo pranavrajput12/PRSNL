@@ -16,14 +16,17 @@
     <h1>Ecosystem Terrarium Preview</h1>
     <div class="preview-badge">PREVIEW MODE</div>
   </header>
-  
+
   <div class="preview-content">
     <EcosystemTerrarium />
   </div>
-  
+
   <div class="preview-info">
     <h2>🌍 Ecosystem Terrarium</h2>
-    <p>Your knowledge habitat comes alive as a living ecosystem where different content types thrive as unique creatures.</p>
+    <p>
+      Your knowledge habitat comes alive as a living ecosystem where different content types thrive
+      as unique creatures.
+    </p>
     <ul>
       <li>🌿 Watch your content evolve through seasons</li>
       <li>🍃 Feed creatures to help them grow</li>
@@ -37,10 +40,10 @@
   .preview-page {
     width: 100%;
     height: 100vh;
-    background: #87CEEB;
+    background: #87ceeb;
     overflow: hidden;
   }
-  
+
   .preview-header {
     position: absolute;
     top: 0;
@@ -55,7 +58,7 @@
     z-index: 100;
     border-bottom: 1px solid #00ff64;
   }
-  
+
   .back-button {
     display: flex;
     align-items: center;
@@ -65,19 +68,19 @@
     font-family: 'Space Grotesk';
     transition: all 0.3s ease;
   }
-  
+
   .back-button:hover {
-    color: #DC143C;
+    color: #dc143c;
     transform: translateX(-5px);
   }
-  
+
   .preview-header h1 {
     font-family: 'Space Grotesk';
     font-size: 24px;
     color: white;
     margin: 0;
   }
-  
+
   .preview-badge {
     background: #00ff64;
     color: #000;
@@ -88,12 +91,12 @@
     font-weight: 700;
     letter-spacing: 1px;
   }
-  
+
   .preview-content {
     width: 100%;
     height: 100%;
   }
-  
+
   .preview-info {
     position: absolute;
     top: 80px;
@@ -107,25 +110,25 @@
     max-width: 400px;
     backdrop-filter: blur(10px);
   }
-  
+
   .preview-info h2 {
     margin: 0 0 10px 0;
     color: #00ff64;
     font-size: 20px;
   }
-  
+
   .preview-info p {
     margin: 0 0 15px 0;
     color: #ccc;
     line-height: 1.6;
   }
-  
+
   .preview-info ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  
+
   .preview-info li {
     padding: 5px 0;
     color: #999;

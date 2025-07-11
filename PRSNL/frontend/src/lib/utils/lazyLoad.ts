@@ -1,9 +1,9 @@
 /**
  * Lazy Loading Infrastructure for PRSNL
- * 
+ *
  * This utility provides system-wide lazy loading for heavy components and libraries.
  * Benefits the entire application by reducing initial bundle size and improving performance.
- * 
+ *
  * Supported lazy loads:
  * - Syntax highlighters (highlight.js, Shiki)
  * - 3D libraries (Three.js components)
@@ -40,40 +40,40 @@ export async function lazyLoad<T>(
   }
 
   // Update loading state
-  loadingStates.update(states => ({ ...states, [moduleKey]: true }));
+  loadingStates.update((states) => ({ ...states, [moduleKey]: true }));
 
   // Create loading promise
   const loadingPromise = (async () => {
     try {
       console.log(`🔄 Lazy loading: ${moduleKey}`);
       const module = await loader();
-      
+
       // Cache the loaded module
       loadedModules.set(moduleKey, module);
       console.log(`✅ Lazy loaded: ${moduleKey}`);
-      
+
       return module;
     } catch (error) {
       console.error(`❌ Failed to lazy load ${moduleKey}:`, error);
-      
+
       // Use fallback if provided
       if (fallback !== undefined) {
         console.log(`🔄 Using fallback for: ${moduleKey}`);
         loadedModules.set(moduleKey, fallback);
         return fallback;
       }
-      
+
       throw error;
     } finally {
       // Clear loading state
-      loadingStates.update(states => ({ ...states, [moduleKey]: false }));
+      loadingStates.update((states) => ({ ...states, [moduleKey]: false }));
       loadingPromises.delete(moduleKey);
     }
   })();
 
   // Cache the promise to prevent duplicate loads
   loadingPromises.set(moduleKey, loadingPromise);
-  
+
   return loadingPromise;
 }
 
@@ -90,7 +90,7 @@ export async function lazyLoadHighlighter(language?: string) {
       import('highlight.js/lib/languages/python'),
       import('highlight.js/lib/languages/json'),
       import('highlight.js/lib/languages/bash'),
-      import('highlight.js/lib/languages/markdown')
+      import('highlight.js/lib/languages/markdown'),
     ]);
 
     const [javascript, typescript, python, json, bash, markdown] = languageModules;
@@ -119,7 +119,7 @@ export async function lazyLoadHighlighter(language?: string) {
  */
 export async function lazyLoadLanguage(language: string, hljs: any) {
   const languageKey = `highlight-lang-${language}`;
-  
+
   // Skip if already loaded
   if (hljs.getLanguage(language)) {
     return;
@@ -174,10 +174,7 @@ export async function lazyLoadVideoPlayer() {
  */
 export async function lazyLoadMarkdownProcessor() {
   return await lazyLoad('markdown-processor', async () => {
-    const [marked, highlighter] = await Promise.all([
-      import('marked'),
-      lazyLoadHighlighter()
-    ]);
+    const [marked, highlighter] = await Promise.all([import('marked'), lazyLoadHighlighter()]);
 
     // Configure marked with highlighter
     marked.marked.setOptions({
@@ -188,12 +185,12 @@ export async function lazyLoadMarkdownProcessor() {
         return code;
       },
       gfm: true,
-      breaks: true
+      breaks: true,
     });
 
     return {
       marked: marked.marked,
-      highlighter
+      highlighter,
     };
   });
 }
@@ -211,20 +208,28 @@ export function preloadModules(modules: string[]) {
     }
   };
 
-  modules.forEach(moduleKey => {
+  modules.forEach((moduleKey) => {
     schedulePreload(() => {
       switch (moduleKey) {
         case 'highlighter':
-          lazyLoadHighlighter().catch(() => {/* Silent fail */});
+          lazyLoadHighlighter().catch(() => {
+            /* Silent fail */
+          });
           break;
         case 'three':
-          lazyLoadThreeJS().catch(() => {/* Silent fail */});
+          lazyLoadThreeJS().catch(() => {
+            /* Silent fail */
+          });
           break;
         case 'd3':
-          lazyLoadD3().catch(() => {/* Silent fail */});
+          lazyLoadD3().catch(() => {
+            /* Silent fail */
+          });
           break;
         case 'markdown':
-          lazyLoadMarkdownProcessor().catch(() => {/* Silent fail */});
+          lazyLoadMarkdownProcessor().catch(() => {
+            /* Silent fail */
+          });
           break;
       }
     });
@@ -268,9 +273,9 @@ export function lazyLoadAction(node: HTMLElement, moduleKey: string) {
         observer.disconnect();
       }
     },
-    { 
+    {
       threshold: 0.2, // Increased threshold for earlier loading
-      rootMargin: '100px' // Increased margin for more aggressive preloading
+      rootMargin: '100px', // Increased margin for more aggressive preloading
     }
   );
 
@@ -279,7 +284,7 @@ export function lazyLoadAction(node: HTMLElement, moduleKey: string) {
   return {
     destroy() {
       observer.disconnect();
-    }
+    },
   };
 }
 
@@ -303,11 +308,11 @@ export const perfUtils = {
       return {
         used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
         total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
-        limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024)
+        limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024),
       };
     }
     return null;
-  }
+  },
 };
 
 export default {
@@ -324,5 +329,5 @@ export default {
   clearModuleCache,
   lazyLoadAction,
   loadingStates,
-  perfUtils
+  perfUtils,
 };

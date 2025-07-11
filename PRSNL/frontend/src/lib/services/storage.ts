@@ -27,7 +27,7 @@ export function saveItem<T>(key: string, value: T): boolean {
 export function getItem<T>(key: string, defaultValue: T | null = null): T | null {
   try {
     const item = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
-    return item ? JSON.parse(item) as T : defaultValue;
+    return item ? (JSON.parse(item) as T) : defaultValue;
   } catch (error) {
     console.error('Failed to get from localStorage:', error);
     return defaultValue;
@@ -56,7 +56,7 @@ export function removeItem(key: string): boolean {
 export function clearAll(): boolean {
   try {
     const keys = Object.keys(localStorage);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith(STORAGE_PREFIX)) {
         localStorage.removeItem(key);
       }
@@ -91,7 +91,7 @@ export enum StorageKeys {
   USER_PREFERENCES = 'user-preferences',
   MEDIA_SETTINGS = 'media-settings',
   FILTER_PREFERENCES = 'filter-preferences',
-  SEARCH_MODE = 'search-mode'
+  SEARCH_MODE = 'search-mode',
 }
 
 /**
@@ -101,8 +101,8 @@ export enum StorageKeys {
 export function getAllKeys(): string[] {
   try {
     return Object.keys(localStorage)
-      .filter(key => key.startsWith(STORAGE_PREFIX))
-      .map(key => key.substring(STORAGE_PREFIX.length));
+      .filter((key) => key.startsWith(STORAGE_PREFIX))
+      .map((key) => key.substring(STORAGE_PREFIX.length));
   } catch (error) {
     console.error('Failed to get localStorage keys:', error);
     return [];

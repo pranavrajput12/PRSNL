@@ -44,22 +44,22 @@
 
   async function loadTimeline(reset = false) {
     if (isLoading) return;
-    
+
     try {
       isLoading = true;
       error = null;
-      
+
       if (reset) {
         page = 1;
         groups = [];
       }
 
       const response = await getTimeline(page);
-      
+
       if (response && response.items) {
         // Group items by date
         const newGroups: { [key: string]: Item[] } = {};
-        
+
         response.items.forEach((item: Item) => {
           const date = new Date(item.createdAt).toDateString();
           if (!newGroups[date]) {
@@ -69,10 +69,14 @@
         });
 
         // Convert to array and sort by date
-        const groupArray: TimelineGroup[] = Object.entries(newGroups).map(([date, items]) => ({
-          date,
-          items: items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const groupArray: TimelineGroup[] = Object.entries(newGroups)
+          .map(([date, items]) => ({
+            date,
+            items: items.sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            ),
+          }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         if (reset) {
           groups = groupArray;
@@ -106,7 +110,7 @@
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     }
   }
@@ -118,13 +122,13 @@
 
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return date.toLocaleDateString();
   }
 
@@ -143,7 +147,7 @@
 
   async function handleScroll() {
     if (!scrollContainer || isLoading || !hasMore) return;
-    
+
     const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
     if (scrollTop + clientHeight >= scrollHeight - 200) {
       await loadTimeline(false);
@@ -172,31 +176,31 @@
   <div class="stream-header">
     <h1 class="stream-title">Neural Thought Stream</h1>
     <div class="stream-controls">
-      <button 
+      <button
         class="control-button {filterMode === 'all' ? 'active' : ''}"
         on:click={() => setFilterMode('all')}
       >
         All Traces
       </button>
-      <button 
+      <button
         class="control-button {filterMode === 'videos' ? 'active' : ''}"
         on:click={() => setFilterMode('videos')}
       >
         Videos
       </button>
-      <button 
+      <button
         class="control-button {filterMode === 'documents' ? 'active' : ''}"
         on:click={() => setFilterMode('documents')}
       >
         Documents
       </button>
-      <button 
+      <button
         class="control-button {filterMode === 'links' ? 'active' : ''}"
         on:click={() => setFilterMode('links')}
       >
         Links
       </button>
-      <button 
+      <button
         class="control-button {filterMode === 'today' ? 'active' : ''}"
         on:click={() => setFilterMode('today')}
       >
@@ -209,17 +213,15 @@
   <div class="neural-flow-line"></div>
 
   <!-- Timeline content -->
-  <div 
-    class="stream-content" 
-    bind:this={scrollContainer}
-    on:scroll={handleScroll}
-  >
+  <div class="stream-content" bind:this={scrollContainer} on:scroll={handleScroll}>
     {#if error}
-      <ErrorMessage 
-        message="Failed to load thought stream" 
-        details={error.message} 
-        retry={() => loadTimeline(true)} 
-        dismiss={() => { error = null; }} 
+      <ErrorMessage
+        message="Failed to load thought stream"
+        details={error.message}
+        retry={() => loadTimeline(true)}
+        dismiss={() => {
+          error = null;
+        }}
       />
     {:else if groups.length === 0 && !isLoading}
       <div class="empty-state">
@@ -247,7 +249,7 @@
             {@const badge = getContentTypeBadge(item)}
             <div class="memory-trace">
               <div class="trace-connection"></div>
-              
+
               <div class="trace-header">
                 <div class="trace-main">
                   <a href="/item/{item.id}" class="trace-title">
@@ -263,7 +265,7 @@
                     <div class="trace-summary">{item.summary}</div>
                   {/if}
                 </div>
-                
+
                 <div class="trace-badges">
                   {#if badge}
                     <div class="trace-badge {badge.type}">
@@ -276,8 +278,8 @@
 
               {#if item.item_type === 'video' && item.thumbnail_url}
                 <div class="trace-video">
-                  <VideoPlayer 
-                    videoUrl={item.url} 
+                  <VideoPlayer
+                    videoUrl={item.url}
                     thumbnailUrl={item.thumbnail_url}
                     title={item.title}
                     duration={item.duration}
@@ -342,24 +344,40 @@
   }
 
   @keyframes pulse-activity {
-    0% { 
+    0% {
       opacity: 0;
       transform: scale(0.5);
     }
-    50% { 
+    50% {
       opacity: 1;
       transform: scale(1);
     }
-    100% { 
+    100% {
       opacity: 0;
       transform: scale(0.5);
     }
   }
 
-  .activity-pulse:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-  .activity-pulse:nth-child(2) { top: 40%; left: 85%; animation-delay: 1s; }
-  .activity-pulse:nth-child(3) { top: 70%; left: 20%; animation-delay: 2s; }
-  .activity-pulse:nth-child(4) { top: 60%; left: 70%; animation-delay: 3s; }
+  .activity-pulse:nth-child(1) {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+  .activity-pulse:nth-child(2) {
+    top: 40%;
+    left: 85%;
+    animation-delay: 1s;
+  }
+  .activity-pulse:nth-child(3) {
+    top: 70%;
+    left: 20%;
+    animation-delay: 2s;
+  }
+  .activity-pulse:nth-child(4) {
+    top: 60%;
+    left: 70%;
+    animation-delay: 3s;
+  }
 
   .stream-header {
     text-align: center;
@@ -371,7 +389,7 @@
     font-family: 'Space Grotesk', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #DC143C, #00ff64);
+    background: linear-gradient(135deg, #dc143c, #00ff64);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -399,15 +417,15 @@
   }
 
   .control-button:hover {
-    border-color: #DC143C;
-    color: #DC143C;
+    border-color: #dc143c;
+    color: #dc143c;
     box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
   }
 
   .control-button.active {
     background: rgba(220, 20, 60, 0.2);
-    border-color: #DC143C;
-    color: #DC143C;
+    border-color: #dc143c;
+    color: #dc143c;
   }
 
   .neural-flow-line {
@@ -416,17 +434,24 @@
     top: 200px;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(180deg, 
-      transparent 0%, 
-      rgba(0, 255, 100, 0.5) 20%, 
-      rgba(220, 20, 60, 0.5) 80%, 
-      transparent 100%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 255, 100, 0.5) 20%,
+      rgba(220, 20, 60, 0.5) 80%,
+      transparent 100%
+    );
     animation: flow-pulse 3s ease-in-out infinite;
   }
 
   @keyframes flow-pulse {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   .stream-content {
@@ -453,7 +478,7 @@
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
-    background: #DC143C;
+    background: #dc143c;
     border-radius: 50%;
     border: 3px solid #0a0a0a;
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
@@ -461,8 +486,13 @@
   }
 
   @keyframes node-pulse {
-    0%, 100% { transform: translateY(-50%) scale(1); }
-    50% { transform: translateY(-50%) scale(1.2); }
+    0%,
+    100% {
+      transform: translateY(-50%) scale(1);
+    }
+    50% {
+      transform: translateY(-50%) scale(1.2);
+    }
   }
 
   .date-label {
@@ -507,8 +537,12 @@
   }
 
   @keyframes connection-flow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
   }
 
   .trace-header {
@@ -533,7 +567,7 @@
   }
 
   .trace-title:hover {
-    color: #DC143C;
+    color: #dc143c;
   }
 
   .processing-indicator {
@@ -571,7 +605,7 @@
 
   .trace-badge.video {
     background: rgba(220, 20, 60, 0.2);
-    color: #DC143C;
+    color: #dc143c;
     border: 1px solid rgba(220, 20, 60, 0.3);
   }
 
@@ -655,7 +689,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #DC143C, #B91C3C);
+    background: linear-gradient(135deg, #dc143c, #b91c3c);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
@@ -665,7 +699,7 @@
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #B91C3C, #991B1B);
+    background: linear-gradient(135deg, #b91c3c, #991b1b);
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
     transform: translateY(-2px);
   }

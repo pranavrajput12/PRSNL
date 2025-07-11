@@ -8,7 +8,7 @@ const checkHealth = () => {
     port: 3003,
     path: '/',
     method: 'GET',
-    timeout: 5000
+    timeout: 5000,
   };
 
   const req = http.request(options, (res) => {

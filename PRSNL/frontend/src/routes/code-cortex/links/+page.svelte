@@ -1,31 +1,37 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getDevelopmentDocs, getDevelopmentCategories, searchDevelopmentContent, type DevelopmentItem, type DevelopmentDocsFilters } from '$lib/api/development';
+  import {
+    getDevelopmentDocs,
+    getDevelopmentCategories,
+    searchDevelopmentContent,
+    type DevelopmentItem,
+    type DevelopmentDocsFilters,
+  } from '$lib/api/development';
   import Icon from '$lib/components/Icon.svelte';
-  
+
   let links: DevelopmentItem[] = [];
   let categories = [];
   let loading = true;
   let selectedCategory = '';
   let selectedLanguage = '';
   let searchQuery = '';
-  
+
   // Enhanced search options
   let searchMode: 'semantic' | 'keyword' | 'hybrid' = 'semantic';
   let isUsingEnhancedSearch = false;
   let searchStats: any = null;
   let searchTimeout: ReturnType<typeof setTimeout> | undefined;
-  
+
   // Pagination
   let currentPage = 0;
   let itemsPerPage = 20;
   let hasMore = true;
-  
+
   onMount(async () => {
     await loadCategories();
     await loadLinks();
   });
-  
+
   async function loadCategories() {
     try {
       categories = await getDevelopmentCategories();
@@ -33,123 +39,122 @@
       console.error('Error loading categories:', error);
     }
   }
-  
+
   async function loadLinks(reset = false) {
     try {
       loading = true;
-      
+
       // Use enhanced search if there's a search query
       if (searchQuery.trim()) {
         await performEnhancedSearch(reset);
       } else {
         await performRegularLoad(reset);
       }
-      
     } catch (error) {
       console.error('Error loading links:', error);
     } finally {
       loading = false;
     }
   }
-  
+
   async function performEnhancedSearch(reset = false) {
     isUsingEnhancedSearch = true;
-    
+
     const searchResult = await searchDevelopmentContent(searchQuery, {
       searchMode: searchMode,
       limit: reset ? itemsPerPage : itemsPerPage * (currentPage + 1),
       filters: {
         category: selectedCategory,
-        language: selectedLanguage
-      }
+        language: selectedLanguage,
+      },
     });
-    
+
     // Filter to only show items with URLs (links)
-    const linkItems = searchResult.results.filter(item => 
-      item.url && item.url.startsWith('http')
+    const linkItems = searchResult.results.filter(
+      (item) => item.url && item.url.startsWith('http')
     );
-    
+
     if (reset) {
       links = linkItems;
       currentPage = 0;
     } else {
       links = linkItems;
     }
-    
+
     searchStats = searchResult.searchStats;
     hasMore = linkItems.length >= itemsPerPage;
-    
+
     console.log('Enhanced links search:', {
       query: searchQuery,
       mode: searchMode,
       results: linkItems.length,
-      stats: searchStats
+      stats: searchStats,
     });
   }
-  
+
   async function performRegularLoad(reset = false) {
     isUsingEnhancedSearch = false;
     searchStats = null;
-    
+
     const filters: DevelopmentDocsFilters = {
       limit: itemsPerPage,
-      offset: reset ? 0 : currentPage * itemsPerPage
+      offset: reset ? 0 : currentPage * itemsPerPage,
     };
-    
+
     if (selectedCategory) filters.category = selectedCategory;
     if (selectedLanguage) filters.language = selectedLanguage;
-    
+
     const newLinks = await getDevelopmentDocs(filters);
-    
+
     // Filter to only show items with URLs (links)
-    const linkItems = newLinks.filter(item => item.url && item.url.startsWith('http'));
-    
+    const linkItems = newLinks.filter((item) => item.url && item.url.startsWith('http'));
+
     if (reset) {
       links = linkItems;
       currentPage = 0;
     } else {
       links = [...links, ...linkItems];
     }
-    
+
     hasMore = newLinks.length === itemsPerPage;
   }
-  
+
   function handleFilterChange() {
     loadLinks(true);
   }
-  
+
   function handleSearchInput() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       loadLinks(true);
     }, 300);
   }
-  
+
   function clearSearch() {
     searchQuery = '';
     loadLinks(true);
   }
-  
+
   function loadMore() {
     currentPage++;
     loadLinks();
   }
-  
+
   function getLanguageIcon(language: string): string {
     const icons = {
-      'python': '🐍',
-      'javascript': '🟨',
-      'typescript': '🔷',
-      'java': '☕',
-      'go': '🐹',
-      'rust': '🦀',
-      'cpp': '⚡',
-      'html': '🌐',
-      'css': '🎨'
+      python: '🐍',
+      javascript: '🟨',
+      typescript: '🔷',
+      java: '☕',
+      go: '🐹',
+      rust: '🦀',
+      cpp: '⚡',
+      html: '🌐',
+      css: '🎨',
     };
     return icons[language] || '💻';
   }
-  
+
   function getDomain(url: string): string {
     try {
       return new URL(url).hostname.replace('www.', '');
@@ -157,7 +162,7 @@
       return 'unknown';
     }
   }
-  
+
   function getDomainIcon(domain: string): string {
     const icons = {
       'github.com': '🐙',
@@ -167,7 +172,7 @@
       'dev.to': '💻',
       'youtube.com': '📺',
       'docs.google.com': '📄',
-      'notion.so': '📝'
+      'notion.so': '📝',
     };
     return icons[domain] || '🔗';
   }
@@ -191,15 +196,15 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Filters -->
   <div class="filters-section">
     <div class="filters-grid">
       <div class="filter-group search-group">
         <label>Enhanced Search</label>
         <div class="search-container">
-          <input 
-            type="text" 
+          <input
+            type="text"
             bind:value={searchQuery}
             placeholder="Search links and repositories with AI..."
             class="filter-input search-input"
@@ -211,35 +216,44 @@
             </button>
           {/if}
         </div>
-        
+
         {#if searchQuery}
           <div class="search-mode-toggle">
-            <button 
+            <button
               class="mode-btn {searchMode === 'semantic' ? 'active' : ''}"
-              on:click={() => { searchMode = 'semantic'; loadLinks(true); }}
+              on:click={() => {
+                searchMode = 'semantic';
+                loadLinks(true);
+              }}
               title="AI Semantic Search - Understands meaning and context"
             >
               <Icon name="brain" size={14} />
               Semantic
             </button>
-            <button 
+            <button
               class="mode-btn {searchMode === 'keyword' ? 'active' : ''}"
-              on:click={() => { searchMode = 'keyword'; loadLinks(true); }}
+              on:click={() => {
+                searchMode = 'keyword';
+                loadLinks(true);
+              }}
               title="Keyword Search - Exact text matching"
             >
               <Icon name="search" size={14} />
               Keyword
             </button>
-            <button 
+            <button
               class="mode-btn {searchMode === 'hybrid' ? 'active' : ''}"
-              on:click={() => { searchMode = 'hybrid'; loadLinks(true); }}
+              on:click={() => {
+                searchMode = 'hybrid';
+                loadLinks(true);
+              }}
               title="Hybrid Search - Combines semantic and keyword"
             >
               <Icon name="zap" size={14} />
               Hybrid
             </button>
           </div>
-          
+
           {#if isUsingEnhancedSearch && searchStats}
             <div class="search-stats">
               <span class="stat-item">
@@ -256,7 +270,7 @@
           {/if}
         {/if}
       </div>
-      
+
       <div class="filter-group">
         <label>Category</label>
         <select bind:value={selectedCategory} on:change={handleFilterChange} class="filter-select">
@@ -266,7 +280,7 @@
           {/each}
         </select>
       </div>
-      
+
       <div class="filter-group">
         <label>Language</label>
         <select bind:value={selectedLanguage} on:change={handleFilterChange} class="filter-select">
@@ -280,21 +294,33 @@
           <option value="cpp">C++</option>
         </select>
       </div>
-      
+
       <div class="filter-group">
         <label>Quick Filters</label>
         <div class="quick-filters">
-          <button class="quick-filter" on:click={() => { searchQuery = 'github.com'; handleFilterChange(); }}>
+          <button
+            class="quick-filter"
+            on:click={() => {
+              searchQuery = 'github.com';
+              handleFilterChange();
+            }}
+          >
             🐙 GitHub
           </button>
-          <button class="quick-filter" on:click={() => { searchQuery = 'docs'; handleFilterChange(); }}>
+          <button
+            class="quick-filter"
+            on:click={() => {
+              searchQuery = 'docs';
+              handleFilterChange();
+            }}
+          >
             📚 Docs
           </button>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Links Grid -->
   <div class="links-grid">
     {#each links as link}
@@ -302,27 +328,29 @@
         <div class="link-header">
           <div class="link-meta">
             <span class="domain-tag">
-              {getDomainIcon(getDomain(link.url))} {getDomain(link.url)}
+              {getDomainIcon(getDomain(link.url))}
+              {getDomain(link.url)}
             </span>
             {#if link.programming_language}
               <span class="language-tag">
-                {getLanguageIcon(link.programming_language)} {link.programming_language}
+                {getLanguageIcon(link.programming_language)}
+                {link.programming_language}
               </span>
             {/if}
             {#if link.is_career_related}
               <span class="career-tag">💼 Career</span>
             {/if}
           </div>
-          
+
           <h3 class="link-title">
             <a href={link.url} target="_blank" rel="noopener noreferrer">{link.title}</a>
           </h3>
         </div>
-        
+
         {#if link.summary}
           <p class="link-summary">{link.summary}</p>
         {/if}
-        
+
         <div class="link-footer">
           <div class="link-tags">
             {#each link.tags.slice(0, 3) as tag}
@@ -332,10 +360,10 @@
               <span class="tag-more">+{link.tags.length - 3}</span>
             {/if}
           </div>
-          
+
           <div class="link-actions">
             <span class="link-date">{new Date(link.created_at).toLocaleDateString()}</span>
-            
+
             {#if isUsingEnhancedSearch && link.similarity_score}
               <div class="search-score">
                 <Icon name="target" size={12} />
@@ -343,19 +371,21 @@
                 {#if link.component_scores && searchMode === 'hybrid'}
                   <div class="component-scores">
                     {#if link.component_scores.semantic}
-                      <span class="score-component semantic">S: {Math.round(link.component_scores.semantic * 100)}%</span>
+                      <span class="score-component semantic"
+                        >S: {Math.round(link.component_scores.semantic * 100)}%</span
+                      >
                     {/if}
                     {#if link.component_scores.keyword}
-                      <span class="score-component keyword">K: {Math.round(link.component_scores.keyword * 100)}%</span>
+                      <span class="score-component keyword"
+                        >K: {Math.round(link.component_scores.keyword * 100)}%</span
+                      >
                     {/if}
                   </div>
                 {/if}
               </div>
             {/if}
-            
-            <a href="/items/{link.id}" class="link-button secondary">
-              View Details
-            </a>
+
+            <a href="/items/{link.id}" class="link-button secondary"> View Details </a>
             <a href={link.url} target="_blank" rel="noopener noreferrer" class="link-button">
               <Icon name="external-link" size="small" />
               Visit
@@ -365,16 +395,14 @@
       </article>
     {/each}
   </div>
-  
+
   <!-- Load More -->
   {#if hasMore && !loading}
     <div class="load-more-section">
-      <button class="load-more-btn" on:click={loadMore}>
-        Load More Links
-      </button>
+      <button class="load-more-btn" on:click={loadMore}> Load More Links </button>
     </div>
   {/if}
-  
+
   <!-- Loading State -->
   {#if loading}
     <div class="loading-state">
@@ -382,7 +410,7 @@
       <span>Loading useful links...</span>
     </div>
   {/if}
-  
+
   <!-- Empty State -->
   {#if !loading && links.length === 0}
     <div class="empty-state">
@@ -402,17 +430,17 @@
     color: #00ff88;
     font-family: 'JetBrains Mono', monospace;
   }
-  
+
   .page-header {
     margin-bottom: 2rem;
   }
-  
+
   .header-left {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .back-link {
     display: flex;
     align-items: center;
@@ -422,25 +450,25 @@
     font-size: 0.9rem;
     transition: color 0.3s ease;
   }
-  
+
   .back-link:hover {
     color: #00ff88;
   }
-  
+
   .header-content h1 {
     font-size: 2rem;
     margin: 0;
-    background: linear-gradient(45deg, #00ff88, #DC143C);
+    background: linear-gradient(45deg, #00ff88, #dc143c);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
+
   .header-content p {
     margin: 0.5rem 0 0 0;
     opacity: 0.8;
   }
-  
+
   .filters-section {
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 255, 136, 0.3);
@@ -448,27 +476,28 @@
     padding: 1.5rem;
     margin-bottom: 2rem;
   }
-  
+
   .filters-grid {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
     gap: 1rem;
   }
-  
+
   .filter-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .filter-group label {
     font-size: 0.875rem;
     color: rgba(0, 255, 136, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
-  .filter-input, .filter-select {
+
+  .filter-input,
+  .filter-select {
     background: rgba(0, 255, 136, 0.1);
     border: 1px solid rgba(0, 255, 136, 0.3);
     border-radius: 6px;
@@ -477,18 +506,19 @@
     font-family: inherit;
     font-size: 0.9rem;
   }
-  
-  .filter-input:focus, .filter-select:focus {
+
+  .filter-input:focus,
+  .filter-select:focus {
     outline: none;
     border-color: #00ff88;
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
   }
-  
+
   .quick-filters {
     display: flex;
     gap: 0.5rem;
   }
-  
+
   .quick-filter {
     background: rgba(0, 255, 136, 0.1);
     border: 1px solid rgba(0, 255, 136, 0.3);
@@ -499,19 +529,19 @@
     transition: all 0.3s ease;
     font-size: 0.8rem;
   }
-  
+
   .quick-filter:hover {
     background: rgba(0, 255, 136, 0.2);
     border-color: #00ff88;
   }
-  
+
   .links-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
-  
+
   .link-card {
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 255, 136, 0.3);
@@ -521,62 +551,64 @@
     position: relative;
     overflow: hidden;
   }
-  
+
   .link-card:hover {
     border-color: #00ff88;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2);
   }
-  
+
   .link-header {
     margin-bottom: 1rem;
   }
-  
+
   .link-meta {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     flex-wrap: wrap;
   }
-  
-  .domain-tag, .language-tag, .career-tag {
+
+  .domain-tag,
+  .language-tag,
+  .career-tag {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-weight: 500;
   }
-  
+
   .domain-tag {
     background: rgba(220, 20, 60, 0.2);
-    color: #DC143C;
+    color: #dc143c;
   }
-  
+
   .language-tag {
     background: rgba(0, 255, 136, 0.2);
     color: #00ff88;
   }
-  
+
   .career-tag {
     background: rgba(220, 20, 60, 0.2);
-    color: #DC143C;
+    color: #dc143c;
   }
-  
+
   .link-title {
     margin: 0;
     font-size: 1.1rem;
     line-height: 1.4;
   }
-  
+
   .link-title a {
     color: #00ff88;
     text-decoration: none;
     transition: color 0.3s ease;
   }
-  
+
   .link-title a:hover {
-    color: #DC143C;
+    color: #dc143c;
   }
-  
+
   .link-summary {
     margin: 0 0 1rem 0;
     opacity: 0.8;
@@ -587,21 +619,21 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .link-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .link-tags {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
     flex: 1;
   }
-  
+
   .tag {
     background: rgba(0, 255, 136, 0.1);
     color: rgba(0, 255, 136, 0.8);
@@ -609,7 +641,7 @@
     border-radius: 4px;
     font-size: 0.75rem;
   }
-  
+
   .tag-more {
     background: rgba(220, 20, 60, 0.1);
     color: rgba(220, 20, 60, 0.8);
@@ -617,18 +649,18 @@
     border-radius: 4px;
     font-size: 0.75rem;
   }
-  
+
   .link-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   .link-date {
     font-size: 0.75rem;
     color: rgba(0, 255, 136, 0.6);
   }
-  
+
   .link-button {
     background: rgba(0, 255, 136, 0.1);
     border: 1px solid rgba(0, 255, 136, 0.3);
@@ -642,17 +674,17 @@
     gap: 0.3rem;
     transition: all 0.3s ease;
   }
-  
+
   .link-button:hover {
     background: rgba(0, 255, 136, 0.2);
     border-color: #00ff88;
   }
-  
+
   .load-more-section {
     text-align: center;
     margin-bottom: 2rem;
   }
-  
+
   .load-more-btn {
     background: rgba(0, 255, 136, 0.1);
     border: 1px solid rgba(0, 255, 136, 0.3);
@@ -663,12 +695,12 @@
     transition: all 0.3s ease;
     font-family: inherit;
   }
-  
+
   .load-more-btn:hover {
     background: rgba(0, 255, 136, 0.2);
     border-color: #00ff88;
   }
-  
+
   .loading-state {
     display: flex;
     flex-direction: column;
@@ -677,7 +709,7 @@
     min-height: 200px;
     gap: 1rem;
   }
-  
+
   .neural-pulse {
     width: 40px;
     height: 40px;
@@ -686,36 +718,40 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
+
   .empty-state {
     text-align: center;
     padding: 4rem 2rem;
     opacity: 0.8;
   }
-  
+
   .empty-icon {
     font-size: 4rem;
     margin-bottom: 1rem;
   }
-  
+
   .empty-state h3 {
     margin: 0 0 1rem 0;
     font-size: 1.5rem;
     color: #00ff88;
   }
-  
+
   .empty-state p {
     margin: 0 0 2rem 0;
     opacity: 0.7;
   }
-  
+
   .add-links-btn {
-    background: linear-gradient(45deg, #00ff88, #DC143C);
+    background: linear-gradient(45deg, #00ff88, #dc143c);
     color: black;
     padding: 0.75rem 2rem;
     border-radius: 8px;
@@ -724,41 +760,41 @@
     transition: transform 0.3s ease;
     display: inline-block;
   }
-  
+
   .add-links-btn:hover {
     transform: translateY(-2px);
   }
-  
+
   /* Mobile responsiveness */
   @media (max-width: 768px) {
     .links-page {
       padding: 1rem;
     }
-    
+
     .filters-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .links-grid {
       grid-template-columns: 1fr;
     }
   }
-  
+
   /* Enhanced Search Styles (shared with docs page) */
   .search-group {
     position: relative;
   }
-  
+
   .search-container {
     position: relative;
     display: flex;
     align-items: center;
   }
-  
+
   .search-input {
     padding-right: 2.5rem;
   }
-  
+
   .clear-search-btn {
     position: absolute;
     right: 0.5rem;
@@ -770,12 +806,12 @@
     border-radius: 50%;
     transition: all 0.2s ease;
   }
-  
+
   .clear-search-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: #00ff88;
   }
-  
+
   .search-mode-toggle {
     display: flex;
     gap: 0.5rem;
@@ -785,7 +821,7 @@
     border-radius: 0.5rem;
     border: 1px solid rgba(0, 255, 136, 0.2);
   }
-  
+
   .mode-btn {
     display: flex;
     align-items: center;
@@ -799,19 +835,19 @@
     cursor: pointer;
     transition: all 0.2s ease;
   }
-  
+
   .mode-btn:hover {
     background: rgba(0, 255, 136, 0.1);
     border-color: rgba(0, 255, 136, 0.3);
     color: #00ff88;
   }
-  
+
   .mode-btn.active {
     background: rgba(0, 255, 136, 0.2);
     border-color: #00ff88;
     color: #00ff88;
   }
-  
+
   .search-stats {
     display: flex;
     gap: 0.75rem;
@@ -819,13 +855,13 @@
     font-size: 0.75rem;
     color: #888;
   }
-  
+
   .stat-item {
     display: flex;
     align-items: center;
     gap: 0.25rem;
   }
-  
+
   .search-score {
     display: flex;
     align-items: center;
@@ -837,17 +873,17 @@
     border-radius: 0.25rem;
     border: 1px solid rgba(0, 255, 136, 0.2);
   }
-  
+
   .score-value {
     font-weight: 600;
   }
-  
+
   .component-scores {
     display: flex;
     gap: 0.25rem;
     margin-left: 0.5rem;
   }
-  
+
   .score-component {
     font-size: 0.65rem;
     padding: 0.125rem 0.25rem;
@@ -856,13 +892,13 @@
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
-  
+
   .score-component.semantic {
     color: #00ff64;
     border-color: rgba(0, 255, 100, 0.3);
     background: rgba(0, 255, 100, 0.1);
   }
-  
+
   .score-component.keyword {
     color: #0096ff;
     border-color: rgba(0, 150, 255, 0.3);

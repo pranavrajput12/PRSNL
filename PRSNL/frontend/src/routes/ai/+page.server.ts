@@ -6,11 +6,11 @@ export const load: PageServerLoad = async ({ locals, fetch }) => {
   if (!locals.user) {
     throw redirect(302, '/login');
   }
-  
+
   // We'll load data client-side via the API for better user experience
   // This is just a placeholder for server-side authorization checks
-  
+
   return {
-    user: locals.user
+    user: locals.user,
   };
 };

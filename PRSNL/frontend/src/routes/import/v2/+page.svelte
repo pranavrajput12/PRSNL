@@ -4,7 +4,7 @@
   import Icon from '$lib/components/Icon.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import ProcessingProgress from '$lib/components/ProcessingProgress.svelte';
-  
+
   let files = [];
   let isDragging = false;
   let isProcessing = false;
@@ -14,91 +14,95 @@
   let importType = 'bookmarks';
   let progress = 0;
   let currentItem = '';
-  
+
   function handleDragOver(e) {
     e.preventDefault();
     isDragging = true;
   }
-  
+
   function handleDragLeave(e) {
     e.preventDefault();
     isDragging = false;
   }
-  
+
   function handleDrop(e) {
     e.preventDefault();
     isDragging = false;
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     handleFiles(droppedFiles);
   }
-  
+
   function handleFileSelect(e) {
     const selectedFiles = Array.from(e.target.files);
     handleFiles(selectedFiles);
   }
-  
+
   function handleFiles(newFiles) {
-    files = newFiles.filter(file => {
+    files = newFiles.filter((file) => {
       if (importType === 'bookmarks') {
         return file.type === 'text/html' || file.name.endsWith('.html');
       } else if (importType === 'json') {
         return file.type === 'application/json' || file.name.endsWith('.json');
       } else if (importType === 'notes') {
-        return file.type === 'text/plain' || file.type === 'text/markdown' || 
-               file.name.endsWith('.txt') || file.name.endsWith('.md');
+        return (
+          file.type === 'text/plain' ||
+          file.type === 'text/markdown' ||
+          file.name.endsWith('.txt') ||
+          file.name.endsWith('.md')
+        );
       }
       return false;
     });
-    
+
     if (files.length === 0) {
       error = `Please select valid ${importType} files`;
     } else {
       error = null;
     }
   }
-  
+
   async function startImport() {
     if (files.length === 0) return;
-    
+
     isProcessing = true;
     error = null;
     importResults = null;
     progress = 0;
-    
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         currentItem = file.name;
         progress = ((i + 1) / files.length) * 100;
-        
+
         const formData = new FormData();
         formData.append('file', file);
-        
+
         if (importType === 'bookmarks') {
           formData.append('auto_fetch', autoFetch.toString());
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/import/${importType}`, {
           method: 'POST',
-          body: formData
+          body: formData,
         });
-        
+
         if (!response.ok) {
           throw new Error(`Import failed: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
-        
+
         if (!importResults) {
           importResults = {
             imported: 0,
             skipped: 0,
             errors: [],
-            total: 0
+            total: 0,
           };
         }
-        
+
         importResults.imported += result.imported || 0;
         importResults.skipped += result.skipped || 0;
         importResults.total += result.total || 0;
@@ -106,7 +110,7 @@
           importResults.errors.push(...result.errors);
         }
       }
-      
+
       files = [];
     } catch (err) {
       error = err.message;
@@ -115,7 +119,7 @@
       currentItem = '';
     }
   }
-  
+
   function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -123,7 +127,7 @@
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   function removeFile(index) {
     files = files.filter((_, i) => i !== index);
   }
@@ -134,11 +138,11 @@
     <h1 class="circuit-board-text">Import Data</h1>
     <p>Import your bookmarks, notes, or data from other sources</p>
   </header>
-  
+
   <div class="import-options">
-    <button 
+    <button
       class="option-card circuit-board-card {importType === 'bookmarks' ? 'active' : ''}"
-      on:click={() => importType = 'bookmarks'}
+      on:click={() => (importType = 'bookmarks')}
     >
       <div class="trace-pattern">
         <div class="trace-line horizontal"></div>
@@ -150,10 +154,10 @@
       <h3>Bookmarks</h3>
       <p>Import from Chrome, Safari, or Firefox</p>
     </button>
-    
-    <button 
+
+    <button
       class="option-card circuit-board-card {importType === 'json' ? 'active' : ''}"
-      on:click={() => importType = 'json'}
+      on:click={() => (importType = 'json')}
     >
       <div class="trace-pattern">
         <div class="trace-line horizontal"></div>
@@ -165,10 +169,10 @@
       <h3>PRSNL Export</h3>
       <p>Import from PRSNL JSON export</p>
     </button>
-    
-    <button 
+
+    <button
       class="option-card circuit-board-card {importType === 'notes' ? 'active' : ''}"
-      on:click={() => importType = 'notes'}
+      on:click={() => (importType = 'notes')}
     >
       <div class="trace-pattern">
         <div class="trace-line horizontal"></div>
@@ -181,7 +185,7 @@
       <p>Import text or markdown files</p>
     </button>
   </div>
-  
+
   <div class="steps-guide circuit-board-substrate">
     <h3>How to export and import your bookmarks:</h3>
     <div class="steps">
@@ -191,8 +195,9 @@
           <h4>Export from your browser</h4>
           <p>
             {#if importType === 'bookmarks'}
-              <strong>Chrome:</strong> Menu → Bookmarks → Bookmark Manager → ⋮ → Export bookmarks<br>
-              <strong>Safari:</strong> File → Export → Bookmarks<br>
+              <strong>Chrome:</strong> Menu → Bookmarks → Bookmark Manager → ⋮ → Export bookmarks<br
+              />
+              <strong>Safari:</strong> File → Export → Bookmarks<br />
               <strong>Firefox:</strong> Menu → Bookmarks → Manage Bookmarks → Import and Backup → Export
             {:else if importType === 'json'}
               Go to your PRSNL dashboard → Settings → Export Data → Download JSON
@@ -202,22 +207,26 @@
           </p>
         </div>
       </div>
-      
+
       <div class="step">
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Select your file</h4>
-          <p>Drag and drop your exported file below, or click to browse and select it from your computer</p>
+          <p>
+            Drag and drop your exported file below, or click to browse and select it from your
+            computer
+          </p>
         </div>
       </div>
-      
+
       <div class="step">
         <div class="step-number">3</div>
         <div class="step-content">
           <h4>Import and organize</h4>
           <p>
             {#if importType === 'bookmarks'}
-              Click "Start Import" - we'll fetch page content and organize your bookmarks automatically
+              Click "Start Import" - we'll fetch page content and organize your bookmarks
+              automatically
             {:else if importType === 'json'}
               Click "Start Import" to restore your PRSNL data with all tags and metadata
             {:else}
@@ -228,21 +237,17 @@
       </div>
     </div>
   </div>
-  
+
   {#if importType === 'bookmarks'}
     <div class="settings-section">
       <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          bind:checked={autoFetch}
-          disabled={isProcessing}
-        />
+        <input type="checkbox" bind:checked={autoFetch} disabled={isProcessing} />
         <span>Auto-fetch page content (slower but more complete)</span>
       </label>
     </div>
   {/if}
-  
-  <div 
+
+  <div
     class="drop-zone circuit-board-drop {isDragging ? 'dragging' : ''}"
     on:dragover={handleDragOver}
     on:dragleave={handleDragLeave}
@@ -259,16 +264,16 @@
       <div class="connection-via bottom-right"></div>
       <div class="connection-via center"></div>
     </div>
-    
-    <input 
-      type="file" 
-      id="file-input" 
+
+    <input
+      type="file"
+      id="file-input"
       multiple
       accept={importType === 'bookmarks' ? '.html' : importType === 'json' ? '.json' : '.txt,.md'}
       on:change={handleFileSelect}
       style="display: none;"
     />
-    
+
     <label for="file-input" class="drop-zone-content">
       <Icon name="upload-cloud" size="xlarge" />
       <h3>Drop files here or click to browse</h3>
@@ -283,7 +288,7 @@
       </p>
     </label>
   </div>
-  
+
   {#if files.length > 0}
     <div class="file-list">
       <h3>Selected Files</h3>
@@ -292,22 +297,14 @@
           <Icon name="file" size="small" />
           <span class="file-name">{file.name}</span>
           <span class="file-size">{formatFileSize(file.size)}</span>
-          <button 
-            class="remove-btn"
-            on:click={() => removeFile(i)}
-            disabled={isProcessing}
-          >
+          <button class="remove-btn" on:click={() => removeFile(i)} disabled={isProcessing}>
             <Icon name="x" size="small" />
           </button>
         </div>
       {/each}
     </div>
-    
-    <button 
-      class="import-btn"
-      on:click={startImport}
-      disabled={isProcessing}
-    >
+
+    <button class="import-btn" on:click={startImport} disabled={isProcessing}>
       {#if isProcessing}
         <Spinner size="small" />
         Importing...
@@ -317,22 +314,18 @@
       {/if}
     </button>
   {/if}
-  
+
   {#if isProcessing}
-    <ProcessingProgress 
-      {progress}
-      status={`Importing ${currentItem}...`}
-      active={true}
-    />
+    <ProcessingProgress {progress} status={`Importing ${currentItem}...`} active={true} />
   {/if}
-  
+
   {#if error}
     <div class="error-message">
       <Icon name="alert-circle" size="small" />
       {error}
     </div>
   {/if}
-  
+
   {#if importResults}
     <div class="results-card">
       <h3>Import Complete!</h3>
@@ -350,7 +343,7 @@
           <span class="stat-label">Errors</span>
         </div>
       </div>
-      
+
       {#if importResults.errors.length > 0}
         <details class="error-details">
           <summary>View errors</summary>
@@ -361,10 +354,8 @@
           </ul>
         </details>
       {/if}
-      
-      <a href="/" class="view-items-btn">
-        View Imported Items
-      </a>
+
+      <a href="/" class="view-items-btn"> View Imported Items </a>
     </div>
   {/if}
 </div>
@@ -376,7 +367,7 @@
     padding: 2rem;
     position: relative;
   }
-  
+
   .container::before {
     content: '';
     position: fixed;
@@ -387,7 +378,7 @@
     background: linear-gradient(135deg, #1a4f3a 0%, #2d5a2d 100%);
     z-index: -2;
   }
-  
+
   .container::after {
     content: '';
     position: fixed;
@@ -395,7 +386,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
       radial-gradient(circle at 20% 30%, rgba(34, 139, 34, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 80% 70%, rgba(34, 139, 34, 0.1) 0%, transparent 50%),
       repeating-linear-gradient(
@@ -407,12 +398,12 @@
       );
     z-index: -1;
   }
-  
+
   .page-header {
     text-align: center;
     margin-bottom: 3rem;
   }
-  
+
   /* Circuit Board Text Effect */
   .circuit-board-text {
     font-size: 2.5rem;
@@ -423,7 +414,7 @@
     display: inline-block;
     padding: 0.5rem 1rem;
   }
-  
+
   .circuit-board-text::before {
     content: '';
     position: absolute;
@@ -431,18 +422,18 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-      linear-gradient(45deg, 
-        rgba(34, 139, 34, 0.1) 0%,
-        transparent 25%,
-        transparent 75%,
-        rgba(34, 139, 34, 0.1) 100%
-      );
+    background: linear-gradient(
+      45deg,
+      rgba(34, 139, 34, 0.1) 0%,
+      transparent 25%,
+      transparent 75%,
+      rgba(34, 139, 34, 0.1) 100%
+    );
     border: 2px solid rgba(34, 139, 34, 0.2);
     border-radius: 4px;
     z-index: -1;
   }
-  
+
   .circuit-board-text::after {
     content: '';
     position: absolute;
@@ -450,7 +441,8 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, 
+    background: linear-gradient(
+      90deg,
       transparent 0%,
       rgba(34, 139, 34, 0.3) 20%,
       rgba(34, 139, 34, 0.5) 50%,
@@ -459,14 +451,14 @@
     );
     z-index: -1;
   }
-  
+
   .import-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
   }
-  
+
   /* Circuit Board Card Design */
   .circuit-board-card {
     position: relative;
@@ -479,7 +471,7 @@
     text-align: center;
     overflow: hidden;
   }
-  
+
   .trace-pattern {
     position: absolute;
     top: 0.5rem;
@@ -487,12 +479,12 @@
     width: 24px;
     height: 24px;
   }
-  
+
   .trace-line {
     position: absolute;
     background: rgba(34, 139, 34, 0.4);
   }
-  
+
   .trace-line.horizontal {
     width: 16px;
     height: 2px;
@@ -500,7 +492,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  
+
   .trace-line.vertical {
     width: 2px;
     height: 16px;
@@ -508,7 +500,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  
+
   .via {
     position: absolute;
     width: 4px;
@@ -518,37 +510,37 @@
     top: 4px;
     left: 4px;
   }
-  
+
   .via.bottom-right {
     top: auto;
     left: auto;
     bottom: 4px;
     right: 4px;
   }
-  
+
   .circuit-board-card:hover {
     background: var(--bg-tertiary);
     border-color: rgba(34, 139, 34, 0.5);
     transform: translateY(-2px);
   }
-  
+
   .circuit-board-card.active {
     background: var(--bg-tertiary);
     border-color: var(--man-united-red);
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.2);
   }
-  
+
   .option-card h3 {
     margin: 0.5rem 0;
     font-size: 1.1rem;
   }
-  
+
   .option-card p {
     margin: 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
   }
-  
+
   /* Circuit Board Substrate Design for Steps */
   .circuit-board-substrate {
     position: relative;
@@ -559,7 +551,7 @@
     margin-bottom: 2rem;
     overflow: hidden;
   }
-  
+
   .circuit-board-substrate::before {
     content: '';
     position: absolute;
@@ -567,8 +559,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-      linear-gradient(90deg, 
+    background:
+      linear-gradient(
+        90deg,
         transparent 0px,
         rgba(34, 139, 34, 0.1) 1px,
         transparent 2px,
@@ -577,7 +570,8 @@
         transparent 12px,
         transparent 20px
       ),
-      linear-gradient(0deg, 
+      linear-gradient(
+        0deg,
         transparent 0px,
         rgba(34, 139, 34, 0.1) 1px,
         transparent 2px,
@@ -588,13 +582,13 @@
       );
     z-index: 0;
   }
-  
+
   .steps-guide h3,
   .steps {
     position: relative;
     z-index: 1;
   }
-  
+
   /* Circuit Board Drop Zone */
   .circuit-board-drop {
     position: relative;
@@ -608,7 +602,7 @@
     background: var(--bg-secondary);
     overflow: hidden;
   }
-  
+
   .circuit-traces {
     position: absolute;
     top: 0;
@@ -617,40 +611,40 @@
     bottom: 0;
     z-index: 0;
   }
-  
+
   .main-trace {
     position: absolute;
     background: rgba(34, 139, 34, 0.2);
   }
-  
+
   .main-trace.top-left {
     width: 40px;
     height: 3px;
     top: 20px;
     left: 20px;
   }
-  
+
   .main-trace.top-right {
     width: 40px;
     height: 3px;
     top: 20px;
     right: 20px;
   }
-  
+
   .main-trace.bottom-left {
     width: 40px;
     height: 3px;
     bottom: 20px;
     left: 20px;
   }
-  
+
   .main-trace.bottom-right {
     width: 40px;
     height: 3px;
     bottom: 20px;
     right: 20px;
   }
-  
+
   .connection-via {
     position: absolute;
     width: 6px;
@@ -659,52 +653,52 @@
     border-radius: 50%;
     border: 1px solid rgba(255, 215, 0, 0.6);
   }
-  
+
   .connection-via.top-left {
     top: 15px;
     left: 15px;
   }
-  
+
   .connection-via.top-right {
     top: 15px;
     right: 15px;
   }
-  
+
   .connection-via.bottom-left {
     bottom: 15px;
     left: 15px;
   }
-  
+
   .connection-via.bottom-right {
     bottom: 15px;
     right: 15px;
   }
-  
+
   .connection-via.center {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  
+
   .circuit-board-drop:hover {
     border-color: rgba(34, 139, 34, 0.6);
     background: var(--bg-tertiary);
   }
-  
+
   .circuit-board-drop.dragging {
     border-color: var(--man-united-red);
     background: rgba(220, 20, 60, 0.05);
   }
-  
+
   .circuit-board-drop.dragging .main-trace {
     background: rgba(220, 20, 60, 0.3);
   }
-  
+
   .circuit-board-drop.dragging .connection-via {
     background: rgba(220, 20, 60, 0.5);
     border-color: rgba(220, 20, 60, 0.7);
   }
-  
+
   .drop-zone-content {
     position: relative;
     z-index: 1;
@@ -714,18 +708,18 @@
     gap: 1rem;
     cursor: pointer;
   }
-  
+
   .settings-section {
     margin-bottom: 2rem;
   }
-  
+
   .checkbox-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
   }
-  
+
   .file-list {
     background: var(--bg-secondary);
     border: 1px solid rgba(34, 139, 34, 0.2);
@@ -733,11 +727,11 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .file-list h3 {
     margin-bottom: 1rem;
   }
-  
+
   .file-item {
     display: flex;
     align-items: center;
@@ -747,16 +741,16 @@
     border-radius: 6px;
     margin-bottom: 0.5rem;
   }
-  
+
   .file-name {
     flex: 1;
   }
-  
+
   .file-size {
     color: var(--text-secondary);
     font-size: 0.9rem;
   }
-  
+
   .remove-btn {
     padding: 0.25rem;
     background: rgba(255, 0, 0, 0.1);
@@ -766,11 +760,11 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .remove-btn:hover {
     background: rgba(255, 0, 0, 0.2);
   }
-  
+
   .import-btn {
     display: flex;
     align-items: center;
@@ -786,18 +780,18 @@
     transition: all 0.3s ease;
     margin: 0 auto;
   }
-  
+
   .import-btn:hover:not(:disabled) {
     background: var(--accent-red-hover);
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(220, 20, 60, 0.3);
   }
-  
+
   .import-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .error-message {
     display: flex;
     align-items: center;
@@ -809,7 +803,7 @@
     color: var(--error);
     margin-top: 1rem;
   }
-  
+
   .results-card {
     background: var(--bg-secondary);
     border: 2px solid rgba(34, 139, 34, 0.2);
@@ -818,48 +812,48 @@
     text-align: center;
     margin-top: 2rem;
   }
-  
+
   .results-stats {
     display: flex;
     justify-content: center;
     gap: 3rem;
     margin: 2rem 0;
   }
-  
+
   .stat {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  
+
   .stat-value {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--man-united-red);
   }
-  
+
   .stat-label {
     color: var(--text-secondary);
     font-size: 0.9rem;
   }
-  
+
   .error-details {
     margin-top: 1rem;
     text-align: left;
   }
-  
+
   .error-details summary {
     cursor: pointer;
     color: var(--error);
   }
-  
+
   .error-details ul {
     margin-top: 0.5rem;
     padding-left: 1.5rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
   }
-  
+
   .view-items-btn {
     display: inline-flex;
     align-items: center;
@@ -873,30 +867,30 @@
     transition: all 0.3s ease;
     margin-top: 1rem;
   }
-  
+
   .view-items-btn:hover {
     background: rgba(220, 20, 60, 0.2);
     transform: translateY(-2px);
   }
-  
+
   /* Preserve original step styles */
   .steps-guide h3 {
     margin-bottom: 1.5rem;
     color: var(--text-primary);
   }
-  
+
   .steps {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
-  
+
   .step {
     display: flex;
     gap: 1rem;
     align-items: flex-start;
   }
-  
+
   .step-number {
     flex-shrink: 0;
     width: 32px;
@@ -910,32 +904,32 @@
     font-weight: 700;
     font-size: 1.1rem;
   }
-  
+
   .step-content h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.1rem;
     color: var(--text-primary);
   }
-  
+
   .step-content p {
     margin: 0;
     color: var(--text-secondary);
     line-height: 1.6;
   }
-  
+
   .step-content strong {
     color: var(--text-primary);
   }
-  
+
   @media (max-width: 768px) {
     .import-options {
       grid-template-columns: 1fr;
     }
-    
+
     .circuit-board-substrate {
       padding: 1rem;
     }
-    
+
     .step {
       flex-direction: column;
       text-align: center;

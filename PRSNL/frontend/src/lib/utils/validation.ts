@@ -7,7 +7,8 @@
  */
 export function validateEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re =
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
 
@@ -29,7 +30,7 @@ export function validateTag(tag: string | null | undefined): boolean {
  */
 export function sanitizeInput<T>(input: T): T | string {
   if (typeof input !== 'string') return input;
-  return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return input.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**

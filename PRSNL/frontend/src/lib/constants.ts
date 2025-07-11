@@ -47,7 +47,7 @@ export const KEYBOARD_SHORTCUTS = {
   CAPTURE: 'Cmd+N',
   SEARCH: 'Cmd+K',
   TIMELINE: 'Cmd+T',
-  HOME: 'Cmd+H'
+  HOME: 'Cmd+H',
 } as const;
 
 /**
@@ -56,7 +56,7 @@ export const KEYBOARD_SHORTCUTS = {
 export const FILTER_OPTIONS = {
   DATE: ['today', 'week', 'month', 'year'] as const,
   TYPE: ['article', 'video', 'note', 'bookmark'] as const,
-  SORT: ['recent', 'relevant', 'alphabetical'] as const
+  SORT: ['recent', 'relevant', 'alphabetical'] as const,
 } as const;
 
 /**
@@ -73,7 +73,7 @@ export const API_ENDPOINTS = {
   SEARCH_SEMANTIC: '/search/semantic',
   TIMELINE: '/timeline',
   ITEMS: '/items',
-  TAGS: '/tags'
+  TAGS: '/tags',
 } as const;
 
 /**
@@ -83,12 +83,12 @@ export const WS_MESSAGE_TYPES = {
   PROGRESS: 'progress',
   UPDATE: 'update',
   NOTIFICATION: 'notification',
-  ERROR: 'error'
+  ERROR: 'error',
 } as const;
 
 // Type exports for the constants
-export type SupportedFileType = typeof SUPPORTED_FILE_TYPES[number];
-export type DateFilter = typeof FILTER_OPTIONS.DATE[number];
-export type TypeFilter = typeof FILTER_OPTIONS.TYPE[number];
-export type SortOption = typeof FILTER_OPTIONS.SORT[number];
-export type WSMessageType = typeof WS_MESSAGE_TYPES[keyof typeof WS_MESSAGE_TYPES];
+export type SupportedFileType = (typeof SUPPORTED_FILE_TYPES)[number];
+export type DateFilter = (typeof FILTER_OPTIONS.DATE)[number];
+export type TypeFilter = (typeof FILTER_OPTIONS.TYPE)[number];
+export type SortOption = (typeof FILTER_OPTIONS.SORT)[number];
+export type WSMessageType = (typeof WS_MESSAGE_TYPES)[keyof typeof WS_MESSAGE_TYPES];

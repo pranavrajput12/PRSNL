@@ -7,7 +7,7 @@ export enum ItemStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  BOOKMARK = 'bookmark'
+  BOOKMARK = 'bookmark',
 }
 
 export enum ItemType {
@@ -15,7 +15,7 @@ export enum ItemType {
   VIDEO = 'video',
   NOTE = 'note',
   BOOKMARK = 'bookmark',
-  IMAGE = 'image'
+  IMAGE = 'image',
 }
 
 // Base types

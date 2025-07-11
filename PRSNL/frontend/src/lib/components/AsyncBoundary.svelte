@@ -3,16 +3,16 @@
   import ErrorMessage from './ErrorMessage.svelte';
   import ErrorBoundary from './ErrorBoundary.svelte';
   import { onMount } from 'svelte';
-  
+
   export let loading = false;
   export let error: Error | null = null;
   export let fallback: 'minimal' | 'full' = 'minimal';
   export let loadingMessage = 'Loading...';
   export let minLoadingTime = 0;
-  
+
   let startTime: number;
   let showLoading = loading;
-  
+
   $: {
     if (loading && !startTime) {
       startTime = Date.now();
@@ -58,7 +58,7 @@
     padding: 3rem;
     min-height: 200px;
   }
-  
+
   .loading-message {
     color: var(--text-secondary);
     font-size: 0.875rem;

@@ -4,26 +4,28 @@
   export let width: string = '100%';
   export let height: string = '100%';
   export let autoplay: boolean = false;
-  
+
   // Extract video ID from YouTube URL
   function getYouTubeVideoId(url: string): string | null {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
         return match[1];
       }
     }
-    
+
     return null;
   }
-  
+
   $: videoId = getYouTubeVideoId(url);
-  $: embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}${autoplay ? '?autoplay=1' : ''}` : null;
+  $: embedUrl = videoId
+    ? `https://www.youtube.com/embed/${videoId}${autoplay ? '?autoplay=1' : ''}`
+    : null;
 </script>
 
 {#if embedUrl}
@@ -51,7 +53,7 @@
     height: 100%;
     background: #000;
   }
-  
+
   iframe {
     position: absolute;
     top: 0;
@@ -59,7 +61,7 @@
     width: 100%;
     height: 100%;
   }
-  
+
   .embed-error {
     display: flex;
     align-items: center;

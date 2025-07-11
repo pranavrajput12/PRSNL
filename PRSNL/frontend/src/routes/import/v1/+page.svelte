@@ -4,7 +4,7 @@
   import Icon from '$lib/components/Icon.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import ProcessingProgress from '$lib/components/ProcessingProgress.svelte';
-  
+
   let files = [];
   let isDragging = false;
   let isProcessing = false;
@@ -14,91 +14,95 @@
   let importType = 'bookmarks';
   let progress = 0;
   let currentItem = '';
-  
+
   function handleDragOver(e) {
     e.preventDefault();
     isDragging = true;
   }
-  
+
   function handleDragLeave(e) {
     e.preventDefault();
     isDragging = false;
   }
-  
+
   function handleDrop(e) {
     e.preventDefault();
     isDragging = false;
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     handleFiles(droppedFiles);
   }
-  
+
   function handleFileSelect(e) {
     const selectedFiles = Array.from(e.target.files);
     handleFiles(selectedFiles);
   }
-  
+
   function handleFiles(newFiles) {
-    files = newFiles.filter(file => {
+    files = newFiles.filter((file) => {
       if (importType === 'bookmarks') {
         return file.type === 'text/html' || file.name.endsWith('.html');
       } else if (importType === 'json') {
         return file.type === 'application/json' || file.name.endsWith('.json');
       } else if (importType === 'notes') {
-        return file.type === 'text/plain' || file.type === 'text/markdown' || 
-               file.name.endsWith('.txt') || file.name.endsWith('.md');
+        return (
+          file.type === 'text/plain' ||
+          file.type === 'text/markdown' ||
+          file.name.endsWith('.txt') ||
+          file.name.endsWith('.md')
+        );
       }
       return false;
     });
-    
+
     if (files.length === 0) {
       error = `Please select valid ${importType} files`;
     } else {
       error = null;
     }
   }
-  
+
   async function startImport() {
     if (files.length === 0) return;
-    
+
     isProcessing = true;
     error = null;
     importResults = null;
     progress = 0;
-    
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         currentItem = file.name;
         progress = ((i + 1) / files.length) * 100;
-        
+
         const formData = new FormData();
         formData.append('file', file);
-        
+
         if (importType === 'bookmarks') {
           formData.append('auto_fetch', autoFetch.toString());
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/import/${importType}`, {
           method: 'POST',
-          body: formData
+          body: formData,
         });
-        
+
         if (!response.ok) {
           throw new Error(`Import failed: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
-        
+
         if (!importResults) {
           importResults = {
             imported: 0,
             skipped: 0,
             errors: [],
-            total: 0
+            total: 0,
           };
         }
-        
+
         importResults.imported += result.imported || 0;
         importResults.skipped += result.skipped || 0;
         importResults.total += result.total || 0;
@@ -106,7 +110,7 @@
           importResults.errors.push(...result.errors);
         }
       }
-      
+
       files = [];
     } catch (err) {
       error = err.message;
@@ -115,7 +119,7 @@
       currentItem = '';
     }
   }
-  
+
   function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -123,7 +127,7 @@
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   function removeFile(index) {
     files = files.filter((_, i) => i !== index);
   }
@@ -134,11 +138,11 @@
     <h1 class="cpu-die-text">Import Data</h1>
     <p>Import your bookmarks, notes, or data from other sources</p>
   </header>
-  
+
   <div class="import-options">
-    <button 
+    <button
       class="option-card cpu-die-card {importType === 'bookmarks' ? 'active' : ''}"
-      on:click={() => importType = 'bookmarks'}
+      on:click={() => (importType = 'bookmarks')}
     >
       <div class="chip-pattern">
         <div class="die-core"></div>
@@ -153,10 +157,10 @@
       <h3>Bookmarks</h3>
       <p>Import from Chrome, Safari, or Firefox</p>
     </button>
-    
-    <button 
+
+    <button
       class="option-card cpu-die-card {importType === 'json' ? 'active' : ''}"
-      on:click={() => importType = 'json'}
+      on:click={() => (importType = 'json')}
     >
       <div class="chip-pattern">
         <div class="die-core"></div>
@@ -171,10 +175,10 @@
       <h3>PRSNL Export</h3>
       <p>Import from PRSNL JSON export</p>
     </button>
-    
-    <button 
+
+    <button
       class="option-card cpu-die-card {importType === 'notes' ? 'active' : ''}"
-      on:click={() => importType = 'notes'}
+      on:click={() => (importType = 'notes')}
     >
       <div class="chip-pattern">
         <div class="die-core"></div>
@@ -190,7 +194,7 @@
       <p>Import text or markdown files</p>
     </button>
   </div>
-  
+
   <div class="steps-guide cpu-substrate">
     <h3>How to export and import your bookmarks:</h3>
     <div class="steps">
@@ -200,8 +204,9 @@
           <h4>Export from your browser</h4>
           <p>
             {#if importType === 'bookmarks'}
-              <strong>Chrome:</strong> Menu → Bookmarks → Bookmark Manager → ⋮ → Export bookmarks<br>
-              <strong>Safari:</strong> File → Export → Bookmarks<br>
+              <strong>Chrome:</strong> Menu → Bookmarks → Bookmark Manager → ⋮ → Export bookmarks<br
+              />
+              <strong>Safari:</strong> File → Export → Bookmarks<br />
               <strong>Firefox:</strong> Menu → Bookmarks → Manage Bookmarks → Import and Backup → Export
             {:else if importType === 'json'}
               Go to your PRSNL dashboard → Settings → Export Data → Download JSON
@@ -211,22 +216,26 @@
           </p>
         </div>
       </div>
-      
+
       <div class="step">
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Select your file</h4>
-          <p>Drag and drop your exported file below, or click to browse and select it from your computer</p>
+          <p>
+            Drag and drop your exported file below, or click to browse and select it from your
+            computer
+          </p>
         </div>
       </div>
-      
+
       <div class="step">
         <div class="step-number">3</div>
         <div class="step-content">
           <h4>Import and organize</h4>
           <p>
             {#if importType === 'bookmarks'}
-              Click "Start Import" - we'll fetch page content and organize your bookmarks automatically
+              Click "Start Import" - we'll fetch page content and organize your bookmarks
+              automatically
             {:else if importType === 'json'}
               Click "Start Import" to restore your PRSNL data with all tags and metadata
             {:else}
@@ -237,21 +246,17 @@
       </div>
     </div>
   </div>
-  
+
   {#if importType === 'bookmarks'}
     <div class="settings-section">
       <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          bind:checked={autoFetch}
-          disabled={isProcessing}
-        />
+        <input type="checkbox" bind:checked={autoFetch} disabled={isProcessing} />
         <span>Auto-fetch page content (slower but more complete)</span>
       </label>
     </div>
   {/if}
-  
-  <div 
+
+  <div
     class="drop-zone cpu-socket {isDragging ? 'dragging' : ''}"
     on:dragover={handleDragOver}
     on:dragleave={handleDragLeave}
@@ -262,16 +267,16 @@
         <div class="socket-pin" style="--index: {i}"></div>
       {/each}
     </div>
-    
-    <input 
-      type="file" 
-      id="file-input" 
+
+    <input
+      type="file"
+      id="file-input"
       multiple
       accept={importType === 'bookmarks' ? '.html' : importType === 'json' ? '.json' : '.txt,.md'}
       on:change={handleFileSelect}
       style="display: none;"
     />
-    
+
     <label for="file-input" class="drop-zone-content">
       <Icon name="upload-cloud" size="xlarge" />
       <h3>Drop files here or click to browse</h3>
@@ -286,7 +291,7 @@
       </p>
     </label>
   </div>
-  
+
   {#if files.length > 0}
     <div class="file-list">
       <h3>Selected Files</h3>
@@ -295,22 +300,14 @@
           <Icon name="file" size="small" />
           <span class="file-name">{file.name}</span>
           <span class="file-size">{formatFileSize(file.size)}</span>
-          <button 
-            class="remove-btn"
-            on:click={() => removeFile(i)}
-            disabled={isProcessing}
-          >
+          <button class="remove-btn" on:click={() => removeFile(i)} disabled={isProcessing}>
             <Icon name="x" size="small" />
           </button>
         </div>
       {/each}
     </div>
-    
-    <button 
-      class="import-btn"
-      on:click={startImport}
-      disabled={isProcessing}
-    >
+
+    <button class="import-btn" on:click={startImport} disabled={isProcessing}>
       {#if isProcessing}
         <Spinner size="small" />
         Importing...
@@ -320,22 +317,18 @@
       {/if}
     </button>
   {/if}
-  
+
   {#if isProcessing}
-    <ProcessingProgress 
-      {progress}
-      status={`Importing ${currentItem}...`}
-      active={true}
-    />
+    <ProcessingProgress {progress} status={`Importing ${currentItem}...`} active={true} />
   {/if}
-  
+
   {#if error}
     <div class="error-message">
       <Icon name="alert-circle" size="small" />
       {error}
     </div>
   {/if}
-  
+
   {#if importResults}
     <div class="results-card">
       <h3>Import Complete!</h3>
@@ -353,7 +346,7 @@
           <span class="stat-label">Errors</span>
         </div>
       </div>
-      
+
       {#if importResults.errors.length > 0}
         <details class="error-details">
           <summary>View errors</summary>
@@ -364,10 +357,8 @@
           </ul>
         </details>
       {/if}
-      
-      <a href="/" class="view-items-btn">
-        View Imported Items
-      </a>
+
+      <a href="/" class="view-items-btn"> View Imported Items </a>
     </div>
   {/if}
 </div>
@@ -378,12 +369,12 @@
     margin: 0 auto;
     padding: 2rem;
   }
-  
+
   .page-header {
     text-align: center;
     margin-bottom: 3rem;
   }
-  
+
   /* CPU Die Text Effect */
   .cpu-die-text {
     font-size: 2.5rem;
@@ -394,7 +385,7 @@
     display: inline-block;
     padding: 0.5rem 1rem;
   }
-  
+
   .cpu-die-text::before {
     content: '';
     position: absolute;
@@ -402,8 +393,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-      linear-gradient(45deg, 
+    background:
+      linear-gradient(
+        45deg,
         rgba(139, 69, 19, 0.1) 0%,
         transparent 25%,
         transparent 75%,
@@ -415,14 +407,14 @@
     border-radius: 4px;
     z-index: -1;
   }
-  
+
   .import-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
   }
-  
+
   /* CPU Die Card Design */
   .cpu-die-card {
     position: relative;
@@ -435,7 +427,7 @@
     text-align: center;
     overflow: hidden;
   }
-  
+
   .chip-pattern {
     position: absolute;
     top: 0.5rem;
@@ -443,7 +435,7 @@
     width: 24px;
     height: 24px;
   }
-  
+
   .die-core {
     width: 12px;
     height: 12px;
@@ -451,7 +443,7 @@
     border: 1px solid rgba(139, 69, 19, 0.6);
     margin: 6px auto;
   }
-  
+
   .die-pins {
     position: absolute;
     top: 0;
@@ -459,42 +451,54 @@
     width: 100%;
     height: 100%;
   }
-  
+
   .pin {
     position: absolute;
     width: 2px;
     height: 6px;
     background: rgba(220, 20, 60, 0.6);
   }
-  
-  .pin[style*="--pos: 0"] { top: 0; left: 4px; }
-  .pin[style*="--pos: 1"] { top: 0; right: 4px; }
-  .pin[style*="--pos: 2"] { bottom: 0; left: 4px; }
-  .pin[style*="--pos: 3"] { bottom: 0; right: 4px; }
-  
+
+  .pin[style*='--pos: 0'] {
+    top: 0;
+    left: 4px;
+  }
+  .pin[style*='--pos: 1'] {
+    top: 0;
+    right: 4px;
+  }
+  .pin[style*='--pos: 2'] {
+    bottom: 0;
+    left: 4px;
+  }
+  .pin[style*='--pos: 3'] {
+    bottom: 0;
+    right: 4px;
+  }
+
   .cpu-die-card:hover {
     background: var(--bg-tertiary);
     border-color: rgba(139, 69, 19, 0.5);
     transform: translateY(-2px);
   }
-  
+
   .cpu-die-card.active {
     background: var(--bg-tertiary);
     border-color: var(--man-united-red);
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.2);
   }
-  
+
   .option-card h3 {
     margin: 0.5rem 0;
     font-size: 1.1rem;
   }
-  
+
   .option-card p {
     margin: 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
   }
-  
+
   /* CPU Substrate Design for Steps */
   .cpu-substrate {
     position: relative;
@@ -505,7 +509,7 @@
     margin-bottom: 2rem;
     overflow: hidden;
   }
-  
+
   .cpu-substrate::before {
     content: '';
     position: absolute;
@@ -513,7 +517,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
       repeating-linear-gradient(
         90deg,
         transparent 0px,
@@ -530,13 +534,13 @@
       );
     z-index: 0;
   }
-  
+
   .steps-guide h3,
   .steps {
     position: relative;
     z-index: 1;
   }
-  
+
   /* CPU Socket Drop Zone */
   .cpu-socket {
     position: relative;
@@ -550,7 +554,7 @@
     background: var(--bg-secondary);
     overflow: hidden;
   }
-  
+
   .socket-pins {
     position: absolute;
     top: 0;
@@ -559,7 +563,7 @@
     bottom: 0;
     z-index: 0;
   }
-  
+
   .socket-pin {
     position: absolute;
     width: 4px;
@@ -567,38 +571,90 @@
     background: rgba(139, 69, 19, 0.3);
     border-radius: 50%;
   }
-  
-  .socket-pin:nth-child(1) { top: 10px; left: 10px; }
-  .socket-pin:nth-child(2) { top: 10px; right: 10px; }
-  .socket-pin:nth-child(3) { bottom: 10px; left: 10px; }
-  .socket-pin:nth-child(4) { bottom: 10px; right: 10px; }
-  .socket-pin:nth-child(5) { top: 10px; left: 50%; transform: translateX(-50%); }
-  .socket-pin:nth-child(6) { bottom: 10px; left: 50%; transform: translateX(-50%); }
-  .socket-pin:nth-child(7) { left: 10px; top: 50%; transform: translateY(-50%); }
-  .socket-pin:nth-child(8) { right: 10px; top: 50%; transform: translateY(-50%); }
-  .socket-pin:nth-child(9) { top: 30px; left: 30px; }
-  .socket-pin:nth-child(10) { top: 30px; right: 30px; }
-  .socket-pin:nth-child(11) { bottom: 30px; left: 30px; }
-  .socket-pin:nth-child(12) { bottom: 30px; right: 30px; }
-  .socket-pin:nth-child(13) { top: 50px; left: 50px; }
-  .socket-pin:nth-child(14) { top: 50px; right: 50px; }
-  .socket-pin:nth-child(15) { bottom: 50px; left: 50px; }
-  .socket-pin:nth-child(16) { bottom: 50px; right: 50px; }
-  
+
+  .socket-pin:nth-child(1) {
+    top: 10px;
+    left: 10px;
+  }
+  .socket-pin:nth-child(2) {
+    top: 10px;
+    right: 10px;
+  }
+  .socket-pin:nth-child(3) {
+    bottom: 10px;
+    left: 10px;
+  }
+  .socket-pin:nth-child(4) {
+    bottom: 10px;
+    right: 10px;
+  }
+  .socket-pin:nth-child(5) {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .socket-pin:nth-child(6) {
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .socket-pin:nth-child(7) {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .socket-pin:nth-child(8) {
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .socket-pin:nth-child(9) {
+    top: 30px;
+    left: 30px;
+  }
+  .socket-pin:nth-child(10) {
+    top: 30px;
+    right: 30px;
+  }
+  .socket-pin:nth-child(11) {
+    bottom: 30px;
+    left: 30px;
+  }
+  .socket-pin:nth-child(12) {
+    bottom: 30px;
+    right: 30px;
+  }
+  .socket-pin:nth-child(13) {
+    top: 50px;
+    left: 50px;
+  }
+  .socket-pin:nth-child(14) {
+    top: 50px;
+    right: 50px;
+  }
+  .socket-pin:nth-child(15) {
+    bottom: 50px;
+    left: 50px;
+  }
+  .socket-pin:nth-child(16) {
+    bottom: 50px;
+    right: 50px;
+  }
+
   .cpu-socket:hover {
     border-color: rgba(139, 69, 19, 0.6);
     background: var(--bg-tertiary);
   }
-  
+
   .cpu-socket.dragging {
     border-color: var(--man-united-red);
     background: rgba(220, 20, 60, 0.05);
   }
-  
+
   .cpu-socket.dragging .socket-pin {
     background: rgba(220, 20, 60, 0.5);
   }
-  
+
   .drop-zone-content {
     position: relative;
     z-index: 1;
@@ -608,18 +664,18 @@
     gap: 1rem;
     cursor: pointer;
   }
-  
+
   .settings-section {
     margin-bottom: 2rem;
   }
-  
+
   .checkbox-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
   }
-  
+
   .file-list {
     background: var(--bg-secondary);
     border: 1px solid rgba(139, 69, 19, 0.2);
@@ -627,11 +683,11 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .file-list h3 {
     margin-bottom: 1rem;
   }
-  
+
   .file-item {
     display: flex;
     align-items: center;
@@ -641,16 +697,16 @@
     border-radius: 6px;
     margin-bottom: 0.5rem;
   }
-  
+
   .file-name {
     flex: 1;
   }
-  
+
   .file-size {
     color: var(--text-secondary);
     font-size: 0.9rem;
   }
-  
+
   .remove-btn {
     padding: 0.25rem;
     background: rgba(255, 0, 0, 0.1);
@@ -660,11 +716,11 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .remove-btn:hover {
     background: rgba(255, 0, 0, 0.2);
   }
-  
+
   .import-btn {
     display: flex;
     align-items: center;
@@ -680,18 +736,18 @@
     transition: all 0.3s ease;
     margin: 0 auto;
   }
-  
+
   .import-btn:hover:not(:disabled) {
     background: var(--accent-red-hover);
     transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(220, 20, 60, 0.3);
   }
-  
+
   .import-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .error-message {
     display: flex;
     align-items: center;
@@ -703,7 +759,7 @@
     color: var(--error);
     margin-top: 1rem;
   }
-  
+
   .results-card {
     background: var(--bg-secondary);
     border: 2px solid rgba(139, 69, 19, 0.2);
@@ -712,48 +768,48 @@
     text-align: center;
     margin-top: 2rem;
   }
-  
+
   .results-stats {
     display: flex;
     justify-content: center;
     gap: 3rem;
     margin: 2rem 0;
   }
-  
+
   .stat {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  
+
   .stat-value {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--man-united-red);
   }
-  
+
   .stat-label {
     color: var(--text-secondary);
     font-size: 0.9rem;
   }
-  
+
   .error-details {
     margin-top: 1rem;
     text-align: left;
   }
-  
+
   .error-details summary {
     cursor: pointer;
     color: var(--error);
   }
-  
+
   .error-details ul {
     margin-top: 0.5rem;
     padding-left: 1.5rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
   }
-  
+
   .view-items-btn {
     display: inline-flex;
     align-items: center;
@@ -767,30 +823,30 @@
     transition: all 0.3s ease;
     margin-top: 1rem;
   }
-  
+
   .view-items-btn:hover {
     background: rgba(220, 20, 60, 0.2);
     transform: translateY(-2px);
   }
-  
+
   /* Preserve original step styles */
   .steps-guide h3 {
     margin-bottom: 1.5rem;
     color: var(--text-primary);
   }
-  
+
   .steps {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
-  
+
   .step {
     display: flex;
     gap: 1rem;
     align-items: flex-start;
   }
-  
+
   .step-number {
     flex-shrink: 0;
     width: 32px;
@@ -804,32 +860,32 @@
     font-weight: 700;
     font-size: 1.1rem;
   }
-  
+
   .step-content h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.1rem;
     color: var(--text-primary);
   }
-  
+
   .step-content p {
     margin: 0;
     color: var(--text-secondary);
     line-height: 1.6;
   }
-  
+
   .step-content strong {
     color: var(--text-primary);
   }
-  
+
   @media (max-width: 768px) {
     .import-options {
       grid-template-columns: 1fr;
     }
-    
+
     .cpu-substrate {
       padding: 1rem;
     }
-    
+
     .step {
       flex-direction: column;
       text-align: center;
