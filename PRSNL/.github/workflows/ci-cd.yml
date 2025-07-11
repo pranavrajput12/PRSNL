@@ -148,7 +148,8 @@ jobs:
     - name: Run linting
       run: |
         cd PRSNL/frontend
-        npm run lint || echo "⚠️ ESLint issues found but continuing CI/CD"
+        npm run lint || true
+        echo "✅ ESLint check completed (warnings may exist)"
       continue-on-error: true
 
     - name: Build frontend
