@@ -11,7 +11,8 @@ This is your single source of truth for completing tasks properly. Use this simp
 
 ### ⚠️ CRITICAL ENVIRONMENT INFO
 - **Container Runtime**: RANCHER DESKTOP (NOT Docker)
-- **Frontend Port**: 3003 (Updated from 3002)
+- **Frontend Development Port**: 3004 (Updated from 3003 after Svelte 5 upgrade)
+- **Frontend Container Port**: 3003 (production deployments only)
 - **Backend Port**: 8000
 - **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
 
@@ -88,14 +89,14 @@ Run verification commands from the matrix below to ensure everything works.
 **Sanity Checks - Run These**:
 ```bash
 # 1. Verify frontend still works
-npm run dev -- --port 3003
-curl http://localhost:3003/
+npm run dev -- --port 3004
+curl http://localhost:3004/
 
 # 2. Check for TypeScript errors
 npm run check
 
 # 3. Test the specific changes
-# Open browser to http://localhost:3003 and verify your changes work
+# Open browser to http://localhost:3004 and verify your changes work
 ```
 
 **Update Template**:
@@ -266,7 +267,7 @@ pytest tests/[your_test_file].py
 #!/bin/bash
 echo "=== FRONTEND TASK COMPLETION VERIFICATION ==="
 echo "1. Frontend service check:"
-curl -s -o /dev/null -w "Frontend Status: %{http_code}\n" http://localhost:3003/
+curl -s -o /dev/null -w "Frontend Status: %{http_code}\n" http://localhost:3004/
 
 echo "2. TypeScript validation:"
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend

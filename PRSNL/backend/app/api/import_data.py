@@ -26,6 +26,57 @@ class BulkURLRequest(BaseModel):
     tags: Optional[List[str]] = []
 
 
+@router.get("/")
+async def get_import_options():
+    """
+    Get available import options and endpoints
+    """
+    return {
+        "status": "available",
+        "description": "PRSNL Data Import Service",
+        "endpoints": {
+            "/json": {
+                "method": "POST",
+                "description": "Import items from PRSNL JSON export",
+                "content_type": "multipart/form-data",
+                "parameters": {
+                    "file": "JSON file to import",
+                    "merge_duplicates": "Whether to merge duplicate items (default: false)"
+                }
+            },
+            "/bookmarks": {
+                "method": "POST", 
+                "description": "Import bookmarks from browser HTML export",
+                "content_type": "multipart/form-data",
+                "parameters": {
+                    "file": "HTML bookmark file",
+                    "auto_fetch": "Whether to fetch content (default: true)",
+                    "batch_size": "Processing batch size (default: 10)"
+                }
+            },
+            "/notes": {
+                "method": "POST",
+                "description": "Import notes from text files",
+                "content_type": "multipart/form-data", 
+                "parameters": {
+                    "file": "Text/Markdown file",
+                    "format": "File format: markdown or text (default: markdown)",
+                    "default_tags": "Tags to apply to all notes"
+                }
+            },
+            "/urls/bulk": {
+                "method": "POST",
+                "description": "Import multiple URLs in bulk",
+                "content_type": "application/json",
+                "parameters": {
+                    "urls": "List of URLs to import",
+                    "auto_fetch": "Whether to fetch content (default: false)",
+                    "tags": "Tags to apply to all URLs"
+                }
+            }
+        }
+    }
+
 @router.post("/json")
 async def import_json(
     file: UploadFile = File(...),

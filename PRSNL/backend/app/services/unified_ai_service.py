@@ -116,7 +116,7 @@ class UnifiedAIService:
             logger.error(f"Azure OpenAI completion error: {e}")
             raise
     
-    async def analyze_content(self, content: str, url: Optional[str] = None) -> Dict[str, Any]:
+    async def analyze_content(self, content: str, url: Optional[str] = None, enable_key_points: bool = True, enable_entities: bool = True) -> Dict[str, Any]:
         """
         Comprehensive content analysis workflow
         Returns: title, summary, category, tags, key_points, entities
@@ -155,9 +155,17 @@ Provide analysis in this exact JSON format:
                 response_format={"type": "json_object"}
             )
             
+            logger.debug(f"AI response: {response}")
+            
             # Validate the AI output
-            validated_response = await ai_validation_service.validate_content_analysis(response)
-            return validated_response
+            try:
+                validated_response = await ai_validation_service.validate_content_analysis(response)
+                logger.debug(f"Validated response: {validated_response}")
+                return validated_response
+            except Exception as validation_error:
+                logger.error(f"Validation error: {validation_error}")
+                # Return fallback response
+                return await ai_validation_service.validate_content_analysis(None)
             
         except Exception as e:
             logger.error(f"Content analysis failed: {e}")

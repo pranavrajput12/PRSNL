@@ -11,6 +11,17 @@ This repository serves as the **single source of truth** for building new featur
 3. How to integrate frontend components
 4. How to maintain data consistency
 
+## 🆕 **Recent Major Upgrade (2025-07-11)**
+**Svelte 5 Full Migration v2.3** - Complete upgrade with breaking changes:
+- **Svelte**: 4.2.20 → 5.35.6 (Runes system replaces stores for local state)
+- **SvelteKit**: 2.22.2 → 2.22.5 
+- **Vite**: 6.0.2 → 7.0.4
+- **Node.js**: >=20.19 || >=22.12 || >=24
+- **Frontend Port**: 3003 → 3004 (development server)
+- **Security**: All vulnerabilities resolved, dependencies updated
+
+**Migration Impact**: All frontend patterns now support both traditional stores (for shared state) and Svelte 5 runes (for component-local state). See updated patterns below.
+
 ---
 
 ## 📊 **API Design Patterns**
@@ -226,9 +237,11 @@ export const newFeatureAPI = {
 };
 ```
 
-### Store Pattern (Svelte)
+### Store Pattern (Svelte 5 with Runes)
 ```typescript
-// stores/newFeature.ts
+// stores/newFeature.svelte.ts
+import { writable } from 'svelte/store';
+
 interface NewFeatureStore {
     items: NewFeature[];
     loading: boolean;
@@ -236,6 +249,7 @@ interface NewFeatureStore {
     filters: NewFeatureFilters;
 }
 
+// Option 1: Traditional Store (for shared state)
 function createNewFeatureStore() {
     const { subscribe, set, update } = writable<NewFeatureStore>({
         items: [],
@@ -272,37 +286,101 @@ function createNewFeatureStore() {
 }
 
 export const newFeatureStore = createNewFeatureStore();
+
+// Option 2: Svelte 5 Runes (for component-local state)
+export class NewFeatureState {
+    items = $state<NewFeature[]>([]);
+    loading = $state(false);
+    error = $state<string | null>(null);
+    filters = $state<NewFeatureFilters>({});
+
+    async load(filters?: NewFeatureFilters) {
+        this.loading = true;
+        this.error = null;
+        
+        try {
+            const response = await newFeatureAPI.list(filters);
+            this.items = response.data;
+            this.filters = filters || {};
+        } catch (error) {
+            this.error = error.message;
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    async create(data: CreateNewFeatureRequest) {
+        const newItem = await newFeatureAPI.create(data);
+        this.items = [newItem, ...this.items];
+        return newItem;
+    }
+}
 ```
 
-### Component Pattern
+### Component Pattern (Svelte 5)
 ```svelte
 <!-- components/NewFeatureList.svelte -->
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { newFeatureStore } from '$lib/stores/newFeature';
+    import { NewFeatureState } from '$lib/stores/newFeature.svelte';
+    import NewFeatureCard from './NewFeatureCard.svelte';
     
-    export let filters: NewFeatureFilters = {};
+    interface Props {
+        filters?: NewFeatureFilters;
+    }
+    
+    let { filters = {} }: Props = $props();
+    
+    // Option 1: Using runes-based state class
+    const state = new NewFeatureState();
     
     onMount(() => {
-        newFeatureStore.load(filters);
+        state.load(filters);
     });
     
-    $: if (filters) {
-        newFeatureStore.load(filters);
-    }
+    // Svelte 5 effect for reactive filters
+    $effect(() => {
+        if (filters) {
+            state.load(filters);
+        }
+    });
+
+    // Alternative: Using traditional store
+    // import { newFeatureStore } from '$lib/stores/newFeature';
+    // onMount(() => newFeatureStore.load(filters));
+    // $: if (filters) newFeatureStore.load(filters);
 </script>
 
-{#if $newFeatureStore.loading}
+{#if state.loading}
     <div class="loading">Loading...</div>
-{:else if $newFeatureStore.error}
-    <div class="error">{$newFeatureStore.error}</div>
+{:else if state.error}
+    <div class="error">{state.error}</div>
 {:else}
     <div class="items-grid">
-        {#each $newFeatureStore.items as item}
+        {#each state.items as item (item.id)}
             <NewFeatureCard {item} />
         {/each}
     </div>
 {/if}
+
+<style>
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .loading, .error {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .error {
+        color: var(--color-error);
+        background: var(--color-error-bg);
+        border-radius: 4px;
+    }
+</style>
 ```
 
 ---

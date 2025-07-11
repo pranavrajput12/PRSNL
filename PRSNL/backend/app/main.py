@@ -208,6 +208,22 @@ app.include_router(summarization.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(import_data.router, prefix=settings.API_V1_STR)
+# Backward compatibility alias
+@app.get("/api/import-data")
+async def import_data_alias():
+    """Backward compatibility redirect to import endpoints"""
+    return {
+        "message": "Import endpoints have moved",
+        "new_base_url": "/api/import",
+        "available_endpoints": [
+            "/api/import/",
+            "/api/import/json", 
+            "/api/import/bookmarks",
+            "/api/import/notes",
+            "/api/import/urls/bulk"
+        ],
+        "documentation": "Use GET /api/import/ for full endpoint documentation"
+    }
 app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
 app.include_router(content_types.router, prefix=settings.API_V1_STR)
 app.include_router(development.router, prefix=settings.API_V1_STR)

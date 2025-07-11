@@ -1,13 +1,14 @@
 # 🚀 PRSNL Complete Quick Reference & Troubleshooting Guide
 
-## 🎯 System Status (2025-07-09)
-- ✅ **Video Streaming**: Fully functional
-- ✅ **Frontend**: Working on port 3003
+## 🎯 System Status (2025-07-11)
+- ✅ **Svelte 5 Migration**: Complete upgrade to v5.35.6 with Runes system
+- ✅ **Security**: All 14 vulnerabilities resolved, zero security issues
+- ✅ **Frontend Development**: Working on port 3004 (upgraded from 3003)
+- ✅ **Frontend Container**: Working on port 3003 (production only)
 - ✅ **Backend**: Working on port 8000
 - ✅ **Database**: PostgreSQL 16 on port 5432
-- ✅ **Web Scraping**: Fixed meta-tag extraction
-- ✅ **AI Integration**: Azure OpenAI working
-- ✅ **Documentation**: Consolidated (48 → 13 files)
+- ✅ **AI Services**: Fixed authentication, analysis, and import functionality
+- ✅ **Documentation**: Updated for Svelte 5 patterns and new ports
 - 📱 **iOS App**: PRSNL APP - *separate codebase, pending integration*
 
 ---
@@ -23,11 +24,12 @@
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Start Frontend (Terminal 2)
-cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev -- --port 3004
 ```
 
 ### Essential URLs
-- **Frontend**: http://localhost:3003
+- **Frontend Development**: http://localhost:3004
+- **Frontend Container**: http://localhost:3003 (production)
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
@@ -95,7 +97,7 @@ lsof -i :3003,8000,5432
 
 echo "3. Check service health:"
 curl -s http://localhost:8000/health | jq .status
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3003/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/
 
 echo "4. Check file locks:"
 grep "LOCKED" TASK_HISTORY.md
@@ -111,7 +113,7 @@ echo "=== READY TO START TASK ==="
 ```bash
 # Check all services
 curl http://localhost:8000/health      # Backend
-curl http://localhost:3003/           # Frontend
+curl http://localhost:3004/           # Frontend
 psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT version();"  # Database
 ```
 
@@ -272,7 +274,7 @@ psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT * FROM pg_ext
 ```
 
 #### Frontend API Connection Issues
-**Symptom**: ERR_CONNECTION_REFUSED on localhost:3003
+**Symptom**: ERR_CONNECTION_REFUSED on localhost:3004 (development) or localhost:3003 (container)
 **Fix**:
 ```bash
 # Ensure frontend is running
@@ -547,7 +549,7 @@ echo "2. Backend:"
 curl -s http://localhost:8000/health | jq
 
 echo "3. Frontend:"
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3003/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/
 
 echo "4. Database Content:"
 psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
@@ -609,7 +611,7 @@ npm run dev
 
 # 5. Test everything
 curl http://localhost:8000/health
-curl http://localhost:3003/
+curl http://localhost:3004/
 ```
 
 ### Reset Database (Nuclear Option)

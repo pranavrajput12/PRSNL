@@ -150,15 +150,29 @@ class AIValidationService:
                 on="tags"
             )
     
-    async def validate_content_analysis(self, ai_output: Union[str, Dict]) -> Dict[str, Any]:
+    async def validate_content_analysis(self, ai_output: Union[str, Dict, None]) -> Dict[str, Any]:
         """Validate content analysis output"""
+        if ai_output is None:
+            logger.warning("AI output is None, returning default analysis")
+            return self._get_default_content_analysis()
+            
         if not GUARDRAILS_AVAILABLE:
             # Fallback validation using Pydantic only
             try:
                 if isinstance(ai_output, str):
                     ai_output = json.loads(ai_output)
                 validated = ContentAnalysisSchema(**ai_output)
-                return validated.dict()
+                result = validated.dict(by_alias=True, exclude_unset=False, exclude_none=False)
+                
+                # Convert enum values to strings for JSON serialization
+                if 'category' in result and hasattr(result['category'], 'value'):
+                    result['category'] = result['category'].value
+                if 'sentiment' in result and hasattr(result['sentiment'], 'value'):
+                    result['sentiment'] = result['sentiment'].value
+                if 'difficulty_level' in result and hasattr(result['difficulty_level'], 'value'):
+                    result['difficulty_level'] = result['difficulty_level'].value
+                    
+                return result
             except Exception as e:
                 logger.error(f"Validation failed: {e}")
                 return self._get_default_content_analysis()

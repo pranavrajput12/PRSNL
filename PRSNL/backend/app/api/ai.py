@@ -54,6 +54,11 @@ class TranscriptionRequest(BaseModel):
 
 
 # Endpoints
+@router.get("/test")
+async def test_endpoint():
+    """Simple test endpoint"""
+    return {"status": "ok", "message": "test"}
+
 @router.post("/analyze")
 async def analyze_content(
     request: ContentAnalysisRequest,
@@ -70,7 +75,8 @@ async def analyze_content(
     - Reading time estimate
     """
     try:
-        logger.info(f"Analyzing content for user {current_user['id']}")
+        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
+        logger.info(f"Analyzing content for user {user_id}")
         
         result = await unified_ai_service.analyze_content(
             content=request.content,
@@ -105,7 +111,8 @@ async def generate_tags(
     Returns list of lowercase, deduplicated tags.
     """
     try:
-        logger.info(f"Generating tags for user {current_user['id']}")
+        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
+        logger.info(f"Generating tags for user {user_id}")
         
         tags = await unified_ai_service.generate_tags(
             content=request.content,
@@ -136,7 +143,8 @@ async def generate_summary(
     - key_points: 3-5 bullet points
     """
     try:
-        logger.info(f"Generating {request.summary_type} summary for user {current_user['id']}")
+        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
+        logger.info(f"Generating {request.summary_type} summary for user {user_id}")
         
         result = await unified_ai_service.generate_summary(
             content=request.content,
@@ -173,7 +181,8 @@ async def transcribe_audio(
     - accuracy: Uses small model for best accuracy
     """
     try:
-        logger.info(f"Transcribing audio for user {current_user['id']} with priority: {request.priority}")
+        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
+        logger.info(f"Transcribing audio for user {user_id} with priority: {request.priority}")
         
         if not transcription_service.is_available():
             raise HTTPException(
