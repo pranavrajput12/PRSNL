@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'frontend/**'
+      - 'PRSNL/frontend/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'frontend/**'
+      - 'PRSNL/frontend/**'
 
 env:
   NODE_VERSION: '24'
@@ -27,26 +27,26 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Format check with Prettier
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run format:check
         
     - name: Lint with ESLint
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run lint
         
     - name: Type check with TypeScript
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run check
         
   test:
@@ -62,21 +62,21 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Run unit tests
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run test:unit
         
     - name: Run component tests
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run test:integration
         
   build:
@@ -92,11 +92,11 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Build application
@@ -104,19 +104,19 @@ jobs:
         VITE_API_URL: https://api.example.com
         VITE_ENVIRONMENT: production
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run build
         
     - name: Check build size
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm run build:analyze
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: frontend-build
-        path: frontend/dist/
+        path: PRSNL/frontend/dist/
         retention-days: 7
         
   lighthouse:
@@ -133,29 +133,29 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Download build artifacts
       uses: actions/download-artifact@v3
       with:
         name: frontend-build
-        path: frontend/dist/
+        path: PRSNL/frontend/dist/
         
     - name: Serve static files
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npx serve dist/ &
         sleep 5
         
     - name: Run Lighthouse
       uses: treosh/lighthouse-ci-action@v10
       with:
-        configPath: './frontend/lighthouserc.json'
+        configPath: './PRSNL/frontend/lighthouserc.json'
         uploadArtifacts: true
         temporaryPublicStorage: true
         
@@ -172,16 +172,16 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Run npm audit
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm audit --audit-level=moderate
         
     - name: Run security scan with Snyk
@@ -205,7 +205,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: frontend-build
-        path: frontend/dist/
+        path: PRSNL/frontend/dist/
         
     - name: Deploy to Preview Environment
       run: |
@@ -227,7 +227,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: frontend-build
-        path: frontend/dist/
+        path: PRSNL/frontend/dist/
         
     - name: Deploy to staging
       run: |
@@ -248,7 +248,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: frontend-build
-        path: frontend/dist/
+        path: PRSNL/frontend/dist/
         
     - name: Deploy to production
       run: |

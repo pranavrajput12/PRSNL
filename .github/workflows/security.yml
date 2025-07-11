@@ -33,12 +33,12 @@ jobs:
       with:
         node-version: '24'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: PRSNL/frontend/package-lock.json
         
     - name: Install dependencies (Backend)
       if: matrix.component == 'backend'
       run: |
-        cd backend
+        cd PRSNL/backend
         pip install --upgrade pip
         pip install safety bandit semgrep
         pip install -r requirements.txt
@@ -46,34 +46,34 @@ jobs:
     - name: Install dependencies (Frontend)
       if: matrix.component == 'frontend'
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Run Safety check (Backend)
       if: matrix.component == 'backend'
       run: |
-        cd backend
+        cd PRSNL/backend
         safety check --json --output safety-report.json || true
         safety check
         
     - name: Run Bandit security scan (Backend)
       if: matrix.component == 'backend'
       run: |
-        cd backend
+        cd PRSNL/backend
         bandit -r . -f json -o bandit-report.json || true
         bandit -r . -ll
         
     - name: Run Semgrep scan (Backend)
       if: matrix.component == 'backend'
       run: |
-        cd backend
+        cd PRSNL/backend
         semgrep --config=auto --json --output=semgrep-report.json . || true
         semgrep --config=auto .
         
     - name: Run npm audit (Frontend)
       if: matrix.component == 'frontend'
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm audit --audit-level=moderate
         
     - name: Upload security reports
@@ -81,7 +81,7 @@ jobs:
       with:
         name: security-reports-${{ matrix.component }}
         path: |
-          ${{ matrix.component }}/*-report.json
+          PRSNL/${{ matrix.component }}/*-report.json
         retention-days: 30
         
   codeql-analysis:
@@ -120,14 +120,14 @@ jobs:
     - name: Install Python dependencies
       if: matrix.language == 'python'
       run: |
-        cd backend
+        cd PRSNL/backend
         pip install --upgrade pip
         pip install -r requirements.txt
         
     - name: Install Node.js dependencies
       if: matrix.language == 'javascript'
       run: |
-        cd frontend
+        cd PRSNL/frontend
         npm ci
         
     - name: Perform CodeQL Analysis
@@ -162,7 +162,7 @@ jobs:
     
     - name: Build Docker image
       run: |
-        cd backend
+        cd PRSNL/backend
         docker build -t prsnl-backend:scan .
         
     - name: Run Trivy vulnerability scanner

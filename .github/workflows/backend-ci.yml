@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'backend/**'
+      - 'PRSNL/backend/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'backend/**'
+      - 'PRSNL/backend/**'
 
 env:
   PYTHON_VERSION: '3.11'
@@ -31,36 +31,36 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('PRSNL/backend/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
           
     - name: Install dependencies
       run: |
-        cd backend
+        cd PRSNL/backend
         pip install --upgrade pip
         pip install black isort bandit flake8
         pip install -r requirements.txt
         
     - name: Format check with Black
       run: |
-        cd backend
+        cd PRSNL/backend
         black --check --diff .
         
     - name: Import sorting check with isort
       run: |
-        cd backend
+        cd PRSNL/backend
         isort --check-only --diff .
         
     - name: Lint with flake8
       run: |
-        cd backend
+        cd PRSNL/backend
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         
     - name: Security check with Bandit
       run: |
-        cd backend
+        cd PRSNL/backend
         bandit -r . -f json -o bandit-report.json || true
         bandit -r . -ll
   
@@ -105,13 +105,13 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('PRSNL/backend/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
           
     - name: Install dependencies
       run: |
-        cd backend
+        cd PRSNL/backend
         pip install --upgrade pip
         pip install pytest pytest-cov pytest-asyncio
         pip install -r requirements.txt
@@ -122,14 +122,14 @@ jobs:
         REDIS_URL: redis://localhost:6379
         TESTING: true
       run: |
-        cd backend
+        cd PRSNL/backend
         # Create test database schema
         python -c "
         import asyncio
         import asyncpg
         async def create_schema():
             conn = await asyncpg.connect('postgresql://postgres:postgres@localhost:5432/prsnl_test')
-            with open('app/db/schema_unified.sql', 'r') as f:
+            with open('PRSNL/backend/app/db/schema_unified.sql', 'r') as f:
                 schema = f.read()
             await conn.execute('CREATE EXTENSION IF NOT EXISTS vector;')
             await conn.execute('CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";')
@@ -154,13 +154,13 @@ jobs:
         AZURE_OPENAI_API_KEY: test_key_for_ci
         AZURE_OPENAI_ENDPOINT: https://test.openai.azure.com/
       run: |
-        cd backend
+        cd PRSNL/backend
         pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
         
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
-        file: backend/coverage.xml
+        file: PRSNL/backend/coverage.xml
         flags: backend
         name: backend-coverage
         
@@ -180,7 +180,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        cd backend
+        cd PRSNL/backend
         pip install --upgrade pip
         pip install -r requirements.txt
         
@@ -189,13 +189,13 @@ jobs:
         TESTING: true
         AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY || 'mock_key' }}
       run: |
-        cd backend
+        cd PRSNL/backend
         # Run AI integration tests with mocking for CI
         python scripts/test_ai_integrations.py --mock-mode
         
     - name: Test Whisper.cpp integration
       run: |
-        cd backend
+        cd PRSNL/backend
         # Test whisper.cpp integration with mock audio
         python scripts/test_whisper_cpp_integration.py --mock-mode
         
@@ -214,7 +214,7 @@ jobs:
     - name: Build Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./backend
+        context: ./PRSNL/backend
         push: false
         tags: prsnl-backend:${{ github.sha }}
         cache-from: type=gha
