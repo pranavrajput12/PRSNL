@@ -13,7 +13,7 @@ Sentry.init({
   release: `prsnl-frontend@${process.env.VERSION || '2.3.0'}`,
 
   // Additional options
-  beforeSend(event, hint) {
+  beforeSend(event, _hint) {
     // Don't send events in development unless explicitly enabled
     if (process.env.NODE_ENV === 'development' && process.env.SENTRY_ENABLE_IN_DEV !== 'true') {
       return null;

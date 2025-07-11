@@ -6,17 +6,14 @@
 import type {
   CaptureRequest,
   CaptureResponse,
-  SearchRequest,
   SearchResponse,
   TimelineResponse,
   Item,
   Tag,
   UpdateItemRequest,
-  APIError,
   TimelineItem,
   InsightsResponse,
   ContentTypesResponse,
-  EnhancedSearchRequest,
 } from './types/api';
 
 // Add RequestInit type for fetch API
@@ -136,7 +133,7 @@ export async function captureItem(data: CaptureRequest): Promise<CaptureResponse
 
     // Add files if they exist
     if (data.uploaded_files) {
-      data.uploaded_files.forEach((file, index) => {
+      data.uploaded_files.forEach((file) => {
         formData.append('files', file);
       });
     }
@@ -279,7 +276,7 @@ function transformItem(item: any): Item | TimelineItem {
 /**
  * Get timeline items with pagination (legacy page-based)
  */
-export async function getTimeline(page: number = 1, limit: number = 20): Promise<TimelineResponse> {
+export async function getTimeline(_page: number = 1, limit: number = 20): Promise<TimelineResponse> {
   // Legacy page-based pagination - ignores page parameter since backend uses cursor pagination
   const response = await fetchWithErrorHandling<any>(`/timeline?limit=${limit}`);
 
@@ -580,7 +577,7 @@ export const aiApi = {
         method: 'POST',
         body: JSON.stringify({ url, title, content }),
       }),
-    findAll: async (minSimilarity = 0.85) =>
+    findAll: async (_minSimilarity = 0.85) =>
       fetchWithErrorHandling('/duplicates/find-all', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -615,7 +612,7 @@ export const aiApi = {
 
   insights: {
     dashboard: async () => fetchWithErrorHandling('/insights/dashboard'),
-    topicClusters: async (minItems = 3) =>
+    topicClusters: async (_minItems = 3) =>
       fetchWithErrorHandling('/insights/topics', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },

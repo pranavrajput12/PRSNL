@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
   import Icon from '$lib/components/Icon.svelte';
 
   export let variant: 'primary' | 'secondary' | 'ghost' = 'primary';
@@ -14,7 +13,6 @@
   let mouseX = spring(0);
   let mouseY = spring(0);
   let isHovering = false;
-  let isPressed = false;
 
   // Animation values
   const shimmer = tweened(0, { duration: 2000 });
@@ -137,7 +135,7 @@
       );
       transform: translateX({-100 + $shimmer * 200}%);
     "
-  />
+  ></div>
 
   <!-- Glow effect -->
   <div
@@ -147,15 +145,15 @@
       top: {$mouseY}%;
       opacity: {isHovering ? 0.6 : 0};
     "
-  />
+  ></div>
 
   <!-- Content -->
   <span class="button-content">
     {#if loading}
       <span class="loader">
-        <span class="loader-dot" style="animation-delay: 0s" />
-        <span class="loader-dot" style="animation-delay: 0.2s" />
-        <span class="loader-dot" style="animation-delay: 0.4s" />
+        <span class="loader-dot" style="animation-delay: 0s"></span>
+        <span class="loader-dot" style="animation-delay: 0.2s"></span>
+        <span class="loader-dot" style="animation-delay: 0.4s"></span>
       </span>
     {:else}
       {#if icon}
@@ -166,7 +164,7 @@
   </span>
 
   <!-- Ripple container -->
-  <span class="ripple-container" />
+  <span class="ripple-container"></span>
 </button>
 
 <style>
