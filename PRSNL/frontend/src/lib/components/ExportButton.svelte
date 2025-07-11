@@ -53,18 +53,10 @@
   // DOM references
   let dropdownMenu: HTMLDivElement;
   let exportBtn: HTMLButtonElement;
-  
-  // Listen for outside clicks
-  if (typeof window !== 'undefined') {
-    window.addEventListener('click', handleClickOutside);
-  }
 </script>
 
-<svelte:head>
-  {#if typeof window !== 'undefined'}
-    <svelte:window on:click={handleClickOutside} />
-  {/if}
-</svelte:head>
+<!-- Handle clicks outside the dropdown to close it -->
+<svelte:window on:click={handleClickOutside} />
 
 <div class="export-button-container">
   <button 
