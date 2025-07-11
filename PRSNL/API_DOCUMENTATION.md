@@ -202,32 +202,65 @@ Get file storage and processing statistics
 }
 ```
 
-### 🔍 Search
+### 🔍 Enhanced Search
 
-#### GET /api/search
-Search items by query and filters
+#### POST /api/search/
+Advanced multi-modal search with semantic, keyword, and hybrid modes
 
-**Query Parameters:**
-- `query` (string) - Search query
-- `date` (string) - Date filter
-- `type` (string) - Item type filter
-- `tags` (string) - Tags filter
+**Request Body:**
+```json
+{
+  "query": "machine learning",
+  "search_type": "hybrid",
+  "limit": 20,
+  "threshold": 0.3,
+  "include_duplicates": false,
+  "filters": {
+    "type": "article",
+    "date_range": {
+      "start": "2024-01-01",
+      "end": "2024-12-31"
+    }
+  }
+}
+```
 
 **Response:**
 ```json
 {
-  "items": [
+  "results": [
     {
       "id": "uuid",
       "title": "string",
       "url": "string",
-      "summary": "string",
+      "snippet": "string",
       "tags": ["string"],
-      "createdAt": "2025-07-06T10:00:00Z",
-      "type": "article"
+      "created_at": "2025-07-06T10:00:00Z",
+      "similarity": 0.89,
+      "search_metadata": {
+        "has_embedding": true,
+        "search_timestamp": "2025-07-06T10:00:00Z"
+      },
+      "search_type": "hybrid",
+      "component_scores": {
+        "semantic": 0.85,
+        "keyword": 0.92
+      }
     }
   ],
-  "total": 10
+  "total": 15,
+  "query": "machine learning",
+  "search_type": "hybrid",
+  "weights": {
+    "semantic": 0.7,
+    "keyword": 0.3
+  },
+  "timestamp": "2025-07-06T10:00:00Z",
+  "deduplication": {
+    "original_count": 18,
+    "deduplicated_count": 15,
+    "removed_duplicates": 3
+  }
 }
 ```
 

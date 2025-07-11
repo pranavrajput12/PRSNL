@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getDevelopmentDocs, getDevelopmentCategories, type DevelopmentItem, type DevelopmentDocsFilters } from '$lib/api/development';
+  import { getDevelopmentDocs, getDevelopmentCategories, searchDevelopmentContent, type DevelopmentItem, type DevelopmentDocsFilters } from '$lib/api/development';
   import Icon from '$lib/components/Icon.svelte';
   
   let docs: DevelopmentItem[] = [];
@@ -10,6 +10,12 @@
   let selectedLanguage = '';
   let selectedDifficulty: number | null = null;
   let searchQuery = '';
+  
+  // Enhanced search options
+  let searchMode: 'semantic' | 'keyword' | 'hybrid' = 'semantic';
+  let isUsingEnhancedSearch = false;
+  let searchStats: any = null;
+  let searchTimeout: ReturnType<typeof setTimeout> | undefined;
   
   // Pagination
   let currentPage = 0;
@@ -33,26 +39,12 @@
     try {
       loading = true;
       
-      const filters: DevelopmentDocsFilters = {
-        limit: itemsPerPage,
-        offset: reset ? 0 : currentPage * itemsPerPage
-      };
-      
-      if (selectedCategory) filters.category = selectedCategory;
-      if (selectedLanguage) filters.language = selectedLanguage;
-      if (selectedDifficulty) filters.difficulty = selectedDifficulty;
-      if (searchQuery) filters.search = searchQuery;
-      
-      const newDocs = await getDevelopmentDocs(filters);
-      
-      if (reset) {
-        docs = newDocs;
-        currentPage = 0;
+      // Use enhanced search if there's a search query
+      if (searchQuery.trim()) {
+        await performEnhancedSearch(reset);
       } else {
-        docs = [...docs, ...newDocs];
+        await performRegularLoad(reset);
       }
-      
-      hasMore = newDocs.length === itemsPerPage;
       
     } catch (error) {
       console.error('Error loading docs:', error);
@@ -61,7 +53,85 @@
     }
   }
   
+  async function performEnhancedSearch(reset = false) {
+    isUsingEnhancedSearch = true;
+    
+    const searchResult = await searchDevelopmentContent(searchQuery, {
+      searchMode: searchMode,
+      limit: reset ? itemsPerPage : itemsPerPage * (currentPage + 1),
+      filters: {
+        category: selectedCategory,
+        language: selectedLanguage,
+        difficulty: selectedDifficulty
+      }
+    });
+    
+    // Filter to only show documentation items (exclude pure links)
+    const docItems = searchResult.results.filter(item => 
+      !item.url || !item.url.startsWith('http') || item.summary
+    );
+    
+    if (reset) {
+      docs = docItems;
+      currentPage = 0;
+    } else {
+      docs = docItems;
+    }
+    
+    searchStats = searchResult.searchStats;
+    hasMore = docItems.length >= itemsPerPage;
+    
+    console.log('Enhanced development search:', {
+      query: searchQuery,
+      mode: searchMode,
+      results: docItems.length,
+      stats: searchStats
+    });
+  }
+  
+  async function performRegularLoad(reset = false) {
+    isUsingEnhancedSearch = false;
+    searchStats = null;
+    
+    const filters: DevelopmentDocsFilters = {
+      limit: itemsPerPage,
+      offset: reset ? 0 : currentPage * itemsPerPage
+    };
+    
+    if (selectedCategory) filters.category = selectedCategory;
+    if (selectedLanguage) filters.language = selectedLanguage;
+    if (selectedDifficulty) filters.difficulty = selectedDifficulty;
+    
+    const newDocs = await getDevelopmentDocs(filters);
+    
+    // Filter to only show documentation items (exclude pure links)
+    const docItems = newDocs.filter(item => 
+      !item.url || !item.url.startsWith('http') || item.summary
+    );
+    
+    if (reset) {
+      docs = docItems;
+      currentPage = 0;
+    } else {
+      docs = [...docs, ...docItems];
+    }
+    
+    hasMore = newDocs.length === itemsPerPage;
+  }
+  
   function handleFilterChange() {
+    loadDocs(true);
+  }
+  
+  function handleSearchInput() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      loadDocs(true);
+    }, 300);
+  }
+  
+  function clearSearch() {
+    searchQuery = '';
     loadDocs(true);
   }
   
@@ -128,15 +198,66 @@
   <!-- Filters -->
   <div class="filters-section">
     <div class="filters-grid">
-      <div class="filter-group">
-        <label>Search</label>
-        <input 
-          type="text" 
-          bind:value={searchQuery}
-          placeholder="Search documentation..."
-          class="filter-input"
-          on:input={handleFilterChange}
-        />
+      <div class="filter-group search-group">
+        <label>Enhanced Search</label>
+        <div class="search-container">
+          <input 
+            type="text" 
+            bind:value={searchQuery}
+            placeholder="Search documentation with AI..."
+            class="filter-input search-input"
+            on:input={handleSearchInput}
+          />
+          {#if searchQuery}
+            <button class="clear-search-btn" on:click={clearSearch} title="Clear search">
+              <Icon name="x" />
+            </button>
+          {/if}
+        </div>
+        
+        {#if searchQuery}
+          <div class="search-mode-toggle">
+            <button 
+              class="mode-btn {searchMode === 'semantic' ? 'active' : ''}"
+              on:click={() => { searchMode = 'semantic'; loadDocs(true); }}
+              title="AI Semantic Search - Understands meaning and context"
+            >
+              <Icon name="brain" size={14} />
+              Semantic
+            </button>
+            <button 
+              class="mode-btn {searchMode === 'keyword' ? 'active' : ''}"
+              on:click={() => { searchMode = 'keyword'; loadDocs(true); }}
+              title="Keyword Search - Exact text matching"
+            >
+              <Icon name="search" size={14} />
+              Keyword
+            </button>
+            <button 
+              class="mode-btn {searchMode === 'hybrid' ? 'active' : ''}"
+              on:click={() => { searchMode = 'hybrid'; loadDocs(true); }}
+              title="Hybrid Search - Combines semantic and keyword"
+            >
+              <Icon name="zap" size={14} />
+              Hybrid
+            </button>
+          </div>
+          
+          {#if isUsingEnhancedSearch && searchStats}
+            <div class="search-stats">
+              <span class="stat-item">
+                <Icon name="target" size={12} />
+                {searchStats.searchType}
+              </span>
+              {#if searchStats.deduplication}
+                <span class="stat-item">
+                  <Icon name="filter" size={12} />
+                  {searchStats.deduplication.deduplicated_count} results
+                </span>
+              {/if}
+            </div>
+          {/if}
+        {/if}
       </div>
       
       <div class="filter-group">
@@ -225,6 +346,24 @@
           
           <div class="doc-actions">
             <span class="doc-date">{new Date(doc.created_at).toLocaleDateString()}</span>
+            
+            {#if isUsingEnhancedSearch && doc.similarity_score}
+              <div class="search-score">
+                <Icon name="target" size={12} />
+                <span class="score-value">{Math.round(doc.similarity_score * 100)}%</span>
+                {#if doc.component_scores && searchMode === 'hybrid'}
+                  <div class="component-scores">
+                    {#if doc.component_scores.semantic}
+                      <span class="score-component semantic">S: {Math.round(doc.component_scores.semantic * 100)}%</span>
+                    {/if}
+                    {#if doc.component_scores.keyword}
+                      <span class="score-component keyword">K: {Math.round(doc.component_scores.keyword * 100)}%</span>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+            
             {#if doc.url}
               <a href={doc.url} target="_blank" rel="noopener noreferrer" class="doc-link">
                 <Icon name="external-link" size="small" />
@@ -576,5 +715,130 @@
     .docs-grid {
       grid-template-columns: 1fr;
     }
+  }
+  
+  /* Enhanced Search Styles */
+  .search-group {
+    position: relative;
+  }
+  
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-input {
+    padding-right: 2.5rem;
+  }
+  
+  .clear-search-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .clear-search-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+  }
+  
+  .search-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+  
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    color: #ccc;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mode-btn:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+  }
+  
+  .mode-btn.active {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: #00ff88;
+    color: #00ff88;
+  }
+  
+  .search-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #888;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .search-score {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #00ff88;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+  
+  .score-value {
+    font-weight: 600;
+  }
+  
+  .component-scores {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+  }
+  
+  .score-component {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .score-component.semantic {
+    color: #00ff64;
+    border-color: rgba(0, 255, 100, 0.3);
+    background: rgba(0, 255, 100, 0.1);
+  }
+  
+  .score-component.keyword {
+    color: #0096ff;
+    border-color: rgba(0, 150, 255, 0.3);
+    background: rgba(0, 150, 255, 0.1);
   }
 </style>

@@ -112,7 +112,7 @@ items {
 - `GET /api/timeline` - Get items list
 - `GET /api/items/{id}` - Get single item
 - `POST /api/capture` - Add new item
-- `GET /api/search` - Search items
+- `POST /api/search/` - Enhanced multi-modal search (semantic, keyword, hybrid)
 - `GET /api/tags` - Get all tags
 
 ### AI Features (Backend implemented, frontend partial)

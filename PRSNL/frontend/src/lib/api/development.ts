@@ -45,6 +45,16 @@ export interface DevelopmentItem {
   created_at: string;
   updated_at?: string;
   tags: string[];
+  // Enhanced search metadata (optional)
+  similarity_score?: number;
+  search_metadata?: {
+    has_embedding: boolean;
+    search_timestamp: string;
+  };
+  component_scores?: {
+    semantic?: number;
+    keyword?: number;
+  };
 }
 
 export interface DevelopmentDocsFilters {
@@ -159,4 +169,116 @@ export async function autoCategorizeContent(itemId: string): Promise<{
   }
   
   return response.json();
+}
+
+/**
+ * Enhanced search for development content using semantic search API
+ */
+export async function searchDevelopmentContent(
+  query: string,
+  options: {
+    searchMode?: 'semantic' | 'keyword' | 'hybrid';
+    limit?: number;
+    filters?: {
+      category?: string;
+      language?: string;
+      difficulty?: number;
+      career_related?: boolean;
+    };
+  } = {}
+): Promise<{
+  results: DevelopmentItem[];
+  total: number;
+  searchStats: any;
+}> {
+  const { searchMode = 'semantic', limit = 20, filters = {} } = options;
+  
+  // Build enhanced search request
+  const searchRequest = {
+    query: query,
+    search_type: searchMode,
+    limit: limit,
+    threshold: 0.3,
+    include_duplicates: false,
+    filters: {
+      // Add content type filter to focus on development content
+      type: filters.category,
+      // Add custom filters for development content
+      programming_language: filters.language,
+      difficulty_level: filters.difficulty,
+      is_career_related: filters.career_related
+    }
+  };
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/search/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(searchRequest)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Enhanced search failed: ${response.statusText}`);
+    }
+    
+    const searchResponse = await response.json();
+    
+    // Transform search results to DevelopmentItem format
+    const results: DevelopmentItem[] = searchResponse.results.map((result: any) => ({
+      id: result.id,
+      title: result.title,
+      url: result.url,
+      summary: result.snippet || result.summary,
+      type: result.type || 'article',
+      programming_language: result.programming_language,
+      project_category: result.project_category,
+      difficulty_level: result.difficulty_level,
+      is_career_related: result.is_career_related || false,
+      learning_path: result.learning_path,
+      code_snippets: result.code_snippets || [],
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+      tags: result.tags || [],
+      // Add search-specific metadata
+      similarity_score: result.similarity,
+      search_metadata: result.search_metadata,
+      component_scores: result.component_scores
+    }));
+    
+    return {
+      results: results,
+      total: searchResponse.total,
+      searchStats: {
+        searchType: searchResponse.search_type,
+        deduplication: searchResponse.deduplication,
+        weights: searchResponse.weights,
+        timestamp: searchResponse.timestamp
+      }
+    };
+  } catch (error) {
+    console.error('Enhanced development search failed:', error);
+    // Fallback to regular development docs API
+    const fallbackFilters: DevelopmentDocsFilters = {
+      search: query,
+      limit: limit,
+      category: filters.category,
+      language: filters.language,
+      difficulty: filters.difficulty,
+      career_related: filters.career_related
+    };
+    
+    const fallbackResults = await getDevelopmentDocs(fallbackFilters);
+    return {
+      results: fallbackResults,
+      total: fallbackResults.length,
+      searchStats: {
+        searchType: 'fallback',
+        deduplication: null,
+        weights: null,
+        timestamp: new Date().toISOString()
+      }
+    };
+  }
 }

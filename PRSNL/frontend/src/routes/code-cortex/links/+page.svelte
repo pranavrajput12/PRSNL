@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getDevelopmentDocs, getDevelopmentCategories, type DevelopmentItem, type DevelopmentDocsFilters } from '$lib/api/development';
+  import { getDevelopmentDocs, getDevelopmentCategories, searchDevelopmentContent, type DevelopmentItem, type DevelopmentDocsFilters } from '$lib/api/development';
   import Icon from '$lib/components/Icon.svelte';
   
   let links: DevelopmentItem[] = [];
@@ -9,6 +9,12 @@
   let selectedCategory = '';
   let selectedLanguage = '';
   let searchQuery = '';
+  
+  // Enhanced search options
+  let searchMode: 'semantic' | 'keyword' | 'hybrid' = 'semantic';
+  let isUsingEnhancedSearch = false;
+  let searchStats: any = null;
+  let searchTimeout: ReturnType<typeof setTimeout> | undefined;
   
   // Pagination
   let currentPage = 0;
@@ -32,28 +38,12 @@
     try {
       loading = true;
       
-      const filters: DevelopmentDocsFilters = {
-        limit: itemsPerPage,
-        offset: reset ? 0 : currentPage * itemsPerPage
-      };
-      
-      if (selectedCategory) filters.category = selectedCategory;
-      if (selectedLanguage) filters.language = selectedLanguage;
-      if (searchQuery) filters.search = searchQuery;
-      
-      const newLinks = await getDevelopmentDocs(filters);
-      
-      // Filter to only show items with URLs (links)
-      const linkItems = newLinks.filter(item => item.url && item.url.startsWith('http'));
-      
-      if (reset) {
-        links = linkItems;
-        currentPage = 0;
+      // Use enhanced search if there's a search query
+      if (searchQuery.trim()) {
+        await performEnhancedSearch(reset);
       } else {
-        links = [...links, ...linkItems];
+        await performRegularLoad(reset);
       }
-      
-      hasMore = newLinks.length === itemsPerPage;
       
     } catch (error) {
       console.error('Error loading links:', error);
@@ -62,7 +52,81 @@
     }
   }
   
+  async function performEnhancedSearch(reset = false) {
+    isUsingEnhancedSearch = true;
+    
+    const searchResult = await searchDevelopmentContent(searchQuery, {
+      searchMode: searchMode,
+      limit: reset ? itemsPerPage : itemsPerPage * (currentPage + 1),
+      filters: {
+        category: selectedCategory,
+        language: selectedLanguage
+      }
+    });
+    
+    // Filter to only show items with URLs (links)
+    const linkItems = searchResult.results.filter(item => 
+      item.url && item.url.startsWith('http')
+    );
+    
+    if (reset) {
+      links = linkItems;
+      currentPage = 0;
+    } else {
+      links = linkItems;
+    }
+    
+    searchStats = searchResult.searchStats;
+    hasMore = linkItems.length >= itemsPerPage;
+    
+    console.log('Enhanced links search:', {
+      query: searchQuery,
+      mode: searchMode,
+      results: linkItems.length,
+      stats: searchStats
+    });
+  }
+  
+  async function performRegularLoad(reset = false) {
+    isUsingEnhancedSearch = false;
+    searchStats = null;
+    
+    const filters: DevelopmentDocsFilters = {
+      limit: itemsPerPage,
+      offset: reset ? 0 : currentPage * itemsPerPage
+    };
+    
+    if (selectedCategory) filters.category = selectedCategory;
+    if (selectedLanguage) filters.language = selectedLanguage;
+    
+    const newLinks = await getDevelopmentDocs(filters);
+    
+    // Filter to only show items with URLs (links)
+    const linkItems = newLinks.filter(item => item.url && item.url.startsWith('http'));
+    
+    if (reset) {
+      links = linkItems;
+      currentPage = 0;
+    } else {
+      links = [...links, ...linkItems];
+    }
+    
+    hasMore = newLinks.length === itemsPerPage;
+  }
+  
   function handleFilterChange() {
+    loadLinks(true);
+  }
+  
+  function handleSearchInput() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      loadLinks(true);
+    }, 300);
+  }
+  
+  function clearSearch() {
+    searchQuery = '';
     loadLinks(true);
   }
   
@@ -131,15 +195,66 @@
   <!-- Filters -->
   <div class="filters-section">
     <div class="filters-grid">
-      <div class="filter-group">
-        <label>Search</label>
-        <input 
-          type="text" 
-          bind:value={searchQuery}
-          placeholder="Search links and repositories..."
-          class="filter-input"
-          on:input={handleFilterChange}
-        />
+      <div class="filter-group search-group">
+        <label>Enhanced Search</label>
+        <div class="search-container">
+          <input 
+            type="text" 
+            bind:value={searchQuery}
+            placeholder="Search links and repositories with AI..."
+            class="filter-input search-input"
+            on:input={handleSearchInput}
+          />
+          {#if searchQuery}
+            <button class="clear-search-btn" on:click={clearSearch} title="Clear search">
+              <Icon name="x" />
+            </button>
+          {/if}
+        </div>
+        
+        {#if searchQuery}
+          <div class="search-mode-toggle">
+            <button 
+              class="mode-btn {searchMode === 'semantic' ? 'active' : ''}"
+              on:click={() => { searchMode = 'semantic'; loadLinks(true); }}
+              title="AI Semantic Search - Understands meaning and context"
+            >
+              <Icon name="brain" size={14} />
+              Semantic
+            </button>
+            <button 
+              class="mode-btn {searchMode === 'keyword' ? 'active' : ''}"
+              on:click={() => { searchMode = 'keyword'; loadLinks(true); }}
+              title="Keyword Search - Exact text matching"
+            >
+              <Icon name="search" size={14} />
+              Keyword
+            </button>
+            <button 
+              class="mode-btn {searchMode === 'hybrid' ? 'active' : ''}"
+              on:click={() => { searchMode = 'hybrid'; loadLinks(true); }}
+              title="Hybrid Search - Combines semantic and keyword"
+            >
+              <Icon name="zap" size={14} />
+              Hybrid
+            </button>
+          </div>
+          
+          {#if isUsingEnhancedSearch && searchStats}
+            <div class="search-stats">
+              <span class="stat-item">
+                <Icon name="target" size={12} />
+                {searchStats.searchType}
+              </span>
+              {#if searchStats.deduplication}
+                <span class="stat-item">
+                  <Icon name="filter" size={12} />
+                  {searchStats.deduplication.deduplicated_count} results
+                </span>
+              {/if}
+            </div>
+          {/if}
+        {/if}
       </div>
       
       <div class="filter-group">
@@ -220,6 +335,24 @@
           
           <div class="link-actions">
             <span class="link-date">{new Date(link.created_at).toLocaleDateString()}</span>
+            
+            {#if isUsingEnhancedSearch && link.similarity_score}
+              <div class="search-score">
+                <Icon name="target" size={12} />
+                <span class="score-value">{Math.round(link.similarity_score * 100)}%</span>
+                {#if link.component_scores && searchMode === 'hybrid'}
+                  <div class="component-scores">
+                    {#if link.component_scores.semantic}
+                      <span class="score-component semantic">S: {Math.round(link.component_scores.semantic * 100)}%</span>
+                    {/if}
+                    {#if link.component_scores.keyword}
+                      <span class="score-component keyword">K: {Math.round(link.component_scores.keyword * 100)}%</span>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+            
             <a href="/items/{link.id}" class="link-button secondary">
               View Details
             </a>
@@ -609,5 +742,130 @@
     .links-grid {
       grid-template-columns: 1fr;
     }
+  }
+  
+  /* Enhanced Search Styles (shared with docs page) */
+  .search-group {
+    position: relative;
+  }
+  
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-input {
+    padding-right: 2.5rem;
+  }
+  
+  .clear-search-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  
+  .clear-search-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #00ff88;
+  }
+  
+  .search-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+  
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    color: #ccc;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mode-btn:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+  }
+  
+  .mode-btn.active {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: #00ff88;
+    color: #00ff88;
+  }
+  
+  .search-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #888;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .search-score {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #00ff88;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+  
+  .score-value {
+    font-weight: 600;
+  }
+  
+  .component-scores {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+  }
+  
+  .score-component {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .score-component.semantic {
+    color: #00ff64;
+    border-color: rgba(0, 255, 100, 0.3);
+    background: rgba(0, 255, 100, 0.1);
+  }
+  
+  .score-component.keyword {
+    color: #0096ff;
+    border-color: rgba(0, 150, 255, 0.3);
+    background: rgba(0, 150, 255, 0.1);
   }
 </style>

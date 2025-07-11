@@ -222,16 +222,39 @@ export async function searchItems(
     };
   }
   
-  // Regular keyword search
-  const params = new URLSearchParams();
+  // Fallback: Use enhanced search API for keyword search too
+  const keywordSearchRequest = {
+    query: query,
+    search_type: 'keyword' as const,
+    limit: filters.limit || 20,
+    threshold: filters.threshold || 0.3,
+    include_duplicates: filters.include_duplicates || false,
+    filters: {
+      ...(filters.type && { type: filters.type }),
+      ...(filters.date && { 
+        date_range: {
+          start: filters.date,
+          end: filters.date
+        }
+      })
+    }
+  };
   
-  if (query) params.append('query', query);
-  if (filters.date) params.append('date', filters.date);
-  if (filters.type) params.append('type', filters.type);
-  if (filters.tags) params.append('tags', filters.tags);
-  if (filters.limit) params.append('limit', filters.limit.toString());
+  const response = await fetchWithErrorHandling<SearchResponse>('/api/search/', {
+    method: 'POST',
+    body: JSON.stringify(keywordSearchRequest),
+  });
   
-  return fetchWithErrorHandling<SearchResponse>(`/search?${params.toString()}`);
+  // Transform results to ensure compatibility
+  return {
+    ...response,
+    results: response.results.map(result => ({
+      ...result,
+      snippet: result.snippet || '',
+      tags: result.tags || [],
+      score: result.similarity || result.score || 0
+    }))
+  };
 }
 
 /**

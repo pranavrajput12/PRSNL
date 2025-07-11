@@ -262,33 +262,51 @@ This document details all API endpoints, their contracts, headers, and authentic
   }
   ```
 
-### 6. Search API (`/api`)
+### 6. Enhanced Search API (`/api/search`)
 
-#### Text Search
-- **Endpoint**: `GET /api/search?query=test&limit=10&offset=0`
-- **Headers**: Standard
-- **Auth**: ❌ None
-- **Query Params**:
-  - `query` (required, max 1000 chars)
-  - `limit` (default: 10, max: 100)
-  - `offset` (default: 0)
-- **Cache**: Search-specific caching
+#### Enhanced Multi-Modal Search
+- **Endpoint**: `POST /api/search/`
+- **Headers**: 
+  - `Content-Type: application/json`
+- **Auth**: ❌ None (Optional user context supported)
+- **Request Body**:
+  ```json
+  {
+    "query": "string (required, max 1000 chars)",
+    "search_type": "semantic|keyword|hybrid (default: hybrid)",
+    "limit": "integer (default: 20, max: 100)",
+    "threshold": "float (default: 0.3, range: 0.0-1.0)",
+    "include_duplicates": "boolean (default: false)"
+  }
+  ```
+- **Cache**: 5 minutes  
 - **Response**:
   ```json
   {
     "results": [
       {
         "id": "uuid",
-        "title": string,
-        "url": string | null,
-        "snippet": string,
-        "tags": [string],
+        "title": "string",
+        "snippet": "string",
+        "url": "string | null",
+        "tags": ["string"],
         "created_at": "ISO8601",
-        "score": float | null
+        "similarity": 0.89,
+        "search_type": "hybrid",
+        "component_scores": {
+          "semantic": 0.85,
+          "keyword": 0.92
+        }
       }
     ],
-    "total": integer,
-    "took_ms": integer
+    "total": 15,
+    "query": "search query",
+    "search_type": "hybrid",
+    "deduplication": {
+      "original_count": 18,
+      "deduplicated_count": 15,
+      "removed_duplicates": 3
+    }
   }
   ```
 
