@@ -103,7 +103,7 @@
       pre.appendChild(notification);
 
       // Update notification visibility
-      $: if (copyNotifications[blockId]) {
+      if (copyNotifications[blockId]) {
         notification.style.display = 'block';
       } else {
         notification.style.display = 'none';
