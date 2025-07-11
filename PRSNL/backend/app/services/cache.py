@@ -4,13 +4,43 @@ Caching service for PRSNL using Redis
 import json
 import logging
 from typing import Optional, Any, Union
-from datetime import timedelta
+from datetime import timedelta, datetime
 import redis.asyncio as redis
 from functools import wraps
 import hashlib
-import pickle
+import base64
 
 logger = logging.getLogger(__name__)
+
+class SecureJSONEncoder(json.JSONEncoder):
+    """Secure JSON encoder that handles complex types without pickle"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {'__datetime__': obj.isoformat()}
+        elif isinstance(obj, bytes):
+            return {'__bytes__': base64.b64encode(obj).decode('utf-8')}
+        elif hasattr(obj, '__dict__'):
+            # For custom objects, only serialize basic attributes
+            return {'__object__': obj.__class__.__name__, '__data__': {
+                k: v for k, v in obj.__dict__.items() 
+                if isinstance(v, (str, int, float, bool, list, dict, type(None)))
+            }}
+        # For unsupported types, convert to string representation
+        return {'__string__': str(obj)}
+
+def secure_json_decode(obj):
+    """Secure JSON decoder that reconstructs safe objects"""
+    if isinstance(obj, dict):
+        if '__datetime__' in obj:
+            return datetime.fromisoformat(obj['__datetime__'])
+        elif '__bytes__' in obj:
+            return base64.b64decode(obj['__bytes__'].encode('utf-8'))
+        elif '__string__' in obj:
+            return obj['__string__']
+        elif '__object__' in obj:
+            # Don't reconstruct arbitrary objects for security - return dict instead
+            return obj['__data__']
+    return obj
 
 class CacheService:
     """Redis-based caching service"""
@@ -48,11 +78,14 @@ class CacheService:
         try:
             value = await self.redis_client.get(key)
             if value:
-                # Try to deserialize as JSON first, then pickle
+                # Secure JSON deserialization only
                 try:
-                    return json.loads(value)
-                except:
-                    return pickle.loads(value)
+                    return json.loads(value, object_hook=secure_json_decode)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to deserialize cached value for key {key}: {e}")
+                    # Remove corrupted cache entry
+                    await self.redis_client.delete(key)
+                    return None
             return None
         except Exception as e:
             logger.error(f"Cache get error for key {key}: {e}")
@@ -69,11 +102,12 @@ class CacheService:
             return False
             
         try:
-            # Serialize value
+            # Secure JSON serialization only
             try:
-                serialized = json.dumps(value)
-            except:
-                serialized = pickle.dumps(value)
+                serialized = json.dumps(value, cls=SecureJSONEncoder)
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Failed to serialize value for caching: {e}")
+                return False
             
             # Convert timedelta to seconds
             if isinstance(expire, timedelta):
@@ -135,14 +169,14 @@ class CacheService:
                 parts.append(str(arg))
             else:
                 # Hash complex objects
-                parts.append(hashlib.md5(str(arg).encode()).hexdigest()[:8])
+                parts.append(hashlib.sha256(str(arg).encode()).hexdigest()[:8])
         
         # Add keyword arguments
         for k, v in sorted(kwargs.items()):
             if isinstance(v, (str, int, float, bool)):
                 parts.append(f"{k}:{v}")
             else:
-                parts.append(f"{k}:{hashlib.md5(str(v).encode()).hexdigest()[:8]}")
+                parts.append(f"{k}:{hashlib.sha256(str(v).encode()).hexdigest()[:8]}")
         
         return ":".join(parts)
 

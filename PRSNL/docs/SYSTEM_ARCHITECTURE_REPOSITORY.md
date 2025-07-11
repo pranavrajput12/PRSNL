@@ -33,6 +33,29 @@ This repository serves as the **single source of truth** for building new featur
 
 ---
 
+## 🏗️ **Infrastructure Configuration (Updated 2025-07-12)**
+
+### Current Setup
+- **Database**: Local PostgreSQL on port 5432 (user: `pronav`)
+- **Backend**: Running locally with `uvicorn` on port 8000
+- **Frontend**: Development server on port 3004
+- **Redis**: Running in Docker container on port 6379
+- **Container Runtime**: Rancher Desktop (NOT Docker Desktop)
+
+### Services Status
+- **Docker Containers**: Only Redis runs in Docker now
+- **Backend**: Runs locally for better development experience
+- **Database**: Migrated from Docker to local PostgreSQL
+- **Frontend**: Always runs locally with `npm run dev`
+
+### Important Changes
+- Docker database has been **permanently disabled**
+- All 23 items successfully migrated to local PostgreSQL
+- Backend `.env` updated to use local database
+- `docker-compose.yml` updated with database service commented out
+
+---
+
 ## 📊 **API Design Patterns**
 
 ### Standard Endpoint Structure
@@ -182,6 +205,13 @@ async def find_duplicates(request: DuplicateSearchRequest):
 ---
 
 ## 🗄️ **Database Schema Patterns**
+
+### 🚨 **Database Configuration (Updated 2025-07-12)**
+- **Database**: Local PostgreSQL (NOT Docker)
+- **Connection**: `postgresql://pronav@localhost:5432/prsnl`
+- **User**: `pronav` (local system user)
+- **Port**: 5432
+- **Important**: Docker database has been deprecated and all data migrated to local PostgreSQL
 
 ### Table Design Standards
 ```sql

@@ -88,6 +88,14 @@
   - Caching layer improvements
   - CDN integration
 
+- [ ] **Real-time Event Synchronization**
+  - **NATS JetStream Integration**
+    - Cross-platform event messaging (web ↔ extension ↔ iOS)
+    - Replace ad-hoc REST polling with event-driven architecture
+    - Lightweight message bus (<15 MB Go binary)
+    - Real-time content sync across all surfaces
+    - Offline-first with message persistence
+
 - [ ] **Mobile Support**
   - Responsive design improvements
   - Progressive Web App (PWA) features
@@ -200,6 +208,99 @@ All development must follow established patterns:
 
 ---
 
+## 🔌 Chrome Extension Enhancement Roadmap
+
+### **Phase 3: Advanced Extension Features** (Future)
+**Timeline**: After Core Platform Stability  
+**Status**: Planned  
+**Priority**: Medium
+
+#### Workbox Integration - Offline Capabilities
+- [ ] **Service Worker Enhancement**
+  - [ ] Implement Workbox for offline cache management
+  - [ ] Background sync for failed captures
+  - [ ] Offline content access
+  - [ ] Progressive Web App capabilities
+
+- [ ] **Caching Strategies**
+  - [ ] Network-first for dynamic content
+  - [ ] Stale-while-revalidate for static assets
+  - [ ] Cache-first for images and media
+  - [ ] Background sync queue for captures
+
+- [ ] **Offline Features**
+  - [ ] Offline capture queue
+  - [ ] Local content storage
+  - [ ] Sync when connection restored
+  - [ ] Offline browsing of captured content
+
+#### Development Experience Improvements
+- [ ] **Build System Migration** ⚠️ **Risk: Maintenance Uncertainty**
+  - [ ] Evaluate @crxjs/vite-plugin alternatives by March 2025
+  - [ ] Modern build pipeline with HMR
+  - [ ] TypeScript support
+  - [ ] Asset optimization
+
+#### Advanced Messaging (Alternative to webext-bridge)
+- [ ] **Native Chrome APIs Enhancement**
+  - [ ] Custom messaging wrapper with TypeScript
+  - [ ] Better error handling and retries
+  - [ ] Message queuing for reliability
+  - [ ] Cross-context communication improvements
+
+### **Extension Implementation Status**
+
+#### ✅ Phase 1: Completed (2025-07-12)
+- [x] **webext-storage Integration**
+  - [x] Type-safe storage wrapper
+  - [x] Schema validation
+  - [x] Settings management
+  - [x] Capture history tracking
+  - [x] Tags caching system
+  - [x] Statistics tracking
+
+#### ✅ Phase 2: Completed (2025-07-12)  
+- [x] **UI/UX Fixes**
+  - [x] Fixed extension layout issues
+  - [x] Added comprehensive form styling
+  - [x] Removed problematic Three.js dependency
+  - [x] Fixed WebSocket connection errors
+  - [x] Added debugging and logging
+
+#### Risk Assessment
+
+**High Risk Items:**
+- **@crxjs/vite-plugin**: Seeking new maintainers, potential archive by March 2025
+  - **Mitigation**: Have alternative build system ready
+  - **Monitor**: Community takeover or replacement tools
+
+**Medium Risk Items:**
+- **Workbox Complexity**: May be overkill for simple extensions
+  - **Mitigation**: Implement only if offline requirements are critical
+  - **Alternative**: Simple caching with native APIs
+
+**Low Risk Items:**
+- **webext-storage**: Actively maintained, enterprise backing
+- **Native messaging**: Always available, Chrome team supported
+
+### **Implementation Metrics & Success Criteria**
+
+#### Phase 3 Success Metrics
+- [ ] Extension works offline for ≥ 24 hours
+- [ ] Background sync success rate ≥ 95%
+- [ ] Build time improvement ≥ 50% with new tooling
+- [ ] Zero data loss during offline periods
+- [ ] Developer hot reload time < 500ms
+
+#### Performance Targets
+- Extension bundle size < 2MB
+- Capture success rate ≥ 98%
+- Average capture time < 3 seconds
+- Memory usage < 50MB
+- Compatible with Chrome MV3 requirements
+
+---
+
 **Next Review**: After Phase 1 authentication completion  
 **Document Owner**: Development Team  
-**Last Major Update**: 2025-07-11 (GitHub Actions CI/CD implementation)
+**Last Major Update**: 2025-07-12 (Extension Phase 1&2 completion + Phase 3 planning)

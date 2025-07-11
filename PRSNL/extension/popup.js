@@ -1,14 +1,8 @@
-import * as THREE from './vendor/three.module.js';
-import { GLTFLoader } from './vendor/GLTFLoader.js';
-
 // State management
 let currentTab = null;
 let selectedText = '';
 let tags = [];
 let isCapturing = false;
-
-// 3D Scene
-let scene, camera, renderer, macModel;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -32,9 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Auto-detect content type
   autoDetectContentType(tab.url);
-
-  // Initialize 3D scene
-  init3D();
 });
 
 // Display tab information
@@ -74,13 +65,20 @@ function autoDetectContentType(url) {
   const contentTypeSelect = document.getElementById('content-type');
   if (!contentTypeSelect) return;
 
+  console.log('🔍 [POPUP] Auto-detecting content type for:', url);
+
   if (url.includes('github.com')) {
+    console.log('🐙 [POPUP] GitHub URL detected, setting to development');
     contentTypeSelect.value = 'development';
     toggleDevelopmentFields(true);
   } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    console.log('📺 [POPUP] YouTube URL detected, setting to video');
     contentTypeSelect.value = 'video';
   } else if (url.includes('medium.com') || url.includes('dev.to')) {
+    console.log('📄 [POPUP] Article URL detected, setting to article');
     contentTypeSelect.value = 'article';
+  } else {
+    console.log('🔧 [POPUP] No specific detection, keeping auto');
   }
 }
 
@@ -193,6 +191,23 @@ async function handleCapture() {
       enable_summarization: document.getElementById('enable-summarization').checked,
       content_type: document.getElementById('content-type').value
     };
+
+    // Validate URL - exclude chrome-extension URLs and other invalid schemes
+    if (captureData.url && (
+      captureData.url.startsWith('chrome-extension://') || 
+      captureData.url.startsWith('chrome://') ||
+      captureData.url.startsWith('moz-extension://') ||
+      captureData.url === 'about:blank'
+    )) {
+      throw new Error('Cannot capture extension pages or browser internal pages');
+    }
+
+    // Ensure we have either URL or content
+    if (!captureData.url && !captureData.content && !selectedText) {
+      throw new Error('Please select some text or ensure you are on a valid web page');
+    }
+
+    console.log('Capture data:', captureData);
     
     // Add development fields if applicable
     if (captureData.content_type === 'development') {
@@ -208,14 +223,19 @@ async function handleCapture() {
     }
     
     // Send to backend
+    console.log('📤 [POPUP] Sending capture request:', captureData);
     chrome.runtime.sendMessage({ action: 'capture', data: captureData }, (response) => {
-      if (response.success) {
+      console.log('📥 [POPUP] Received response:', response);
+      
+      if (response && response.success) {
+        console.log('✅ [POPUP] Capture successful');
         showStatus('Content captured successfully!', 'success');
         setTimeout(() => {
           window.close();
         }, 1500);
       } else {
-        showStatus(response.error || 'Failed to capture content', 'error');
+        console.error('❌ [POPUP] Capture failed:', response);
+        showStatus(response?.error || 'Failed to capture content', 'error');
       }
     });
 
@@ -244,53 +264,4 @@ function showStatus(message, type) {
   }, 5000);
 }
 
-// Initialize 3D scene
-function init3D() {
-  const canvas = document.getElementById('mac-3d-canvas');
-  if (!canvas) return;
-
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({ 
-    canvas: canvas,
-    alpha: true,
-    antialias: true 
-  });
-  renderer.setSize(40, 40);
-
-  const loader = new GLTFLoader();
-  loader.load('./models/mac-classic.glb', (gltf) => {
-    macModel = gltf.scene;
-    macModel.scale.set(0.5, 0.5, 0.5);
-    scene.add(macModel);
-  }, undefined, (error) => {
-    console.error('An error happened while loading the model:', error);
-  });
-
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
-
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(5, 10, 7.5);
-  scene.add(directionalLight);
-
-  camera.position.z = 5;
-
-  animate();
-}
-
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate);
-
-  if (macModel) {
-    macModel.rotation.y += 0.01;
-  }
-
-  if (isCapturing) {
-    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
-    if(macModel) macModel.scale.set(scale, scale, scale);
-  }
-
-  renderer.render(scene, camera);
-}
+// 3D functionality removed for simplicity

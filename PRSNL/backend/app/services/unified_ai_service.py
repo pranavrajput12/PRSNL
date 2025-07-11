@@ -44,7 +44,7 @@ class UnifiedAIService:
         
         # Check cache first
         for i, text in enumerate(texts):
-            cache_key = f"{cache_key_prefix}:{hashlib.md5(text.encode()).hexdigest()}"
+            cache_key = f"{cache_key_prefix}:{hashlib.sha256(text.encode()).hexdigest()}"
             cached = await cache_service.get(cache_key)
             if cached:
                 embeddings.append(cached)
@@ -71,7 +71,7 @@ class UnifiedAIService:
                         embeddings[idx] = emb_vector
                         
                         # Cache the embedding
-                        cache_key = f"{cache_key_prefix}:{hashlib.md5(texts[idx].encode()).hexdigest()}"
+                        cache_key = f"{cache_key_prefix}:{hashlib.sha256(texts[idx].encode()).hexdigest()}"
                         await cache_service.set(cache_key, emb_vector, expire=86400)  # 24 hours
                         
             except Exception as e:

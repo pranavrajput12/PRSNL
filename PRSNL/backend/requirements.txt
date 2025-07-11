@@ -4,6 +4,7 @@ uvicorn[standard]==0.27.0
 python-dotenv==1.0.0
 pydantic-settings==2.1.0
 slowapi==0.1.9
+fastapi-throttle==0.1.6
 
 # Database
 asyncpg==0.29.0
@@ -36,7 +37,7 @@ bandit==1.7.5
 pydocstyle==6.3.0
 
 # Voice Recognition (Offline)
-vosk==0.3.45
+vosk==0.3.44
 pywhispercpp>=1.2.0  # whisper.cpp Python bindings
 
 # AI Validation & Quality

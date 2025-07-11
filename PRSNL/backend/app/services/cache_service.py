@@ -73,7 +73,7 @@ class CacheService:
         
         # Hash long keys to prevent Redis key length issues
         if len(key_data) > 200:
-            key_hash = hashlib.md5(key_data.encode()).hexdigest()
+            key_hash = hashlib.sha256(key_data.encode()).hexdigest()
             return f"{prefix}:hash:{key_hash}"
         
         return key_data.replace(" ", "_").replace(":", "_")

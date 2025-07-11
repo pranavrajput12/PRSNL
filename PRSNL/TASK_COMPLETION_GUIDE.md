@@ -10,11 +10,13 @@ This is your single source of truth for completing tasks properly. Use this simp
 ```
 
 ### ⚠️ CRITICAL ENVIRONMENT INFO
-- **Container Runtime**: RANCHER DESKTOP (NOT Docker)
+- **Database**: LOCAL PostgreSQL (NOT Docker) - `postgresql://pronav@localhost:5432/prsnl`
+- **Container Runtime**: Rancher Desktop (only for Redis now)
 - **Frontend Development Port**: 3004 (Updated from 3003 after Svelte 5 upgrade)
 - **Frontend Container Port**: 3003 (production deployments only)
-- **Backend Port**: 8000
-- **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
+- **Backend Port**: 8000 (running locally, not in Docker)
+- **Redis Port**: 6379 (running in Docker)
+- **DO NOT**: Use Docker database, rebuild Docker containers unnecessarily
 
 ### 🤖 What AI Will Do Automatically
 When you tag this file, the AI will:
@@ -163,14 +165,14 @@ curl -X POST "http://localhost:8000/api/[endpoint]" -H "Content-Type: applicatio
 **Sanity Checks - Run These**:
 ```bash
 # 1. Verify database connection
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT version();"
+psql -U pronav -d prsnl -c "SELECT version();"
 
 # 2. Test schema changes
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "\d items"  # Check table structure
+psql -U pronav -d prsnl -c "\d items"  # Check table structure
 
 # 3. Test data integrity
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql -U pronav -d prsnl -c "SELECT COUNT(*) FROM items;"
+psql -U pronav -d prsnl -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 # 4. Test API still works with changes
 curl http://localhost:8000/api/timeline?limit=5
@@ -184,7 +186,7 @@ curl http://localhost:8000/api/timeline?limit=5
 
 # In QUICK_REFERENCE_COMPLETE.md - Add to database section:
 # [Description of new capability]
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "[YOUR_QUERY]"
+psql -U pronav -d prsnl -c "[YOUR_QUERY]"
 ```
 
 ### 🤖 AI Service Tasks (Claude) - COMPLETED
@@ -293,7 +295,7 @@ echo "3. Core functionality test:"
 curl -s http://localhost:8000/api/timeline?limit=3 | jq '.items | length'
 
 echo "4. Database connectivity:"
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
+psql -U pronav -d prsnl -c "SELECT COUNT(*) FROM items;"
 
 echo "=== BACKEND VERIFICATION COMPLETE ==="
 ```
@@ -303,13 +305,13 @@ echo "=== BACKEND VERIFICATION COMPLETE ==="
 #!/bin/bash
 echo "=== DATABASE TASK COMPLETION VERIFICATION ==="
 echo "1. Database connection:"
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT version();"
+psql -U pronav -d prsnl -c "SELECT version();"
 
 echo "2. Table structure:"
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "\d items"
+psql -U pronav -d prsnl -c "\d items"
 
 echo "3. Data integrity:"
-psql "postgresql://postgres:postgres@localhost:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql -U pronav -d prsnl -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 echo "4. API integration:"
 curl -s http://localhost:8000/api/timeline?limit=1 | jq

@@ -2,64 +2,11 @@
 
 // Configuration
 const API_BASE_URL = 'http://localhost:8000/api';
-const WS_URL = 'ws://localhost:8000/ws';
-
-// WebSocket connection
-let ws = null;
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(() => {
-  // setupContextMenu(true);
-  connectWebSocket();
+  console.log('PRSNL Extension installed');
 });
-
-// Connect to WebSocket for real-time updates
-function connectWebSocket() {
-  try {
-    ws = new WebSocket(WS_URL);
-    
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      handleWebSocketMessage(data);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    ws.onclose = () => {
-      console.log('WebSocket disconnected. Reconnecting in 5s...');
-      setTimeout(connectWebSocket, 5000);
-    };
-  } catch (error) {
-    console.error('Failed to connect WebSocket:', error);
-  }
-}
-
-// Handle WebSocket messages
-function handleWebSocketMessage(data) {
-  if (data.type === 'capture_complete') {
-    // Show notification for successful capture
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icons/icon128.png',
-      title: 'PRSNL Capture Complete',
-      message: data.message || 'Your content has been processed successfully!'
-    });
-  } else if (data.type === 'capture_error') {
-    // Show error notification
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icons/icon128.png',
-      title: 'PRSNL Capture Error',
-      message: data.message || 'Failed to process content'
-    });
-  }
-}
 
 // Enhanced capture function with retry logic
 async function captureCurrentPage(tags = []) {
@@ -109,8 +56,14 @@ async function captureCurrentPage(tags = []) {
 
 // Send capture request with retry logic
 async function sendCaptureRequest(data, retries = 3) {
+  console.log('🚀 [BACKGROUND] Starting capture request:', data);
+  
   for (let i = 0; i < retries; i++) {
     try {
+      console.log(`🔄 [BACKGROUND] Attempt ${i + 1}/${retries}`);
+      console.log('📤 [BACKGROUND] Sending to:', `${API_BASE_URL}/capture`);
+      console.log('📦 [BACKGROUND] Request body:', JSON.stringify(data, null, 2));
+      
       const response = await fetch(`${API_BASE_URL}/capture`, {
         method: 'POST',
         headers: {
@@ -119,19 +72,46 @@ async function sendCaptureRequest(data, retries = 3) {
         body: JSON.stringify(data)
       });
       
+      console.log('📥 [BACKGROUND] Response status:', response.status);
+      console.log('📥 [BACKGROUND] Response headers:', [...response.headers.entries()]);
+      
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ [BACKGROUND] Success response:', result);
         return { success: true, ...result };
       }
       
+      // Handle error responses
+      const errorText = await response.text();
+      console.error('❌ [BACKGROUND] Error response:', errorText);
+      console.error('❌ [BACKGROUND] Response status:', response.status);
+      
       // Handle specific error codes
       if (response.status === 429) {
+        console.log('⏳ [BACKGROUND] Rate limited, retrying...');
         // Rate limited - wait and retry
         await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
         continue;
       }
       
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Don't retry business logic errors (400 range except 429)
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        console.log('🚫 [BACKGROUND] Business logic error, not retrying');
+        // Break out of retry loop for client errors
+        break;
+      }
+      
+      // Try to parse error JSON
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.detail || errorJson.message || errorMessage;
+        console.error('❌ [BACKGROUND] Parsed error:', errorJson);
+      } catch (e) {
+        console.error('❌ [BACKGROUND] Could not parse error JSON');
+      }
+      
+      throw new Error(errorMessage);
     } catch (error) {
       if (i === retries - 1) throw error;
       
@@ -175,10 +155,22 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 // Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('📨 [BACKGROUND] Received message:', message);
+  
   if (message.action === 'capture') {
-    captureCurrentPage(message.tags)
-      .then(result => sendResponse(result))
-      .catch(error => sendResponse({ error: error.message }));
+    console.log('🎯 [BACKGROUND] Processing capture action');
+    console.log('📄 [BACKGROUND] Capture data received:', message.data);
+    
+    // Send the capture data directly
+    sendCaptureRequest(message.data)
+      .then(result => {
+        console.log('✅ [BACKGROUND] Capture successful, sending response:', result);
+        sendResponse({ success: true, ...result });
+      })
+      .catch(error => {
+        console.error('❌ [BACKGROUND] Capture failed:', error);
+        sendResponse({ success: false, error: error.message });
+      });
     return true; // Keep channel open for async response
   }
 });

@@ -14,7 +14,7 @@
   ],
   "host_permissions": [
     "http://localhost:8000/*",
-    "http://localhost:3003/*"
+    "http://localhost:3004/*"
   ],
   "action": {
     "default_popup": "popup.html",

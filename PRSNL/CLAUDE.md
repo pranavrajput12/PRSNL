@@ -1,11 +1,16 @@
 # PRSNL Project Configuration for Claude
 
-## CRITICAL: Container Runtime
-**WE USE RANCHER DESKTOP, NOT DOCKER**
-- Container runtime: Rancher Desktop
-- Do NOT use docker commands
-- Do NOT start Docker Desktop
-- Do NOT rebuild docker containers
+## CRITICAL: Database Configuration
+**WE USE LOCAL POSTGRESQL, NOT DOCKER DATABASE**
+- Database: Local PostgreSQL on port 5432
+- User: pronav
+- Database name: prsnl
+- Do NOT use Docker database (it's commented out in docker-compose.yml)
+
+## Container Runtime
+- We use Rancher Desktop for containers
+- Only Redis runs in Docker now
+- Backend runs locally for better development experience
 
 ## Ports (Exclusive Port Ownership)
 - Frontend Development: **3004** (Updated from 3003 after Svelte 5 upgrade - container conflict resolved)

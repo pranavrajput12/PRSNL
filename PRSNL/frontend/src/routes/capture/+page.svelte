@@ -141,6 +141,23 @@
       addTerminalLine(`> ESTIMATED_DOWNLOAD_TIME: ${formatTime(estimatedDownloadTimeSeconds)}`);
     }
     
+    // Auto-detect GitHub URLs and set to development
+    if (urlToCheck.includes('github.com')) {
+      contentType = 'development';
+      addTerminalLine(`> GITHUB DETECTED: AUTO_SET_TO_DEVELOPMENT`);
+      addTerminalLine(`> CONTENT_TYPE: DEVELOPMENT_SELECTED`);
+      
+      // Extract repository name from URL
+      const urlParts = urlToCheck.split('/');
+      if (urlParts.length >= 5) {
+        const owner = urlParts[3];
+        const repoName = urlParts[4];
+        if (owner && repoName) {
+          addTerminalLine(`> REPOSITORY: ${owner}/${repoName}`);
+        }
+      }
+    }
+    
     if (urlToCheck) {
       updateStepStatus(1, 'processing');
       addTerminalLine(`> SCANNING_URL: ${urlToCheck.substring(0, 50)}...`);

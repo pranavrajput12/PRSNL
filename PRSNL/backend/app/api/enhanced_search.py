@@ -11,6 +11,7 @@ from app.services.enhanced_search_service import enhanced_search_service
 from app.services.embedding_manager import embedding_manager
 from app.utils.fingerprint import calculate_content_fingerprint
 from app.core.auth import get_current_user_optional
+from app.middleware.throttle import semantic_search_limiter, embedding_limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["Enhanced Search"])
@@ -39,7 +40,7 @@ class SimilarItemsRequest(BaseModel):
     threshold: float = Field(default=0.5, ge=0.0, le=1.0, description="Minimum similarity threshold")
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(semantic_search_limiter)])
 async def enhanced_search(
     request: SearchRequest,
     current_user = Depends(get_current_user_optional)
@@ -144,7 +145,7 @@ async def keyword_search_get(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/duplicates")
+@router.post("/duplicates", dependencies=[Depends(semantic_search_limiter)])
 async def find_duplicates(
     request: DuplicateSearchRequest,
     current_user = Depends(get_current_user_optional)
@@ -170,7 +171,7 @@ async def find_duplicates(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/similar")
+@router.post("/similar", dependencies=[Depends(semantic_search_limiter)])
 async def find_similar_items(
     request: SimilarItemsRequest,
     current_user = Depends(get_current_user_optional)
@@ -267,7 +268,7 @@ async def get_search_stats(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/migrate-embeddings")
+@router.post("/migrate-embeddings", dependencies=[Depends(embedding_limiter)])
 async def migrate_legacy_embeddings(
     current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
@@ -288,7 +289,7 @@ async def migrate_legacy_embeddings(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/update-embeddings")
+@router.post("/update-embeddings", dependencies=[Depends(embedding_limiter)])
 async def update_all_embeddings(
     model_name: Optional[str] = Query(None, description="Embedding model to use"),
     current_user = Depends(get_current_user_optional)

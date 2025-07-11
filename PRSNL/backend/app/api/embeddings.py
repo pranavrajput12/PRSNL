@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.db.database import get_db_pool
 from app.services.embedding_service import embedding_service
+from app.middleware.throttle import mass_processing_limiter
 import asyncpg
 import logging
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.post("/embeddings/generate", status_code=status.HTTP_200_OK)
+@router.post("/embeddings/generate", status_code=status.HTTP_200_OK, dependencies=[Depends(mass_processing_limiter)])
 async def generate_embeddings_for_existing_items(db_pool: asyncpg.Pool = Depends(get_db_pool)):
     """Generates embeddings for existing items that do not have them."""
     try:

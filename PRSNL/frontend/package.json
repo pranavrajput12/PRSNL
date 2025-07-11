@@ -11,7 +11,8 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "generate-api": "orval --config orval.config.cjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^6.0.1",
@@ -23,6 +24,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-svelte": "^2.46.1",
+    "orval": "^7.10.0",
     "prettier": "^3.2.5",
     "prettier-plugin-svelte": "^3.2.2",
     "svelte": "^5.35.6",

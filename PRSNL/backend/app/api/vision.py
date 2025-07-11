@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from typing import Optional, Dict, Any
 import aiofiles
 import os
+import tempfile
 from datetime import datetime
 import uuid
 import json
@@ -30,10 +31,8 @@ async def analyze_image(
         if not file.content_type or not file.content_type.startswith('image/'):
             raise InvalidInput("File must be an image")
             
-        # Create temporary file
-        temp_dir = "/tmp/prsnl_vision"
-        os.makedirs(temp_dir, exist_ok=True)
-        
+        # Create secure temporary file
+        temp_dir = tempfile.mkdtemp(prefix='prsnl_vision_')
         temp_path = os.path.join(temp_dir, f"{uuid.uuid4()}_{file.filename}")
         
         # Save uploaded file
@@ -96,9 +95,11 @@ async def analyze_image(
             }
             
         finally:
-            # Clean up temp file
+            # Clean up temp file and directory
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+            if os.path.exists(temp_dir):
+                os.rmdir(temp_dir)
                 
     except Exception as e:
         raise InternalServerError(f"Vision analysis failed: {str(e)}")

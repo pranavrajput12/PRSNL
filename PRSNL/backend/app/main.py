@@ -9,20 +9,26 @@ import shutil
 import logging
 import sys
 import socket
+import tempfile
 
 # Import Sentry
 # from app.core.sentry import init_sentry
 
-# Import observability
-from app.core.observability import instrument_fastapi_app
+# Import observability (disabled - missing dependencies)
+# TODO: Fix observability dependencies in Docker build
+# from app.core.observability import instrument_fastapi_app
 
-# Configure comprehensive logging
+# Configure comprehensive logging with secure temp file
+# Create secure temporary directory for logs
+temp_dir = tempfile.mkdtemp(prefix='prsnl_logs_')
+log_file = os.path.join(temp_dir, 'prsnl_debug.log')
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/tmp/prsnl_debug.log')
+        logging.FileHandler(log_file)
     ]
 )
 
@@ -55,7 +61,7 @@ app = FastAPI(
 )
 
 # 🔍 Two-line drop-in observability setup
-instrument_fastapi_app(app)
+# instrument_fastapi_app(app)
 
 # Add legacy Prometheus middleware (enhanced by observability)
 app.add_middleware(PrometheusMiddleware, app_name="prsnl_backend", group_paths=True)
@@ -184,7 +190,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 
 from fastapi.staticfiles import StaticFiles
 from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
-from app.api import enhanced_search
+from app.api import enhanced_search, embeddings
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
 from app.api import insights, import_data, file_upload, content_types, development, ai, rag, firecrawl
@@ -238,6 +244,7 @@ app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(rag.router, prefix=settings.API_V1_STR)
 app.include_router(firecrawl.router, prefix=settings.API_V1_STR)
 app.include_router(enhanced_search.router, prefix=settings.API_V1_STR)
+app.include_router(embeddings.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

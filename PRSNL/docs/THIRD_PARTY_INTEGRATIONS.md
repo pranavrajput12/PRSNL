@@ -2,6 +2,14 @@
 
 This document catalogs all third-party libraries, APIs, and integrations used in the PRSNL knowledge management system.
 
+## **🚨 Infrastructure Update (2025-07-12)**
+**Database Migration & Docker Simplification**:
+- **Database**: Migrated from Docker PostgreSQL to local PostgreSQL
+- **Docker Usage**: Now only used for Redis (simplified infrastructure)
+- **Data Migration**: All 23 items successfully migrated from Docker to local database
+- **Backend**: Running locally instead of Docker for better development experience
+- **Configuration**: Updated all connection strings to use `postgresql://pronav@localhost:5432/prsnl`
+
 ## **🆕 Recent Major Update (2025-07-11)**
 **Advanced Integrations & Architecture v2.4** completed:
 - **Sentry Integration**: Complete error monitoring for frontend and backend
@@ -13,7 +21,7 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 - Frontend port changed from 3003 to 3004 for development
 - All integrations tested and verified working
 
-## **✅ Completed Integrations (2025-07-11)**
+## **✅ Completed Integrations (Updated 2025-07-12)**
 | Integration | Status | Purpose | Priority | Implementation Details |
 |-------------|--------|---------|----------|------------------------|
 | **Sentry** | ✅ Added | Error monitoring & performance tracking | High | Frontend + Backend integration, 5k events/month free |
@@ -21,10 +29,14 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | **Content Fingerprinting** | ✅ Added | Duplicate detection & change tracking | High | SHA-256 hashing, database field, indexed |
 | **Normalized Embeddings** | ✅ Added | Vector storage optimization | High | Separate embeddings table, embed_vector_id foreign key |
 | **Enhanced Search** | ✅ Added | Multi-modal search capabilities | High | Semantic, keyword, hybrid search with deduplication |
+| **OpenAPI-Typegen** | ✅ Added | Auto-generated TypeScript API clients | High | Orval with Svelte-Query, type-safe API calls, auto-sync |
+| **FastAPI-Throttle** | ✅ Added | Endpoint-specific rate limiting | High | Leaky bucket protection for embedding/upload endpoints |
 
 ## **🚧 Future Integrations**
 | Integration | Status | Purpose | Priority | Notes |
 |-------------|--------|---------|----------|-------|
+| **PromptLayer OSS** | 🔵 Evaluated | Azure OpenAI logging & prompt debugging | Medium | LiteLLM proxy + PromptLayer integration (score: 80%) |
+| **NATS JetStream** | 🔵 Phase 3 | Cross-platform event messaging | Medium | Real-time sync between web ↔ extension ↔ iOS |
 | **Web-Workerize-Svelte** | 🔵 Later Stage | Offload heavy processing to Web Workers | Medium | For Markdown parsing & embeddings |
 | **UnoCSS** | ⚪ Considered | Atomic CSS with minimal bundle size | Low | High effort, defer until needed |
 
@@ -33,10 +45,10 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 ### **Database & Storage**
 | Library | Version | Purpose | License | Risk Level |
 |---------|---------|---------|---------|------------|
-| `PostgreSQL` | - | Primary database with pgvector | PostgreSQL | Low |
+| `PostgreSQL` | Local | Primary database (local, not Docker) | PostgreSQL | Low |
 | `pgvector` | 0.2.0 | Vector similarity search | PostgreSQL | Low |
 | `asyncpg` | 0.29.0 | Async PostgreSQL driver | Apache 2.0 | Low |
-| `Redis` | 5.0.1 | Caching & session storage | BSD | Low |
+| `Redis` | 5.0.1 | Caching (Docker container) | BSD | Low |
 | `SQLAlchemy` | 2.0.25 | ORM and query builder | MIT | Low |
 
 ### **Web Framework & API**
@@ -46,6 +58,7 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `Uvicorn` | 0.27.0 | ASGI web server | BSD | Low |
 | `Pydantic` | - | Data validation | MIT | Low |
 | `slowapi` | 0.1.9 | Rate limiting | MIT | Low |
+| `fastapi-throttle` | 0.1.9 | **✅ Endpoint-specific rate limiting** | MIT | Low |
 | `python-multipart` | 0.0.6 | File upload support | Apache 2.0 | Low |
 
 ## **🎨 Frontend Stack (SvelteKit) - UPDATED 2025-07-11**
@@ -87,6 +100,14 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `ESLint` | **8.57.1** | Code linting | MIT | Low |
 | `Prettier` | **3.2.5** | Code formatting | MIT | Low |
 | `svelte-check` | **3.6.6** | Type checking | MIT | Low |
+
+### **NEW: API Client Generation**
+| Library | Version | Purpose | License | Risk Level |
+|---------|---------|---------|---------|------------|
+| `orval` | **7.10.0** | **✅ OpenAPI TypeScript client generator** | MIT | Low |
+| **Features** | Auto-generated API clients from FastAPI schema | **✅ Operational** | Low |
+| **Integration** | Svelte-Query hooks, type-safe requests, custom mutator | **✅ Active** | Low |
+| **Benefits** | Type safety, API sync, reduced manual API client code | **✅ Active** | Low |
 
 ## **🔗 External API Integrations**
 
@@ -267,6 +288,70 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `python-telegram-bot` | 20.8 | Telegram notifications | GPL v3 | Medium |
 | `tenacity` | 8.2.3 | Retry mechanisms | Apache 2.0 | Low |
 
+## **🚀 Future: Real-time Event Messaging**
+
+### **NATS JetStream Integration (Planned for Phase 3)**
+| Component | Purpose | Implementation Status | Benefits |
+|-----------|---------|---------------------|----------|
+| `NATS Server` | Lightweight message broker (<15 MB Go binary) | 🔵 Planned | Cross-platform event sync |
+| `NATS Client Libraries` | Language-specific client SDKs | 🔵 Research | TypeScript/Swift/Python support |
+| **Architecture** | Event-driven communication | 🔵 Design | Replace REST polling with push events |
+| **Use Cases** | Extension ↔ Web ↔ iOS sync | 🔵 Specification | Real-time content updates |
+
+### **Event Messaging Benefits**
+- **Real-time Sync**: Instant content updates across all platforms
+- **Offline-first**: Message persistence with replay capability  
+- **Lightweight**: Minimal resource footprint vs traditional message brokers
+- **Scalable**: Built-in clustering and high availability
+- **Cross-platform**: Unified messaging for web, extension, and mobile
+
+### **Integration Timeline**
+- **Phase 1**: User authentication (current priority)
+- **Phase 2**: Security fixes and optimizations
+- **Phase 3**: NATS JetStream implementation
+- **Phase 4**: Enterprise features and advanced messaging patterns
+
+## **🚦 Endpoint Rate Limiting & Protection**
+
+### **NEW: FastAPI-Throttle Implementation (2025-07-11)**
+| Component | Purpose | Configuration | Protection Level |
+|-----------|---------|---------------|------------------|
+| `embedding_limiter` | Expensive AI model calls | 5 requests / 5 minutes | **High** |
+| `capture_throttle_limiter` | Extension upload protection | 30 requests / minute | **Medium** |
+| `file_upload_limiter` | File upload rate limiting | 15 files / 5 minutes | **Medium** |
+| `semantic_search_limiter` | Search query protection | 50 requests / minute | **Medium** |
+| `mass_processing_limiter` | Admin bulk operations | 2 requests / 10 minutes | **Maximum** |
+
+### **Throttling Strategy**
+- **Layered Protection**: FastAPI-Throttle for specific endpoints + SlowAPI for general rate limiting
+- **IP-Based Tracking**: Automatic identification of runaway clients
+- **Zero Dependencies**: In-memory storage, no Redis/external services required
+- **Fast Response**: <1ms overhead per request
+- **Clear Error Messages**: HTTP 429 with retry-after headers
+
+### **Protected Endpoints**
+```python
+# High-cost AI operations
+POST /api/embeddings/generate          # 5 requests / 5 minutes
+POST /api/search/migrate-embeddings    # 5 requests / 5 minutes  
+POST /api/search/update-embeddings     # 5 requests / 5 minutes
+
+# Extension upload protection
+POST /api/capture                      # 30 requests / minute
+POST /api/file/upload                  # 15 files / 5 minutes
+
+# Search operations
+POST /api/search/                      # 50 requests / minute
+POST /api/search/duplicates            # 50 requests / minute
+POST /api/search/similar               # 50 requests / minute
+```
+
+### **Throttling Benefits**
+- **Cost Control**: Prevents runaway AI API charges
+- **Resource Protection**: Guards against memory/CPU exhaustion
+- **Extension Safety**: Stops malicious or buggy extension behavior
+- **Graceful Degradation**: Users get clear feedback when limits are hit
+
 ## **🚨 Risk Assessment & Security Considerations**
 
 ### **Critical Risk Components**
@@ -367,5 +452,5 @@ whisper.cpp → Simple Transcription → Complete Privacy
 | `whisper.cpp` | Offline transcription | Models auto-download | Low |
 | `pgvector` | Semantic search | Database extension | Low |
 
-**Last Updated:** 2025-07-11  
-**Next Review:** 2025-10-11
+**Last Updated:** 2025-07-12 (Database migration to local PostgreSQL + FastAPI-Throttle verified working)  
+**Next Review:** 2025-10-12

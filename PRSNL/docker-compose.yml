@@ -1,24 +1,29 @@
-version: '3.8'
+# PRSNL Docker Configuration
+# NOTE: We use local PostgreSQL for the main database
+# This file is for Redis and other services only
 
 services:
-  db:
-    image: pgvector/pgvector:pg16
-    container_name: prsnl_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: prsnl
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d prsnl"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # Database is now using local PostgreSQL (not Docker)
+  # To use Docker database again, uncomment the db service below
+  
+  # db:
+  #   image: pgvector/pgvector:pg16
+  #   container_name: prsnl_db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: prsnl
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   ports:
+  #     - "${POSTGRES_PORT:-5432}:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./backend/app/db/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres -d prsnl"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   redis:
     image: redis:7-alpine
@@ -45,12 +50,13 @@ services:
       - ./backend/media:/app/media
       - /Users/pronav/Library/Application Support/Arc:/chrome-profile:ro
     depends_on:
-      db:
-        condition: service_healthy
+      # db:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/prsnl
+      # Using local database instead of Docker
+      DATABASE_URL: postgresql://pronav@host.docker.internal:5432/prsnl
       PG_CONN_STR: postgresql://postgres:postgres@db:5432/prsnl
       REDIS_URL: redis://redis:6379
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}

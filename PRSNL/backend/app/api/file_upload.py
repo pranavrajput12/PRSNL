@@ -16,6 +16,7 @@ from app.services.embedding_service import embedding_service
 from app.db.database import get_db_pool, get_db_connection, update_item_embedding
 from app.models.schemas import ItemStatus
 from app.middleware.rate_limit import capture_limiter
+from app.middleware.throttle import file_upload_limiter, bulk_operation_limiter
 from app.services.cache import invalidate_cache, CacheKeys
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class FileProcessingStatus(BaseModel):
     word_count: Optional[int] = None
     ai_analysis_complete: bool = False
 
-@router.post("/upload", status_code=status.HTTP_201_CREATED, response_model=FileUploadResponse)
+@router.post("/upload", status_code=status.HTTP_201_CREATED, response_model=FileUploadResponse, dependencies=[Depends(file_upload_limiter)])
 @capture_limiter
 @invalidate_cache(patterns=[f"{CacheKeys.STATS}:*"])
 async def upload_file(

@@ -1,8 +1,21 @@
-# PRSNL - Personal Knowledge Management System v2.2
+# PRSNL - Personal Knowledge Management System v2.3
 
-> **Advanced AI-powered knowledge management with comprehensive observability and hybrid transcription**
+> **Advanced AI-powered knowledge management with simplified infrastructure and enhanced rate limiting**
 
-PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 2.2 introduces enterprise-grade monitoring, offline transcription capabilities, and automated code quality tools.
+PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 2.3 introduces FastAPI-Throttle for endpoint protection, simplified Docker infrastructure, and improved local development experience.
+
+## 🚨 **Recent Updates (v2.3 - July 2025)**
+
+### **Infrastructure Simplification**
+- **Database**: Migrated from Docker to local PostgreSQL for better performance
+- **Docker**: Now only used for Redis (simplified container management)
+- **Backend**: Runs locally with `uvicorn` for easier debugging
+- **Development**: Improved local development experience
+
+### **Security & Performance**
+- **FastAPI-Throttle**: Added rate limiting to protect high-cost endpoints
+- **Endpoint Protection**: Embedding generation, file uploads, and search endpoints
+- **Rate Limits**: Configurable per-endpoint throttling
 
 ## 🌟 **Key Features**
 
@@ -38,11 +51,11 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
-- **Rancher Desktop** (NOT Docker Desktop)
+- **Local PostgreSQL 14+** with pgvector extension (primary database)
+- **Rancher Desktop** for Redis container only
 - **Python 3.11+**
-- **Node.js 18+**
-- **PostgreSQL 14+** with pgvector extension
-- **Redis 7+**
+- **Node.js 18+** (v20+ recommended)
+- **Redis 7+** (runs in Docker)
 
 ### **1. Clone and Setup**
 ```bash
@@ -68,17 +81,22 @@ nano backend/.env
 
 ### **3. Start Services**
 ```bash
-# Start core services (PostgreSQL, Redis, Backend, Frontend)
-docker-compose up -d
+# Start Redis only (database is local PostgreSQL)
+docker-compose up -d redis
 
-# Start monitoring stack (optional)
-./start-monitoring.sh
+# Start backend locally
+cd backend
+python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Start frontend (in new terminal)
+cd frontend
+npm run dev -- --port 3004
 ```
 
 ### **4. Access Applications**
 | Service | URL | Purpose |
 |---------|-----|---------|
-| **PRSNL Web App** | http://localhost:3003 | Main application |
+| **PRSNL Web App** | http://localhost:3004 | Main application |
 | **API Documentation** | http://localhost:8000/docs | Backend API docs |
 | **Grafana Monitoring** | http://localhost:3000 | Performance dashboards |
 | **Prometheus Metrics** | http://localhost:9090 | Raw metrics data |

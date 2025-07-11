@@ -13,6 +13,7 @@ from app.db.database import get_db_pool, get_db_connection, update_item_embeddin
 from app.services.embedding_service import embedding_service
 from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
 from app.middleware.rate_limit import capture_limiter
+from app.middleware.throttle import capture_throttle_limiter
 import logging
 import asyncpg
 from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS, VIDEO_DOWNLOAD_OUTCOMES, VIDEO_DOWNLOAD_DURATION_SECONDS, VIDEO_PROCESSING_DURATION_SECONDS
@@ -94,7 +95,7 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
 
 from app.services.cache import invalidate_cache, CacheKeys
 
-@router.post("/capture", status_code=status.HTTP_201_CREATED)
+@router.post("/capture", status_code=status.HTTP_201_CREATED, dependencies=[Depends(capture_throttle_limiter)])
 async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks):
     """Capture a new item (web page, note, file, etc.)."""
     print(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force print
@@ -149,8 +150,21 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             media_info = None
             item_type = 'article'  # Default fallback
             
-            # Rule 1: If user explicitly chose content_type, respect it (except 'auto')
-            if capture_request.content_type and capture_request.content_type != 'auto':
+            # Rule 1: Auto-detect GitHub URLs as development (override user choice)
+            if capture_request.url and 'github.com' in str(capture_request.url).lower():
+                item_type = 'development'
+                capture_request.content_type = 'development'  # Override user selection
+                logger.info(f"🐙 GitHub URL detected, forcing content_type: development → type: {item_type}")
+                
+                # Auto-fill development fields for GitHub
+                url_classification = URLClassifier.classify_url(str(capture_request.url))
+                if not capture_request.programming_language and url_classification.get('programming_language'):
+                    capture_request.programming_language = url_classification['programming_language']
+                if not capture_request.project_category and url_classification.get('project_category'):
+                    capture_request.project_category = url_classification['project_category']
+                    
+            # Rule 2: If user explicitly chose content_type, respect it (except 'auto' and GitHub override)
+            elif capture_request.content_type and capture_request.content_type != 'auto':
                 # Map content_type to item_type
                 if capture_request.content_type == 'video':
                     item_type = 'video'
@@ -172,7 +186,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     
                 logger.info(f"🎯 Using user-selected content_type: {capture_request.content_type} → type: {item_type}")
             
-            # Rule 2: Auto-detection only when content_type='auto' or not specified
+            # Rule 3: Auto-detection only when content_type='auto' or not specified
             elif capture_request.url and (not capture_request.content_type or capture_request.content_type == 'auto'):
                 # First check for development content
                 url_classification = URLClassifier.classify_url(str(capture_request.url))
@@ -210,7 +224,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                         
                     logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
             
-            # Rule 3: Special case - if no summarization requested for URL, treat as simple link
+            # Rule 4: Special case - if no summarization requested for URL, treat as simple link
             # Exception: Don't convert development content to link (it needs rich preview)
             if (capture_request.url and not capture_request.enable_summarization and 
                 capture_request.content_type not in ['video', 'document', 'image', 'development'] and
@@ -243,8 +257,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 "content_type": capture_request.content_type  # Store user-selected content type
             }
             
-            # Generate rich preview for development content
-            if item_type == 'development' and capture_request.url:
+            # Generate rich preview for development content (check both auto-detected type and user-selected type)
+            if (item_type == 'development' or capture_request.content_type == 'development') and capture_request.url:
                 try:
                     logger.info(f"🔍 Generating rich preview for development content: {capture_request.url}")
                     preview_data = await preview_service.generate_preview(str(capture_request.url), 'development')
