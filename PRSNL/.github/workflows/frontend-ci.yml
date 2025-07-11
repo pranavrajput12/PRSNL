@@ -1,0 +1,257 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+
+env:
+  NODE_VERSION: '24'
+  
+jobs:
+  lint-and-format:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Format check with Prettier
+      run: |
+        cd frontend
+        npm run format:check
+        
+    - name: Lint with ESLint
+      run: |
+        cd frontend
+        npm run lint
+        
+    - name: Type check with TypeScript
+      run: |
+        cd frontend
+        npm run check
+        
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Run unit tests
+      run: |
+        cd frontend
+        npm run test:unit
+        
+    - name: Run component tests
+      run: |
+        cd frontend
+        npm run test:integration
+        
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, test]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Build application
+      env:
+        VITE_API_URL: https://api.example.com
+        VITE_ENVIRONMENT: production
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Check build size
+      run: |
+        cd frontend
+        npm run build:analyze
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        retention-days: 7
+        
+  lighthouse:
+    name: Lighthouse Performance
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        
+    - name: Serve static files
+      run: |
+        cd frontend
+        npx serve dist/ &
+        sleep 5
+        
+    - name: Run Lighthouse
+      uses: treosh/lighthouse-ci-action@v10
+      with:
+        configPath: './frontend/lighthouserc.json'
+        uploadArtifacts: true
+        temporaryPublicStorage: true
+        
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Run npm audit
+      run: |
+        cd frontend
+        npm audit --audit-level=moderate
+        
+    - name: Run security scan with Snyk
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --project-name=prsnl-frontend --severity-threshold=high
+        
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        
+    - name: Deploy to Preview Environment
+      run: |
+        echo "🚀 Would deploy preview to staging environment"
+        echo "Preview URL: https://pr-${{ github.event.number }}-prsnl.vercel.app"
+        echo "This step would typically deploy to Vercel/Netlify preview"
+        
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Would deploy to staging environment"
+        echo "This step would typically deploy to staging.prsnl.app"
+        
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, security-scan, lighthouse]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        
+    - name: Deploy to production
+      run: |
+        echo "🚀 Would deploy to production environment"
+        echo "This step would typically deploy to prsnl.app"
+        echo "Production deployment can be configured with Vercel/Netlify CLI"
