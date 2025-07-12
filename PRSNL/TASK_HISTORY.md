@@ -46,6 +46,43 @@ This document consolidates all task tracking, project history, and progress moni
 
 ### ✅ RECENTLY COMPLETED
 
+#### Task CLAUDE-2025-07-12-006: TanStack Query v5 & OpenAPI Client Improvements
+**Status**: COMPLETED
+**Started**: 2025-07-12 15:00
+**Completed**: 2025-07-12 15:30
+**Assigned**: Claude
+**Type**: Frontend Infrastructure + Build Process
+**Priority**: P1
+**Files Modified**:
+- `/frontend/src/routes/+layout.svelte` - Fixed deprecated `cacheTime` → `gcTime` for TanStack Query v5 compatibility
+- `/frontend/package.json` - Added `prebuild` script to automatically generate API client before builds
+- `/.github/workflows/ci-cd.yml` - Added API generation and drift detection steps in CI/CD pipeline
+**Infrastructure Improvements**:
+- **TanStack Query v5 Compatibility**: Fixed deprecated `cacheTime` property to use `gcTime` for proper garbage collection
+- **Automatic API Generation**: Added prebuild script that runs `npm run generate-api` before every build
+- **CI/CD API Validation**: Added automated API client generation and drift detection in CI/CD pipeline
+- **Background Refetch**: Enabled `refetchOnWindowFocus: true` for better user experience
+**Features Implemented**:
+- **Developer Experience**: API types automatically stay in sync with backend changes
+- **Build Safety**: Builds now fail if API client is out of sync with backend schema
+- **Performance**: Optimized cache settings with proper garbage collection timing (10 minutes gcTime)
+- **Reliability**: Background refetch ensures fresh data when users return to the application
+**Issues Resolved**:
+- **Deprecated API Warning**: TanStack Query v5 deprecation warnings eliminated
+- **Manual API Generation**: Developers no longer need to remember to run `npm run generate-api`
+- **API Drift**: CI/CD prevents deployments with outdated API client definitions
+- **Stale Data**: Users get fresh data when switching back to browser tabs
+**Notes**: These improvements enhance the development workflow by automating API client management and ensuring type safety between frontend and backend. All changes maintain backward compatibility while preparing the codebase for advanced query patterns needed for the upcoming AI second brain features.
+**Sanity Checks**:
+- ✅ Frontend development server starts without warnings
+- ✅ API client generates successfully in CI/CD pipeline
+- ✅ TanStack Query cache configuration working correctly
+- ✅ Background refetch behavior functions as expected
+- ✅ Build process includes automatic API generation
+**Documentation Updates**:
+- ✅ TASK_HISTORY.md - Task completion logged with implementation details
+- ✅ TODO list updated with completed priority improvements 1-4
+
 #### Task CLAUDE-2025-07-12-005: GitHub Repository Preview Enhancement & README Content Fix
 **Status**: COMPLETED
 **Started**: 2025-07-12 13:30

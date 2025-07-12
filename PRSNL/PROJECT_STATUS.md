@@ -24,6 +24,11 @@ PRSNL consists of three main components:
 - **🔌 Chrome Extension**: Content capture with Neural Chip Module design
 
 ### 🎉 Version 2.4 Release Highlights (2025-07-12)
+- ✅ **TanStack Query v5 & API Infrastructure**: Modern query client improvements
+  - Fixed deprecated `cacheTime` → `gcTime` for proper garbage collection
+  - Automatic API client generation in build pipeline (`prebuild` script)
+  - CI/CD API drift detection preventing outdated deployments
+  - Background refetch enabled for fresh data when users return
 - ✅ **Infrastructure Quick Wins**: Implemented expert-recommended optimizations
   - DragonflyDB replacing Redis (25x performance improvement)
   - HTTP client standardization on httpx
