@@ -15,7 +15,7 @@ import logging
 
 from app.services.unified_ai_service import unified_ai_service
 from app.services.whisper_only_transcription import transcription_service, TranscriptionModel
-from app.services.ai_validation_service import ai_validation_service, GUARDRAILS_AVAILABLE
+# Guardrails removed per SDE2 recommendation
 from app.core.auth import get_current_user_optional
 
 logger = logging.getLogger(__name__)
@@ -252,7 +252,7 @@ async def get_validation_status(
     """Get AI validation service status."""
     try:
         return {
-            "guardrails_available": GUARDRAILS_AVAILABLE,
+            # Guardrails removed
             "validation_enabled": True,
             "supported_schemas": [
                 "content_analysis",

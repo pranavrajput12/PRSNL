@@ -140,6 +140,23 @@ jobs:
         npm ci
         echo "✅ Frontend dependencies installed successfully"
 
+    - name: Generate API client
+      run: |
+        cd PRSNL/frontend
+        npm run generate-api
+        echo "✅ API client generated successfully"
+
+    - name: Check for API drift
+      run: |
+        cd PRSNL/frontend
+        if git diff --exit-code src/lib/api/generated.ts src/lib/types/generated/; then
+          echo "✅ API client is up to date"
+        else
+          echo "❌ API client has drift - please run 'npm run generate-api' locally"
+          git diff src/lib/api/generated.ts src/lib/types/generated/
+          exit 1
+        fi
+
     - name: Run type checking
       run: |
         cd PRSNL/frontend

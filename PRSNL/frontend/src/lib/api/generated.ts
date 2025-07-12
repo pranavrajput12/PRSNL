@@ -6713,7 +6713,7 @@ export const importNotesApiImportNotesPost = (
     bodyImportNotesApiImportNotesPost.default_tags !== undefined &&
     bodyImportNotesApiImportNotesPost.default_tags !== null
   ) {
-    formData.append(`default_tags`, JSON.stringify(bodyImportNotesApiImportNotesPost.default_tags));
+    formData.append(`default_tags`, bodyImportNotesApiImportNotesPost.default_tags);
   }
 
   return customInstance<unknown>({

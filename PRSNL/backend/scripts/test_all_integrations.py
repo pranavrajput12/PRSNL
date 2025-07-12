@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Integration Test Suite for PRSNL v4.2.0
-Tests all AI integrations: RAG, Firecrawl, OpenCLIP, Guardrails, etc.
+#Tests all AI integrations: RAG, Firecrawl, OpenCLIP, Guardrails, etc.
 """
 
 import asyncio

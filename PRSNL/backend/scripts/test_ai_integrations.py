@@ -3,7 +3,7 @@
 Comprehensive test suite for all AI integrations in PRSNL.
 
 Tests:
-1. Guardrails-AI validation
+#1. Guardrails-AI validation
 2. whisper.cpp transcription
 3. Unified AI service
 4. End-to-end content processing
@@ -357,7 +357,7 @@ async def main():
     print("🧪 PRSNL AI Integration Test Suite")
     print("="*80)
     print("\nThis test suite validates all AI integrations including:")
-    print("- Guardrails-AI validation")
+#    print("- Guardrails-AI validation")
     print("- whisper.cpp transcription")
     print("- Unified AI service")
     print("- End-to-end workflows")
