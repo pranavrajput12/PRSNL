@@ -1,6 +1,7 @@
 # Core
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
+uvloop==0.21.0  # High-performance event loop (2-4x async performance boost)
 python-dotenv==1.0.0
 pydantic-settings==2.1.0
 slowapi==0.1.9

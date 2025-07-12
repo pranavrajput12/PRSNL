@@ -11,6 +11,18 @@ import sys
 import socket
 import tempfile
 
+# Configure uvloop for 2-4x async performance boost
+try:
+    import uvloop
+    # Only install on non-Windows platforms (uvloop doesn't support Windows)
+    if sys.platform != 'win32':
+        uvloop.install()
+        logging.info("🚀 uvloop installed - async performance optimized")
+    else:
+        logging.info("⚠️ uvloop not available on Windows - using default asyncio")
+except ImportError:
+    logging.warning("⚠️ uvloop not available - install with: pip install uvloop")
+
 # Import Sentry
 # from app.core.sentry import init_sentry
 
