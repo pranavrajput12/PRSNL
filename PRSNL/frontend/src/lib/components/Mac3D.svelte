@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -127,12 +127,12 @@
 
     if (!ctx) return;
 
-    // Fill with classic Mac screen green
-    ctx.fillStyle = '#00ff00';
+    // Fill with classic Mac screen teal
+    ctx.fillStyle = '#4ECDC4';
     ctx.fillRect(0, 0, 1024, 1024);
 
     // Add scanlines effect
-    ctx.strokeStyle = 'rgba(0, 200, 0, 0.3)';
+    ctx.strokeStyle = 'rgba(78, 205, 196, 0.3)';
     ctx.lineWidth = 2;
     for (let i = 0; i < 1024; i += 4) {
       ctx.beginPath();
@@ -142,7 +142,7 @@
     }
 
     // Set text properties
-    ctx.fillStyle = '#003300';
+    ctx.fillStyle = '#0D1B2A';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 

@@ -110,18 +110,18 @@ class WhisperCppTranscriptionService:
     
     async def _download_model(self, url: str, save_path: Path):
         """Download Whisper model."""
-        import aiohttp
+        import httpx
         
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    raise Exception(f"Failed to download model: HTTP {response.status}")
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", url) as response:
+                if response.status_code != 200:
+                    raise Exception(f"Failed to download model: HTTP {response.status_code}")
                 
                 total_size = int(response.headers.get('content-length', 0))
                 downloaded = 0
                 
                 with open(save_path, 'wb') as f:
-                    async for chunk in response.content.iter_chunked(8192):
+                    async for chunk in response.aiter_bytes(chunk_size=8192):
                         f.write(chunk)
                         downloaded += len(chunk)
                         

@@ -6,7 +6,7 @@ import os
 
 class Settings(BaseSettings):
     # Database - Railway provides DATABASE_URL automatically
-    _database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/prsnl")
+    _database_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5433/prsnl")
     # Fix Railway's postgres:// to postgresql:// for asyncpg
     DATABASE_URL: str = _database_url.replace("postgres://", "postgresql://", 1) if _database_url.startswith("postgres://") else _database_url
     
@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     # Additional settings from .env
     ENVIRONMENT: str = "development"
     PRSNL_API_KEY: Optional[str] = None
+    GITHUB_TOKEN: Optional[str] = None
     
     # Firecrawl Web Scraping
     FIRECRAWL_API_KEY: Optional[str] = None

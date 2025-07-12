@@ -15,8 +15,7 @@ from app.services.file_ai_processor import FileAIProcessor
 from app.services.embedding_service import embedding_service
 from app.db.database import get_db_pool, get_db_connection, update_item_embedding
 from app.models.schemas import ItemStatus
-from app.middleware.rate_limit import capture_limiter
-from app.middleware.throttle import file_upload_limiter, bulk_operation_limiter
+from app.middleware.rate_limit import capture_limiter, file_upload_limiter, bulk_operation_limiter
 from app.services.cache import invalidate_cache, CacheKeys
 
 logger = logging.getLogger(__name__)

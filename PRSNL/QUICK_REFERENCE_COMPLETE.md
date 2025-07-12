@@ -1,14 +1,17 @@
 # 🚀 PRSNL Complete Quick Reference & Troubleshooting Guide
 
-## 🎯 System Status (2025-07-11)
+## 🎯 System Status (2025-07-12)
+- ✅ **Infrastructure v2.4**: DragonflyDB cache, httpx standardized, slowapi only
 - ✅ **Svelte 5 Migration**: Complete upgrade to v5.35.6 with Runes system
-- ✅ **Security**: All 14 vulnerabilities resolved, zero security issues
+- ✅ **Security**: Critical vulnerabilities fixed (pickle, MD5, temp dirs)
+- ✅ **Chrome Extension**: Fixed and functional with GitHub auto-detection
 - ✅ **Frontend Development**: Working on port 3004 (upgraded from 3003)
 - ✅ **Frontend Container**: Working on port 3003 (production only)
-- ✅ **Backend**: Working on port 8000
-- ✅ **Database**: PostgreSQL 16 on port 5432
+- ✅ **Backend**: Working locally on port 8000 (not Docker)
+- ✅ **Database**: Local PostgreSQL 16 on port 5432 (not Docker)
+- ✅ **Cache**: DragonflyDB in Docker (25x faster than Redis)
 - ✅ **AI Services**: Fixed authentication, analysis, and import functionality
-- ✅ **Documentation**: Updated for Svelte 5 patterns and new ports
+- ✅ **CI/CD**: GitHub Actions pipeline fully operational
 - 📱 **iOS App**: PRSNL APP - *separate codebase, pending integration*
 
 ---
@@ -32,6 +35,46 @@ cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev -- --po
 - **Frontend Container**: http://localhost:3003 (production)
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
+
+---
+
+## 🏗️ Infrastructure Commands
+
+### DragonflyDB Cache (Replaced Redis)
+```bash
+# Start DragonflyDB container
+docker-compose up -d redis  # Still named 'redis' in compose for compatibility
+
+# Check DragonflyDB status
+docker ps | grep dragonfly
+
+# Connect to DragonflyDB CLI
+docker exec -it prsnl_redis redis-cli
+
+# Monitor cache operations
+docker logs prsnl_redis -f
+```
+
+### Rate Limiting (slowapi only)
+```python
+# All rate limiting now uses slowapi decorators
+from app.middleware.rate_limit import capture_limiter, search_limiter
+
+@router.post("/capture")
+@capture_limiter  # 10 requests per minute
+async def capture_item():
+    pass
+```
+
+### HTTP Client (httpx standardized)
+```python
+# All HTTP requests now use httpx
+import httpx
+
+async with httpx.AsyncClient() as client:
+    response = await client.get("https://api.example.com")
+    data = response.json()
+```
 
 ---
 

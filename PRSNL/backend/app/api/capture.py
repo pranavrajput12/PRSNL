@@ -12,8 +12,7 @@ from app.services.llm_processor import LLMProcessor
 from app.db.database import get_db_pool, get_db_connection, update_item_embedding
 from app.services.embedding_service import embedding_service
 from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
-from app.middleware.rate_limit import capture_limiter
-from app.middleware.throttle import capture_throttle_limiter
+from app.middleware.rate_limit import capture_limiter, capture_throttle_limiter
 import logging
 import asyncpg
 from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS, VIDEO_DOWNLOAD_OUTCOMES, VIDEO_DOWNLOAD_DURATION_SECONDS, VIDEO_PROCESSING_DURATION_SECONDS
@@ -257,8 +256,22 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 "content_type": capture_request.content_type  # Store user-selected content type
             }
             
-            # Generate rich preview for development content (check both auto-detected type and user-selected type)
-            if (item_type == 'development' or capture_request.content_type == 'development') and capture_request.url:
+            # Generate rich preview for ALL GitHub URLs (regardless of item type)
+            if capture_request.url and 'github.com' in str(capture_request.url).lower():
+                try:
+                    logger.info(f"🔍 Generating GitHub preview for URL: {capture_request.url}")
+                    preview_data = await preview_service.generate_preview(str(capture_request.url), 'development')
+                    if preview_data and preview_data.get('type') != 'error':
+                        metadata['rich_preview'] = preview_data
+                        logger.info(f"🟢 GitHub preview generated successfully for {capture_request.url}")
+                    else:
+                        logger.warning(f"🟡 GitHub preview generation failed or returned error for {capture_request.url}")
+                except Exception as e:
+                    logger.error(f"🔴 Error generating GitHub preview: {e}")
+                    # Don't fail the entire capture if preview generation fails
+                    pass
+            # Also generate rich preview for development content (non-GitHub)
+            elif (item_type == 'development' or capture_request.content_type == 'development') and capture_request.url:
                 try:
                     logger.info(f"🔍 Generating rich preview for development content: {capture_request.url}")
                     preview_data = await preview_service.generate_preview(str(capture_request.url), 'development')

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
 
@@ -143,7 +143,7 @@
   }
 
   .screen-bezel {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
     border-radius: 15px;
     padding: 25px;
     box-shadow:
@@ -153,12 +153,12 @@
 
   .crt-screen {
     position: relative;
-    background: linear-gradient(135deg, #000 0%, #111 100%);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     border-radius: 10px;
     min-height: 400px;
     overflow: hidden;
     box-shadow:
-      inset 0 0 50px rgba(0, 255, 0, 0.1),
+      inset 0 0 50px rgba(78, 205, 196, 0.1),
       inset 0 0 100px rgba(0, 0, 0, 0.8);
   }
 
@@ -172,8 +172,8 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 255, 0, 0.03) 2px,
-      rgba(0, 255, 0, 0.03) 4px
+      rgba(78, 205, 196, 0.03) 2px,
+      rgba(78, 205, 196, 0.03) 4px
     );
     pointer-events: none;
     z-index: 3;
@@ -197,7 +197,7 @@
     z-index: 2;
     padding: 30px;
     height: 100%;
-    color: #00ff00;
+    color: var(--synapse-teal);
     font-family: 'Monaco', 'Menlo', monospace;
   }
 
@@ -269,14 +269,14 @@
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+    border-bottom: 1px solid rgba(78, 205, 196, 0.3);
   }
 
   .console-brand {
     font-size: 1rem;
     font-weight: 700;
-    color: #00ff00;
-    text-shadow: 0 0 10px #00ff00;
+    color: var(--synapse-teal);
+    text-shadow: 0 0 10px var(--synapse-teal);
     font-family: 'Monaco', monospace;
     letter-spacing: 2px;
   }
@@ -291,15 +291,15 @@
     align-items: center;
     gap: 5px;
     font-size: 0.7rem;
-    color: #00ff00;
+    color: var(--synapse-teal);
   }
 
   .indicator-light {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #00ff00;
-    box-shadow: 0 0 8px #00ff00;
+    background: var(--synapse-teal);
+    box-shadow: 0 0 8px var(--synapse-teal);
     animation: pulse 2s infinite;
   }
 
@@ -341,8 +341,8 @@
     position: absolute;
     width: 40px;
     height: 60px;
-    background: rgba(0, 255, 0, 0.2);
-    border: 2px solid #00ff00;
+    background: rgba(78, 205, 196, 0.2);
+    border: 2px solid var(--synapse-teal);
     border-radius: 20px 0 0 20px;
     top: 10px;
   }
@@ -369,7 +369,7 @@
     position: absolute;
     width: 6px;
     height: 6px;
-    background: #00ff00;
+    background: var(--synapse-teal);
     border-radius: 50%;
     animation: neuronPulse 3s infinite;
   }
@@ -429,11 +429,11 @@
     0%,
     100% {
       transform: scale(1);
-      box-shadow: 0 0 5px #00ff00;
+      box-shadow: 0 0 5px var(--synapse-teal);
     }
     50% {
       transform: scale(1.5);
-      box-shadow: 0 0 15px #00ff00;
+      box-shadow: 0 0 15px var(--synapse-teal);
     }
   }
 
@@ -441,7 +441,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #00ff00;
+    color: var(--synapse-teal);
     font-size: 0.8rem;
     margin-bottom: 10px;
     opacity: 0.8;
@@ -450,19 +450,19 @@
   .motherboard-title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #00ff00;
-    text-shadow: 0 0 15px #00ff00;
+    color: var(--synapse-teal);
+    text-shadow: 0 0 15px var(--synapse-teal);
     margin: 15px 0;
     line-height: 1.2;
     font-family: 'Monaco', monospace;
   }
 
   .neural-description {
-    color: rgba(0, 255, 0, 0.8);
+    color: rgba(78, 205, 196, 0.8);
     font-size: 0.9rem;
     line-height: 1.4;
     margin-top: 15px;
-    text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+    text-shadow: 0 0 5px rgba(78, 205, 196, 0.3);
   }
 
   /* Responsive Design */

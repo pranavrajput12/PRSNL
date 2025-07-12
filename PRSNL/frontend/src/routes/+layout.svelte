@@ -666,8 +666,8 @@
     height: 100vh;
     width: 420px;
     background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-right: 2px solid rgba(0, 255, 100, 0.3);
     transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10;
@@ -730,7 +730,7 @@
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #dc143c, #ff6b6b, #ff1744, #c62828);
+    background: linear-gradient(45deg, var(--brand-accent), var(--highlight), var(--error), var(--brand-hover));
     border-radius: 12px;
     z-index: -1;
     opacity: 0;
@@ -893,7 +893,7 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #00ff88;
+    background: var(--success);
     animation: dot-wave 3s ease-in-out infinite;
     will-change: background-color;
   }
@@ -1082,7 +1082,7 @@
   }
 
   .prsnl-logo-text {
-    background: linear-gradient(135deg, #dc143c, #ff6b6b, #ff1744, #c62828);
+    background: linear-gradient(135deg, var(--brand-accent), var(--highlight), var(--error), var(--brand-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1107,9 +1107,9 @@
     position: absolute;
     width: 3px;
     height: 3px;
-    background: #00ff00;
+    background: var(--synapse-teal);
     border-radius: 50%;
-    box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+    box-shadow: 0 0 8px var(--synapse-teal-40);
     animation: spark-travel 4s ease-in-out infinite;
   }
 
@@ -1139,7 +1139,7 @@
 
   .electrical-circuit {
     position: absolute;
-    background: linear-gradient(90deg, transparent, #00ff00, transparent);
+    background: linear-gradient(90deg, transparent, var(--synapse-teal), transparent);
     height: 1px;
     opacity: 0.6;
     animation: circuit-flow 3s ease-in-out infinite;
@@ -1170,7 +1170,7 @@
     position: absolute;
     width: 20px;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #dc143c, transparent);
+    background: linear-gradient(90deg, transparent, var(--brand-accent), transparent);
     animation: data-flow 2s ease-in-out infinite;
   }
 
@@ -1198,23 +1198,23 @@
     margin-bottom: 1rem;
     padding: 0.8rem;
     background: rgba(0, 255, 0, 0.05);
-    border-left: 4px solid #00ff00;
+    border-left: 4px solid var(--synapse-teal);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
-    color: #00ff00;
+    color: var(--synapse-teal);
   }
 
   .terminal-process:hover {
     background: rgba(0, 255, 0, 0.1);
-    border-left-color: #dc143c;
+    border-left-color: var(--brand-accent);
     transform: translateX(4px);
   }
 
   .terminal-process.active {
     background: rgba(220, 20, 60, 0.1);
-    border-left-color: #dc143c;
+    border-left-color: var(--brand-accent);
     box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
   }
 
@@ -1226,13 +1226,13 @@
   }
 
   .process-name {
-    color: #00ff00;
+    color: var(--synapse-teal);
     font-weight: 600;
     font-size: 1rem;
   }
 
   .terminal-process.active .process-name {
-    color: #dc143c;
+    color: var(--brand-accent);
   }
 
   .process-status {
@@ -1246,12 +1246,12 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #00ff00;
+    background: var(--synapse-teal);
     animation: status-blink 1.5s ease-in-out infinite;
   }
 
   .status-indicator.active {
-    background: #dc143c;
+    background: var(--brand-accent);
     animation: status-pulse 1s ease-in-out infinite;
   }
 
@@ -1564,22 +1564,22 @@
   /* Dot Matrix Wave Animation */
   @keyframes dot-wave {
     0% {
-      background: #00ff88;
+      background: var(--success);
       box-shadow: 0 0 4px rgba(0, 255, 136, 0.8);
     }
     50% {
-      background: #dc143c;
+      background: var(--brand-accent);
       box-shadow: 0 0 8px rgba(220, 20, 60, 1);
     }
     100% {
-      background: #00ff88;
+      background: var(--success);
       box-shadow: 0 0 4px rgba(0, 255, 136, 0.8);
     }
   }
 
   /* Terminal Header Styles */
   .terminal-header {
-    border-bottom: 2px solid #00ff00;
+    border-bottom: 2px solid var(--synapse-teal);
     padding-bottom: 1rem;
     margin-bottom: 1rem;
     flex-direction: column;
@@ -1594,7 +1594,7 @@
 
   .system-info {
     font-size: 0.8rem;
-    color: #00ff00;
+    color: var(--synapse-teal);
     margin-bottom: 0.5rem;
     text-align: center;
     width: 100%;
@@ -1608,7 +1608,7 @@
   .boot-line {
     margin-bottom: 0.3rem;
     font-size: 0.75rem;
-    color: #00ff00;
+    color: var(--synapse-teal);
     opacity: 0.8;
   }
 
@@ -1734,8 +1734,8 @@
     right: 0;
     bottom: 0;
     background:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px);
+      repeating-linear-gradient(0deg, transparent, transparent 40px, var(--success) 40px, var(--success) 42px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, var(--success) 40px, var(--success) 42px);
   }
 
   .circuit-nodes {
@@ -1750,9 +1750,9 @@
     position: absolute;
     width: 20px;
     height: 20px;
-    background: radial-gradient(circle, #dc143c, #b91c3c);
+    background: radial-gradient(circle, var(--brand-accent), var(--brand-hover));
     border-radius: 50%;
-    border: 2px solid #dc143c;
+    border: 2px solid var(--brand-accent);
     box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
     animation: node-pulse 3s ease-in-out infinite;
   }

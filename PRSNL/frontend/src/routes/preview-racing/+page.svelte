@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import RacingDashboard from '$lib/components/previews/RacingDashboard.svelte';
   import Icon from '$lib/components/Icon.svelte';
 </script>

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -110,7 +110,7 @@
     blueLight.position.set(-3, 2, 3);
     scene.add(blueLight);
 
-    const greenLight = new THREE.PointLight(0x00ff00, 0.2, 10);
+    const greenLight = new THREE.PointLight(0x4ecdc4, 0.2, 10);
     greenLight.position.set(3, -2, 3);
     scene.add(greenLight);
   }
@@ -383,8 +383,8 @@
 
   .chip-body {
     position: relative;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-    border: 2px solid #333;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid var(--border);
     border-radius: 6px;
     padding: 8px 12px;
     min-width: 80px;
@@ -395,7 +395,7 @@
 
   .chip-label {
     font-size: 0.7rem;
-    color: #888;
+    color: var(--text-secondary);
     text-align: center;
     margin-bottom: 2px;
     font-family: monospace;
@@ -404,10 +404,10 @@
   .chip-display {
     font-size: 1rem;
     font-weight: bold;
-    color: #00ff00;
+    color: var(--synapse-teal);
     text-align: center;
     font-family: monospace;
-    text-shadow: 0 0 6px #00ff00;
+    text-shadow: 0 0 6px var(--synapse-teal);
   }
 
   .chip-pins {
@@ -422,7 +422,7 @@
   .chip-pin {
     width: 3px;
     height: 6px;
-    background: #666;
+    background: var(--text-muted);
     border-radius: 1px;
   }
 
@@ -433,8 +433,8 @@
   }
 
   .sensor-body {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 2px solid #444;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border: 2px solid var(--border);
     border-radius: 8px;
     padding: 10px;
     display: flex;
@@ -446,16 +446,16 @@
 
   .sensor-label {
     font-size: 0.7rem;
-    color: #888;
+    color: var(--text-secondary);
     font-family: monospace;
   }
 
   .sensor-display {
     font-size: 0.9rem;
     font-weight: bold;
-    color: #ff6600;
+    color: var(--warning);
     font-family: monospace;
-    text-shadow: 0 0 6px #ff6600;
+    text-shadow: 0 0 6px var(--warning);
   }
 
   .sensor-indicator {
@@ -466,13 +466,13 @@
   }
 
   .sensor-indicator.normal {
-    background: #00ff00;
-    box-shadow: 0 0 8px #00ff00;
+    background: var(--synapse-teal);
+    box-shadow: 0 0 8px var(--synapse-teal);
   }
 
   .sensor-indicator.warning {
-    background: #ff6600;
-    box-shadow: 0 0 8px #ff6600;
+    background: var(--warning);
+    box-shadow: 0 0 8px var(--warning);
   }
 
   /* Status LED Array */
@@ -482,8 +482,8 @@
   }
 
   .led-array {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-    border: 2px solid #333;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid var(--border);
     border-radius: 6px;
     padding: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -491,7 +491,7 @@
 
   .led-label {
     font-size: 0.7rem;
-    color: #888;
+    color: var(--text-secondary);
     text-align: center;
     margin-bottom: 4px;
     font-family: monospace;
@@ -511,19 +511,19 @@
   }
 
   .status-led.on {
-    background: #00ff00;
-    box-shadow: 0 0 8px #00ff00;
+    background: var(--synapse-teal);
+    box-shadow: 0 0 8px var(--synapse-teal);
   }
 
   .status-led.blinking {
-    background: #0066ff;
-    box-shadow: 0 0 8px #0066ff;
+    background: var(--info);
+    box-shadow: 0 0 8px var(--info);
     animation: blink 1s infinite;
   }
 
   .status-led.off {
-    background: #333;
-    border: 1px solid #555;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
   }
 
   @keyframes blink {
@@ -541,7 +541,7 @@
     display: flex;
     gap: 4px;
     font-size: 0.6rem;
-    color: #666;
+    color: var(--text-muted);
     font-family: monospace;
   }
 
@@ -557,8 +557,8 @@
   }
 
   .harness-connector {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 2px solid #444;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border: 2px solid var(--border);
     border-radius: 4px;
     padding: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -566,7 +566,7 @@
 
   .connector-label {
     font-size: 0.7rem;
-    color: #888;
+    color: var(--text-secondary);
     text-align: center;
     margin-bottom: 4px;
     font-family: monospace;
@@ -585,28 +585,28 @@
   }
 
   .wire.red {
-    background: linear-gradient(90deg, #ff0000 0%, #cc0000 100%);
+    background: linear-gradient(90deg, var(--error) 0%, var(--brand-hover) 100%);
   }
 
   .wire.black {
-    background: linear-gradient(90deg, #333 0%, #000 100%);
+    background: linear-gradient(90deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
   }
 
   .wire.yellow {
-    background: linear-gradient(90deg, #ffff00 0%, #cccc00 100%);
+    background: linear-gradient(90deg, var(--highlight) 0%, var(--warning) 100%);
   }
 
   .wire.blue {
-    background: linear-gradient(90deg, #0000ff 0%, #0000cc 100%);
+    background: linear-gradient(90deg, var(--info) 0%, var(--info) 100%);
   }
 
   /* PCB Traces */
   .component-trace {
     width: 30px;
     height: 2px;
-    background: linear-gradient(90deg, #00ff00 0%, transparent 100%);
+    background: linear-gradient(90deg, var(--synapse-teal) 0%, transparent 100%);
     border-radius: 1px;
-    opacity: 0.6;
+    opacity: 0.05;
   }
 
   .rpm-trace {

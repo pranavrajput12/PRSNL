@@ -5,7 +5,7 @@ Shows live data as it flows from models through backend to frontend
 """
 
 import asyncio
-import aiohttp
+import httpx
 import json
 import sys
 from datetime import datetime
@@ -96,14 +96,14 @@ class AIModelMonitor:
         # Instructions
         print(f"\n{CYAN}Press Ctrl+C to stop monitoring{RESET}")
     
-    async def monitor_api_calls(self, session):
+    async def monitor_api_calls(self, client):
         """Monitor API calls for model activity"""
         while self.running:
             try:
                 # Check recent items for processing status
-                async with session.get(f"{API_BASE}/items?limit=5") as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
+                resp = await client.get(f"{API_BASE}/items?limit=5")
+                    if resp.status_code == 200:
+                        data = resp.json()
                         items = data.get('items', [])
                         
                         for item in items:
@@ -130,9 +130,9 @@ class AIModelMonitor:
                                              f"Item: {item.get('title', 'Unknown')[:30]}")
                 
                 # Monitor search endpoint for embedding usage
-                async with session.get(f"{API_BASE}/search?query=test&semantic=true&limit=1") as resp:
-                    if resp.status == 200:
-                        results = await resp.json()
+                resp = await client.get(f"{API_BASE}/search?query=test&semantic=true&limit=1")
+                    if resp.status_code == 200:
+                        results = resp.json()
                         if results and any('relevance_score' in r for r in results):
                             self.add_event("embedding", "search", "Semantic search active")
                 
@@ -176,7 +176,7 @@ class AIModelMonitor:
                 self.add_event("websocket", "error", str(e))
                 await asyncio.sleep(5)
     
-    async def trigger_test_activities(self, session):
+    async def trigger_test_activities(self, client):
         """Periodically trigger test activities to see data flow"""
         test_cycle = 0
         
@@ -191,19 +191,19 @@ class AIModelMonitor:
                     # Small test image
                     test_image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                     
-                    async with session.post(f"{API_BASE}/vision/analyze", 
-                                          json={"image_base64": test_image, "image_path": "test.png"}) as resp:
-                        if resp.status == 200:
+                    resp = await client.post(f"{API_BASE}/vision/analyze", 
+                                          json={"image_base64": test_image, "image_path": "test.png"})
+                        if resp.status_code == 200:
                             self.add_event("vision", "test_success", "Vision test completed")
                 
                 elif test_cycle % 3 == 2:
                     # Test Embedding/Search
                     self.add_event("test", "trigger", "Testing semantic search...")
                     
-                    async with session.get(f"{API_BASE}/search", 
-                                         params={"query": "AI technology", "semantic": "true"}) as resp:
-                        if resp.status == 200:
-                            results = await resp.json()
+                    resp = await client.get(f"{API_BASE}/search", 
+                                         params={"query": "AI technology", "semantic": "true"})
+                        if resp.status_code == 200:
+                            results = resp.json()
                             self.add_event("embedding", "test_success", 
                                          f"Found {len(results)} semantic results")
                 
@@ -223,12 +223,12 @@ class AIModelMonitor:
         """Run the monitor"""
         try:
             # Create HTTP session
-            async with aiohttp.ClientSession() as session:
+            async with httpx.AsyncClient() as client:
                 # Start all monitoring tasks
                 tasks = [
-                    self.monitor_api_calls(session),
+                    self.monitor_api_calls(client),
                     self.monitor_websocket(),
-                    self.trigger_test_activities(session),
+                    self.trigger_test_activities(client),
                     self.update_display()
                 ]
                 
@@ -250,9 +250,9 @@ async def main():
     
     # Check backend health first
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_BASE}/stats") as resp:
-                if resp.status != 200:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{API_BASE}/stats")
+            if resp.status_code != 200:
                     print(f"{RED}Backend is not responding. Please start it first:{RESET}")
                     print("cd PRSNL && docker-compose up -d")
                     return

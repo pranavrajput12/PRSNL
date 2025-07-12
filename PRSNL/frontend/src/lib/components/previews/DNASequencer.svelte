@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import { getAudioManager } from '$lib/utils/audioManager';
 

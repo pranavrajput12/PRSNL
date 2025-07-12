@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';

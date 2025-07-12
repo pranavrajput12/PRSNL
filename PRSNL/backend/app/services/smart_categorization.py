@@ -341,7 +341,7 @@ Provide a concise category name and brief description in JSON format:
                     id, 
                     title, 
                     summary,
-                    1 - (embedding <=> $1) as similarity
+                    1 - (embedding <=> $1::vector) as similarity
                 FROM items
                 WHERE id != $2 
                     AND embedding IS NOT NULL

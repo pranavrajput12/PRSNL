@@ -2,7 +2,7 @@
 Image Processing Service - Extract and store images from content
 """
 import asyncio
-import aiohttp
+import httpx
 import hashlib
 import os
 from typing import List, Dict, Optional
@@ -54,11 +54,11 @@ class ImageProcessor:
             
             # Process each image
             processed_images = []
-            async with aiohttp.ClientSession() as session:
+            async with httpx.AsyncClient() as client:
                 for img_info in images[:10]:  # Limit to 10 images per article
                     try:
                         image_data = await self._download_and_process_image(
-                            session,
+                            client,
                             item_id,
                             img_info['url'],
                             img_info

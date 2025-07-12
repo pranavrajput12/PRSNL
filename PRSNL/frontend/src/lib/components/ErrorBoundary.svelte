@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
 

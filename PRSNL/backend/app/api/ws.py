@@ -303,11 +303,11 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                 created_at, 
                                 summary,
                                 metadata->>'category' as category,
-                                1 - (embedding <=> $1) as similarity_score
+                                1 - (embedding <=> $1::vector) as similarity_score
                             FROM items
                             WHERE embedding IS NOT NULL
                                 {date_filter_sql}
-                            ORDER BY embedding <=> $1
+                            ORDER BY embedding <=> $1::vector
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
                         # Pass embedding directly - pgvector handles conversion

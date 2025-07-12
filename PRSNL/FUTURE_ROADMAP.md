@@ -1,6 +1,6 @@
 # PRSNL Future Development Roadmap
 
-*Last Updated: 2025-07-11*
+*Last Updated: 2025-07-12*
 
 ## 🎯 Development Priorities
 
@@ -58,7 +58,36 @@
   - Replace hardcoded temp directories
   - Implement secure file handling
 
-### **Phase 3: Advanced Features** (Future)
+### **Phase 3: SEO & Performance Optimization** (Deferred)
+**Timeline**: After Authentication Implementation  
+**Status**: Planned
+
+#### SEO Enhancement
+- [ ] **Meta Data Generation**
+  - Automated meta titles and descriptions
+  - Open Graph tags for social sharing
+  - Twitter Card integration
+  - Schema.org structured data markup
+
+- [ ] **Sitemap Generation**
+  - XML sitemap for search engines
+  - Dynamic sitemap updates
+  - Category-based sitemaps
+  - Image and video sitemaps
+
+- [ ] **Performance Optimization**
+  - CDN-friendly URL structure validation
+  - Page load time optimization
+  - Image optimization and lazy loading
+  - CSS and JS minification
+
+- [ ] **Analytics Integration**
+  - URL performance tracking
+  - User navigation analytics
+  - 404 error monitoring
+  - Content popularity metrics
+
+### **Phase 4: Advanced Features** (Future)
 **Timeline**: TBD  
 **Status**: Backlog
 
@@ -301,6 +330,121 @@ All development must follow established patterns:
 
 ---
 
+## 🏗️ Expert Architecture Recommendations
+
+### **Completed Quick Wins** (2025-07-12)
+**Status**: ✅ Implemented
+
+#### Infrastructure Improvements
+- [x] **DragonflyDB Migration**
+  - Replaced Redis with DragonflyDB (25x performance improvement)
+  - Zero-configuration drop-in replacement
+  - Memory efficiency gains
+  
+- [x] **HTTP Client Standardization**
+  - Standardized on httpx across all services
+  - Removed aiohttp dependency
+  - Consistent async HTTP handling
+  
+- [x] **Rate Limiting Consolidation**
+  - Removed fastapi-throttle, kept slowapi only
+  - Native Starlette integration
+  - Simplified rate limiting configuration
+
+### **Phase 5: Advanced Architecture Patterns** (Future Consideration)
+**Timeline**: After Phase 4  
+**Status**: Research & Evaluation  
+**Priority**: Low-Medium
+
+#### AI/ML Orchestration
+- [ ] **LangChain Integration** (High Complexity - Not Recommended)
+  - **Pros**: Advanced chain management, community ecosystem
+  - **Cons**: Over-engineered for current needs, adds complexity
+  - **Alternative**: Current unified AI service is working well
+  - **Decision**: Defer unless specific orchestration needs arise
+
+#### Vector Database Evolution
+- [ ] **Dedicated Vector Database Evaluation**
+  - [ ] Evaluate Weaviate, Pinecone, Qdrant
+  - [ ] Consider hybrid approach (pgvector + dedicated)
+  - [ ] Benchmark against current pgvector performance
+  - **Current State**: pgvector handling well up to 100k items
+  - **Trigger**: When collection > 500k items or latency > 200ms
+
+#### Data Architecture
+- [ ] **Iceberg Tables for Time-Series Data**
+  - [ ] Evaluate for captured content versioning
+  - [ ] Consider for audit logs and analytics
+  - [ ] Streaming data architecture patterns
+  - **Use Case**: Historical analysis of knowledge evolution
+
+#### Advanced Monitoring
+- [ ] **Enhanced OpenTelemetry Integration**
+  - [ ] Custom semantic conventions
+  - [ ] Distributed tracing for AI pipelines
+  - [ ] Cost tracking for AI model usage
+  - [ ] Performance profiling automation
+
+### **Architecture Decision Records (ADRs)**
+
+#### ADR-001: Keep Current AI Implementation
+**Date**: 2025-07-12  
+**Status**: Accepted  
+**Context**: Expert suggested LangChain for orchestration  
+**Decision**: Continue with unified AI service pattern  
+**Consequences**: 
+- Simpler codebase maintenance
+- Direct control over AI workflows
+- May need revisiting for complex multi-agent scenarios
+
+#### ADR-002: DragonflyDB over Redis
+**Date**: 2025-07-12  
+**Status**: Implemented  
+**Context**: Performance optimization opportunity  
+**Decision**: Replace Redis with DragonflyDB  
+**Consequences**:
+- 25x performance improvement
+- Same Redis protocol compatibility
+- Zero code changes required
+
+#### ADR-003: HTTP Client Standardization
+**Date**: 2025-07-12  
+**Status**: Implemented  
+**Context**: Multiple HTTP clients causing inconsistency  
+**Decision**: Standardize on httpx  
+**Consequences**:
+- Consistent error handling
+- Better async support
+- Simplified dependency management
+
+### **Technology Radar**
+
+#### **Adopt** (Using Now)
+- PostgreSQL with pgvector
+- FastAPI + SvelteKit
+- Azure OpenAI
+- DragonflyDB
+- httpx
+- slowapi
+
+#### **Trial** (Experimenting)
+- NATS JetStream (Phase 3)
+- Workbox (Extension offline)
+
+#### **Assess** (Research Needed)
+- LangChain (complex orchestration)
+- Dedicated vector databases
+- Iceberg tables
+- GraphQL Federation
+
+#### **Hold** (Not Pursuing)
+- Redis (replaced by DragonflyDB)
+- aiohttp (replaced by httpx)
+- fastapi-throttle (replaced by slowapi)
+- Multiple AI service patterns
+
+---
+
 **Next Review**: After Phase 1 authentication completion  
 **Document Owner**: Development Team  
-**Last Major Update**: 2025-07-12 (Extension Phase 1&2 completion + Phase 3 planning)
+**Last Major Update**: 2025-07-12 (Extension Phase 1&2 completion + Phase 3 planning + Expert recommendations)

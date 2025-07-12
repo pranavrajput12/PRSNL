@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import { captureItem, getRecentTags, getAISuggestions } from '$lib/api';
   import type { CaptureRequest, ContentTypeDefinition } from '$lib/types/api';
@@ -358,7 +358,9 @@
         highlight: highlight || undefined,
         content_type: contentType,
         enable_summarization: enableSummarization,
-        tags: tags,
+        tags: tags.length > 0 ? tags : undefined,
+        // Include uploaded files only when they exist
+        uploaded_files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
         // Development-specific fields
         programming_language: programmingLanguage || undefined,
         project_category: projectCategory || undefined,

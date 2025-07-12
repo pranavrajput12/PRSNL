@@ -1,0 +1,352 @@
+[
+  {
+    "name": "Home",
+    "path": "/",
+    "url": "http://localhost:3004/",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] Starting to load data...",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] Raw timeline response before transform: JSHandle@object",
+      "[log] Timeline response after transform: JSHandle@object",
+      "[log] Timeline response: JSHandle@object",
+      "[log] Timeline items: 20",
+      "[log] Recent items: JSHandle@array",
+      "[log] First item detail: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] Tags response: JSHandle@object",
+      "[log] Final stats: JSHandle@object",
+      "[log] Fan model loaded. Structure:",
+      "[log] Mesh undefined: Object_4, vertices: 65532",
+      "[log] Mesh undefined: Object_5, vertices: 16900",
+      "[log] Mesh undefined: Object_7, vertices: 32660",
+      "[log] All meshes found:",
+      "[log] 0: \"Object_4\" - 65532 vertices",
+      "[log] 1: \"Object_5\" - 16900 vertices",
+      "[log] 2: \"Object_7\" - 32660 vertices",
+      "[log] Largest mesh: \"Object_4\" with 65532 vertices",
+      "[log] Added to BLADES (rotating): \"Object_4\" - 65532 vertices",
+      "[log] Added to FRAME (static): \"Object_7\" - 32660 vertices",
+      "[log] Added to FRAME (static): \"Object_5\" - 16900 vertices",
+      "[log] Frame: 2 parts, Blades: 1 parts"
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/favicon.png"
+    ],
+    "screenshot": "",
+    "loadTime": 3169
+  },
+  {
+    "name": "Insights",
+    "path": "/insights",
+    "url": "http://localhost:3004/p/insights",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Error: <circle> attribute cx: Expected length, \"{20\".",
+      "[error] Error: <circle> attribute cy: Expected length, \"{40\".",
+      "[error] Error: <circle> attribute r: Expected length, \"{Math.max(3,\".",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
+    ],
+    "screenshot": "",
+    "loadTime": 4445
+  },
+  {
+    "name": "Videos",
+    "path": "/videos",
+    "url": "http://localhost:3004/p/visual",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Error: <circle> attribute cx: Expected length, \"{20\".",
+      "[error] Error: <circle> attribute cy: Expected length, \"{40\".",
+      "[error] Error: <circle> attribute r: Expected length, \"{Math.max(3,\".",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] Raw timeline response before transform: JSHandle@object",
+      "[log] Timeline response after transform: JSHandle@object"
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
+    ],
+    "screenshot": "",
+    "loadTime": 2870
+  },
+  {
+    "name": "Timeline",
+    "path": "/timeline",
+    "url": "http://localhost:3004/p/timeline",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Error: <circle> attribute cx: Expected length, \"{20\".",
+      "[error] Error: <circle> attribute cy: Expected length, \"{40\".",
+      "[error] Error: <circle> attribute r: Expected length, \"{Math.max(3,\".",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 Neural Stream: Mounting timeline...",
+      "[log] 🔵 API Request: JSHandle@object"
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
+    ],
+    "screenshot": "",
+    "loadTime": 2471
+  },
+  {
+    "name": "Settings",
+    "path": "/settings",
+    "url": "http://localhost:3004/s/settings",
+    "status": "failed",
+    "consoleMessages": [
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🔵 Neural Stream: Loading timeline page 1",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "",
+    "loadTime": 2513
+  },
+  {
+    "name": "Import",
+    "path": "/import",
+    "url": "http://localhost:3004/s/import",
+    "status": "failed",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "",
+    "loadTime": 903
+  },
+  {
+    "name": "Capture",
+    "path": "/capture",
+    "url": "http://localhost:3004/capture",
+    "status": "failed",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": [],
+    "screenshot": "",
+    "loadTime": 1033
+  },
+  {
+    "name": "Chat",
+    "path": "/chat",
+    "url": "http://localhost:3004/p/chat",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Error: <circle> attribute cx: Expected length, \"{20\".",
+      "[error] Error: <circle> attribute cy: Expected length, \"{40\".",
+      "[error] Error: <circle> attribute r: Expected length, \"{Math.max(3,\".",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
+    ],
+    "screenshot": "",
+    "loadTime": 1309
+  },
+  {
+    "name": "AI",
+    "path": "/ai",
+    "url": "http://localhost:3004/login",
+    "status": "failed",
+    "consoleMessages": [
+      "[debug] [Chat] Connecting to WebSocket with clientId: fuorq",
+      "[debug] [WebSocket] Creating connection to: ws://localhost:3004/ws/chat/fuorq",
+      "[log] WebSocket connected",
+      "[debug] [WebSocket] Connection opened",
+      "[debug] [Chat] WebSocket connected successfully",
+      "[debug] [WebSocket] Message received: JSHandle@object",
+      "[debug] [WebSocket] Connection established: JSHandle@object",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/login"
+    ],
+    "screenshot": "",
+    "loadTime": 2553
+  },
+  {
+    "name": "Code Cortex",
+    "path": "/code-cortex",
+    "url": "http://localhost:3004/p/code",
+    "status": "failed",
+    "consoleMessages": [
+      "[error] Error: <circle> attribute cx: Expected length, \"{20\".",
+      "[error] Error: <circle> attribute cy: Expected length, \"{40\".",
+      "[error] Error: <circle> attribute r: Expected length, \"{Math.max(3,\".",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
+    ],
+    "screenshot": "",
+    "loadTime": 1565
+  },
+  {
+    "name": "Code Docs",
+    "path": "/code-cortex/docs",
+    "url": "http://localhost:3004/code-cortex/docs",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "test-screenshots/code-docs.png",
+    "loadTime": 2477,
+    "content": {
+      "title": "📚 Documentation Hub",
+      "codeBlocks": 0
+    }
+  },
+  {
+    "name": "Code Links",
+    "path": "/code-cortex/links",
+    "url": "http://localhost:3004/code-cortex/links",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "test-screenshots/code-links.png",
+    "loadTime": 1060,
+    "content": {
+      "title": "🔗 Useful Links",
+      "codeBlocks": 0
+    }
+  },
+  {
+    "name": "Code Projects",
+    "path": "/code-cortex/projects",
+    "url": "http://localhost:3004/code-cortex/projects",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "test-screenshots/code-projects.png",
+    "loadTime": 932,
+    "content": {
+      "title": "📋 Project Categories",
+      "codeBlocks": 0
+    }
+  },
+  {
+    "name": "Code Synapses",
+    "path": "/code-cortex/synapses",
+    "url": "http://localhost:3004/code-cortex/synapses",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected."
+    ],
+    "networkErrors": [],
+    "screenshot": "test-screenshots/code-synapses.png",
+    "loadTime": 1179,
+    "content": {
+      "title": "🧠 AI Synapses",
+      "codeBlocks": 0
+    }
+  },
+  {
+    "name": "Items Entry 1",
+    "path": "/items/1",
+    "url": "http://localhost:3004/items/1",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[error] Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[error] 🔴 API Error: JSHandle@object",
+      "[error] 🔴 API Catch Error: JSHandle@object"
+    ],
+    "networkErrors": [
+      "422 Unprocessable Entity - http://localhost:3004/api/items/1"
+    ],
+    "screenshot": "test-screenshots/items-entry-1.png",
+    "loadTime": 1925,
+    "content": {
+      "title": "No title found"
+    }
+  },
+  {
+    "name": "Video Entry 1",
+    "path": "/videos/1",
+    "url": "http://localhost:3004/videos/1",
+    "status": "success",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] Loading video with ID: 1",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[error] Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[error] 🔴 API Error: JSHandle@object",
+      "[error] 🔴 API Catch Error: JSHandle@object",
+      "[error] Error loading video: JSHandle@error"
+    ],
+    "networkErrors": [
+      "422 Unprocessable Entity - http://localhost:3004/api/items/1"
+    ],
+    "screenshot": "test-screenshots/video-entry-1.png",
+    "loadTime": 971,
+    "content": {
+      "title": "No title found"
+    }
+  }
+]

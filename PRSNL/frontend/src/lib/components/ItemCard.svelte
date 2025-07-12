@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { goto } from '$app/navigation';
   import Icon from './Icon.svelte';
   import VideoPlayer from './VideoPlayer.svelte';
@@ -35,7 +35,9 @@
   let transcriptLoading = false;
 
   function handleClick() {
-    goto(`/item/${item.id}`);
+    // Use the new permalink URL if available, fallback to old format
+    const targetUrl = item.url || `/item/${item.id}`;
+    goto(targetUrl);
   }
 
   function formatDate(dateString: string) {

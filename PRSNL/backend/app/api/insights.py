@@ -327,7 +327,13 @@ async def get_timeline_trends(
                 COUNT(*) as count
             FROM items 
             WHERE created_at >= :cutoff_date
-            GROUP BY DATE(created_at), content_type
+            GROUP BY DATE(created_at), CASE 
+                    WHEN type = 'article' THEN 'articles'
+                    WHEN type = 'video' THEN 'videos' 
+                    WHEN type = 'note' THEN 'notes'
+                    WHEN type = 'bookmark' THEN 'bookmarks'
+                    ELSE 'other'
+                END
             ORDER BY date DESC
         """)
         

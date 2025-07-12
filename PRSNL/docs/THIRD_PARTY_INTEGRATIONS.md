@@ -3,12 +3,13 @@
 This document catalogs all third-party libraries, APIs, and integrations used in the PRSNL knowledge management system.
 
 ## **🚨 Infrastructure Update (2025-07-12)**
-**Database Migration & Docker Simplification**:
-- **Database**: Migrated from Docker PostgreSQL to local PostgreSQL
-- **Docker Usage**: Now only used for Redis (simplified infrastructure)
-- **Data Migration**: All 23 items successfully migrated from Docker to local database
+**Latest Optimizations & Quick Wins**:
+- **DragonflyDB**: Replaced Redis with DragonflyDB for 25x performance improvement
+- **HTTP Client**: Standardized on httpx, removed aiohttp dependency
+- **Rate Limiting**: Consolidated to slowapi only, removed fastapi-throttle
+- **Database**: Local PostgreSQL (NOT Docker) - `postgresql://pronav@localhost:5432/prsnl`
+- **Docker Usage**: Now only used for DragonflyDB cache (simplified infrastructure)
 - **Backend**: Running locally instead of Docker for better development experience
-- **Configuration**: Updated all connection strings to use `postgresql://pronav@localhost:5432/prsnl`
 
 ## **🆕 Recent Major Update (2025-07-11)**
 **Advanced Integrations & Architecture v2.4** completed:
@@ -48,7 +49,7 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `PostgreSQL` | Local | Primary database (local, not Docker) | PostgreSQL | Low |
 | `pgvector` | 0.2.0 | Vector similarity search | PostgreSQL | Low |
 | `asyncpg` | 0.29.0 | Async PostgreSQL driver | Apache 2.0 | Low |
-| `Redis` | 5.0.1 | Caching (Docker container) | BSD | Low |
+| `DragonflyDB` | Latest | **High-performance caching (replaced Redis)** | BSL 1.1 | Low |
 | `SQLAlchemy` | 2.0.25 | ORM and query builder | MIT | Low |
 
 ### **Web Framework & API**
@@ -57,8 +58,7 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `FastAPI` | 0.109.0 | Backend API framework | MIT | Low |
 | `Uvicorn` | 0.27.0 | ASGI web server | BSD | Low |
 | `Pydantic` | - | Data validation | MIT | Low |
-| `slowapi` | 0.1.9 | Rate limiting | MIT | Low |
-| `fastapi-throttle` | 0.1.9 | **✅ Endpoint-specific rate limiting** | MIT | Low |
+| `slowapi` | 0.1.9 | **✅ Rate limiting (consolidated)** | MIT | Low |
 | `python-multipart` | 0.0.6 | File upload support | Apache 2.0 | Low |
 
 ## **🎨 Frontend Stack (SvelteKit) - UPDATED 2025-07-11**
@@ -142,8 +142,7 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | Library | Version | Purpose | License | Risk Level |
 |---------|---------|---------|---------|------------|
 | `BeautifulSoup4` | 4.12.3 | HTML parsing | MIT | Low |
-| `httpx` | 0.26.0 | HTTP client | BSD | Low |
-| `aiohttp` | 3.9.3 | Async HTTP requests | Apache 2.0 | Low |
+| `httpx` | 0.26.0 | **✅ HTTP client (standardized)** | BSD | Low |
 | `readability-lxml` | Latest | Content extraction | Apache 2.0 | Low |
 | `lxml_html_clean` | Latest | HTML sanitization | BSD | Medium |
 
@@ -313,20 +312,22 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 
 ## **🚦 Endpoint Rate Limiting & Protection**
 
-### **NEW: FastAPI-Throttle Implementation (2025-07-11)**
+### **SlowAPI Rate Limiting (2025-07-12)**
 | Component | Purpose | Configuration | Protection Level |
 |-----------|---------|---------------|------------------|
-| `embedding_limiter` | Expensive AI model calls | 5 requests / 5 minutes | **High** |
-| `capture_throttle_limiter` | Extension upload protection | 30 requests / minute | **Medium** |
-| `file_upload_limiter` | File upload rate limiting | 15 files / 5 minutes | **Medium** |
-| `semantic_search_limiter` | Search query protection | 50 requests / minute | **Medium** |
-| `mass_processing_limiter` | Admin bulk operations | 2 requests / 10 minutes | **Maximum** |
+| `embedding_limiter` | Expensive AI model calls | 5 per 5 minutes | **High** |
+| `capture_throttle_limiter` | Extension upload protection | 30 per minute | **Medium** |
+| `file_upload_limiter` | File upload rate limiting | 15 per 5 minutes | **Medium** |
+| `semantic_search_limiter` | Search query protection | 50 per minute | **Medium** |
+| `mass_processing_limiter` | Admin bulk operations | 2 per 10 minutes | **Maximum** |
+| `capture_limiter` | Basic capture protection | 10 per minute | **Medium** |
+| `search_limiter` | Basic search protection | 30 per minute | **Medium** |
 
-### **Throttling Strategy**
-- **Layered Protection**: FastAPI-Throttle for specific endpoints + SlowAPI for general rate limiting
-- **IP-Based Tracking**: Automatic identification of runaway clients
-- **Zero Dependencies**: In-memory storage, no Redis/external services required
-- **Fast Response**: <1ms overhead per request
+### **Rate Limiting Strategy**
+- **Native Integration**: SlowAPI with Starlette middleware
+- **IP-Based Tracking**: Automatic identification by remote address
+- **Flexible Configuration**: Environment variable control
+- **Fast Response**: Minimal overhead per request
 - **Clear Error Messages**: HTTP 429 with retry-after headers
 
 ### **Protected Endpoints**
@@ -368,7 +369,7 @@ POST /api/search/similar               # 50 requests / minute
 - All external API keys stored in environment variables
 - Content sanitization on both frontend (DOMPurify) and backend
 - Rate limiting implemented for all external API calls
-- Redis-based caching to reduce external API dependencies
+- DragonflyDB-based caching to reduce external API dependencies
 - Input validation using Pydantic schemas
 
 ## **📝 Environment Variables Required**
@@ -384,8 +385,8 @@ AZURE_OPENAI_API_VERSION=2024-02-01
 GITHUB_TOKEN=your_github_personal_access_token
 
 # Database connections
-DATABASE_URL=postgresql://user:pass@localhost:5432/prsnl
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://pronav@localhost:5432/prsnl
+REDIS_URL=redis://localhost:6379  # DragonflyDB using Redis protocol
 
 # Development
 DEBUG=false
@@ -452,5 +453,16 @@ whisper.cpp → Simple Transcription → Complete Privacy
 | `whisper.cpp` | Offline transcription | Models auto-download | Low |
 | `pgvector` | Semantic search | Database extension | Low |
 
-**Last Updated:** 2025-07-12 (Database migration to local PostgreSQL + FastAPI-Throttle verified working)  
+### **Recently Removed Integrations** (2025-07-12)
+As part of infrastructure optimization, these integrations were removed:
+
+| Integration | Reason for Removal | Replaced By |
+|-------------|-------------------|-------------|
+| `Redis` | Performance optimization | DragonflyDB (25x faster) |
+| `aiohttp` | Standardization | httpx (unified HTTP client) |
+| `fastapi-throttle` | Simplification | slowapi (native Starlette integration) |
+
+These removals reduce dependency complexity while maintaining or improving functionality.
+
+**Last Updated:** 2025-07-12 (DragonflyDB migration + HTTP client standardization + Rate limiting consolidation)  
 **Next Review:** 2025-10-12

@@ -2,10 +2,43 @@
 
 ## CRITICAL: Database Configuration
 **WE USE LOCAL POSTGRESQL, NOT DOCKER DATABASE**
-- Database: Local PostgreSQL on port 5432
+- Database: Local PostgreSQL on port 5433 (ARM64 version)
 - User: pronav
 - Database name: prsnl
 - Do NOT use Docker database (it's commented out in docker-compose.yml)
+
+## 🚨 CRITICAL: Architecture Configuration (Apple Silicon M1/M2)
+**THIS SYSTEM RUNS ON ARM64 ARCHITECTURE - DO NOT MIX WITH x86_64**
+
+### PostgreSQL Architecture Setup
+- **ALWAYS USE**: `/opt/homebrew/` (ARM64 Homebrew) for PostgreSQL
+- **NEVER USE**: `/usr/local/` (Intel x86_64 Homebrew) for PostgreSQL
+- **Current PostgreSQL**: ARM64 PostgreSQL 16 on port 5433
+- **pgvector**: Must be built for ARM64 architecture
+
+### Common Architecture Issues (AVOID THESE):
+1. **DO NOT** install or use PostgreSQL from `/usr/local/` (Intel Homebrew)
+2. **DO NOT** mix pgvector builds between architectures
+3. **DO NOT** change PostgreSQL port from 5433 to 5432
+4. **DO NOT** use `brew` from `/usr/local/bin/brew` - use `/opt/homebrew/bin/brew`
+
+### Verify Correct Setup:
+```bash
+# Check PostgreSQL is ARM64
+file /opt/homebrew/opt/postgresql@16/bin/postgres  # Should show: arm64
+
+# Check pgvector extension
+/opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5433 -d prsnl -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
+
+# Check which PostgreSQL is running
+lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
+```
+
+### If pgvector Breaks Again:
+1. Stop any x86_64 PostgreSQL: `/usr/local/bin/brew services stop postgresql@16`
+2. Start ARM64 PostgreSQL: `/opt/homebrew/bin/brew services start postgresql@16`
+3. Verify database is on port 5433 in `.env` and `config.py`
+4. pgvector should already be installed in ARM64 PostgreSQL
 
 ## Container Runtime
 - We use Rancher Desktop for containers
@@ -16,7 +49,7 @@
 - Frontend Development: **3004** (Updated from 3003 after Svelte 5 upgrade - container conflict resolved)
 - Frontend Container: **3003** (production deployments only)
 - Backend API: **8000**
-- PostgreSQL: **5432**
+- PostgreSQL: **5433** (ARM64 PostgreSQL 16 - NOT 5432!)
 - Redis: **6379**
 
 **Port Conflict Resolution:**
@@ -25,7 +58,7 @@
 lsof -ti:8000 | xargs kill -9  # Backend
 lsof -ti:3004 | xargs kill -9  # Frontend Dev
 lsof -ti:3003 | xargs kill -9  # Frontend Container
-lsof -ti:5432 | xargs kill -9  # PostgreSQL
+lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
 ```
 
 ## Running Services - CRITICAL DISTINCTION
@@ -75,6 +108,20 @@ docker-compose stop frontend
 - **Purpose**: Prevents breaking existing functionality when adding features
 - **Contains**: API patterns, database schemas, frontend integration, testing templates
 - **Rule**: ALL new development must follow the patterns in this repository
+
+## 📊 CRITICAL: Database Schema Documentation
+**COMPLETE DATABASE REFERENCE:**
+- **File**: `/backend/docs/DATABASE_SCHEMA.md`
+- **Purpose**: Complete and current database structure reference (Updated: 2025-07-12)
+- **Contains**: 
+  - All 11 tables with complete column definitions
+  - Development-specific fields for Code Cortex functionality
+  - Embeddings table structure for semantic search
+  - Indexes, triggers, and performance optimizations
+  - JSON schema examples and API response formats
+  - Common query patterns and maintenance commands
+- **Migration Notes**: ARM64 PostgreSQL with pgvector, normalized embeddings table
+- **Usage**: Reference before any database changes, migrations, or new features
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
 - **NEW: GitHub Actions CI/CD Pipeline (2025-07-11)** - Comprehensive automated testing, security scanning, and deployment workflows

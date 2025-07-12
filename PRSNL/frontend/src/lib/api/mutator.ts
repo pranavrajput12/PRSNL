@@ -7,18 +7,46 @@ const API_BASE_URL =
     : 'http://localhost:8000';
 
 /**
+ * Extended config interface for Orval-generated API clients
+ * Includes Orval-specific properties like data and params
+ */
+interface OrvalRequestConfig extends RequestInit {
+  url: string;
+  data?: any;
+  params?: Record<string, any>;
+}
+
+/**
  * Custom instance for Orval-generated API clients
  * Provides authentication, error handling, and request/response transformation
  */
-export const customInstance = async <T>(config: RequestInit & { url: string }): Promise<T> => {
-  const { url, ...requestConfig } = config;
+export const customInstance = async <T>(config: OrvalRequestConfig): Promise<T> => {
+  const { url, data, params, ...requestConfig } = config;
 
-  // Build full URL
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  // Build full URL with query parameters
+  let fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const queryString = searchParams.toString();
+    if (queryString) {
+      fullUrl += fullUrl.includes('?') ? '&' + queryString : '?' + queryString;
+    }
+  }
+
+  // Handle request body
+  let body = requestConfig.body;
+  if (data && !body) {
+    body = typeof data === 'string' ? data : JSON.stringify(data);
+  }
 
   // Add default headers
   const headers = new Headers(requestConfig.headers);
-  if (!headers.has('Content-Type') && requestConfig.body) {
+  if (!headers.has('Content-Type') && body && typeof body === 'string') {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -33,6 +61,7 @@ export const customInstance = async <T>(config: RequestInit & { url: string }): 
   const response = await fetch(fullUrl, {
     ...requestConfig,
     headers,
+    body,
   });
 
   if (!response.ok) {

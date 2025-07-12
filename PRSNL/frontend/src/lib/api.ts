@@ -170,6 +170,8 @@ export async function searchItems(
     tags?: string;
     mode?: 'keyword' | 'semantic' | 'hybrid';
     limit?: number;
+    threshold?: number;
+    include_duplicates?: boolean;
   } = {}
 ): Promise<SearchResponse> {
   // Use semantic search endpoint if mode is semantic or hybrid
@@ -230,7 +232,7 @@ export async function searchItems(
     },
   };
 
-  const response = await fetchWithErrorHandling<SearchResponse>('/api/search/', {
+  const response = await fetchWithErrorHandling<SearchResponse>('/search/', {
     method: 'POST',
     body: JSON.stringify(keywordSearchRequest),
   });
@@ -450,7 +452,14 @@ export async function getAISuggestions(url: string): Promise<{
 }> {
   return fetchWithErrorHandling('/suggest', {
     method: 'POST',
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({
+      url,
+      include_title: true,
+      include_summary: true,
+      include_tags: true,
+      include_category: true,
+      max_tags: 5
+    }),
   });
 }
 

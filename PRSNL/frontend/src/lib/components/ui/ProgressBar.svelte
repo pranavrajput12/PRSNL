@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   export let value: number = 0;
   export let max: number = 100;
   export let color: string = 'bg-red-600';

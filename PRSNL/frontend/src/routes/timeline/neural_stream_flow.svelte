@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import { getTimeline } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';

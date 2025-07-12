@@ -22,6 +22,24 @@ search_limiter = limiter.limit("30 per minute")
 admin_limiter = limiter.limit("5 per minute")
 webhook_limiter = limiter.limit("60 per minute")  # Higher for webhooks
 
+# Aggressive throttling for high-cost embedding operations
+embedding_limiter = limiter.limit("5 per 5 minutes")
+
+# Moderate throttling for bulk operations
+bulk_operation_limiter = limiter.limit("10 per minute")
+
+# Strict throttling for mass embedding generation
+mass_processing_limiter = limiter.limit("2 per 10 minutes")
+
+# Capture endpoint throttling (extension uploads)
+capture_throttle_limiter = limiter.limit("30 per minute")
+
+# Search embedding throttling
+semantic_search_limiter = limiter.limit("50 per minute")
+
+# File upload throttling
+file_upload_limiter = limiter.limit("15 per 5 minutes")
+
 # Configure rate limit response
 def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     """Custom rate limit exceeded handler"""
@@ -43,6 +61,12 @@ __all__ = [
     'search_limiter', 
     'admin_limiter',
     'webhook_limiter',
+    'embedding_limiter',
+    'bulk_operation_limiter',
+    'mass_processing_limiter',
+    'capture_throttle_limiter',
+    'semantic_search_limiter',
+    'file_upload_limiter',
     'rate_limit_handler',
     'RateLimitExceeded'
 ]

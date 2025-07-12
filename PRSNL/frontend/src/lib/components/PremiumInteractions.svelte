@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -179,7 +179,7 @@
       class="ripple"
       style="
         transform: scale({$rippleScale});
-        opacity: {1 - $rippleScale / 2};
+        opacity: {1} - $rippleScale / 2};
       "
     />
   {/if}

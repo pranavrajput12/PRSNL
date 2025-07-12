@@ -11,7 +11,7 @@ from app.services.enhanced_search_service import enhanced_search_service
 from app.services.embedding_manager import embedding_manager
 from app.utils.fingerprint import calculate_content_fingerprint
 from app.core.auth import get_current_user_optional
-from app.middleware.throttle import semantic_search_limiter, embedding_limiter
+from app.middleware.rate_limit import semantic_search_limiter, embedding_limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["Enhanced Search"])

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import Spinner from './Spinner.svelte';
   import ErrorMessage from './ErrorMessage.svelte';
   import ErrorBoundary from './ErrorBoundary.svelte';

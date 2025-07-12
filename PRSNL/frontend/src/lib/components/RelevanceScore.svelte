@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   // Props
   export let score: number;
   export let size: 'small' | 'medium' | 'large' = 'medium';

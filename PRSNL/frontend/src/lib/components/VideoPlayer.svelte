@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import Icon from './Icon.svelte';
   import {
@@ -13,6 +13,8 @@
   } from '$lib/stores/media';
 
   export let src: string;
+  // Add support for url prop as alias to src (for compatibility)
+  export let url: string | undefined = undefined;
   export let thumbnail: string | undefined = undefined;
   export let thumbnailUrl: string | undefined = thumbnail;
   export let title: string = '';
@@ -20,7 +22,9 @@
   export let autoplay: boolean = false;
   export let platform: string | undefined = undefined;
   export let lazyLoad: boolean = true;
-  export let videoId: string = src.split('/').pop() || Math.random().toString(36).substring(2, 9);
+  // Use url as fallback if src is not provided
+  $: actualSrc = src || url || '';
+  export let videoId: string = actualSrc.split('/').pop() || Math.random().toString(36).substring(2, 9);
   export let showControls: boolean = true;
 
   // Helper function to ensure thumbnail URLs are properly formatted
@@ -344,15 +348,15 @@
       <!-- Use progressive loading for thumbnails if enabled -->
       {#if processedThumbnailUrl && $mediaSettings.enableProgressiveLoading}
         <img
-          src={processedThumbnailUrl}
+          src={processedThumbnailUrl || ''}
           alt={title}
           loading="lazy"
-          style="filter: ${progressiveLoaded
+          style="filter: {progressiveLoaded
             ? 'none'
             : 'blur(10px)'}; transition: filter 0.3s ease-in-out;"
         />
       {:else if processedThumbnail}
-        <img src={processedThumbnail} alt={title} loading="lazy" />
+        <img src={processedThumbnail || ''} alt={title} loading="lazy" />
       {:else}
         <!-- Placeholder when no thumbnail is available -->
         <div class="thumbnail-placeholder">
@@ -424,7 +428,7 @@
     on:waiting={handleBuffering}
   >
     {#if isInViewport || !$mediaSettings.networkSavingMode}
-      <source {src} type="video/mp4" />
+      <source src={actualSrc || ''} type="video/mp4" />
     {/if}
     Your browser does not support the video tag.
   </video>

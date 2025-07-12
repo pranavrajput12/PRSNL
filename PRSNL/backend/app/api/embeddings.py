@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.db.database import get_db_pool
 from app.services.embedding_service import embedding_service
-from app.middleware.throttle import mass_processing_limiter
+from app.middleware.rate_limit import mass_processing_limiter
 import asyncpg
 import logging
 

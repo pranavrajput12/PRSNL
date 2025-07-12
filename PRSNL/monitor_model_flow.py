@@ -5,7 +5,7 @@ Shows how data flows from backend models to frontend via WebSocket
 """
 
 import asyncio
-import aiohttp
+import httpx
 import json
 from datetime import datetime
 import websockets
@@ -80,13 +80,13 @@ class ModelFlowMonitor:
     
     async def monitor_api_calls(self):
         """Monitor API calls to track model usage"""
-        async with aiohttp.ClientSession() as session:
+        async with httpx.AsyncClient() as client:
             while True:
                 try:
                     # Check recent items
-                    async with session.get(f"{self.api_base}/items?limit=10") as resp:
-                        if resp.status == 200:
-                            items = await resp.json()
+                    resp = await client.get(f"{self.api_base}/items?limit=10")
+                        if resp.status_code == 200:
+                            items = resp.json()
                             for item in items.get("items", []):
                                 item_id = item["id"]
                                 if item_id not in self.active_items:
@@ -184,7 +184,7 @@ class ModelFlowMonitor:
     
     async def test_model_flow(self):
         """Trigger test actions to demonstrate model flow"""
-        async with aiohttp.ClientSession() as session:
+        async with httpx.AsyncClient() as client:
             console.print("\n[cyan]🧪 Running model flow tests...[/cyan]")
             
             # Test 1: Vision flow
@@ -200,13 +200,13 @@ class ModelFlowMonitor:
             }
             
             try:
-                async with session.post(
+                resp = await client.post(
                     f"{self.api_base}/capture",
                     json=test_content,
                     headers={"Content-Type": "application/json"}
-                ) as resp:
-                    if resp.status == 201:
-                        result = await resp.json()
+                )
+                    if resp.status_code == 201:
+                        result = resp.json()
                         console.print(f"[green]✅ Test item created: {result['id']}[/green]")
             except Exception as e:
                 console.print(f"[red]❌ Test failed: {e}[/red]")

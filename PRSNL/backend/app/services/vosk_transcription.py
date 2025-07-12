@@ -78,18 +78,18 @@ class VoskTranscriptionService:
     
     async def _download_and_extract_model(self, url: str, extract_path: Path):
         """Download and extract Vosk model."""
-        import aiohttp
+        import httpx
         import zipfile
         
         # Download model
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    raise Exception(f"Failed to download model: HTTP {response.status}")
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", url) as response:
+                if response.status_code != 200:
+                    raise Exception(f"Failed to download model: HTTP {response.status_code}")
                 
                 # Save to temporary file
                 with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp_file:
-                    async for chunk in response.content.iter_chunked(8192):
+                    async for chunk in response.aiter_bytes(chunk_size=8192):
                         tmp_file.write(chunk)
                     tmp_path = tmp_file.name
         

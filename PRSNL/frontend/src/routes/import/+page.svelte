@@ -185,7 +185,7 @@
       <div class="drop-zone-content">
         {#if files.length === 0}
           <div class="drop-icon">
-            <Icon name="upload" size="xx-large" color="#4a9eff" />
+            <Icon name="upload" size="xx-large" color="var(--info)" />
           </div>
           <h3>Drop {importType} files here</h3>
           <p>or click to browse files</p>
@@ -206,7 +206,7 @@
           </AnimatedButton>
         {:else}
           <div class="files-loaded">
-            <Icon name="check-circle" size="large" color="#00ff00" />
+            <Icon name="check-circle" size="large" color="var(--synapse-teal)" />
             <h4>{files.length} file{files.length !== 1 ? 's' : ''} loaded</h4>
             {#each files as file, i}
               <div class="file-chip">
@@ -245,7 +245,7 @@
           {#if isProcessing}
             <Spinner size="medium" />
           {:else}
-            <Icon name="power" size="large" color="#ffffff" />
+            <Icon name="power" size="large" color="var(--text-primary)" />
           {/if}
         </div>
       </div>
@@ -303,7 +303,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     border-radius: 1rem;
     position: relative;
   }
@@ -324,8 +324,8 @@
     position: relative;
     width: 200px;
     height: 80px;
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 2px solid #333;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border: 2px solid var(--border);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -333,13 +333,13 @@
   }
 
   .ram-module:hover {
-    border-color: #4a9eff;
+    border-color: var(--info);
     box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
   }
 
   .ram-module.active {
-    border-color: #4a9eff;
-    background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+    border-color: var(--info);
+    background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
     box-shadow: 0 0 30px rgba(74, 158, 255, 0.5);
   }
 
@@ -372,7 +372,7 @@
     transform: translateX(-50%);
     width: 20px;
     height: 8px;
-    background: #1a1a1a;
+    background: var(--bg-secondary);
     border-radius: 0 0 4px 4px;
   }
 
@@ -389,7 +389,7 @@
   .ram-contact {
     flex: 1;
     height: 100%;
-    background: linear-gradient(180deg, #ffd700 0%, #ffb000 100%);
+    background: linear-gradient(180deg, var(--highlight) 0%, var(--warning) 100%);
     border-radius: 0 0 1px 1px;
   }
 
@@ -410,13 +410,13 @@
   .socket-label {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #4a9eff;
+    color: var(--info);
   }
 
   .socket-type {
     font-size: 1rem;
     font-weight: 600;
-    color: #888;
+    color: var(--text-secondary);
   }
 
   .cpu-socket {
@@ -424,8 +424,8 @@
     width: 400px;
     height: 400px;
     margin: 0 auto;
-    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-    border: 3px solid #333;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border: 3px solid var(--border);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -435,13 +435,13 @@
   }
 
   .cpu-socket.receiving {
-    border-color: #4a9eff;
+    border-color: var(--info);
     box-shadow: 0 0 40px rgba(74, 158, 255, 0.5);
   }
 
   .cpu-socket.loaded {
-    border-color: #00ff00;
-    box-shadow: 0 0 40px rgba(0, 255, 0, 0.5);
+    border-color: var(--synapse-teal);
+    box-shadow: 0 0 40px var(--synapse-teal-40);
   }
 
   .socket-pins {
@@ -460,7 +460,7 @@
   .socket-pin {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #444 0%, #222 100%);
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--bg-secondary) 100%);
     border-radius: 2px;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
   }
@@ -499,14 +499,14 @@
   }
 
   .file-size {
-    color: #888;
+    color: var(--text-secondary);
     font-size: 0.8rem;
   }
 
   .remove-file {
     background: none;
     border: none;
-    color: #ff4444;
+    color: var(--error);
     cursor: pointer;
     font-size: 1.2rem;
     font-weight: bold;
@@ -515,8 +515,8 @@
   /* Import Options Board */
   .import-options-board {
     position: relative;
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid #333;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 2rem;
     margin-bottom: 3rem;
@@ -528,7 +528,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #4a9eff 0%, #00ff00 100%);
+    background: linear-gradient(90deg, var(--info) 0%, var(--synapse-teal) 100%);
   }
 
   .option-component {
@@ -547,7 +547,7 @@
     position: relative;
     width: 60px;
     height: 30px;
-    background: #333;
+    background: var(--bg-tertiary);
     border-radius: 15px;
     transition: all 0.3s ease;
   }
@@ -559,13 +559,13 @@
     left: 3px;
     width: 24px;
     height: 24px;
-    background: #666;
+    background: var(--text-muted);
     border-radius: 50%;
     transition: all 0.3s ease;
   }
 
   input[type='checkbox']:checked + .switch-slider {
-    background: #4a9eff;
+    background: var(--info);
   }
 
   input[type='checkbox']:checked + .switch-slider::before {
@@ -602,7 +602,7 @@
   .power-ring {
     width: 100%;
     height: 100%;
-    border: 4px solid #333;
+    border: 4px solid var(--border);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -611,19 +611,19 @@
   }
 
   .power-button:hover:not(:disabled) .power-ring {
-    border-color: #4a9eff;
+    border-color: var(--info);
     box-shadow: 0 0 30px rgba(74, 158, 255, 0.5);
   }
 
   .power-button.processing .power-ring {
-    border-color: #00ff00;
-    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+    border-color: var(--synapse-teal);
+    box-shadow: 0 0 30px var(--synapse-teal-40);
   }
 
   .power-core {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -640,8 +640,8 @@
   /* Status Panels */
   .status-panel,
   .error-panel {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid #333;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -664,12 +664,12 @@
   }
 
   .status-led.success {
-    background: #00ff00;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    background: var(--synapse-teal);
+    box-shadow: 0 0 10px var(--synapse-teal-40);
   }
 
   .status-led.error {
-    background: #ff4444;
+    background: var(--error);
     box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
   }
 
@@ -686,12 +686,12 @@
   .stat-value {
     font-size: 2rem;
     font-weight: 900;
-    color: #4a9eff;
+    color: var(--info);
     margin-bottom: 0.5rem;
   }
 
   .stat-label {
-    color: #888;
+    color: var(--text-secondary);
     font-size: 0.9rem;
   }
 

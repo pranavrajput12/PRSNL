@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   export let size: 'tiny' | 'small' | 'medium' | 'large' = 'medium';
   export let center = false;
   export let fullPage = false;
@@ -21,7 +21,7 @@
     style="width: {pixelSize}px; height: {pixelSize}px; border-width: {Math.max(
       2,
       pixelSize / 10
-    )}px;"
+   )}px;"
   ></div>
 
   {#if message}

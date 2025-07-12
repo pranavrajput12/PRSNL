@@ -48,7 +48,7 @@
         <div class="term-explanations">
           <div class="term-card">
             <div class="term-icon">
-              <Icon name="memory" size="small" color="#00ff00" />
+              <Icon name="memory" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="term-content">
               <h3>Memory Traces</h3>
@@ -62,7 +62,7 @@
 
           <div class="term-card">
             <div class="term-icon">
-              <Icon name="network" size="small" color="#00ff00" />
+              <Icon name="network" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="term-content">
               <h3>Trace Network</h3>
@@ -76,7 +76,7 @@
 
           <div class="term-card">
             <div class="term-icon">
-              <Icon name="search" size="small" color="#00ff00" />
+              <Icon name="search" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="term-content">
               <h3>Neural Interface Scanner</h3>
@@ -90,7 +90,7 @@
 
           <div class="term-card">
             <div class="term-icon">
-              <Icon name="cpu" size="small" color="#00ff00" />
+              <Icon name="cpu" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="term-content">
               <h3>Neural Processors</h3>
@@ -170,7 +170,7 @@
         <div class="navigation-explanations">
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="brain" size="small" color="#00ff00" />
+              <Icon name="brain" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Neural Nest</h3>
@@ -183,7 +183,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="ingest" size="small" color="#00ff00" />
+              <Icon name="ingest" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Ingest</h3>
@@ -197,7 +197,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="thought-stream" size="small" color="#00ff00" />
+              <Icon name="thought-stream" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Thought Stream</h3>
@@ -210,7 +210,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="cognitive-map" size="small" color="#00ff00" />
+              <Icon name="cognitive-map" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Cognitive Map</h3>
@@ -224,7 +224,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="mind-palace" size="small" color="#00ff00" />
+              <Icon name="mind-palace" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Mind Palace</h3>
@@ -238,7 +238,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="visual-cortex" size="small" color="#00ff00" />
+              <Icon name="visual-cortex" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Visual Cortex</h3>
@@ -252,7 +252,7 @@
 
           <div class="nav-card">
             <div class="nav-icon">
-              <Icon name="knowledge-sync" size="small" color="#00ff00" />
+              <Icon name="knowledge-sync" size="small" color="var(--synapse-teal)" />
             </div>
             <div class="nav-content">
               <h3>Knowledge Sync</h3>
@@ -327,7 +327,7 @@
   .docs-container {
     min-height: 100vh;
     position: relative;
-    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
     overflow-x: hidden;
   }
 
@@ -348,8 +348,8 @@
     right: 0;
     bottom: 0;
     background:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, #00ff64 40px, #00ff64 42px);
+      repeating-linear-gradient(0deg, transparent, transparent 40px, var(--synapse-teal) 40px, var(--synapse-teal) 42px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, var(--synapse-teal) 40px, var(--synapse-teal) 42px);
   }
 
   .circuit-nodes {
@@ -523,8 +523,8 @@
     flex-shrink: 0;
     width: 40px;
     height: 40px;
-    background: radial-gradient(circle, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.05));
-    border: 1px solid rgba(0, 255, 0, 0.3);
+    background: radial-gradient(circle, rgba(78, 205, 196, 0.1), rgba(78, 205, 196, 0.05));
+    border: 1px solid rgba(78, 205, 196, 0.3);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -585,7 +585,7 @@
   }
 
   .hippocampus-activity {
-    background: radial-gradient(circle, rgba(0, 255, 100, 0.3), transparent 70%);
+    background: radial-gradient(circle, rgba(78, 205, 196, 0.3), transparent 70%);
   }
 
   .amygdala-activity {

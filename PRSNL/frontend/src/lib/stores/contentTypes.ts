@@ -32,15 +32,11 @@ function createContentTypesStore() {
       const unsubscribe = subscribe((t) => (types = t));
       unsubscribe();
 
-      return (
-        types.find((t) => t.name === typeName) || {
-          name: typeName,
-          display_name: typeName.charAt(0).toUpperCase() + typeName.slice(1),
-          icon: 'file',
-          description: `${typeName} content`,
-          color: '#6B7280',
-        }
-      );
+      return types.find((t) => t.type === typeName) || {
+        type: typeName,
+        count: 0,
+        description: `${typeName} content`,
+      };
     },
 
     // Refresh content types from backend
@@ -59,46 +55,34 @@ function createContentTypesStore() {
 function getDefaultTypes(): ContentTypeDefinition[] {
   return [
     {
-      name: 'article',
-      display_name: 'Article',
-      icon: 'file-text',
+      type: 'article',
+      count: 0,
       description: 'Written articles and blog posts',
-      color: '#3B82F6',
     },
     {
-      name: 'video',
-      display_name: 'Video',
-      icon: 'play-circle',
+      type: 'video',
+      count: 0,
       description: 'Video content from various platforms',
-      color: '#EF4444',
     },
     {
-      name: 'document',
-      display_name: 'Document',
-      icon: 'file',
+      type: 'document',
+      count: 0,
       description: 'PDF files and other documents',
-      color: '#10B981',
     },
     {
-      name: 'image',
-      display_name: 'Image',
-      icon: 'image',
+      type: 'image',
+      count: 0,
       description: 'Images and visual content',
-      color: '#8B5CF6',
     },
     {
-      name: 'note',
-      display_name: 'Note',
-      icon: 'edit',
+      type: 'note',
+      count: 0,
       description: 'Personal notes and highlights',
-      color: '#F59E0B',
     },
     {
-      name: 'link',
-      display_name: 'Link',
-      icon: 'link',
+      type: 'link',
+      count: 0,
       description: 'Simple bookmarked links',
-      color: '#6B7280',
     },
   ];
 }
@@ -109,7 +93,7 @@ export const contentTypes = createContentTypesStore();
 // Derived store for type map (for quick lookups)
 export const contentTypeMap = derived(contentTypes, ($types) => {
   const map = new Map<string, ContentTypeDefinition>();
-  $types.forEach((type) => map.set(type.name, type));
+  $types.forEach((type) => map.set(type.type, type));
   return map;
 });
 

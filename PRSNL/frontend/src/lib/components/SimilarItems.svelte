@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, createEventDispatcher } from 'svelte';
   import { getSimilarItems } from '$lib/api';
   import type { ContentItem } from '$lib/types/api';
@@ -98,7 +98,7 @@
               </div>
               {#if item.similarity !== undefined}
                 <div class="similarity-score">
-                  {Math.round(item.similarity * 100)}%
+                  {Math.round(item.similarity *} 100)}%
                 </div>
               {/if}
             </button>

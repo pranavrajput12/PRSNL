@@ -1,10 +1,14 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import Icon from './Icon.svelte';
 
   export let mode: any;
   export let onComplete: () => void;
+
+  // Prevent rendering if mode is not properly provided
+  // This fixes the issue where component renders on non-chat pages without valid props
+  $: isValidMode = mode && mode.id && typeof onComplete === 'function';
 
   let currentSlide = 0;
 
@@ -178,8 +182,9 @@
   }
 </script>
 
-<div class="onboarding-overlay" transition:fade={{ duration: 300 }}>
-  <div class="onboarding-container" transition:fly={{ y: 50, duration: 500 }}>
+{#if isValidMode}
+  <div class="onboarding-overlay" transition:fade={{ duration: 300 }}>
+    <div class="onboarding-container" transition:fly={{ y: 50, duration: 500 }}>
     <button class="skip-button" on:click={skip}>
       Skip
       <Icon name="x" size={16} />
@@ -262,6 +267,7 @@
     </div>
   </div>
 </div>
+{/if}
 
 <style>
   .onboarding-overlay {

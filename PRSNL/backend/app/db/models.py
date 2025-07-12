@@ -232,3 +232,39 @@ class AuditLog(Base):
     metadata_ = Column('metadata', JSON, default={})  # Avoid SQLAlchemy conflict
     status = Column(String(20))
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+
+class ContentUrl(Base):
+    __tablename__ = 'content_urls'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    content_id = Column(UUID(as_uuid=True), ForeignKey('items.id', ondelete='CASCADE'), nullable=False)
+    slug = Column(String(255), nullable=False)
+    category = Column(String(50), nullable=False)
+    
+    # SEO fields
+    meta_title = Column(String(160))
+    meta_description = Column(String(320))
+    canonical_url = Column(String(500))
+    
+    # Performance tracking
+    views = Column(Integer, default=0)
+    last_accessed = Column(TIMESTAMP(timezone=True))
+    
+    # Timestamps
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    content = relationship('Item', backref='content_url')
+
+class UrlRedirect(Base):
+    __tablename__ = 'url_redirects'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_path = Column(String(500), nullable=False, unique=True)
+    new_path = Column(String(500), nullable=False)
+    redirect_type = Column(Integer, default=301)  # 301 or 302
+    hit_count = Column(Integer, default=0)
+    active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
+    last_used = Column(TIMESTAMP(timezone=True))

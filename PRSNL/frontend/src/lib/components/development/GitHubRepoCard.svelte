@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import Icon from '$lib/components/Icon.svelte';
 
   export let repoData: any = null;

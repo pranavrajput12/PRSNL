@@ -72,7 +72,8 @@ export const API_ENDPOINTS = {
   SEARCH: '/search',
   SEARCH_SEMANTIC: '/search/semantic',
   TIMELINE: '/timeline',
-  ITEMS: '/items',
+  THOUGHTS: '/thoughts', // Modern route
+  ITEMS: '/items', // Deprecated, use THOUGHTS
   TAGS: '/tags',
 } as const;
 

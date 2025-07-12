@@ -3,30 +3,35 @@
  */
 
 import {
-  useHealthCheckApiHealthGetQuery,
-  useSearchItemsApiSearchGetQuery,
-  useCaptureItemApiCapturePostMutation,
+  getHealthCheckApiHealthGetQueryKey,
+  getSearchItemsApiSearchGetQueryKey,
+  createHealthCheckApiHealthGet,
+  createSearchItemsApiSearchGet,
+  createCaptureItemApiCapturePost,
 } from './generated';
+import type { CaptureItemApiCapturePostMutationBody } from './generated';
 
 // Example usage demonstrating the generated API client
 export function testApiClient() {
-  // Health check query
-  const healthQuery = useHealthCheckApiHealthGetQuery();
-
-  // Search query with parameters
-  const searchQuery = useSearchItemsApiSearchGetQuery({
+  // These are just query key generators, not hooks
+  const healthQueryKey = getHealthCheckApiHealthGetQueryKey();
+  const searchQueryKey = getSearchItemsApiSearchGetQueryKey({ 
     query: 'test search',
     limit: 10,
     offset: 0,
   });
 
-  // Capture mutation
-  const captureMutation = useCaptureItemApiCapturePostMutation();
+  // The actual API functions are create* functions
+  const healthApiFunction = createHealthCheckApiHealthGet;
+  const searchApiFunction = createSearchItemsApiSearchGet;
+  const captureApiFunction = createCaptureItemApiCapturePost;
 
   console.log('Generated API client is working!', {
-    healthQuery,
-    searchQuery,
-    captureMutation,
+    healthQueryKey,
+    searchQueryKey,
+    healthApiFunction,
+    searchApiFunction,
+    captureApiFunction,
   });
 }
 

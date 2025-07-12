@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount } from 'svelte';
   import { spring } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -464,7 +464,7 @@
     margin: 0 auto;
     padding: 3rem 2rem;
     background: transparent;
-    backdrop-filter: blur(40px) saturate(150%);
+    backdrop-filter: blur(6px) saturate(150%);
     border-radius: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:

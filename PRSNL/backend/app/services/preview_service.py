@@ -9,7 +9,7 @@ import os
 import re
 import json
 import asyncio
-import aiohttp
+import httpx
 from typing import Dict, Optional, List, Any
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
@@ -79,21 +79,21 @@ class PreviewService:
             owner, repo = match.groups()
             repo = repo.rstrip('.git')  # Remove .git suffix if present
             
-            async with aiohttp.ClientSession() as session:
+            async with httpx.AsyncClient() as client:
                 # Fetch repository data from GitHub API
-                repo_data = await self._fetch_github_repo_data(session, owner, repo)
+                repo_data = await self._fetch_github_repo_data(client, owner, repo)
                 
                 if not repo_data:
                     return await self._generate_basic_preview(url)
                 
                 # Fetch README content
-                readme_content = await self._fetch_github_readme(session, owner, repo)
+                readme_content = await self._fetch_github_readme(client, owner, repo)
                 
                 # Fetch recent commits
-                commits = await self._fetch_github_commits(session, owner, repo, limit=3)
+                commits = await self._fetch_github_commits(client, owner, repo, limit=3)
                 
                 # Fetch repository topics/languages
-                languages = await self._fetch_github_languages(session, owner, repo)
+                languages = await self._fetch_github_languages(client, owner, repo)
                 
                 return {
                     'type': 'github_repo',
@@ -145,7 +145,7 @@ class PreviewService:
             logger.error(f"Error generating GitHub preview: {e}")
             return await self._generate_basic_preview(url)
     
-    async def _fetch_github_repo_data(self, session: aiohttp.ClientSession, owner: str, repo: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_github_repo_data(self, client: httpx.AsyncClient, owner: str, repo: str) -> Optional[Dict[str, Any]]:
         """Fetch repository data from GitHub API with caching."""
         
         # Try cache first
@@ -161,30 +161,31 @@ class PreviewService:
             if self.github_token:
                 headers['Authorization'] = f'token {self.github_token}'
             
-            async with session.get(api_url, headers=headers, timeout=10) as response:
-                if response.status == 200:
-                    repo_data = await response.json()
-                    
-                    # Cache the successful response for 1 hour
-                    await cache_service.cache_github_repo(owner, repo, repo_data, ttl=3600)
-                    logger.info(f"💾 Cached GitHub data for {owner}/{repo}")
-                    
-                    return repo_data
-                elif response.status == 404:
-                    # Cache 404s for shorter time to avoid repeated requests
-                    error_data = {"error": "Repository not found", "status": 404}
-                    await cache_service.cache_github_repo(owner, repo, error_data, ttl=300)
-                    logger.warning(f"Repository {owner}/{repo} not found (404)")
-                else:
-                    logger.warning(f"GitHub API returned status {response.status} for {owner}/{repo}")
+            response = await client.get(api_url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                repo_data = response.json()
+                
+                # Cache the successful response for 1 hour
+                await cache_service.cache_github_repo(owner, repo, repo_data, ttl=3600)
+                logger.info(f"💾 Cached GitHub data for {owner}/{repo}")
+                
+                return repo_data
+            elif response.status_code == 404:
+                # Cache 404s for shorter time to avoid repeated requests
+                error_data = {"error": "Repository not found", "status": 404}
+                await cache_service.cache_github_repo(owner, repo, error_data, ttl=300)
+                logger.warning(f"Repository {owner}/{repo} not found (404)")
+            else:
+                logger.warning(f"GitHub API returned status {response.status_code} for {owner}/{repo}")
                     
         except Exception as e:
             logger.error(f"Error fetching GitHub repo data: {e}")
         
         return None
     
-    async def _fetch_github_readme(self, session: aiohttp.ClientSession, owner: str, repo: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_github_readme(self, client: httpx.AsyncClient, owner: str, repo: str) -> Optional[Dict[str, Any]]:
         """Fetch README content from GitHub repository."""
+        
         readme_files = ['README.md', 'readme.md', 'Readme.md', 'README.rst', 'README.txt', 'README']
         
         for readme_file in readme_files:
@@ -192,30 +193,47 @@ class PreviewService:
                 api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{readme_file}"
                 headers = {'Accept': 'application/vnd.github.v3+json'}
                 
-                if self.github_token:
+                # Add GitHub token if available and valid (not placeholder)
+                if self.github_token and self.github_token != 'ghp_placeholder_add_real_token_here':
                     headers['Authorization'] = f'token {self.github_token}'
                 
-                async with session.get(api_url, headers=headers, timeout=5) as response:
-                    if response.status == 200:
-                        readme_data = await response.json()
+                response = await client.get(api_url, headers=headers, timeout=5)
+                if response.status_code == 200:
+                    readme_data = response.json()
+                    
+                    if readme_data.get('encoding') == 'base64':
+                        import base64
+                        content = base64.b64decode(readme_data['content']).decode('utf-8')
                         
-                        if readme_data.get('encoding') == 'base64':
-                            import base64
-                            content = base64.b64decode(readme_data['content']).decode('utf-8')
-                            
-                            # Extract meaningful snippet (remove headers, links, badges)
-                            snippet = self._extract_readme_snippet(content)
-                            
-                            return {
+                        # Extract meaningful snippet (remove headers, links, badges)
+                        snippet = self._extract_readme_snippet(content)
+                        
+                        return {
                                 'snippet': snippet,
                                 'full_content': content,
                                 'full_length': len(content),
                                 'file_name': readme_file,
                                 'format': 'markdown' if readme_file.lower().endswith('.md') else 'text'
                             }
+                elif response.status_code == 404:
+                    logger.debug(f"README {readme_file} not found (404)")
+                    continue
+                elif response.status_code == 403:
+                    logger.warning(f"GitHub API rate limit hit for {readme_file}")
+                    # Return a rate limit message instead of None
+                    return {
+                        'snippet': 'GitHub API rate limit reached',
+                        'full_content': f'# README Content Temporarily Unavailable\n\nGitHub API rate limit reached. The README for {owner}/{repo} exists but cannot be fetched right now.\n\nTo avoid rate limits, configure a GitHub token in your environment variables.',
+                        'full_length': 0,
+                        'file_name': readme_file,
+                        'format': 'markdown'
+                    }
+                else:
+                    logger.debug(f"GitHub API returned {response.status_code} for {readme_file}")
+                    continue
                             
             except Exception as e:
-                logger.debug(f"README {readme_file} not found or error: {e}")
+                logger.debug(f"README {readme_file} fetch error: {e}")
                 continue
         
         return None
@@ -251,7 +269,7 @@ class PreviewService:
         
         return snippet or "No description available."
     
-    async def _fetch_github_commits(self, session: aiohttp.ClientSession, owner: str, repo: str, limit: int = 3) -> List[Dict[str, Any]]:
+    async def _fetch_github_commits(self, client: httpx.AsyncClient, owner: str, repo: str, limit: int = 3) -> List[Dict[str, Any]]:
         """Fetch recent commits from GitHub repository."""
         try:
             api_url = f"https://api.github.com/repos/{owner}/{repo}/commits"
@@ -262,27 +280,27 @@ class PreviewService:
             
             params = {'per_page': limit}
             
-            async with session.get(api_url, headers=headers, params=params, timeout=5) as response:
-                if response.status == 200:
-                    commits_data = await response.json()
-                    
-                    return [
-                        {
-                            'sha': commit['sha'][:7],
-                            'message': commit['commit']['message'].split('\n')[0][:100],
-                            'author': commit['commit']['author']['name'],
-                            'date': commit['commit']['author']['date'],
-                            'url': commit['html_url']
-                        }
-                        for commit in commits_data
-                    ]
+            response = await client.get(api_url, headers=headers, params=params, timeout=5)
+            if response.status_code == 200:
+                commits_data = response.json()
+                
+                return [
+                    {
+                        'sha': commit['sha'][:7],
+                        'message': commit['commit']['message'].split('\n')[0][:100],
+                        'author': commit['commit']['author']['name'],
+                        'date': commit['commit']['author']['date'],
+                        'url': commit['html_url']
+                    }
+                    for commit in commits_data
+                ]
                     
         except Exception as e:
             logger.debug(f"Error fetching commits: {e}")
         
         return []
     
-    async def _fetch_github_languages(self, session: aiohttp.ClientSession, owner: str, repo: str) -> Dict[str, int]:
+    async def _fetch_github_languages(self, client: httpx.AsyncClient, owner: str, repo: str) -> Dict[str, int]:
         """Fetch programming languages from GitHub repository."""
         try:
             api_url = f"https://api.github.com/repos/{owner}/{repo}/languages"
@@ -291,9 +309,9 @@ class PreviewService:
             if self.github_token:
                 headers['Authorization'] = f'token {self.github_token}'
             
-            async with session.get(api_url, headers=headers, timeout=5) as response:
-                if response.status == 200:
-                    return await response.json()
+            response = await client.get(api_url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                return response.json()
                     
         except Exception as e:
             logger.debug(f"Error fetching languages: {e}")
@@ -316,30 +334,30 @@ class PreviewService:
                 'filter': 'withbody'  # Include question body
             }
             
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_url, params=params, timeout=10) as response:
-                    if response.status == 200:
-                        data = await response.json()
+            async with httpx.AsyncClient() as client:
+                response = await client.get(api_url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if data.get('items'):
+                        question = data['items'][0]
                         
-                        if data.get('items'):
-                            question = data['items'][0]
-                            
-                            return {
-                                'type': 'stackoverflow_question',
-                                'platform': 'stackoverflow',
-                                'url': url,
-                                'question': {
-                                    'title': question.get('title'),
-                                    'body_snippet': BeautifulSoup(question.get('body', ''), 'html.parser').get_text()[:300] + '...',
-                                    'tags': question.get('tags', []),
-                                    'score': question.get('score', 0),
-                                    'view_count': question.get('view_count', 0),
-                                    'answer_count': question.get('answer_count', 0),
-                                    'is_answered': question.get('is_answered', False),
-                                    'creation_date': datetime.fromtimestamp(question.get('creation_date', 0)).isoformat(),
-                                    'last_activity_date': datetime.fromtimestamp(question.get('last_activity_date', 0)).isoformat()
-                                }
+                        return {
+                            'type': 'stackoverflow_question',
+                            'platform': 'stackoverflow',
+                            'url': url,
+                            'question': {
+                                'title': question.get('title'),
+                                'body_snippet': BeautifulSoup(question.get('body', ''), 'html.parser').get_text()[:300] + '...',
+                                'tags': question.get('tags', []),
+                                'score': question.get('score', 0),
+                                'view_count': question.get('view_count', 0),
+                                'answer_count': question.get('answer_count', 0),
+                                'is_answered': question.get('is_answered', False),
+                                'creation_date': datetime.fromtimestamp(question.get('creation_date', 0)).isoformat(),
+                                'last_activity_date': datetime.fromtimestamp(question.get('last_activity_date', 0)).isoformat()
                             }
+                        }
             
         except Exception as e:
             logger.error(f"Error generating Stack Overflow preview: {e}")
@@ -349,26 +367,26 @@ class PreviewService:
     async def _generate_documentation_preview(self, url: str, classification: Dict[str, Any]) -> Dict[str, Any]:
         """Generate rich preview for documentation sites."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as response:
-                    if response.status == 200:
-                        html_content = await response.text()
-                        soup = BeautifulSoup(html_content, 'html.parser')
-                        
-                        # Extract common documentation metadata
-                        title = self._extract_title(soup)
-                        description = self._extract_description(soup)
-                        
-                        return {
-                            'type': 'documentation',
-                            'platform': 'documentation',
-                            'url': url,
-                            'title': title,
-                            'description': description,
-                            'domain': urlparse(url).netloc,
-                            'programming_language': classification.get('programming_language'),
-                            'project_category': classification.get('project_category')
-                        }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=10)
+                if response.status_code == 200:
+                    html_content = response.text
+                    soup = BeautifulSoup(html_content, 'html.parser')
+                    
+                    # Extract common documentation metadata
+                    title = self._extract_title(soup)
+                    description = self._extract_description(soup)
+                    
+                    return {
+                        'type': 'documentation',
+                        'platform': 'documentation',
+                        'url': url,
+                        'title': title,
+                        'description': description,
+                        'domain': urlparse(url).netloc,
+                        'programming_language': classification.get('programming_language'),
+                        'project_category': classification.get('project_category')
+                    }
             
         except Exception as e:
             logger.error(f"Error generating documentation preview: {e}")
@@ -378,26 +396,26 @@ class PreviewService:
     async def _generate_development_preview(self, url: str, classification: Dict[str, Any]) -> Dict[str, Any]:
         """Generate generic development content preview."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as response:
-                    if response.status == 200:
-                        html_content = await response.text()
-                        soup = BeautifulSoup(html_content, 'html.parser')
-                        
-                        title = self._extract_title(soup)
-                        description = self._extract_description(soup)
-                        
-                        return {
-                            'type': 'development_content',
-                            'platform': classification.get('platform', 'unknown'),
-                            'url': url,
-                            'title': title,
-                            'description': description,
-                            'domain': urlparse(url).netloc,
-                            'programming_language': classification.get('programming_language'),
-                            'project_category': classification.get('project_category'),
-                            'difficulty_level': classification.get('difficulty_level')
-                        }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=10)
+                if response.status_code == 200:
+                    html_content = response.text
+                    soup = BeautifulSoup(html_content, 'html.parser')
+                    
+                    title = self._extract_title(soup)
+                    description = self._extract_description(soup)
+                    
+                    return {
+                        'type': 'development_content',
+                        'platform': classification.get('platform', 'unknown'),
+                        'url': url,
+                        'title': title,
+                        'description': description,
+                        'domain': urlparse(url).netloc,
+                        'programming_language': classification.get('programming_language'),
+                        'project_category': classification.get('project_category'),
+                        'difficulty_level': classification.get('difficulty_level')
+                    }
             
         except Exception as e:
             logger.error(f"Error generating development preview: {e}")
@@ -407,22 +425,22 @@ class PreviewService:
     async def _generate_basic_preview(self, url: str) -> Dict[str, Any]:
         """Generate basic preview for non-development content."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as response:
-                    if response.status == 200:
-                        html_content = await response.text()
-                        soup = BeautifulSoup(html_content, 'html.parser')
-                        
-                        title = self._extract_title(soup)
-                        description = self._extract_description(soup)
-                        
-                        return {
-                            'type': 'basic',
-                            'url': url,
-                            'title': title,
-                            'description': description,
-                            'domain': urlparse(url).netloc
-                        }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=10)
+                if response.status_code == 200:
+                    html_content = response.text
+                    soup = BeautifulSoup(html_content, 'html.parser')
+                    
+                    title = self._extract_title(soup)
+                    description = self._extract_description(soup)
+                    
+                    return {
+                        'type': 'basic',
+                        'url': url,
+                        'title': title,
+                        'description': description,
+                        'domain': urlparse(url).netloc
+                    }
             
         except Exception as e:
             logger.error(f"Error generating basic preview: {e}")

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import { spring } from 'svelte/motion';
   import { getAudioManager } from '$lib/utils/audioManager';
@@ -212,7 +212,7 @@
         vy: (Math.random() - 0.5) * 0.2,
         vz: (Math.random() - 0.5) * 0.1,
         size: Math.random() * 3,
-        color: `hsl(${280 + Math.random() * 60}, 70%, ${40 + Math.random() * 20}%)`,
+        color: `hsl(${280} + Math.random() * 60}, 70%, ${40} + Math.random() * 20}%)`,
         life: 1,
         maxLife: 1,
       });
@@ -347,7 +347,7 @@
 
     // Draw label for systems when zoomed in
     if (node.type === 'system' && zoomLevel > 1.5) {
-      ctx.font = `${12 * projected.scale}px 'Space Grotesk'`;
+      ctx.font = `${12} * projected.scale}px 'Space Grotesk'`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.fillText(node.name, projected.x, projected.y - size - 10);

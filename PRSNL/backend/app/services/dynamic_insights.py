@@ -51,7 +51,8 @@ class DynamicInsightsService:
             logger.debug(f"Starting generate_insights with time_range={time_range}, user_id={user_id}")
             # Parse time range
             days = self._parse_time_range(time_range)
-            start_date = datetime.utcnow() - timedelta(days=days)
+            from datetime import timezone
+            start_date = datetime.now(timezone.utc) - timedelta(days=days)
             
             # Get items within time range
             query = select(Item).where(Item.created_at >= start_date)
@@ -133,7 +134,7 @@ class DynamicInsightsService:
                 "summary": summary,
                 "time_range": time_range,
                 "item_count": len(items),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
@@ -170,7 +171,8 @@ class DynamicInsightsService:
             recent_tags = defaultdict(int)
             older_tags = defaultdict(int)
             
-            cutoff_date = datetime.utcnow() - timedelta(days=7)
+            from datetime import timezone
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
             
             for item in items:
                 # Get item tags
@@ -293,21 +295,23 @@ class DynamicInsightsService:
             
             for item in items:
                 # Determine content type
-                if item.metadata.get('video'):
+                metadata = item.metadata_ or {}
+                if metadata.get('video'):
                     content_types['video'] += 1
-                elif 'github.com' in item.url:
+                elif item.url and 'github.com' in item.url:
                     content_types['code'] += 1
-                elif any(domain in item.url for domain in ['arxiv.org', 'scholar.google']):
+                elif item.url and any(domain in item.url for domain in ['arxiv.org', 'scholar.google']):
                     content_types['academic'] += 1
-                elif any(domain in item.url for domain in ['medium.com', 'substack.com']):
+                elif item.url and any(domain in item.url for domain in ['medium.com', 'substack.com']):
                     content_types['article'] += 1
                 else:
                     content_types['other'] += 1
                 
                 # Extract domain
-                from urllib.parse import urlparse
-                domain = urlparse(item.url).netloc
-                sources[domain] += 1
+                if item.url:
+                    from urllib.parse import urlparse
+                    domain = urlparse(item.url).netloc
+                    sources[domain] += 1
                 
                 # Content length
                 if item.processed_content:
@@ -362,7 +366,9 @@ class DynamicInsightsService:
             
             # Calculate momentum (recent vs overall average)
             recent_days = 7
-            recent_items = [i for i in items if i.created_at >= datetime.utcnow() - timedelta(days=recent_days)]
+            from datetime import timezone
+            recent_cutoff = datetime.now(timezone.utc) - timedelta(days=recent_days)
+            recent_items = [i for i in items if i.created_at >= recent_cutoff]
             recent_avg = len(recent_items) / recent_days
             momentum = (recent_avg - avg_daily) / (avg_daily + 1) * 100
             
@@ -492,10 +498,17 @@ class DynamicInsightsService:
                 
                 for tag in tags:
                     topic_counts[tag.name] += 1
+                    # Ensure timezone-aware datetime
+                    created_at = item.created_at
+                    if created_at.tzinfo is None:
+                        # If naive datetime, assume UTC
+                        from datetime import timezone
+                        created_at = created_at.replace(tzinfo=timezone.utc)
+                    
                     topic_items[tag.name].append({
                         "id": str(item.id),
                         "title": item.title,
-                        "created_at": item.created_at.isoformat()
+                        "created_at": created_at.isoformat()
                     })
             
             # Identify areas of deep knowledge
@@ -598,8 +611,8 @@ class DynamicInsightsService:
             # Get current topics
             current_topics = set()
             for item in items:
-                tag_query = select(Tag).join(ItemTag).where(
-                    ItemTag.item_id == item.id
+                tag_query = select(Tag).join(item_tags).where(
+                    item_tags.c.item_id == item.id
                 )
                 result = await db.execute(tag_query)
                 tags = result.scalars().all()
@@ -737,12 +750,14 @@ Format: Topic: Reason (one line each)"""
             topics = set()
             
             for item in items:
-                domains.add(self._extract_domain(item.url))
+                if item.url:
+                    domains.add(self._extract_domain(item.url))
                 
                 # Determine content type
-                if item.metadata.get('video'):
+                metadata = item.metadata_ or {}
+                if metadata.get('video'):
                     content_types.add('video')
-                elif 'github.com' in item.url:
+                elif item.url and 'github.com' in item.url:
                     content_types.add('code')
                 else:
                     content_types.add('article')
@@ -797,7 +812,8 @@ Format: Topic: Reason (one line each)"""
         """
         try:
             # Focus on last 7 days
-            recent_date = datetime.utcnow() - timedelta(days=7)
+            from datetime import timezone
+            recent_date = datetime.now(timezone.utc) - timedelta(days=7)
             recent_items = [i for i in items if i.created_at >= recent_date]
             
             if len(recent_items) < 3:

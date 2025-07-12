@@ -146,13 +146,13 @@ class URLClassifier:
     @classmethod
     def classify_url(cls, url: str) -> Dict[str, any]:
         """
-        Classify a URL and extract development-related metadata.
+        Classify a URL and extract metadata for simplified permalink system.
         
         Args:
             url: The URL to classify
             
         Returns:
-            Dictionary containing classification results
+            Dictionary containing classification results with simplified categories
         """
         parsed_url = urlparse(url)
         domain = parsed_url.netloc.lower()
@@ -162,6 +162,7 @@ class URLClassifier:
         result = {
             'is_development': False,
             'content_type': 'auto',
+            'category': 'ideas',  # Default category for new system
             'platform': None,
             'programming_language': None,
             'project_category': None,
@@ -169,6 +170,9 @@ class URLClassifier:
             'is_career_related': False,
             'metadata': {}
         }
+        
+        # Determine simplified category first
+        result['category'] = cls._classify_simplified_category(full_url, domain, path)
         
         # Check if it's a development-related URL
         if cls._is_development_url(full_url, domain, path):
@@ -194,6 +198,70 @@ class URLClassifier:
             result['metadata'] = cls._extract_metadata(url, result['platform'])
         
         return result
+    
+    @classmethod
+    def _classify_simplified_category(cls, url: str, domain: str, path: str) -> str:
+        """
+        Classify URL into one of four simplified categories: dev, learn, media, ideas.
+        
+        Args:
+            url: Full URL (lowercase)
+            domain: Domain part (lowercase)
+            path: Path part (lowercase)
+            
+        Returns:
+            Category string: 'dev', 'learn', 'media', or 'ideas'
+        """
+        # Development content patterns
+        dev_patterns = [
+            'github.com', 'gitlab.com', 'bitbucket.org',
+            'stackoverflow.com', 'stackexchange.com',
+            'developer.mozilla.org', 'docs.python.org', 'docs.microsoft.com',
+            'api.', 'docs.', 'documentation', 'developer.',
+            'programming', 'coding', 'software', 'framework'
+        ]
+        
+        # Learning content patterns
+        learn_patterns = [
+            'tutorial', 'course', 'learn', 'guide', 'education',
+            'academy', 'training', 'workshop', 'udemy.com',
+            'coursera.org', 'edx.org', 'pluralsight.com',
+            'freecodecamp.org', 'codecademy.com', 'w3schools.com',
+            'geeksforgeeks.org', 'tutorialspoint.com'
+        ]
+        
+        # Media content patterns
+        media_patterns = [
+            'youtube.com', 'youtu.be', 'vimeo.com', 'twitch.tv',
+            'video', 'audio', 'podcast', 'media', 'watch',
+            'image', 'photo', 'presentation', 'slide',
+            'instagram.com', 'tiktok.com'
+        ]
+        
+        # Check for development content
+        if any(pattern in url or pattern in domain for pattern in dev_patterns):
+            return 'dev'
+        
+        # Check for learning content
+        if any(pattern in url or pattern in domain for pattern in learn_patterns):
+            return 'learn'
+        
+        # Check for media content
+        if any(pattern in url or pattern in domain for pattern in media_patterns):
+            return 'media'
+        
+        # Check path for additional clues
+        if any(keyword in path for keyword in ['video', 'watch', 'media', 'image']):
+            return 'media'
+        
+        if any(keyword in path for keyword in ['tutorial', 'course', 'learn', 'guide']):
+            return 'learn'
+        
+        if any(keyword in path for keyword in ['api', 'docs', 'documentation', 'code']):
+            return 'dev'
+        
+        # Default to ideas for personal notes, bookmarks, etc.
+        return 'ideas'
     
     @classmethod
     def _is_development_url(cls, url: str, domain: str, path: str) -> bool:

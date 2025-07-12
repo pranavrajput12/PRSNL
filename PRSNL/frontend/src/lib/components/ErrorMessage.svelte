@@ -1,10 +1,14 @@
-<script lang="ts">
+<script lang="ts" type="module">
   export let message = 'An error occurred';
   export let details = '';
   export let retry: (() => void) | null = null;
   export let dismiss: (() => void) | null = null;
+  
+  // Only render if we have a meaningful message
+  $: shouldRender = message && message !== '' && message !== 'An error occurred';
 </script>
 
+{#if shouldRender}
 <div class="error-container">
   <div class="error-icon">
     <svg
@@ -58,6 +62,7 @@
     </div>
   </div>
 </div>
+{/if}
 
 <style>
   .error-container {

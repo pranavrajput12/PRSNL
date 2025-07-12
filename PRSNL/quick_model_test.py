@@ -6,7 +6,7 @@ Run with: python quick_model_test.py [whisper|vision|embedding|all]
 
 import sys
 import asyncio
-import aiohttp
+import httpx
 import json
 import base64
 from PIL import Image, ImageDraw
@@ -29,7 +29,7 @@ async def test_whisper():
     # Use a short video for testing
     video_url = "https://www.youtube.com/watch?v=jNQXAC9IVRw"  # Me at the zoo (19 seconds)
     
-    async with aiohttp.ClientSession() as session:
+    async with httpx.AsyncClient() as client:
         # Capture the video
         print("1. Capturing video...")
         capture_data = {
@@ -38,9 +38,9 @@ async def test_whisper():
         }
         
         try:
-            async with session.post(f"{API_BASE}/capture", json=capture_data) as resp:
-                if resp.status == 201:
-                    result = await resp.json()
+            resp = await client.post(f"{API_BASE}/capture", json=capture_data)
+            if resp.status_code == 201:
+                result = resp.json()
                     item_id = result['id']
                     print(f"{GREEN}✓ Video captured: {item_id}{RESET}")
                     
@@ -50,9 +50,9 @@ async def test_whisper():
                         await asyncio.sleep(1)
                         print(f"\r   Checking... {i+1}/30 seconds", end='', flush=True)
                         
-                        async with session.get(f"{API_BASE}/items/{item_id}") as item_resp:
-                            if item_resp.status == 200:
-                                item = await item_resp.json()
+                        item_resp = await client.get(f"{API_BASE}/items/{item_id}")
+                        if item_resp.status_code == 200:
+                            item = item_resp.json()
                                 metadata = item.get('metadata', {})
                                 
                                 # Check multiple possible locations for transcription
@@ -75,14 +75,14 @@ async def test_whisper():
                     print("- AZURE_OPENAI_WHISPER_DEPLOYMENT not set in .env")
                     print("- Video still processing (check backend logs)")
                     return False
+            else:
+                error = resp.text()
+                if "already exists" in error:
+                    print(f"{YELLOW}Video already exists in database{RESET}")
+                    return True
                 else:
-                    error = await resp.text()
-                    if "already exists" in error:
-                        print(f"{YELLOW}Video already exists in database{RESET}")
-                        return True
-                    else:
-                        print(f"{RED}✗ Capture failed: {error}{RESET}")
-                        return False
+                    print(f"{RED}✗ Capture failed: {error}{RESET}")
+                    return False
                         
         except Exception as e:
             print(f"{RED}✗ Error: {str(e)}{RESET}")
@@ -106,7 +106,7 @@ async def test_vision():
     img.save(buffer, format='PNG')
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     
-    async with aiohttp.ClientSession() as session:
+    async with httpx.AsyncClient() as client:
         print("2. Sending image for analysis...")
         vision_data = {
             "image_base64": img_base64,
@@ -114,9 +114,9 @@ async def test_vision():
         }
         
         try:
-            async with session.post(f"{API_BASE}/vision/analyze", json=vision_data) as resp:
-                if resp.status == 200:
-                    result = await resp.json()
+            resp = await client.post(f"{API_BASE}/vision/analyze", json=vision_data)
+            if resp.status_code == 200:
+                result = resp.json()
                     print(f"{GREEN}✓ Vision analysis successful!{RESET}")
                     
                     print("\nAnalysis Results:")
@@ -128,9 +128,9 @@ async def test_vision():
                         print(f"- Objects detected: {', '.join(result['objects'][:5])}")
                     
                     return True
-                else:
-                    error = await resp.text()
-                    print(f"{RED}✗ Vision analysis failed: {error}{RESET}")
+            else:
+                error = resp.text()
+                print(f"{RED}✗ Vision analysis failed: {error}{RESET}")
                     print("Possible issues:")
                     print("- GPT-4.1 deployment doesn't support vision")
                     print("- Check AZURE_OPENAI_DEPLOYMENT in .env")
@@ -145,7 +145,7 @@ async def test_embedding():
     """Test text-embedding-ada-002"""
     print(f"\n{BLUE}Testing text-embedding-ada-002 (Semantic Search)...{RESET}")
     
-    async with aiohttp.ClientSession() as session:
+    async with httpx.AsyncClient() as client:
         # First, add some test content
         print("1. Adding test content...")
         test_content = {
@@ -156,11 +156,11 @@ async def test_embedding():
         }
         
         try:
-            async with session.post(f"{API_BASE}/capture", json=test_content) as resp:
-                if resp.status == 201:
-                    print(f"{GREEN}✓ Test content added{RESET}")
-                elif resp.status == 400:
-                    print(f"{YELLOW}Test content might already exist{RESET}")
+            resp = await client.post(f"{API_BASE}/capture", json=test_content)
+            if resp.status_code == 201:
+                print(f"{GREEN}✓ Test content added{RESET}")
+            elif resp.status_code == 400:
+                print(f"{YELLOW}Test content might already exist{RESET}")
                     
             # Wait for embedding generation
             await asyncio.sleep(2)
@@ -173,9 +173,9 @@ async def test_embedding():
                 "limit": 5
             }
             
-            async with session.get(f"{API_BASE}/search", params=search_params) as resp:
-                if resp.status == 200:
-                    results = await resp.json()
+            resp = await client.get(f"{API_BASE}/search", params=search_params)
+            if resp.status_code == 200:
+                results = resp.json()
                     
                     if results and len(results) > 0:
                         print(f"{GREEN}✓ Semantic search working! Found {len(results)} results{RESET}")
@@ -196,10 +196,10 @@ async def test_embedding():
                         print(f"{YELLOW}⚠ No search results found{RESET}")
                         print("Embeddings might not be generated yet")
                         return False
-                else:
-                    error = await resp.text()
-                    print(f"{RED}✗ Search failed: {error}{RESET}")
-                    return False
+            else:
+                error = resp.text()
+                print(f"{RED}✗ Search failed: {error}{RESET}")
+                return False
                     
         except Exception as e:
             print(f"{RED}✗ Error: {str(e)}{RESET}")
@@ -211,14 +211,14 @@ async def check_backend_health():
     print(f"{BLUE}Checking backend health...{RESET}")
     
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_BASE}/timeline?limit=1") as resp:
-                if resp.status == 200:
-                    print(f"{GREEN}✓ Backend is running{RESET}")
-                    return True
-                else:
-                    print(f"{RED}✗ Backend returned status {resp.status}{RESET}")
-                    return False
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{API_BASE}/timeline?limit=1")
+            if resp.status_code == 200:
+                print(f"{GREEN}✓ Backend is running{RESET}")
+                return True
+            else:
+                print(f"{RED}✗ Backend returned status {resp.status_code}{RESET}")
+                return False
     except Exception as e:
         print(f"{RED}✗ Backend is not accessible: {str(e)}{RESET}")
         print(f"Make sure backend is running on {API_BASE}")

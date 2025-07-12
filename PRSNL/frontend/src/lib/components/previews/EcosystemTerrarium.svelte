@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" type="module">
   import { onMount, onDestroy } from 'svelte';
   import { spring, tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -153,7 +153,7 @@
         size: 30 + Math.random() * 50,
         growth: Math.random(),
         type: ['tree', 'flower', 'grass'][Math.floor(Math.random() * 3)],
-        color: `hsl(${100 + Math.random() * 40}, 70%, 40%)`,
+        color: `hsl(${100} + Math.random() * 40}, 70%, 40%)`,
         swayPhase: Math.random() * Math.PI * 2,
       });
     }
@@ -703,12 +703,12 @@
     // Update plant colors
     plants.forEach((plant) => {
       if (season === 'autumn') {
-        plant.color = `hsl(${20 + Math.random() * 40}, 70%, 50%)`;
+        plant.color = `hsl(${20} + Math.random() * 40}, 70%, 50%)`;
       } else if (season === 'winter') {
         plant.growth *= 0.5;
       } else if (season === 'spring') {
         plant.growth = Math.min(1, plant.growth + 0.3);
-        plant.color = `hsl(${100 + Math.random() * 40}, 70%, 40%)`;
+        plant.color = `hsl(${100} + Math.random() * 40}, 70%, 40%)`;
       }
     });
   }
