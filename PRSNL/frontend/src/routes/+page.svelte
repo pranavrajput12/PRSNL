@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
   import { getTimeline, getTags, searchItems } from '$lib/api';

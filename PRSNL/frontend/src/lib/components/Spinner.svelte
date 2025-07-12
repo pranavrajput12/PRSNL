@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let size: 'tiny' | 'small' | 'medium' | 'large' = 'medium';
   export let center = false;
   export let fullPage = false;

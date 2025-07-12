@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import Icon from './Icon.svelte';
 
   export let title: string;

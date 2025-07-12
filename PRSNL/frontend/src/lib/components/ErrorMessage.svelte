@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let message = 'An error occurred';
   export let details = '';
   export let retry: (() => void) | null = null;

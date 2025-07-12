@@ -45,15 +45,20 @@ async def get_item_detail(item_id: UUID):
                     COALESCE(i.duration, (i.metadata->'video_metadata'->'video_info'->>'duration')::int, (i.metadata->>'duration')::int) as duration,
                     i.metadata->>'file_path' as file_path,
                     i.metadata,
+                    CASE 
+                        WHEN cu.slug IS NOT NULL THEN '/c/' || cu.category || '/' || cu.slug
+                        ELSE NULL
+                    END as permalink,
                     COALESCE(
                         ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL),
                         ARRAY[]::TEXT[]
                     ) as tags
                 FROM items i
+                LEFT JOIN content_urls cu ON i.id = cu.content_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.id = $1
-                GROUP BY i.id
+                GROUP BY i.id, cu.slug, cu.category
             """
             
             row = await conn.fetchrow(query, item_id)
@@ -91,7 +96,8 @@ async def get_item_detail(item_id: UUID):
                 "platform": row["platform"],
                 "duration": row["duration"],
                 "file_path": row["file_path"],
-                "metadata": row["metadata"] if isinstance(row.get("metadata"), dict) else (json.loads(row["metadata"]) if row.get("metadata") else {})
+                "metadata": row["metadata"] if isinstance(row.get("metadata"), dict) else (json.loads(row["metadata"]) if row.get("metadata") else {}),
+                "permalink": row["permalink"]
             }
             
             # Cache the result

@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let variant: 'primary' | 'secondary' | 'outline' = 'primary';
   export let size: 'sm' | 'md' | 'lg' = 'md';
   export let disabled = false;

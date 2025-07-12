@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import EcosystemTerrarium from '$lib/components/previews/EcosystemTerrarium.svelte';
   import Icon from '$lib/components/Icon.svelte';
 </script>

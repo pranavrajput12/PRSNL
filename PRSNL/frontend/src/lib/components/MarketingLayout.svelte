@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import Fan3D from './Fan3D.svelte';
   import MacCRT from './MacCRT.svelte';
 

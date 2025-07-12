@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import {
     getDevelopmentDocs,
@@ -8,6 +8,8 @@
     type DevelopmentDocsFilters,
   } from '$lib/api/development';
   import Icon from '$lib/components/Icon.svelte';
+  import GitHubRepoCard from '$lib/components/development/GitHubRepoCard.svelte';
+  import MarkdownViewer from '$lib/components/development/MarkdownViewer.svelte';
 
   let docs: DevelopmentItem[] = [];
   let categories = [];
@@ -320,6 +322,13 @@
   <div class="docs-grid">
     {#each docs as doc}
       <article class="doc-card">
+        <!-- GitHub Repository Preview -->
+        {#if doc.url && doc.url.includes('github.com') && doc.metadata?.preview_data?.type === 'github_repo'}
+          <div class="repo-preview-section">
+            <GitHubRepoCard repoData={doc.metadata.preview_data} compact={true} />
+          </div>
+        {/if}
+
         <div class="doc-header">
           <div class="doc-meta">
             {#if doc.programming_language}
@@ -344,7 +353,7 @@
           </div>
 
           <h3 class="doc-title">
-            <a href="/items/{doc.id}" class="doc-link">{doc.title}</a>
+            <a href={doc.type === 'development' ? `/items/${doc.id}` : (doc.permalink || `/item/${doc.id}`)} class="doc-link">{doc.title}</a>
             {#if doc.url}
               <a
                 href={doc.url}
@@ -359,6 +368,26 @@
 
         {#if doc.summary}
           <p class="doc-summary">{doc.summary}</p>
+        {/if}
+
+        <!-- README Preview for GitHub Documents -->
+        {#if doc.url && doc.url.includes('github.com') && doc.metadata?.preview_data?.readme?.snippet}
+          <div class="readme-preview">
+            <h4>📄 README Preview</h4>
+            <div class="readme-content">
+              <MarkdownViewer 
+                content={doc.metadata.preview_data.readme.snippet} 
+                enableSyntaxHighlight={true} 
+                theme="neural" 
+                compact={true} 
+              />
+            </div>
+            {#if doc.metadata.preview_data.readme.full_length > doc.metadata.preview_data.readme.snippet.length}
+              <a href={doc.type === 'development' ? `/items/${doc.id}` : (doc.permalink || `/item/${doc.id}`)} class="read-more-link">
+                Read full README ({Math.round(doc.metadata.preview_data.readme.full_length / 1000)}k chars)
+              </a>
+            {/if}
+          </div>
         {/if}
 
         <div class="doc-footer">
@@ -877,5 +906,69 @@
     color: #0096ff;
     border-color: rgba(0, 150, 255, 0.3);
     background: rgba(0, 150, 255, 0.1);
+  }
+
+  /* Repository Preview Styles */
+  .repo-preview-section {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    padding-bottom: 1rem;
+  }
+
+  /* README Preview Styles */
+  .readme-preview {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+  }
+
+  .readme-preview h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    color: #00ff88;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .readme-content {
+    max-height: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .readme-content::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
+    pointer-events: none;
+  }
+
+  .read-more-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    color: #00ff88;
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+
+  .read-more-link:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: #00ff88;
+    transform: translateY(-1px);
   }
 </style>

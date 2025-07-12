@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Icon from './Icon.svelte';
 

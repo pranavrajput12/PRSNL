@@ -1,0 +1,130 @@
+{
+  "generated_at": "2025-07-13T02:33:09.934308",
+  "database_url": "localhost:5433/prsnl",
+  "issues": {
+    "video_url_mismatches": [],
+    "missing_video_urls": [],
+    "content_url_mismatches": [
+      {
+        "content_url_id": "aa4fb836-2a22-4a92-b80f-e8128cbba602",
+        "item_id": "d043e8ca-cc4c-476c-9b77-a23fa861c136",
+        "slug": "overview-pranav-rajputs-placeholder-project-page",
+        "category": "media",
+        "item_type": "article",
+        "item_title": "Overview of Pranav Rajput's Placeholder Project Page",
+        "item_url": "https://pranavrajput.work/",
+        "expected_types": [],
+        "views": 0,
+        "issue": "Category 'media' contains item of type 'article'",
+        "created_at": "2025-07-09T13:18:06.968851+00:00"
+      },
+      {
+        "content_url_id": "72e1f8ad-7efa-49f0-805f-3b09f3d08dcc",
+        "item_id": "e82ee92b-604e-4b98-8b55-f99ceceac38e",
+        "slug": "hash-docker-best-practices",
+        "category": "media",
+        "item_type": "development",
+        "item_title": "# Docker Best Practices",
+        "item_url": null,
+        "expected_types": [],
+        "views": 1,
+        "issue": "Category 'media' contains item of type 'development'",
+        "created_at": "2025-07-10T22:42:48.845861+00:00"
+      }
+    ],
+    "duplicate_urls": [],
+    "missing_permalinks": [
+      {
+        "id": "fd3231c2-2e73-4202-846a-735d2a89320f",
+        "title": "- YouTube",
+        "type": "video",
+        "url": "https://www.youtube.com/watch?v=test123456",
+        "suggested_category": "videos",
+        "issue": "Item of type 'video' missing permalink",
+        "created_at": "2025-07-12T20:51:47.475776+00:00"
+      },
+      {
+        "id": "98bf01e5-db25-4577-83ab-ccb22dab222d",
+        "title": "- YouTube",
+        "type": "video",
+        "url": "https://www.youtube.com/watch?v=newvideo123",
+        "suggested_category": "videos",
+        "issue": "Item of type 'video' missing permalink",
+        "created_at": "2025-07-12T20:42:19.001955+00:00"
+      },
+      {
+        "id": "059a9aa6-866c-4d26-b3dc-4edd36269eed",
+        "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+        "type": "video",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "suggested_category": "videos",
+        "issue": "Item of type 'video' missing permalink",
+        "created_at": "2025-07-10T20:53:19.585893+00:00"
+      }
+    ],
+    "orphaned_content_urls": [],
+    "invalid_platforms": [],
+    "inconsistent_metadata": [],
+    "summary": {
+      "total_items": 68,
+      "total_content_urls": 66,
+      "total_issues_found": 5,
+      "type_distribution": [
+        {
+          "type": "bookmark",
+          "count": 25
+        },
+        {
+          "type": "development",
+          "count": 18
+        },
+        {
+          "type": "article",
+          "count": 13
+        },
+        {
+          "type": "video",
+          "count": 9
+        },
+        {
+          "type": "text",
+          "count": 3
+        }
+      ],
+      "platform_distribution": [
+        {
+          "platform": "youtube",
+          "count": 5
+        }
+      ],
+      "category_distribution": [
+        {
+          "category": "dev",
+          "count": 32
+        },
+        {
+          "category": "ideas",
+          "count": 17
+        },
+        {
+          "category": "media",
+          "count": 9
+        },
+        {
+          "category": "learn",
+          "count": 8
+        }
+      ],
+      "issue_breakdown": {
+        "video_url_mismatches": 0,
+        "missing_video_urls": 0,
+        "content_url_mismatches": 2,
+        "duplicate_urls": 0,
+        "missing_permalinks": 3,
+        "orphaned_content_urls": 0,
+        "invalid_platforms": 0,
+        "inconsistent_metadata": 0
+      }
+    }
+  }
+}

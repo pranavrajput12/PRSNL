@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import { captureItem, getRecentTags, getAISuggestions } from '$lib/api';
   import type { CaptureRequest, ContentTypeDefinition } from '$lib/types/api';

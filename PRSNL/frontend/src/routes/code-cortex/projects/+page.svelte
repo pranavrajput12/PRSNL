@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import {
     getDevelopmentStats,
@@ -262,12 +262,11 @@
                     </div>
 
                     <h3 class="project-title">
+                      <a href={project.permalink || `/item/${project.id}`}>{project.title}</a>
                       {#if project.url}
-                        <a href={project.url} target="_blank" rel="noopener noreferrer"
-                          >{project.title}</a
-                        >
-                      {:else}
-                        {project.title}
+                        <a href={project.url} target="_blank" rel="noopener noreferrer" class="external-link-inline">
+                          <Icon name="external-link" size="small" />
+                        </a>
                       {/if}
                     </h3>
                   </div>
@@ -662,6 +661,18 @@
 
   .project-title a:hover {
     color: #dc143c;
+  }
+
+  .external-link-inline {
+    display: inline-flex;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+
+  .external-link-inline:hover {
+    opacity: 1;
   }
 
   .project-summary {

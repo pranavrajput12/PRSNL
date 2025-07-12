@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import NeuralGalaxy from '$lib/components/previews/NeuralGalaxy.svelte';
   import Icon from '$lib/components/Icon.svelte';
 </script>

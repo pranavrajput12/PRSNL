@@ -16,6 +16,11 @@ export enum ItemType {
   NOTE = 'note',
   BOOKMARK = 'bookmark',
   IMAGE = 'image',
+  DEVELOPMENT = 'development',
+  GITHUB_REPO = 'github_repo',
+  GITHUB_DOCUMENT = 'github_document',
+  LINK = 'link',
+  TUTORIAL = 'tutorial',
 }
 
 // Base types
@@ -72,7 +77,7 @@ export interface Item {
   title: string;
   content?: string;
   summary?: string;
-  item_type: ItemType;
+  type: ItemType;
   status: ItemStatus;
   created_at: string;
   updated_at?: string;

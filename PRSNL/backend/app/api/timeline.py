@@ -23,6 +23,7 @@ class TimelineItem(BaseModel):
     createdAt: datetime
     updatedAt: Optional[datetime] = None
     tags: List[str] = []
+    permalink: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -56,11 +57,16 @@ async def get_timeline(
                     i.status,
                     i.created_at,
                     i.updated_at,
+                    CASE 
+                        WHEN cu.slug IS NOT NULL THEN '/c/' || cu.category || '/' || cu.slug
+                        ELSE NULL
+                    END as permalink,
                     COALESCE(
                         ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL),
                         ARRAY[]::TEXT[]
                     ) as tags
                 FROM items i
+                LEFT JOIN content_urls cu ON i.id = cu.content_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.status IN ('completed', 'bookmark', 'pending')
@@ -75,7 +81,7 @@ async def get_timeline(
                 except ValueError:
                     raise HTTPException(status_code=400, detail="Invalid cursor format.")
 
-            query += f" GROUP BY i.id ORDER BY i.created_at DESC LIMIT ${len(params) + 1}"
+            query += f" GROUP BY i.id, cu.slug, cu.category ORDER BY i.created_at DESC LIMIT ${len(params) + 1}"
             params.append(limit)
 
             rows = await conn.fetch(query, *params)
@@ -99,7 +105,8 @@ async def get_timeline(
                     "status": row["status"],
                     "createdAt": row["created_at"],
                     "updatedAt": row["updated_at"],
-                    "tags": row["tags"]
+                    "tags": row["tags"],
+                    "permalink": row["permalink"]
                 })
 
             next_cursor = None

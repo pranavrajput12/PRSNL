@@ -10,6 +10,8 @@ import asyncio
 from typing import Optional, Dict, List
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from slugify import slugify
+from nanoid import generate
 
 from app.db.database import get_db
 from app.db.models import ContentUrl, Item
@@ -81,39 +83,30 @@ class SmartSlugGenerator:
     
     @classmethod
     def _generate_base_slug(cls, title: str) -> str:
-        """Generate the base slug from title without uniqueness check."""
+        """Generate the base slug from title using python-slugify for better Unicode handling."""
         if not title or not title.strip():
             return 'untitled'
-            
-        slug = title.strip().lower()
         
-        # Apply custom replacements first
+        # Apply custom emoji replacements first (without adding extra spaces)
+        processed_title = title
         for search, replace in cls.CUSTOM_REPLACEMENTS.items():
-            slug = slug.replace(search, replace)
+            processed_title = processed_title.replace(search, replace)
         
-        # Remove stop words (but keep them if they're the only words)
-        words = slug.split()
-        if len(words) > 2:  # Only remove stop words if we have enough words
-            words = [word for word in words if word not in cls.STOP_WORDS]
-        
-        slug = ' '.join(words)
-        
-        # Remove special characters (keep alphanumeric, spaces, and hyphens)
-        slug = re.sub(r'[^a-z0-9\s\-]', '', slug)
-        
-        # Replace multiple spaces/hyphens with single hyphen
-        slug = re.sub(r'[\s\-]+', '-', slug)
-        
-        # Remove leading/trailing hyphens
-        slug = slug.strip('-')
-        
-        # Limit length for SEO (60 chars is optimal)
-        if len(slug) > 60:
-            slug = slug[:60]
-            # Break at word boundary
-            last_hyphen = slug.rfind('-')
-            if last_hyphen > 30:  # Ensure we don't make it too short
-                slug = slug[:last_hyphen]
+        # Use python-slugify for robust slug generation
+        slug = slugify(
+            processed_title,
+            max_length=60,
+            word_boundary=True,
+            lowercase=True,
+            separator='-',
+            replacements=[
+                ['&', 'and'],
+                ['@', 'at'],
+                ['+', 'plus'],
+                ['%', 'percent']
+            ],
+            stopwords=cls.STOP_WORDS if len(processed_title.split()) > 2 else None
+        )
         
         return slug or 'untitled'
     
@@ -131,12 +124,20 @@ class SmartSlugGenerator:
                 candidate_slug = base_slug
                 
                 while await cls._slug_exists(session, candidate_slug, category, content_id):
-                    candidate_slug = f"{base_slug}-{counter}"
+                    # Use nanoid for better collision handling after a few attempts
+                    if counter <= 5:
+                        candidate_slug = f"{base_slug}-{counter}"
+                    else:
+                        # Use nanoid for unique suffix after 5 collisions
+                        unique_suffix = generate(size=6)  # Generates something like "V1StGX"
+                        candidate_slug = f"{base_slug}-{unique_suffix}"
+                    
                     counter += 1
                     
                     # Sanity check to prevent infinite loops
-                    if counter > 1000:
-                        candidate_slug = f"{base_slug}-{asyncio.get_event_loop().time()}"
+                    if counter > 20:
+                        # Final fallback with guaranteed uniqueness
+                        candidate_slug = f"{base_slug}-{generate(size=10)}"
                         break
                 
                 return candidate_slug
@@ -192,37 +193,56 @@ class SmartSlugGenerator:
     @classmethod
     def _classify_content_category(cls, item: Item) -> str:
         """Classify content into one of the four categories."""
-        # Check URL patterns first
-        if item.url:
+        
+        # PRIORITIZE ITEM TYPE (reflects user choice or final determination)
+        if item.type in ['video', 'image', 'audio']:
+            return 'media'
+        
+        if item.type in ['development', 'github_repo', 'github_document']:
+            return 'dev'
+        
+        # Handle other specific types
+        if item.type in ['article', 'text', 'note']:
+            # These could be learning content, check for educational keywords
+            text_to_check = f"{item.title} {item.summary or ''} {item.raw_content or ''}".lower()
+            if any(keyword in text_to_check for keyword in [
+                'tutorial', 'course', 'learn', 'guide', 'how to', 'documentation', 'education'
+            ]):
+                return 'learn'
+            # Otherwise default to ideas for articles/text/notes
+            return 'ideas'
+        
+        if item.type in ['bookmark', 'link']:
+            # Links could be anything, use URL-based detection
+            pass  # Continue to URL-based detection below
+        
+        if item.platform in ['youtube', 'vimeo', 'video']:
+            return 'media'
+        
+        # Fallback: Check URL patterns for ambiguous types like 'article', 'bookmark', 'link'
+        if item.url and item.type in ['article', 'bookmark', 'link']:
             url_lower = item.url.lower()
             
-            # Development content
+            # Development content URLs (only for non-development types)
             if any(pattern in url_lower for pattern in [
                 'github.com', 'stackoverflow.com', 'docs.', 'api.', 
                 'developer.', 'programming', 'coding', 'software'
             ]):
                 return 'dev'
             
-            # Learning content  
+            # Learning content URLs
             if any(pattern in url_lower for pattern in [
                 'tutorial', 'course', 'learn', 'guide', 'education',
                 'academy', 'training', 'workshop'
             ]):
                 return 'learn'
             
-            # Media content
+            # Media content URLs
             if any(pattern in url_lower for pattern in [
                 'youtube.com', 'video', 'audio', 'podcast', 'media',
                 'image', 'photo', 'presentation'
             ]):
                 return 'media'
-        
-        # Check content type and platform
-        if item.platform in ['youtube', 'vimeo', 'video']:
-            return 'media'
-        
-        if item.type in ['video', 'image', 'audio']:
-            return 'media'
         
         # Check title and content for keywords
         text_to_check = f"{item.title} {item.summary or ''} {item.raw_content or ''}".lower()

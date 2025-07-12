@@ -24,14 +24,14 @@ class MediaDetector:
         'twitter': [
             r'(?:https?://)?(?:www\.)?twitter\.com/\w+/status/(\d+)/video/\d+',
             r'(?:https?://)?(?:www\.)?x\.com/\w+/status/(\d+)/video/\d+',
-            # Twitter videos can also be in regular status URLs
-            r'(?:https?://)?(?:www\.)?twitter\.com/\w+/status/(\d+)',
-            r'(?:https?://)?(?:www\.)?x\.com/\w+/status/(\d+)'
+            # NOTE: Regular status URLs require content analysis to determine if video
         ],
         'instagram': [
-            r'(?:https?://)?(?:www\.)?instagram\.com/p/([a-zA-Z0-9_-]+)',
+            # Instagram Reels are definitely videos
             r'(?:https?://)?(?:www\.)?instagram\.com/reel/([a-zA-Z0-9_-]+)',
-            r'(?:https?://)?(?:www\.)?instagram\.com/tv/([a-zA-Z0-9_-]+)'
+            # Instagram TV is definitely videos  
+            r'(?:https?://)?(?:www\.)?instagram\.com/tv/([a-zA-Z0-9_-]+)',
+            # NOTE: Regular posts (/p/) can be images or videos, need content analysis
         ],
         'dailymotion': [
             r'(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)'
@@ -133,6 +133,22 @@ class MediaDetector:
                         'thumbnail_url': cls.get_thumbnail_url(platform, video_id)
                     }
         return None
+    
+    @classmethod
+    def is_ambiguous_media_url(cls, url: str) -> bool:
+        """
+        Check if URL could be either video or image (requires content analysis)
+        """
+        ambiguous_patterns = [
+            r'(?:https?://)?(?:www\.)?instagram\.com/p/([a-zA-Z0-9_-]+)',  # Instagram posts
+            r'(?:https?://)?(?:www\.)?twitter\.com/\w+/status/(\d+)(?!/video)',  # Twitter posts without /video
+            r'(?:https?://)?(?:www\.)?x\.com/\w+/status/(\d+)(?!/video)',  # X posts without /video
+        ]
+        
+        for pattern in ambiguous_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                return True
+        return False
     
     @classmethod
     def get_embed_url(cls, platform: str, video_id: str) -> str:

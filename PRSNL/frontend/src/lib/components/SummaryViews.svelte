@@ -2,7 +2,7 @@
   SummaryViews.svelte
   Component for displaying AI-generated summaries with different view options
  -->
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import { aiApi } from '$lib/api';
 

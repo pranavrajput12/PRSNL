@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import { searchItems, getTimeline } from '$lib/api';
   import type { TimelineItem, Item } from '$lib/types/api';

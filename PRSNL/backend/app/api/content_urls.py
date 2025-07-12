@@ -32,6 +32,11 @@ class LegacyRedirectResponse(BaseModel):
     newUrl: Optional[str] = None
 
 
+class VideoResolutionResponse(BaseModel):
+    videoId: Optional[str] = None
+    videoUrl: Optional[str] = None
+
+
 # Route order is important: more specific routes must come before general ones
 @router.get("/content/category/{category}", response_model=CategoryContentResponse)
 async def get_category_content(
@@ -247,6 +252,44 @@ async def get_video_redirect(
         
     except Exception:
         return LegacyRedirectResponse(newUrl=None)
+
+
+@router.get("/video-resolution/{category}/{slug}", response_model=VideoResolutionResponse)
+async def resolve_video_permalink(
+    category: str,
+    slug: str,
+    session: AsyncSession = Depends(get_db)
+):
+    """Resolve video permalink to video ID for redirection to video player."""
+    try:
+        # Only handle media category for videos
+        if category != "media":
+            return VideoResolutionResponse(videoId=None, videoUrl=None)
+        
+        # Find the content URL for this video slug
+        query = select(ContentUrl, Item).join(
+            Item, ContentUrl.content_id == Item.id
+        ).where(
+            and_(
+                ContentUrl.category == category,
+                ContentUrl.slug == slug,
+                Item.type == "video"
+            )
+        )
+        result = await session.execute(query)
+        content_url_item = result.first()
+        
+        if content_url_item:
+            content_url, item = content_url_item
+            video_id = str(item.id)
+            video_url = f"/videos/{video_id}"
+            return VideoResolutionResponse(videoId=video_id, videoUrl=video_url)
+        
+        return VideoResolutionResponse(videoId=None, videoUrl=None)
+        
+    except Exception as e:
+        print(f"Error resolving video permalink: {e}")
+        return VideoResolutionResponse(videoId=None, videoUrl=None)
 
 
 @router.post("/content/{category}/{slug}/migrate")

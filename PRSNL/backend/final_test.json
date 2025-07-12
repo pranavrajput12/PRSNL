@@ -1,0 +1,151 @@
+{
+  "generated_at": "2025-07-13T02:28:59.722079",
+  "database_url": "localhost:5433/prsnl",
+  "issues": {
+    "video_url_mismatches": [
+      {
+        "id": "ad1fa0b1-1f4b-4375-a04b-aa2de9cd1ebf",
+        "title": "Me at the zoo",
+        "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+        "current_type": "bookmark",
+        "detected_platform": "youtube",
+        "suggested_type": "video",
+        "issue": "Video URL marked as 'bookmark' instead of video type",
+        "created_at": "2025-07-10T20:53:47.797588+00:00"
+      },
+      {
+        "id": "059a9aa6-866c-4d26-b3dc-4edd36269eed",
+        "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "current_type": "bookmark",
+        "detected_platform": "youtube",
+        "suggested_type": "video",
+        "issue": "Video URL marked as 'bookmark' instead of video type",
+        "created_at": "2025-07-10T20:53:19.585893+00:00"
+      },
+      {
+        "id": "758bd5c7-0b95-4a04-8e24-8835b215de4b",
+        "title": "- YouTube",
+        "url": "https://www.youtube.com/watch?v=test123",
+        "current_type": "article",
+        "detected_platform": "youtube",
+        "suggested_type": "video",
+        "issue": "Video URL marked as 'article' instead of video type",
+        "created_at": "2025-07-09T22:52:38.502037+00:00"
+      }
+    ],
+    "missing_video_urls": [],
+    "content_url_mismatches": [
+      {
+        "content_url_id": "aa4fb836-2a22-4a92-b80f-e8128cbba602",
+        "item_id": "d043e8ca-cc4c-476c-9b77-a23fa861c136",
+        "slug": "overview-pranav-rajputs-placeholder-project-page",
+        "category": "media",
+        "item_type": "article",
+        "item_title": "Overview of Pranav Rajput's Placeholder Project Page",
+        "item_url": "https://pranavrajput.work/",
+        "expected_types": [],
+        "views": 0,
+        "issue": "Category 'media' contains item of type 'article'",
+        "created_at": "2025-07-09T13:18:06.968851+00:00"
+      },
+      {
+        "content_url_id": "72e1f8ad-7efa-49f0-805f-3b09f3d08dcc",
+        "item_id": "e82ee92b-604e-4b98-8b55-f99ceceac38e",
+        "slug": "hash-docker-best-practices",
+        "category": "media",
+        "item_type": "development",
+        "item_title": "# Docker Best Practices",
+        "item_url": null,
+        "expected_types": [],
+        "views": 1,
+        "issue": "Category 'media' contains item of type 'development'",
+        "created_at": "2025-07-10T22:42:48.845861+00:00"
+      }
+    ],
+    "duplicate_urls": [
+      {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "types": [
+          "bookmark",
+          "video"
+        ],
+        "item_ids": [
+          "059a9aa6-866c-4d26-b3dc-4edd36269eed",
+          "4bd14a61-72a6-490b-a40a-9b1f39d91dcd"
+        ],
+        "titles": [
+          "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+          "Rick Astley - Never Gonna Give You Up (Official 4K Remaster Video) Analysis"
+        ],
+        "count": 2,
+        "issue": "URL appears 2 times with different types: bookmark, video",
+        "suggested_action": "Review and merge or deduplicate items"
+      }
+    ],
+    "missing_permalinks": [],
+    "orphaned_content_urls": [],
+    "invalid_platforms": [],
+    "inconsistent_metadata": [],
+    "summary": {
+      "total_items": 68,
+      "total_content_urls": 66,
+      "total_issues_found": 6,
+      "type_distribution": [
+        {
+          "type": "bookmark",
+          "count": 27
+        },
+        {
+          "type": "development",
+          "count": 18
+        },
+        {
+          "type": "article",
+          "count": 14
+        },
+        {
+          "type": "video",
+          "count": 4
+        },
+        {
+          "type": "text",
+          "count": 3
+        },
+        {
+          "type": "link",
+          "count": 2
+        }
+      ],
+      "platform_distribution": [],
+      "category_distribution": [
+        {
+          "category": "dev",
+          "count": 32
+        },
+        {
+          "category": "ideas",
+          "count": 17
+        },
+        {
+          "category": "media",
+          "count": 9
+        },
+        {
+          "category": "learn",
+          "count": 8
+        }
+      ],
+      "issue_breakdown": {
+        "video_url_mismatches": 3,
+        "missing_video_urls": 0,
+        "content_url_mismatches": 2,
+        "duplicate_urls": 1,
+        "missing_permalinks": 0,
+        "orphaned_content_urls": 0,
+        "invalid_platforms": 0,
+        "inconsistent_metadata": 0
+      }
+    }
+  }
+}

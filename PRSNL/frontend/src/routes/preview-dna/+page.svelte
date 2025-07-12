@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import DNASequencer from '$lib/components/previews/DNASequencer.svelte';
   import Icon from '$lib/components/Icon.svelte';
 </script>

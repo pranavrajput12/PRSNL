@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let size: 'sm' | 'md' | 'lg' = 'md';
   export let color: string = 'text-red-600';
 

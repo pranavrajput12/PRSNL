@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { getTimeline } from '$lib/api';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -252,7 +252,7 @@
 
               <div class="trace-header">
                 <div class="trace-main">
-                  <a href="/item/{item.id}" class="trace-title">
+                  <a href={item.permalink || `/item/${item.id}`} class="trace-title">
                     {item.title || 'Untitled'}
                     {#if item.status === 'pending'}
                       <span class="processing-indicator">

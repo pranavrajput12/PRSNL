@@ -2,7 +2,7 @@
   StreamingText.svelte
   A component that shows text appearing word-by-word with typing animation
 -->
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
 

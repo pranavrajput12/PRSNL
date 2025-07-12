@@ -2,7 +2,7 @@
   CategoryManager.svelte
   Component for displaying and managing AI-suggested categories with confidence scores
  -->
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import { aiApi } from '$lib/api';
   import { Button } from '$lib/components/ui/button';

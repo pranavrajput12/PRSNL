@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let url: string;
   export let title: string = '';
   export let width: string = '100%';

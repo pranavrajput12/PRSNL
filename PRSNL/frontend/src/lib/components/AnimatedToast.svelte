@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { spring } from 'svelte/motion';
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';

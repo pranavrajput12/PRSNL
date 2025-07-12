@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import MindAvatar from '$lib/components/previews/MindAvatar.svelte';
   import Icon from '$lib/components/Icon.svelte';
 </script>

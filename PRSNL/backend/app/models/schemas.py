@@ -100,7 +100,7 @@ class CaptureRequest(BaseModel):
     highlight: Optional[str] = Field(None, max_length=1000, description="Highlighted text")
     tags: Optional[List[str]] = Field(default_factory=list, description="Tags for categorization")
     enable_summarization: bool = Field(default=False, description="Enable AI summarization for this item")
-    content_type: str = Field(default="auto", description="Content type: auto, document, video, article, tutorial, image, note, link, development")
+    content_type: str = Field(default="auto", description="Content type: auto, document, video, article, tutorial, image, note, link, development, github_repo, github_document")
     uploaded_files: Optional[List[Any]] = Field(default_factory=list, description="Uploaded files for processing")
     # Development-specific fields
     programming_language: Optional[str] = Field(None, max_length=50, description="Programming language for development content")
@@ -140,7 +140,7 @@ class CaptureRequest(BaseModel):
         if v is None:
             return "auto"
         
-        allowed_types = ["auto", "document", "video", "article", "tutorial", "image", "note", "link", "development"]
+        allowed_types = ["auto", "document", "video", "article", "tutorial", "image", "note", "link", "development", "github_repo", "github_document"]
         if v.lower() not in allowed_types:
             raise ValueError(f"Content type must be one of: {', '.join(allowed_types)}")
         
@@ -264,6 +264,7 @@ class Item(ItemBase):
     metadata: Optional[Dict[str, Any]] = None
     content_fingerprint: Optional[str] = Field(None, description="SHA-256 hash of raw content for deduplication")
     embed_vector_id: Optional[UUID] = Field(None, description="Direct pointer to pgvector embedding table")
+    permalink: Optional[str] = Field(None, description="Permalink URL for the item")
     
     class Config:
         from_attributes = True

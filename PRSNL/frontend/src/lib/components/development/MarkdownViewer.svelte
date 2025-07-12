@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import SafeHTML from '$lib/components/SafeHTML.svelte';
   import { lazyLoadMarkdownProcessor, loadingStates } from '$lib/utils/lazyLoad';

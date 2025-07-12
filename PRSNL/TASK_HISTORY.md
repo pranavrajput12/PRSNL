@@ -54,7 +54,7 @@ This document consolidates all task tracking, project history, and progress moni
 **Type**: Backend Integration + Database + Third-Party API
 **Priority**: P0
 **Files Modified**:
-- `/backend/.env` - Added real GitHub token for API authentication (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)
+- `/backend/.env` - Added real GitHub token for API authentication (token redacted for security)
 - `/backend/app/config.py` - Added GITHUB_TOKEN configuration support
 - `/backend/app/services/preview_service.py` - Fixed README fetching logic and rate limit handling
 - `/backend/app/api/capture.py` - Enhanced to ALWAYS generate GitHub previews for ALL GitHub URLs

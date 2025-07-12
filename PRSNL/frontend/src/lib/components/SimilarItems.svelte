@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
   import { getSimilarItems } from '$lib/api';
   import type { ContentItem } from '$lib/types/api';

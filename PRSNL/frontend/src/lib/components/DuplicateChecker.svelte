@@ -2,7 +2,7 @@
   DuplicateChecker.svelte
   Component for checking and managing duplicate content with similarity scores
  -->
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
   import { aiApi } from '$lib/api';
   import { Button } from '$lib/components/ui/button';

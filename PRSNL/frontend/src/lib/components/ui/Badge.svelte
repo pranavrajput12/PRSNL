@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let variant: 'default' | 'success' | 'warning' | 'error' = 'default';
   export let size: 'sm' | 'md' = 'md';
 

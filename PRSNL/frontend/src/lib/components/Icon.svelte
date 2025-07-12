@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   export let name = '';
   export let size: 'small' | 'medium' | 'large' | string | number = 'medium';
   export let color = 'currentColor';

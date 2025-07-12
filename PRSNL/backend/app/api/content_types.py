@@ -79,6 +79,20 @@ CONTENT_TYPE_DEFINITIONS = {
         "description": "Development documentation, tutorials, and code resources",
         "color": "#10B981"
     },
+    "github_repo": {
+        "name": "github_repo",
+        "display_name": "GitHub Repository", 
+        "icon": "github",
+        "description": "GitHub repository links and project pages",
+        "color": "#24292e"
+    },
+    "github_document": {
+        "name": "github_document",
+        "display_name": "GitHub Document",
+        "icon": "file-text",
+        "description": "GitHub markdown files, documentation, and wikis",
+        "color": "#0366d6"
+    },
     "auto": {
         "name": "auto",
         "display_name": "Auto-Detect",

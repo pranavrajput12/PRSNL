@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { goto } from '$app/navigation';
   import Icon from './Icon.svelte';
   import VideoPlayer from './VideoPlayer.svelte';
@@ -36,7 +36,7 @@
 
   function handleClick() {
     // Use the new permalink URL if available, fallback to old format
-    const targetUrl = item.url || `/item/${item.id}`;
+    const targetUrl = item.permalink || `/item/${item.id}`;
     goto(targetUrl);
   }
 

@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { mediaSettings } from '$lib/stores/media';
   import Icon from './Icon.svelte';

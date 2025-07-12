@@ -275,10 +275,15 @@ async def get_development_stats():
             
             # Recent activity (last 10 items)
             recent_query = """
-                SELECT id, title, programming_language, project_category, created_at
-                FROM items 
-                WHERE type = 'development'
-                ORDER BY created_at DESC
+                SELECT i.id, i.title, i.programming_language, i.project_category, i.created_at,
+                       CASE 
+                           WHEN cu.slug IS NOT NULL THEN '/c/' || cu.category || '/' || cu.slug
+                           ELSE NULL
+                       END as permalink
+                FROM items i
+                LEFT JOIN content_urls cu ON i.id = cu.content_id
+                WHERE i.type = 'development'
+                ORDER BY i.created_at DESC
                 LIMIT 10
             """
             recent_rows = await conn.fetch(recent_query)
@@ -289,7 +294,8 @@ async def get_development_stats():
                     "title": row["title"],
                     "programming_language": row["programming_language"],
                     "project_category": row["project_category"],
-                    "created_at": row["created_at"].isoformat()
+                    "created_at": row["created_at"].isoformat(),
+                    "permalink": row["permalink"]
                 }
                 for row in recent_rows
             ]

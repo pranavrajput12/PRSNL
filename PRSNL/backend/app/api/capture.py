@@ -94,7 +94,8 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
 
 from app.services.cache import invalidate_cache, CacheKeys
 
-@router.post("/capture", status_code=status.HTTP_201_CREATED, dependencies=[Depends(capture_throttle_limiter)])
+@router.post("/capture", status_code=status.HTTP_201_CREATED)
+@capture_throttle_limiter
 async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks):
     """Capture a new item (web page, note, file, etc.)."""
     print(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force print
@@ -113,6 +114,16 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
     if not capture_request.url and not capture_request.content and not has_files and not has_highlight:
         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
         raise InvalidInput("Either URL, content, or files must be provided.")
+    
+    # Validate content_type if provided  
+    VALID_CONTENT_TYPES = {
+        'article', 'video', 'document', 'image', 'note', 'link', 'tutorial', 
+        'audio', 'code', 'development', 'github_repo', 'github_document', 'auto'
+    }
+    # Note: github_course is not included as courses are AI-generated, not captured
+    if capture_request.content_type and capture_request.content_type not in VALID_CONTENT_TYPES:
+        raise InvalidInput(f"Invalid content_type '{capture_request.content_type}'. "
+                          f"Valid types: {', '.join(sorted(VALID_CONTENT_TYPES))}")
     
     item_id = uuid4()
     item_type = 'article'
@@ -149,14 +160,26 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             media_info = None
             item_type = 'article'  # Default fallback
             
-            # Rule 1: Auto-detect GitHub URLs as development (override user choice)
-            if capture_request.url and 'github.com' in str(capture_request.url).lower():
-                item_type = 'development'
-                capture_request.content_type = 'development'  # Override user selection
-                logger.info(f"🐙 GitHub URL detected, forcing content_type: development → type: {item_type}")
+            # Rule 1: Auto-detect GitHub URLs with specific types (only in auto mode)
+            if (capture_request.url and 'github.com' in str(capture_request.url).lower() and 
+                (not capture_request.content_type or capture_request.content_type == 'auto')):
+                
+                # Get detailed GitHub classification
+                url_classification = URLClassifier.classify_url(str(capture_request.url))
+                github_type = url_classification.get('content_type', 'development')
+                
+                # Map to item types
+                if github_type == 'github_document':
+                    item_type = 'github_document'
+                elif github_type == 'github_repo':
+                    item_type = 'github_repo'
+                else:
+                    item_type = 'development'  # Fallback
+                
+                capture_request.content_type = github_type
+                logger.info(f"🐙 GitHub URL auto-detected: {github_type} → type: {item_type}")
                 
                 # Auto-fill development fields for GitHub
-                url_classification = URLClassifier.classify_url(str(capture_request.url))
                 if not capture_request.programming_language and url_classification.get('programming_language'):
                     capture_request.programming_language = url_classification['programming_language']
                 if not capture_request.project_category and url_classification.get('project_category'):
@@ -179,6 +202,10 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     item_type = 'article'
                 elif capture_request.content_type == 'link':
                     item_type = 'link'
+                elif capture_request.content_type == 'github_repo':
+                    item_type = 'github_repo'
+                elif capture_request.content_type == 'github_document':
+                    item_type = 'github_document'
                 else:
                     # For other content types, use the content_type as item_type
                     item_type = capture_request.content_type
@@ -224,10 +251,10 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
             
             # Rule 4: Special case - if no summarization requested for URL, treat as simple link
-            # Exception: Don't convert development content to link (it needs rich preview)
+            # Exception: Don't convert development content or videos to link (they need rich preview)
             if (capture_request.url and not capture_request.enable_summarization and 
                 capture_request.content_type not in ['video', 'document', 'image', 'development'] and
-                item_type != 'development'):
+                item_type not in ['development', 'video']):
                 item_type = 'link'
                 logger.info(f"🔗 No summarization requested for URL → type: link")
             
@@ -248,12 +275,24 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                         VIDEO_CAPTURE_REQUESTS.labels(status='validation_failed').inc()
                         raise InvalidInput(f"Video validation failed: {e}")
         
+            # Determine platform based on item type and URL
+            platform = None
+            if item_type in ['github_repo', 'github_document']:
+                platform = 'github'
+            elif media_info and media_info.get('platform'):
+                platform = media_info['platform']
+            elif capture_request.url and 'youtube.com' in str(capture_request.url).lower():
+                platform = 'youtube'
+            elif capture_request.url and 'vimeo.com' in str(capture_request.url).lower():
+                platform = 'vimeo'
+        
             # Insert initial item record with metadata for capture type
             metadata = {
                 "capture_type": capture_request.type if hasattr(capture_request, 'type') else 'page',
                 "media_info": media_info,
                 "type": item_type,  # Store item type in metadata
-                "content_type": capture_request.content_type  # Store user-selected content type
+                "content_type": capture_request.content_type,  # Store user-selected content type
+                "platform": platform  # Store platform in metadata as well
             }
             
             # Generate rich preview for ALL GitHub URLs (regardless of item type)
@@ -295,7 +334,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             logger.info(f"🔍 - item_id: {item_id}")
             logger.info(f"🔍 - url: {capture_request.url}")
             logger.info(f"🔍 - title: {capture_request.title}")
-            logger.info(f"🔍 - type: {type}")
+            logger.info(f"🔍 - type: {item_type}")
             logger.info(f"🔍 - content_type: {capture_request.content_type}")
             logger.info(f"🔍 - enable_summarization: {capture_request.enable_summarization}")
             logger.info(f"🔍 - metadata: {json.dumps(metadata)}")
@@ -324,9 +363,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             sql_query = """
                 INSERT INTO public.items (
                     id, url, title, raw_content, status, type, content_type, enable_summarization, metadata,
-                    programming_language, project_category, difficulty_level, is_career_related
+                    programming_language, project_category, difficulty_level, is_career_related, platform
                 )
-                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12)
+                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
             """
             params = (
                 item_id, 
@@ -340,7 +379,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 capture_request.programming_language,
                 capture_request.project_category,
                 capture_request.difficulty_level,
-                capture_request.is_career_related
+                capture_request.is_career_related,
+                platform
             )
             
             logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")

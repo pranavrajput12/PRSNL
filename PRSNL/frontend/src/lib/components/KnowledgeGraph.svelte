@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import type { KnowledgeGraph, KnowledgeGraphNode, KnowledgeGraphLink } from '$lib/types/api';

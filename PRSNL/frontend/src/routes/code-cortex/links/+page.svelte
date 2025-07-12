@@ -1,4 +1,4 @@
-<script lang="ts" type="module">
+<script lang="ts">
   import { onMount } from 'svelte';
   import {
     getDevelopmentDocs,
@@ -385,7 +385,7 @@
               </div>
             {/if}
 
-            <a href="/items/{link.id}" class="link-button secondary"> View Details </a>
+            <a href={link.type === 'development' ? `/items/${link.id}` : (link.permalink || `/item/${link.id}`)} class="link-button secondary"> View Details </a>
             <a href={link.url} target="_blank" rel="noopener noreferrer" class="link-button">
               <Icon name="external-link" size="small" />
               Visit

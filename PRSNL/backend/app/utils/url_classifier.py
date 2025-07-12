@@ -14,11 +14,25 @@ from bs4 import BeautifulSoup
 class URLClassifier:
     """Classifier for detecting and categorizing development-related URLs."""
     
-    # Development platform patterns
-    GITHUB_PATTERNS = [
-        r'github\.com/[\w\-\.]+/[\w\-\.]+',
-        r'raw\.githubusercontent\.com',
-        r'gist\.github\.com'
+    # GitHub platform patterns with content type detection
+    GITHUB_REPO_PATTERNS = [
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/?$',  # Main repo page
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/tree/(.+)',  # Branch/folder view
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/releases',  # Releases page
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/issues',  # Issues page
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/pull',  # Pull requests
+    ]
+    
+    GITHUB_DOCUMENT_PATTERNS = [
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/blob/(.+)\.md',  # Markdown files
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/blob/(.+)\.rst',  # RestructuredText
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/blob/(.+)\.txt',  # Text files
+        r'github\.com/([\w\-\.]+)/([\w\-\.]+)/wiki',  # Wiki pages
+        r'raw\.githubusercontent\.com/([\w\-\.]+)/([\w\-\.]+)/(.+)\.md',  # Raw markdown
+    ]
+    
+    GITHUB_GIST_PATTERNS = [
+        r'gist\.github\.com/([\w\-\.]+)/([\w\-\.]+)',  # Gists
     ]
     
     STACKOVERFLOW_PATTERNS = [
@@ -174,8 +188,36 @@ class URLClassifier:
         # Determine simplified category first
         result['category'] = cls._classify_simplified_category(full_url, domain, path)
         
-        # Check if it's a development-related URL
-        if cls._is_development_url(full_url, domain, path):
+        # Check for GitHub content first (most specific)
+        github_info = cls._classify_github_content(url)
+        if github_info:
+            result['is_development'] = True
+            result['content_type'] = github_info['github_type']  # github_repo or github_document
+            result['platform'] = 'github'
+            
+            # Extract programming language
+            result['programming_language'] = cls._detect_language(full_url, path)
+            
+            # Determine project category based on GitHub type
+            if github_info['github_type'] == 'github_document':
+                result['project_category'] = 'Documentation'
+            else:
+                result['project_category'] = cls._detect_category(full_url, path) or 'Repository'
+            
+            # Detect difficulty (basic heuristics)
+            result['difficulty_level'] = cls._detect_difficulty(full_url, path)
+            
+            # Check if career-related
+            result['is_career_related'] = cls._is_career_related(full_url, path)
+            
+            # Store GitHub-specific metadata
+            result['metadata'] = {
+                'github': github_info,
+                'general': cls._extract_metadata(url, 'github')
+            }
+            
+        # Check if it's other development-related URLs
+        elif cls._is_development_url(full_url, domain, path):
             result['is_development'] = True
             result['content_type'] = 'development'
             
@@ -264,10 +306,66 @@ class URLClassifier:
         return 'ideas'
     
     @classmethod
+    def _classify_github_content(cls, url: str) -> Dict[str, any]:
+        """Classify GitHub URL into specific content types."""
+        # Check for GitHub documents first (most specific)
+        for pattern in cls.GITHUB_DOCUMENT_PATTERNS:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                return {
+                    'github_type': 'github_document',
+                    'user': match.group(1) if len(match.groups()) >= 1 else None,
+                    'repo': match.group(2) if len(match.groups()) >= 2 else None,
+                    'file_path': match.group(3) if len(match.groups()) >= 3 else None,
+                    'is_markdown': url.lower().endswith('.md'),
+                    'is_documentation': True
+                }
+        
+        # Check for GitHub gists
+        for pattern in cls.GITHUB_GIST_PATTERNS:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                return {
+                    'github_type': 'github_document',
+                    'user': match.group(1) if len(match.groups()) >= 1 else None,
+                    'gist_id': match.group(2) if len(match.groups()) >= 2 else None,
+                    'is_gist': True,
+                    'is_documentation': True
+                }
+        
+        # Check for GitHub repos (broader patterns)
+        for pattern in cls.GITHUB_REPO_PATTERNS:
+            match = re.search(pattern, url, re.IGNORECASE)
+            if match:
+                return {
+                    'github_type': 'github_repo',
+                    'user': match.group(1) if len(match.groups()) >= 1 else None,
+                    'repo': match.group(2) if len(match.groups()) >= 2 else None,
+                    'is_repository': True,
+                    'is_documentation': False
+                }
+        
+        # Fallback for any GitHub URL
+        if 'github.com' in url.lower():
+            return {
+                'github_type': 'github_repo',
+                'is_repository': True,
+                'is_documentation': False
+            }
+        
+        return None
+    
+    @classmethod
     def _is_development_url(cls, url: str, domain: str, path: str) -> bool:
         """Check if URL is development-related."""
+        # Check GitHub patterns
+        github_info = cls._classify_github_content(url)
+        if github_info:
+            return True
+            
+        # Check other development patterns
         all_patterns = (
-            cls.GITHUB_PATTERNS + cls.STACKOVERFLOW_PATTERNS + 
+            cls.STACKOVERFLOW_PATTERNS + 
             cls.DOCUMENTATION_PATTERNS + cls.TUTORIAL_PATTERNS
         )
         
