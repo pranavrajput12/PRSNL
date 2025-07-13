@@ -27,24 +27,33 @@ endpoints:
   # Azure OpenAI Configuration (Primary)
   azureOpenAI:
     titleModel: "gpt-4"
-    plugins: true
+    plugins: false  # Disabled for now
     assistants: true
+    titleConvo: true
     groups:
       - group: "prsnl-production"
         apiKey: "${AZURE_OPENAI_API_KEY}"
-        instanceName: "airops"
+        instanceName: "airops" 
         version: "2025-01-01-preview"
-        baseURL: "https://airops.openai.azure.com/openai/deployments"
+        baseURL: "https://airops.openai.azure.com"
+        additionalHeaders:
+          "User-Agent": "PRSNL-LibreChat-Integration"
         models:
           gpt-4:
             deploymentName: "gpt-4.1"
             model: "gpt-4"
+            maxContextTokens: 128000
           gpt-3.5-turbo:
-            deploymentName: "gpt-35-turbo"
+            deploymentName: "gpt-35-turbo" 
             model: "gpt-3.5-turbo"
+            maxContextTokens: 16385
           text-embedding-ada-002:
             deploymentName: "text-embedding-ada-002"
             model: "text-embedding-ada-002"
+          # Add Whisper for voice functionality
+          whisper-1:
+            deploymentName: "whisper"
+            model: "whisper-1"
 
 # Interface customization
 interface:
