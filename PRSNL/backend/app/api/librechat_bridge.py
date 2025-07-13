@@ -212,7 +212,7 @@ async def enhance_query_with_knowledge_base(
         except Exception as e:
             logger.warning(f"Multimodal search failed, falling back to text search: {e}")
             
-            # Fallback to traditional text search
+            # Fallback to traditional text search (simplified to actually work)
             async for conn in get_db_connection():
                 search_query = """
                     SELECT 
@@ -221,26 +221,24 @@ async def enhance_query_with_knowledge_base(
                         CASE 
                             WHEN repository_metadata IS NOT NULL THEN 'repository'
                             ELSE type 
-                        END as item_type,
-                        ts_rank(search_vector, plainto_tsquery($1)) as relevance_score
+                        END as item_type
                     FROM items 
-                    WHERE search_vector @@ plainto_tsquery($1)
-                       OR summary ILIKE $2
-                       OR content ILIKE $2
+                    WHERE title ILIKE $1
+                       OR summary ILIKE $1
+                       OR content ILIKE $1
                        OR (repository_metadata IS NOT NULL AND (
-                           repository_metadata->>'repo_name' ILIKE $2
-                           OR repository_metadata->>'description' ILIKE $2
-                           OR repository_metadata->'tech_stack' ? $1
-                           OR repository_metadata->>'use_case' ILIKE $2
+                           repository_metadata->>'repo_name' ILIKE $1
+                           OR repository_metadata->>'description' ILIKE $1
+                           OR repository_metadata->>'use_case' ILIKE $1
                        ))
                     ORDER BY 
                         CASE WHEN repository_metadata IS NOT NULL THEN 1 ELSE 2 END,
-                        ts_rank(search_vector, plainto_tsquery($1)) DESC
+                        char_length(title) ASC
                     LIMIT 8
                 """
                 
                 search_pattern = f"%{query}%"
-                relevant_items = await conn.fetch(search_query, query, search_pattern)
+                relevant_items = await conn.fetch(search_query, search_pattern)
             
         # Build context from relevant items
         context_parts = []
