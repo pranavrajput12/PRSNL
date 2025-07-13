@@ -95,16 +95,16 @@ class MultimodalEmbeddingService:
             Dict with embedding vector and metadata
         """
         try:
-            if use_openai and hasattr(unified_ai_service, 'create_embedding'):
-                # Use OpenAI through unified AI service
-                result = await unified_ai_service.create_embedding(text)
-                vector = result.get('embedding', [])
-                actual_model = result.get('model', model_name)
-            else:
-                # Use local sentence transformer
-                await self.initialize()
-                vector = self.text_model.encode([text])[0].tolist()
-                actual_model = 'all-MiniLM-L6-v2'
+            # Always use local sentence transformer for consistency
+            await self.initialize()
+            vector = self.text_model.encode([text])[0].tolist()
+            actual_model = 'all-MiniLM-L6-v2'
+            
+            # Pad to 1536 dimensions to match database schema
+            if len(vector) < 1536:
+                vector.extend([0.0] * (1536 - len(vector)))
+            elif len(vector) > 1536:
+                vector = vector[:1536]
             
             # Calculate content hash
             content_hash = hashlib.sha256(text.encode()).hexdigest()
@@ -299,7 +299,7 @@ class MultimodalEmbeddingService:
         Returns:
             Embedding ID
         """
-        async with get_db_connection() as conn:
+        async for conn in get_db_connection():
             embedding_id = await conn.fetchval("""
                 INSERT INTO embeddings (
                     item_id, model_name, model_version, vector, embedding_type,
@@ -348,7 +348,7 @@ class MultimodalEmbeddingService:
         Returns:
             List of similar items with metadata
         """
-        async with get_db_connection() as conn:
+        async for conn in get_db_connection():
             # Convert target_types to SQL array
             target_types_sql = f"ARRAY{target_types}"
             
@@ -483,7 +483,7 @@ class MultimodalEmbeddingService:
     
     async def get_embeddings_stats(self) -> Dict[str, Any]:
         """Get statistics about embeddings in the system."""
-        async with get_db_connection() as conn:
+        async for conn in get_db_connection():
             stats = await conn.fetchrow("""
                 SELECT 
                     COUNT(*) as total_embeddings,

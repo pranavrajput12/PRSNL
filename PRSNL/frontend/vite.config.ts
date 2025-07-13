@@ -14,8 +14,15 @@ export default defineConfig({
     sveltekit(),
   ],
   server: {
-    port: 3003,
+    port: 3004,
     host: '0.0.0.0',
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'prsnl.fyi',
+      'www.prsnl.fyi',
+      '.prsnl.fyi'
+    ],
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:8000',

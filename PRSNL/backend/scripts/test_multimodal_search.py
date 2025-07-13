@@ -27,7 +27,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from app.services.multimodal_embedding_service import multimodal_embedding_service
 from app.services.ner_service import ner_service
 from app.services.embedding_manager import embedding_manager
-from app.db.database import get_db_connection
+from app.db.database import get_db_connection, create_db_pool
 
 # Configure logging
 logging.basicConfig(
@@ -55,6 +55,9 @@ class MultimodalSearchTester:
         logger.info("🚀 Starting multimodal search test suite")
         
         try:
+            # Initialize database
+            await create_db_pool()
+            
             # Initialize services
             await self._initialize_services()
             
