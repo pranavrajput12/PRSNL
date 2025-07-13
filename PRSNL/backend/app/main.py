@@ -209,7 +209,6 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 
 from fastapi.staticfiles import StaticFiles
 
-from app.api import autoagent_integration  # AutoAgent second brain transformation
 from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
 from app.api import (
@@ -297,7 +296,6 @@ app.include_router(embeddings.router, prefix=settings.API_V1_STR)
 app.include_router(openclip.router, prefix=settings.API_V1_STR)  # OpenCLIP vision service
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
-app.include_router(autoagent_integration.router)  # AutoAgent second brain transformation
 app.include_router(ws.router)
 
 # V2 API endpoints with improved standards

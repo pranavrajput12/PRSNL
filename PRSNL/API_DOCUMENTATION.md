@@ -4,7 +4,7 @@
 - Development: `http://localhost:8000/api`
 - Frontend Proxy: `http://localhost:3004/api` (updated from 3003)
 - iOS App: Configured in iOS app settings
-- **NEW**: AutoAgent API: `http://localhost:8000/api/autoagent`
+- **NEW**: AI API: `http://localhost:8000/api/ai`
 - **NEW**: LibreChat API: `http://localhost:8000/api/ai`
 
 ## Client Applications
@@ -12,7 +12,7 @@
 - **iOS App (PRSNL APP)**: Native iOS application - *separate codebase*
 - **Chrome Extension**: Browser extension
 - **NEW**: LibreChat Integration - OpenAI-compatible chat interface
-- **NEW**: AutoAgent Multi-Agent System - Autonomous AI workflows
+- **NEW**: AI Services - Intelligent content analysis and suggestions
 
 ## Navigation Structure (Neural Nest Theme)
 - **Neural Nest** (`/`) - Main dashboard and knowledge hub
@@ -31,10 +31,10 @@ Currently no authentication required (development mode)
 
 ## Phase 3 AI API Endpoints
 
-### 🤖 AutoAgent - Multi-Agent AI System
+### 🤖 AI Services - Intelligent Analysis
 
-#### GET /api/autoagent/agent-status
-Get the status of all AutoAgent AI agents
+#### GET /api/ai/health
+Get the health status of AI services
 
 **Response:**
 ```json
@@ -67,8 +67,8 @@ Get the status of all AutoAgent AI agents
 }
 ```
 
-#### POST /api/autoagent/process-content
-Process content through the multi-agent workflow (Knowledge Curator + Research Synthesizer)
+#### POST /api/ai-suggest
+Process content through AI-powered analysis and suggestions
 
 **Request Body:**
 ```json
@@ -106,8 +106,8 @@ Process content through the multi-agent workflow (Knowledge Curator + Research S
 }
 ```
 
-#### POST /api/autoagent/create-learning-path
-Create a personalized learning path using the Learning Pathfinder agent
+#### POST /api/ai-suggest
+Create AI-powered suggestions and recommendations
 
 **Request Body:**
 ```json
@@ -130,8 +130,8 @@ Create a personalized learning path using the Learning Pathfinder agent
 }
 ```
 
-#### POST /api/autoagent/explore-topic
-Explore a topic using Content Explorer and Learning Pathfinder agents
+#### POST /api/ai-suggest
+Explore topics with AI-powered insights
 
 **Request Body:**
 ```json
@@ -157,8 +157,8 @@ Explore a topic using Content Explorer and Learning Pathfinder agents
 }
 ```
 
-#### GET /api/autoagent/insights-report
-Generate comprehensive insights report across the knowledge base
+#### POST /api/summarization/summarize/batch
+Generate comprehensive summaries across content
 
 **Query Parameters:**
 - `time_period` (string, default: "week") - Time period for analysis
@@ -178,14 +178,14 @@ Generate comprehensive insights report across the knowledge base
 }
 ```
 
-#### GET /api/autoagent/health
-AutoAgent health check
+#### GET /api/ai/health
+AI service health check
 
 **Response:**
 ```json
 {
   "status": "healthy",
-  "service": "prsnl-autoagent",
+  "service": "prsnl-ai",
   "memory_connected": true,
   "agents_loaded": true,
   "agent_count": 4,

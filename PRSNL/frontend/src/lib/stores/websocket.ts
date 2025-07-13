@@ -40,7 +40,24 @@ export interface IncomingMessage {
 }
 
 // WebSocket configuration
-const WS_URL = import.meta.env.PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
+const getWebSocketURL = () => {
+  if (import.meta.env.PUBLIC_WS_URL) {
+    return import.meta.env.PUBLIC_WS_URL;
+  }
+  
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  
+  // In production, use the same host but with /api/ws path
+  if (host.includes('prsnl.fyi')) {
+    return `${protocol}//${host}/api/ws`;
+  }
+  
+  // In development, use localhost:8000
+  return 'ws://localhost:8000/api/ws';
+};
+
+const WS_URL = getWebSocketURL();
 const RECONNECT_INTERVAL = 2000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 

@@ -43,16 +43,15 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 ## Container Runtime - Phase 3 Configuration
 - We use Rancher Desktop for containers
 - **DragonflyDB** runs in Docker (replaced Redis - 25x faster)
-- Backend runs locally for better development experience with AutoAgent integration
-- AutoAgent agents run as part of backend process (not containerized)
+- Backend runs locally for better development experience
+- AI agents run as part of backend process (not containerized)
 
 ## Ports (Exclusive Port Ownership) - Phase 3 Updated
 - Frontend Development: **3004** (Updated from 3003 after Svelte 5 upgrade - container conflict resolved)
 - Frontend Container: **3003** (production deployments only)
-- Backend API: **8000** (includes AutoAgent API endpoints)
+- Backend API: **8000** (includes AI API endpoints)
 - PostgreSQL: **5433** (ARM64 PostgreSQL 16 - NOT 5432!)
 - DragonflyDB: **6379** (replaced Redis - 25x performance improvement)
-- **NEW**: AutoAgent API: `/api/autoagent/*` endpoints
 - **NEW**: LibreChat API: `/api/ai/*` endpoints
 
 **Port Conflict Resolution:**
@@ -67,7 +66,7 @@ lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
 ## Running Services - CRITICAL DISTINCTION
 **DEVELOPMENT MODE (WHAT WE USE):**
 - Frontend: Run locally with `cd frontend && npm run dev -- --port 3004` (port 3004)
-- Backend: Run locally with AutoAgent integration
+- Backend: Run locally with AI integration
 - Database: Local ARM64 PostgreSQL 16 on port 5433
 - Cache: DragonflyDB in Rancher container
 
@@ -88,42 +87,12 @@ docker-compose stop frontend
 
 ## Phase 3 AI Development Patterns
 
-### AutoAgent Development
+### AI Development
 **Key Principles:**
-1. **Multi-Agent Architecture**: 4 specialized agents working in orchestration
+1. **AI Integration**: Leverage Azure OpenAI for intelligent features
 2. **Azure OpenAI Integration**: Use prsnl-gpt-4 for complex reasoning
-3. **Function Calling**: Ensure Azure OpenAI API version 2023-12-01-preview
-4. **Agent Memory**: Persistent context through PRSNLMemory database integration
-
-**Agent Development Pattern:**
-```python
-# Always check FN_CALL environment variable for function calling
-use_functions = os.getenv("FN_CALL", "True").lower() != "false"
-
-agent = Agent(
-    name="Agent Name",
-    model="azure/prsnl-gpt-4",  # Use prsnl-gpt-4 for AutoAgent
-    instructions=AGENT_PROMPT,
-    functions=[func1, func2] if use_functions else [],
-    parallel_tool_calls=use_functions
-)
-```
-
-**Testing AutoAgent:**
-```bash
-# Test agent status
-curl http://localhost:8000/api/autoagent/agent-status
-
-# Test learning path creation
-curl -X POST http://localhost:8000/api/autoagent/create-learning-path \
-  -H "Content-Type: application/json" \
-  -d '{"goal": "Test goal", "current_knowledge": ["basics"]}'
-
-# Test multi-agent content processing  
-curl -X POST http://localhost:8000/api/autoagent/process-content \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Test content", "title": "Test"}'
-```
+3. **Model Selection**: Choose appropriate models for different tasks
+4. **Context Enhancement**: Integrate knowledge base for better responses
 
 ### LibreChat Development
 **Key Principles:**
@@ -160,10 +129,9 @@ curl -X POST http://localhost:8000/api/ai/chat/completions \
 ### Azure OpenAI Configuration
 **Critical Environment Variables:**
 ```bash
-# Set these in autoagent_integration.py BEFORE imports
-os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Function calling
-os.environ["AZURE_OPENAI_DEPLOYMENT"] = settings.AZURE_OPENAI_DEPLOYMENT
-os.environ["FN_CALL"] = "True"  # Enable function calling
+# Set these for Azure OpenAI integration
+AZURE_OPENAI_API_VERSION = "2023-12-01-preview"  # Standard API version
+AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 ```
 
 **Model Selection Strategy:**
@@ -174,11 +142,11 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 1. **Old design showing**: Clear Vite cache with `rm -rf node_modules/.vite .svelte-kit`
 2. **API errors**: Backend is at http://localhost:8000/api/
 3. **Container issues**: Check Rancher Desktop app, NOT Docker
-4. **AutoAgent Issues**:
+4. **AI Integration Issues**:
    - **Function calling errors**: Check Azure OpenAI API version is 2023-12-01-preview
    - **Model not found**: Ensure prsnl-gpt-4 deployment exists in Azure OpenAI
-   - **Python cache issues**: Clear with `find autoagent/ -name "*.pyc" -delete && find autoagent/ -name "__pycache__" -exec rm -rf {} +`
-   - **Agent not responding**: Check agent status with `curl http://localhost:8000/api/autoagent/agent-status`
+   - **Python cache issues**: Clear with `find . -name "*.pyc" -delete && find . -name "__pycache__" -exec rm -rf {} +`
+   - **AI not responding**: Check AI service status with endpoints
 5. **LibreChat Issues**:
    - **No response**: Verify model deployment gpt-4.1-mini exists
    - **Slow responses**: Check if using correct model (should be fast)
@@ -196,9 +164,9 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 - Lint: `npm run lint`
 - Type check: `npm run check`
 - Format: `npm run format`
-- **NEW**: AutoAgent health: `curl http://localhost:8000/api/autoagent/health`
+- **NEW**: AI health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
-- **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/autoagent/agent-status`
+- **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/ai/health`
 
 ## HTTPie Integration for API Testing
 **HTTPie is now installed for improved API debugging and testing.**
@@ -207,15 +175,14 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 ```bash
 # Health checks (simpler than curl)
 http GET localhost:8000/health
-http GET localhost:8000/api/autoagent/agent-status
 http GET localhost:8000/api/ai/health
 
 # RAG queries
 http POST localhost:8000/api/rag/query query="What is FastAPI?"
 
-# AutoAgent testing
-http POST localhost:8000/api/autoagent/process-content \
-  content="Test content" title="Test"
+# AI testing
+http POST localhost:8000/api/ai-suggest \
+  prompt="Test content" context:='{"type": "test"}'
 
 # LibreChat testing
 http POST localhost:8000/api/ai/chat/completions \

@@ -305,7 +305,7 @@
     ];
 
     const actions = [
-      { label: 'View Details', icon: 'eye', onClick: () => window.location.href = project.permalink || `/item/${project.id}` },
+      { label: 'View Details', icon: 'eye', onClick: () => window.location.href = `/code-cortex/projects/${project.id}` },
       ...(project.url ? [{ label: 'Source', icon: 'external-link', onClick: () => window.open(project.url, '_blank') }] : [])
     ];
 
@@ -317,7 +317,7 @@
       tags,
       stats,
       actions,
-      onClick: () => window.location.href = project.permalink || `/item/${project.id}`,
+      onClick: () => window.location.href = `/code-cortex/projects/${project.id}`,
       variant: status === 'completed' ? 'highlight' : 'default'
     };
   }
@@ -502,7 +502,7 @@
                       </div>
                       <div class="kanban-items">
                         {#each statusProjects as project}
-                          <div class="kanban-card" on:click={() => window.location.href = project.permalink || `/item/${project.id}`}>
+                          <div class="kanban-card" on:click={() => window.location.href = `/code-cortex/projects/${project.id}`}>
                             <h4>{project.title}</h4>
                             <div class="kanban-meta">
                               {#if project.programming_language}
@@ -531,7 +531,7 @@
                       <div class="project-list-header">
                         <div class="project-list-title">
                           <Icon name={getStatusIcon(getProjectStatus(project))} size="20" style="color: {getStatusColor(getProjectStatus(project))}" />
-                          <a href={project.permalink || `/item/${project.id}`}>
+                          <a href={`/code-cortex/projects/${project.id}`}>
                             {project.title}
                           </a>
                         </div>

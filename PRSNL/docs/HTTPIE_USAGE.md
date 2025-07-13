@@ -28,8 +28,8 @@ http GET localhost:8000/api/health
 # RAG service health
 http GET localhost:8000/api/rag/stats
 
-# AutoAgent status
-http GET localhost:8000/api/autoagent/agent-status
+# AI service status
+http GET localhost:8000/api/ai/health
 
 # OpenCLIP health
 http GET localhost:8000/api/openclip/health
@@ -67,28 +67,25 @@ http POST localhost:8000/api/rag/query \
   use_embeddings=true
 ```
 
-### AutoAgent Integration
+### AI Integration
 
 ```bash
-# Process content with AutoAgent
-http POST localhost:8000/api/autoagent/process-content \
+# Process content with AI suggestions
+http POST localhost:8000/api/ai-suggest \
   Content-Type:application/json \
-  content="FastAPI is a modern web framework" \
-  title="FastAPI Introduction" \
-  existing_tags:='["python", "api"]'
+  prompt="FastAPI is a modern web framework" \
+  context:='{"title": "FastAPI Introduction", "tags": ["python", "api"]}'
 
-# Create learning path
-http POST localhost:8000/api/autoagent/create-learning-path \
+# Get AI-powered insights
+http POST localhost:8000/api/ai/chat/completions \
   Content-Type:application/json \
-  goal="Master FastAPI and async Python" \
-  current_knowledge:='["Python basics", "HTTP"]' \
-  time_commitment="intensive"
+  model="prsnl-gpt-4" \
+  messages:='[{"role": "user", "content": "Create a learning path for FastAPI"}]'
 
-# Explore topic
-http POST localhost:8000/api/autoagent/explore-topic \
+# Generate content summary
+http POST localhost:8000/api/summarization/summarize/batch \
   Content-Type:application/json \
-  topic="AI-powered knowledge management" \
-  interests:='["AI", "productivity"]'
+  item_ids:='["123e4567-e89b-12d3-a456-426614174000"]'
 ```
 
 ### LibreChat Integration
@@ -223,19 +220,20 @@ http --form POST localhost:8000/api/upload file@document.pdf
 
 ## Common Debugging Scenarios
 
-### Debug AutoAgent Integration
+### Debug AI Integration
 ```bash
-# Check agent status
-http GET localhost:8000/api/autoagent/agent-status
+# Check AI service status
+http GET localhost:8000/api/ai/health
 
 # Test with verbose output
-http --verbose POST localhost:8000/api/autoagent/process-content \
-  content="Test content" \
-  title="Test"
+http --verbose POST localhost:8000/api/ai-suggest \
+  prompt="Test content" \
+  context:='{"type": "test"}'
 
 # Check response headers
-http --headers POST localhost:8000/api/autoagent/analyze \
-  content="Sample text"
+http --headers POST localhost:8000/api/ai/chat/completions \
+  model="prsnl-gpt-4" \
+  messages:='[{"role": "user", "content": "Test"}]'
 ```
 
 ### Debug LibreChat API

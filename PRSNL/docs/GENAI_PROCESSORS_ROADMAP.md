@@ -129,7 +129,7 @@ Dependencies: google-genai, google-cloud-speech, google-cloud-texttospeech, open
 
 ## 🆕 Additional Tools for Future Enhancement
 
-### AutoAgent (HKUDS) - AI Workflow Automation
+### AI Workflow Automation
 **When**: Phase 6+ (After core features stable)
 **Use Cases**:
 - Natural language content categorization
@@ -170,7 +170,7 @@ agent.create_from_description(
    - Consider tsup for TypeScript issues
 2. **Post-Permalink**: Implement PDF and image enhancements
 3. **Long-term**: 
-   - Integrate AutoAgent for AI workflows
+   - Implement AI workflow automation
    - Evaluate and implement premium features
 
 ---

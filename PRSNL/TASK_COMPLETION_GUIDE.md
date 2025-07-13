@@ -16,7 +16,7 @@ This is your single source of truth for completing tasks properly. Use this simp
 - **Frontend Container Port**: 3003 (production deployments only)
 - **Backend Port**: 8000 (running locally, not in Docker)
 - **DragonflyDB Port**: 6379 (25x faster than Redis, running in Docker)
-- **AutoAgent**: Fully integrated multi-agent AI system (Phase 3)
+- **AI Services**: Fully integrated intelligent analysis system (Phase 3)
 - **LibreChat**: Azure OpenAI integration bridge (Phase 2)
 - **DO NOT**: Use Docker database, rebuild Docker containers unnecessarily
 
@@ -192,13 +192,13 @@ psql -U pronav -d prsnl -c "[YOUR_QUERY]"
 ```
 
 ### 🤖 AI Service Tasks (Claude) - PHASE 3 COMPLETE
-**What You Changed**: AutoAgent multi-agent system, LibreChat integration, Azure OpenAI optimization
+**What You Changed**: AI services, LibreChat integration, Azure OpenAI optimization
 **Required Updates**:
 - ✅ `TASK_HISTORY.md` - Mark as COMPLETED with files modified
 - ✅ `AI_COORDINATION_COMPLETE.md` - Update AI workflow information
 - ✅ `PROJECT_STATUS.md` - Update system AI capabilities to Phase 3
-- ✅ `QUICK_REFERENCE_COMPLETE.md` - Add AutoAgent and LibreChat commands
-- ✅ `API_DOCUMENTATION.md` - Add AutoAgent and LibreChat endpoints
+- ✅ `QUICK_REFERENCE_COMPLETE.md` - Add AI services and LibreChat commands
+- ✅ `API_DOCUMENTATION.md` - Add AI services and LibreChat endpoints
 - ✅ `TESTING_VERIFICATION_REPORT.md` - Document real AI response testing
 
 **Sanity Checks - Run These**:
@@ -206,17 +206,17 @@ psql -U pronav -d prsnl -c "[YOUR_QUERY]"
 # 1. Test AI service health
 curl http://localhost:8000/health
 
-# 2. Test AutoAgent multi-agent system
-curl -X POST http://localhost:8000/api/autoagent/create-learning-path -H "Content-Type: application/json" -d '{"goal": "Test learning path", "current_knowledge": ["basics"]}'
+# 2. Test AI services
+curl -X POST http://localhost:8000/api/ai-suggest -H "Content-Type: application/json" -d '{"prompt": "Test suggestion", "context": {"type": "test"}}'
 
 # 3. Test LibreChat integration
 curl -X POST http://localhost:8000/api/ai/chat/completions -H "Content-Type: application/json" -H "X-PRSNL-Integration: test" -d '{"model": "prsnl-gpt-4", "messages": [{"role": "user", "content": "Test"}]}'
 
-# 4. Check AutoAgent agent status
-curl http://localhost:8000/api/autoagent/agent-status
+# 4. Check AI service status
+curl http://localhost:8000/api/ai/health
 
 # 5. Test content processing workflow
-curl -X POST http://localhost:8000/api/autoagent/process-content -H "Content-Type: application/json" -d '{"content": "Test content", "title": "Test"}'
+curl -X POST http://localhost:8000/api/ai-suggest -H "Content-Type: application/json" -d '{"prompt": "Test content", "context": {"title": "Test"}}'
 ```
 
 **Update Template**:

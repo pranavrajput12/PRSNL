@@ -185,20 +185,58 @@ async def get_development_docs(
             params.append(search)
             param_count += 1
             
-        # Content type filtering for new page organization
+        # Enhanced content type filtering for refined page organization
         if content_type:
             if content_type == 'knowledge':
-                # Knowledge Base: Non-URL content or content with summaries (docs, guides, learning materials)
-                conditions.append("(i.url IS NULL OR NOT i.url LIKE 'http%' OR i.summary IS NOT NULL)")
+                # Knowledge Base: Internal docs, guides, tutorials, learning materials
+                # Excludes external URLs and repositories, focuses on documentation with content
+                conditions.append("""(
+                    (i.url IS NULL OR NOT i.url LIKE 'http%' OR 
+                     (i.summary IS NOT NULL AND LENGTH(i.summary) > 50)) AND
+                    (i.url IS NULL OR 
+                     (i.url NOT LIKE '%github.com%' AND 
+                      i.url NOT LIKE '%gitlab.com%' AND 
+                      i.url NOT LIKE '%bitbucket.%'))
+                )""")
             elif content_type == 'tools':
-                # Tools & Links: External URLs (tools, utilities, services)
-                conditions.append("(i.url IS NOT NULL AND i.url LIKE 'http%')")
+                # Tools & Links: External tools, utilities, services (not repositories)
+                # Focuses on external URLs that are not code repositories
+                conditions.append("""(
+                    i.url IS NOT NULL AND 
+                    i.url LIKE 'http%' AND
+                    i.url NOT LIKE '%github.com%' AND 
+                    i.url NOT LIKE '%gitlab.com%' AND 
+                    i.url NOT LIKE '%bitbucket.%'
+                )""")
             elif content_type == 'repositories':
-                # Repositories: GitHub/GitLab/Bitbucket URLs or content with project categories
-                conditions.append("((i.url IS NOT NULL AND (i.url LIKE '%github.com%' OR i.url LIKE '%gitlab.com%' OR i.url LIKE '%bitbucket.%')) OR i.project_category IS NOT NULL)")
+                # Open Source Integrations: GitHub/GitLab repositories that are libraries/frameworks
+                # Only integration repositories, not general documentation or tools
+                conditions.append("""(
+                    i.url IS NOT NULL AND 
+                    (i.url LIKE '%github.com%' OR i.url LIKE '%gitlab.com%' OR i.url LIKE '%bitbucket.%') AND
+                    (i.project_category IS NOT NULL OR
+                     EXISTS (
+                         SELECT 1 FROM item_tags it2 
+                         JOIN tags t2 ON it2.tag_id = t2.id 
+                         WHERE it2.item_id = i.id AND 
+                         t2.name ILIKE ANY(ARRAY['%library%', '%framework%', '%integration%', '%tool%', '%sdk%', '%api%'])
+                     ))
+                )""")
             elif content_type == 'progress':
-                # Progress: Items with learning paths or progress tracking
-                conditions.append("(i.learning_path IS NOT NULL OR i.difficulty_level IS NOT NULL)")
+                # Learning Progress: Items with learning paths, difficulty levels, or progress indicators
+                # Focuses on personal learning journey and skill development tracking
+                conditions.append("""(
+                    i.learning_path IS NOT NULL OR 
+                    i.difficulty_level IS NOT NULL OR
+                    i.is_career_related = TRUE OR
+                    EXISTS (
+                        SELECT 1 FROM item_tags it2 
+                        JOIN tags t2 ON it2.tag_id = t2.id 
+                        WHERE it2.item_id = i.id AND 
+                        t2.name ILIKE ANY(ARRAY['%progress%', '%learning%', '%skill%', '%course%', '%certification%', '%goal%'])
+                    ) OR
+                    i.title ILIKE ANY(ARRAY['%learn%', '%skill%', '%course%'])
+                )""")
         
         # Add limit and offset
         params.extend([limit, offset])

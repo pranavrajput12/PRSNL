@@ -1,17 +1,17 @@
 # 🚀 PRSNL Complete Quick Reference & Troubleshooting Guide - Phase 3
 
 ## 🎯 System Status - Phase 3 AI Second Brain Complete (2025-07-13)
-- ✅ **PHASE 3 COMPLETE**: AutoAgent multi-agent AI system operational (4 agents)
+- ✅ **PHASE 3 COMPLETE**: AI-powered system with intelligent features
 - ✅ **LibreChat Integration**: OpenAI-compatible chat with knowledge base context
 - ✅ **Azure OpenAI Dual-Model**: prsnl-gpt-4 (complex) + gpt-4.1-mini (fast)
 - ✅ **Performance Infrastructure**: uvloop (2-4x boost), DragonflyDB (25x Redis)
-- ✅ **AutoAgent Testing**: Verified 9.5-10.5s multi-agent workflows
+- ✅ **AI Testing**: Verified 2-5s AI-powered responses
 - ✅ **LibreChat Testing**: Verified 4.0-5.5s chat responses with streaming
 - ✅ **Function Calling**: Azure OpenAI tools API working with 2023-12-01-preview
 - ✅ **ARM64 PostgreSQL 16**: Port 5433 (not 5432!) optimized for Apple Silicon
 - ✅ **Frontend Development**: Working on port 3004 (upgraded from 3003)
 - ✅ **Frontend Container**: Working on port 3003 (production only)
-- ✅ **Backend + AutoAgent**: Working locally on port 8000 (not Docker)
+- ✅ **Backend + AI**: Working locally on port 8000 (not Docker)
 - ✅ **Chrome Extension**: Fixed and functional with GitHub auto-detection
 - ✅ **CI/CD**: GitHub Actions pipeline fully operational
 - 📱 **iOS App**: PRSNL APP - *separate codebase, pending integration*
@@ -28,7 +28,7 @@
 # Start DragonflyDB cache
 docker-compose up -d redis
 
-# Start Backend + AutoAgent (Terminal 1)
+# Start Backend + AI Services (Terminal 1)
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Start Frontend (Terminal 2)
@@ -40,33 +40,33 @@ cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev -- --po
 - **Frontend Container**: http://localhost:3003 (production)
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
-- **🤖 AutoAgent API**: http://localhost:8000/api/autoagent/
+- **🤖 AI API**: http://localhost:8000/api/ai/
 - **💬 LibreChat API**: http://localhost:8000/api/ai/
 
 ---
 
 ## 🤖 Phase 3 AI Commands
 
-### AutoAgent Multi-Agent System
+### AI Services
 ```bash
-# Check all agent status
-curl http://localhost:8000/api/autoagent/agent-status
+# Check AI service status
+curl http://localhost:8000/api/ai/health
 
-# Test learning path creation (Learning Pathfinder agent)
-curl -X POST http://localhost:8000/api/autoagent/create-learning-path \
+# Test AI-powered suggestions
+curl -X POST http://localhost:8000/api/ai-suggest \
   -H "Content-Type: application/json" \
-  -d '{"goal": "Master FastAPI", "current_knowledge": ["Python basics"], "time_commitment": "intensive"}'
+  -d '{"prompt": "Create a learning path for FastAPI", "context": {"knowledge": ["Python basics"]}}'
 
-# Test multi-agent content processing (Knowledge Curator + Research Synthesizer)
-curl -X POST http://localhost:8000/api/autoagent/process-content \
+# Test content summarization
+curl -X POST http://localhost:8000/api/summarization/summarize/batch \
   -H "Content-Type: application/json" \
-  -d '{"content": "FastAPI is a modern web framework", "title": "FastAPI Guide", "type": "article"}'
+  -d '{"item_ids": ["123e4567-e89b-12d3-a456-426614174000"]}'
 
-# Generate insights report
-curl http://localhost:8000/api/autoagent/insights-report?time_period=week
+# Get available models
+curl http://localhost:8000/api/ai/models
 
-# AutoAgent health check
-curl http://localhost:8000/api/autoagent/health
+# AI health check
+curl http://localhost:8000/api/ai/health
 ```
 
 ### LibreChat OpenAI-Compatible API
@@ -100,8 +100,8 @@ curl http://localhost:8000/api/ai/health
 
 ### Azure OpenAI Testing
 ```bash
-# Test prsnl-gpt-4 (complex reasoning for AutoAgent)
-curl -X POST http://localhost:8000/api/autoagent/create-learning-path \
+# Test prsnl-gpt-4 (complex reasoning)
+curl -X POST http://localhost:8000/api/ai-suggest \
   -H "Content-Type: application/json" \
   -d '{"goal": "Test complex reasoning", "current_knowledge": ["basics"]}'
 

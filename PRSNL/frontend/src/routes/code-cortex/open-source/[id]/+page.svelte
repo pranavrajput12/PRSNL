@@ -177,20 +177,24 @@
     try {
       isAIAnalyzing = true;
       
-      // Use AutoAgent to analyze repository
-      const response = await fetch('/api/autoagent/analyze-repository', {
+      // Use AI suggest API to analyze repository
+      const response = await fetch('/api/ai-suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          repo_url: repository.repository_metadata.repo_url,
-          context: 'Generate practical usage suggestions and integration tips'
+          prompt: `Analyze this repository and provide practical usage suggestions: ${repository.title} - ${repository.repository_metadata.description}`,
+          context: {
+            tech_stack: repository.repository_metadata.tech_stack,
+            category: repository.repository_metadata.category,
+            language: repository.repository_metadata.language
+          }
         })
       });
 
       if (response.ok) {
-        const analysis = await response.json();
+        const data = await response.json();
         aiSuggestions = [
-          ...(analysis.recommendations || []),
+          ...(data.suggestions || []),
           'Consider this for your current projects',
           'Check compatibility with your tech stack',
           'Review documentation for implementation details'

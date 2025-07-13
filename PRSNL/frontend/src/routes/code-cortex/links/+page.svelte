@@ -334,7 +334,7 @@
 
     const actions = [
       { label: 'Visit', icon: 'external-link', onClick: () => window.open(link.url, '_blank') },
-      { label: 'Details', icon: 'info', onClick: () => window.location.href = link.type === 'development' ? `/items/${link.id}` : link.permalink || `/item/${link.id}` }
+      { label: 'Details', icon: 'info', onClick: () => window.location.href = `/code-cortex/links/${link.id}` }
     ];
 
     return {
@@ -597,7 +597,7 @@
                 <div class="compact-actions">
                   <button 
                     class="compact-action"
-                    on:click={() => window.location.href = link.type === 'development' ? `/items/${link.id}` : link.permalink || `/item/${link.id}`}
+                    on:click={() => window.location.href = `/code-cortex/links/${link.id}`}
                     title="View details"
                   >
                     <Icon name="info" size="16" />

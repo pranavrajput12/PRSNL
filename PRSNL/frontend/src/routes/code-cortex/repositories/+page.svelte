@@ -289,7 +289,7 @@
 
     const actions = [
       { label: 'View Repository', icon: 'github', onClick: () => window.open(repo.url, '_blank') },
-      { label: 'Analysis', icon: 'brain', onClick: () => window.location.href = repo.permalink || `/item/${repo.id}` }
+      { label: 'Analysis', icon: 'brain', onClick: () => window.location.href = `/code-cortex/open-source/${repo.id}` }
     ];
 
     return {
@@ -300,7 +300,7 @@
       tags,
       stats,
       actions,
-      onClick: () => window.open(repo.url, '_blank'),
+      onClick: () => window.location.href = `/code-cortex/open-source/${repo.id}`,
       variant: status === 'starred' ? 'highlight' : 'default'
     };
   }

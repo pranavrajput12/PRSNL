@@ -17,7 +17,7 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 |---------|------|--------|-------------|-----------------|
 | **Frontend Dev (SvelteKit)** | **3004** | **FIXED** | Main dev UI | `/PRSNL/frontend/vite.config.ts` |
 | **Frontend Container** | **3003** | FIXED | Production UI | `/PRSNL/docker-compose.yml` |
-| **Backend + AutoAgent** | **8000** | FIXED | REST API + AI agents | Local process |
+| **Backend + AI** | **8000** | FIXED | REST API + AI services | Local process |
 | **PostgreSQL ARM64** | **5433** | **CRITICAL** | Primary database | ARM64 PostgreSQL 16 |
 | **DragonflyDB** | **6379** | FIXED | Ultra-fast cache | `/PRSNL/docker-compose.yml` |
 
@@ -25,7 +25,7 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 
 | API Path | Service | Description |
 |----------|---------|-------------|
-| `/api/autoagent/*` | **AutoAgent** | Multi-agent AI system |
+| `/api/ai/*` | **AI Services** | AI-powered features |
 | `/api/ai/*` | **LibreChat** | OpenAI-compatible chat |
 | `/api/*` | **Core API** | Original PRSNL endpoints |
 
@@ -225,7 +225,7 @@ taskkill /F /PID <PID>
   - Frontend development port changed from 3003 to 3004
   - Database port changed from 5432 to 5433 (ARM64 PostgreSQL 16)
   - Redis replaced with DragonflyDB (same port 6379)
-  - Added AutoAgent API endpoints (`/api/autoagent/*`)
+  - Added AI API endpoints (`/api/ai/*`)
   - Added LibreChat API endpoints (`/api/ai/*`)
   - Updated all AI infrastructure port documentation
 - Note: This document supersedes port information in MODEL_COORDINATION_RULES.md

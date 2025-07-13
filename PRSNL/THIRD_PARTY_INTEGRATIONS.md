@@ -15,7 +15,7 @@ PRSNL integrates with multiple third-party services to create a comprehensive AI
 #### ✅ Integration Status: **COMPLETE**
 - **Purpose**: Primary AI processing with dual-model optimization
 - **Models**: 
-  - `prsnl-gpt-4`: Complex reasoning, AutoAgent workflows, function calling
+  - `prsnl-gpt-4`: Complex reasoning, AI workflows, function calling
   - `gpt-4.1-mini`: Fast chat responses, LibreChat integration
 - **API Version**: `2023-12-01-preview` (function calling support)
 
@@ -31,7 +31,7 @@ AZURE_OPENAI_API_VERSION=2023-12-01-preview
 
 #### API Endpoints
 - **LibreChat Bridge**: `/api/ai/*` - OpenAI-compatible chat completions
-- **AutoAgent Integration**: `/api/autoagent/*` - Multi-agent AI workflows
+- **AI Integration**: `/api/ai/*` - AI-powered workflows
 - **Function Calling**: Full tools API support with parallel execution
 
 #### Usage Example
@@ -45,13 +45,12 @@ curl -X POST http://localhost:8000/api/ai/chat/completions \
     "temperature": 0.7
   }'
 
-# AutoAgent learning path creation
-curl -X POST http://localhost:8000/api/autoagent/create-learning-path \
+# AI-powered insights
+curl -X POST http://localhost:8000/api/ai-suggest \
   -H "Content-Type: application/json" \
   -d '{
-    "goal": "Master FastAPI",
-    "current_knowledge": ["Python basics"],
-    "time_commitment": "intensive"
+    "prompt": "Create a learning path for FastAPI",
+    "context": {"current_knowledge": ["Python basics"]}
   }'
 ```
 
@@ -321,35 +320,32 @@ GET /api/ai/models
 GET /api/ai/health
 ```
 
-### 10. AutoAgent Multi-Agent System
+### 10. AI Services Integration
 
-#### ✅ Integration Status: **COMPLETE** (4 Specialized Agents)
-- **Purpose**: Autonomous AI knowledge curation
-- **Agents**: 
-  - Knowledge Curator: Content analysis and categorization
-  - Research Synthesizer: Multi-source synthesis and insights
-  - Content Explorer: Relationship discovery and exploration paths
-  - Learning Pathfinder: Personalized learning sequences
+#### ✅ Integration Status: **COMPLETE**
+- **Purpose**: Autonomous AI knowledge curation and analysis
+- **Capabilities**: 
+  - Content analysis and categorization
+  - Multi-source synthesis and insights
+  - Relationship discovery and exploration
+  - Personalized recommendations
 
 #### API Endpoints
 ```bash
-# Agent status and capabilities
-GET /api/autoagent/agent-status
+# AI service health
+GET /api/ai/health
 
-# Multi-agent content processing
-POST /api/autoagent/process-content
+# AI-powered suggestions
+POST /api/ai-suggest
 
-# Learning path creation
-POST /api/autoagent/create-learning-path
+# Content summarization
+POST /api/summarization/summarize/batch
 
-# Topic exploration
-POST /api/autoagent/explore-topic
+# AI chat completions
+POST /api/ai/chat/completions
 
-# Insights report generation
-GET /api/autoagent/insights-report
-
-# Health check
-GET /api/autoagent/health
+# Model information
+GET /api/ai/models
 ```
 
 ---
@@ -405,11 +401,11 @@ ENVIRONMENT=development
 BACKEND_PORT=8000
 ```
 
-#### AutoAgent Configuration
+#### AI Configuration
 ```bash
-# Set in autoagent_integration.py
-FN_CALL=True  # Enable function calling
+# Azure OpenAI settings
 AZURE_OPENAI_API_VERSION=2023-12-01-preview
+AZURE_OPENAI_DEPLOYMENT=prsnl-gpt-4
 ```
 
 ---
@@ -424,8 +420,8 @@ curl http://localhost:8000/health
 # Azure OpenAI models
 curl http://localhost:8000/api/ai/models
 
-# AutoAgent capabilities
-curl http://localhost:8000/api/autoagent/agent-status
+# AI service status
+curl http://localhost:8000/api/ai/health
 
 # OpenCLIP service
 curl http://localhost:8000/api/openclip/health
@@ -444,12 +440,12 @@ curl -X POST http://localhost:8000/api/ai/chat/completions \
     "messages": [{"role": "user", "content": "Test response"}]
   }'
 
-# Test AutoAgent workflow
-curl -X POST http://localhost:8000/api/autoagent/process-content \
+# Test AI workflow
+curl -X POST http://localhost:8000/api/ai-suggest \
   -H "Content-Type: application/json" \
   -d '{
-    "content": "Test content for processing",
-    "title": "Test Article"
+    "prompt": "Analyze this content",
+    "context": {"title": "Test Article"}
   }'
 
 # Test OpenCLIP vision
@@ -472,7 +468,7 @@ curl -X POST http://localhost:8000/api/firecrawl/scrape \
 
 ### Response Times (Phase 3 Verified)
 - **LibreChat**: 4.0s (streaming), 5.5s (regular completion)
-- **AutoAgent**: 9.5-10.5s (multi-agent workflows)
+- **AI Processing**: 2-5s (context-aware responses)
 - **OpenCLIP**: Sub-second for most operations
 - **Firecrawl**: 2-15s depending on page complexity
 
@@ -521,7 +517,7 @@ curl -X POST http://localhost:8000/api/firecrawl/scrape \
 
 ### ✅ Phase 3 Complete (Current)
 - Azure OpenAI dual-model optimization
-- AutoAgent multi-agent system
+- AI-powered content analysis
 - LibreChat integration bridge
 - OpenCLIP REST API endpoints
 - DragonflyDB performance upgrade
@@ -578,7 +574,7 @@ docker logs prsnl_redis
 ## 📚 Additional Resources
 
 - **API Documentation**: http://localhost:8000/docs
-- **AutoAgent Guide**: `/docs/AUTOAGENT_GUIDE.md`
+- **AI Integration Guide**: `/docs/AI_INTEGRATION_GUIDE.md`
 - **LibreChat Setup**: `/docs/LIBRECHAT_INTEGRATION.md`
 - **Performance Tuning**: `/docs/PERFORMANCE_OPTIMIZATION.md`
 - **Architecture Overview**: `/docs/ARCHITECTURE.md`

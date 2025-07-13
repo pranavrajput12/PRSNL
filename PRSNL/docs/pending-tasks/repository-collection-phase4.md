@@ -19,14 +19,14 @@ The Repository Collection & AI Auto-Categorization system is architecturally com
 
 ### ✅ Backend Services
 - **Repository Analyzer Service**: GitHub API integration with AI-powered analysis
-- **AutoAgent Integration**: Repository analyzer and project resource agents
+- **AI Integration**: Repository analyzer and project resource analysis
 - **LibreChat Bridge**: OpenAI-compatible API with repository context
 - **Capture API**: Automatic repository detection and processing
 
 ### ✅ API Endpoints
 - `/api/capture` - Repository capture with auto-categorization
-- `/api/autoagent/analyze-repository` - Deep repository analysis with context  
-- `/api/autoagent/find-project-resources` - Cross-knowledge base search
+- `/api/ai/analyze-repository` - Deep repository analysis with context  
+- `/api/ai/find-project-resources` - Cross-knowledge base search
 - `/api/ai/chat/completions` - LibreChat integration with repository data
 
 ## Phase 4 Pending Tasks
@@ -117,8 +117,8 @@ async def enhance_with_repository_context(messages: List[ChatMessage]) -> str:
 
 ### API Testing
 - [ ] `/api/capture` repository detection working
-- [ ] `/api/autoagent/analyze-repository` returning complete metadata
-- [ ] `/api/autoagent/find-project-resources` searching across knowledge base  
+- [ ] `/api/ai/analyze-repository` returning complete metadata
+- [ ] `/api/ai/find-project-resources` searching across knowledge base  
 - [ ] `/api/ai/chat/completions` including repository context in responses
 
 ### Frontend Requirements
@@ -137,8 +137,8 @@ async def enhance_with_repository_context(messages: List[ChatMessage]) -> str:
 
 ## Integration Points
 
-### AutoAgent Multi-Agent Workflow
-- Repository Analyzer Agent ↔ GitHub API + AI Analysis
+### AI Analysis Workflow
+- Repository Analyzer ↔ GitHub API + AI Analysis
 - Project Resource Agent ↔ Database Repository Search  
 - Knowledge Synthesizer Agent ↔ Cross-reference with existing content
 
@@ -153,7 +153,7 @@ User Query → LibreChat → Repository Context Search → Enhanced Response
 
 ### Core Services
 - `app/services/repository_analyzer.py` - GitHub API and AI analysis
-- `app/services/autoagent_repository.py` - AutoAgent repository agents
+- `app/services/ai_repository.py` - AI repository analysis
 - `app/api/librechat_bridge.py` - LibreChat integration  
 - `app/api/capture.py:364-402` - Repository capture processing
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-PRSNL is a modern personal knowledge management system that has evolved into an intelligent AI second brain. With Phase 3 complete, PRSNL now features a multi-agent AI system (AutoAgent) for autonomous knowledge curation and a LibreChat integration for conversational AI interactions, all powered by Azure OpenAI.
+PRSNL is a modern personal knowledge management system that has evolved into an intelligent AI second brain. With Phase 3 complete, PRSNL now features AI-powered analysis and suggestions for autonomous knowledge curation and a LibreChat integration for conversational AI interactions, all powered by Azure OpenAI.
 
 ## System Architecture - Phase 3 AI Second Brain
 
@@ -29,9 +29,9 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
         ┌────────────────────────────┴────────────────────────────┐
         │                 Multi-Agent AI Layer                     │
         ├─────────────┬──────────────┬─────────────┬─────────────┤
-        │  AutoAgent  │ LibreChat    │  Unified    │  Embedding  │
-        │ Orchestrator│  Bridge      │  AI Service │  Generator  │
-        │ (4 Agents)  │ (OpenAI API) │ (Azure)     │ (Semantic)  │
+        │ AI Services │ LibreChat    │  Unified    │  Embedding  │
+        │ (Analysis)  │  Bridge      │  AI Service │  Generator  │
+        │ (Suggestions)│ (OpenAI API) │ (Azure)     │ (Semantic)  │
         └─────────────┴──────────────┴─────────────┴─────────────┘
                                      │
         ┌────────────────────────────┴────────────────────────────┐
@@ -65,7 +65,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 - **Technology**: SvelteKit 2.22.5, TypeScript, Tailwind CSS, TanStack Query v5
 - **Port**: 3004 (development), 3003 (production container)
 - **Key Features**:
-  - Phase 3 AI-powered interface with AutoAgent integration
+  - Phase 3 AI-powered interface with intelligent features
   - Real-time AI agent status monitoring
   - LibreChat conversation interface
   - Progressive Web App capabilities with AI enhancements
@@ -88,7 +88,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 - **Technology**: FastAPI, Python 3.11, AsyncIO with uvloop (2-4x performance)
 - **Port**: 8000 (local development)
 - **Key Features**:
-  - **AutoAgent Integration**: Multi-agent AI orchestration system
+  - **AI Integration**: Intelligent analysis and suggestions
   - **LibreChat Bridge**: OpenAI-compatible API for chat interactions
   - **Azure OpenAI Integration**: Unified AI service with function calling
   - **High-Performance Async**: uvloop for enhanced async performance
@@ -103,7 +103,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 - **Port**: 5433 (exclusive ARM64 installation)
 - **Extensions**: pgvector for semantic search and AI embeddings
 - **Key Features**:
-  - **AutoAgent Memory**: Persistent storage for AI agent context and learning
+  - **AI Context**: Persistent storage for AI context and learning
   - **Vector Search**: Semantic similarity search for knowledge discovery
   - **High Performance**: ARM64 optimization for Apple Silicon
   - **ACID Compliance**: Reliable data integrity for AI workflows
@@ -141,12 +141,12 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 
 ## Phase 3 AI Components
 
-### AutoAgent - Multi-Agent AI Orchestration System
+### AI Services - Intelligent Analysis System
 - **Technology**: Custom multi-agent framework with Azure OpenAI integration
 - **Purpose**: Autonomous knowledge curation and intelligent content processing
 - **Architecture**:
   ```
-  AutoAgent Orchestrator
+  AI Service Integration
   ├── Knowledge Curator Agent
   │   ├── Content Analysis & Categorization
   │   ├── Tag Suggestion & Enhancement
@@ -166,10 +166,10 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
   ```
 
 **API Endpoints**:
-- `/api/autoagent/process-content` - Multi-agent content processing
-- `/api/autoagent/create-learning-path` - Personalized learning plans
-- `/api/autoagent/explore-topic` - Topic exploration and discovery
-- `/api/autoagent/agent-status` - Real-time agent monitoring
+- `/api/ai-suggest` - AI-powered content analysis
+- `/api/ai/chat/completions` - Conversational AI responses
+- `/api/summarization/summarize/batch` - Content summarization
+- `/api/ai/health` - AI service health monitoring
 
 ### LibreChat Integration - Conversational AI Bridge
 - **Technology**: OpenAI-compatible API bridge with Azure OpenAI backend
@@ -188,12 +188,12 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 ### Unified AI Service - Azure OpenAI Integration Layer
 - **Technology**: Centralized Azure OpenAI service with dual-model optimization
 - **Models**:
-  - **prsnl-gpt-4**: Complex reasoning and multi-agent workflows (AutoAgent)
+  - **prsnl-gpt-4**: Complex reasoning and AI workflows
   - **gpt-4.1-mini**: Fast responses and chat interactions (LibreChat)
 - **Features**:
   - **Function Calling**: Full Azure OpenAI tools API support
   - **Model Routing**: Intelligent model selection based on use case
-  - **Performance Optimization**: 5.5s LibreChat, 9.5s AutoAgent response times
+  - **Performance Optimization**: 5.5s LibreChat, 2-5s AI response times
   - **Caching & Context**: Efficient AI response management
 
 ## Performance Metrics - Phase 3
@@ -202,7 +202,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 - **LibreChat (gpt-4.1-mini)**:
   - Regular completion: 5.5 seconds
   - Streaming completion: 4.0 seconds
-- **AutoAgent (prsnl-gpt-4)**:
+- **AI Services (prsnl-gpt-4)**:
   - Learning path creation: 9.5 seconds
   - Multi-agent content processing: 10.5 seconds
   - Agent status check: <1 second
@@ -227,7 +227,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 ### AI Router Service (SUPERSEDED by Unified AI Service)
 Intelligently routes AI tasks to the most appropriate provider:
 - **Providers**: Azure OpenAI (cloud)
-- **Status**: ⚠️ **Superseded by Unified AI Service with AutoAgent integration**
+- **Status**: ⚠️ **Superseded by Unified AI Service with AI integration**
 
 ### Video Processor Service
 Handles video download and processing:

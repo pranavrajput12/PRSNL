@@ -289,7 +289,7 @@
       tags,
       stats,
       actions,
-      onClick: () => window.location.href = doc.type === 'development' ? `/items/${doc.id}` : doc.permalink || `/item/${doc.id}`,
+      onClick: () => window.location.href = `/code-cortex/docs/${doc.id}`,
       variant: doc.is_career_related ? 'highlight' : 'default'
     };
   }
@@ -487,7 +487,7 @@
                     </div>
                     {#if doc.metadata.preview_data.readme.full_length > doc.metadata.preview_data.readme.snippet.length}
                       <a
-                        href={doc.type === 'development' ? `/items/${doc.id}` : doc.permalink || `/item/${doc.id}`}
+                        href={`/code-cortex/docs/${doc.id}`}
                         class="read-more-link"
                       >
                         Read full README ({Math.round(doc.metadata.preview_data.readme.full_length / 1000)}k chars)
@@ -502,7 +502,7 @@
                 <div class="doc-list-header">
                   <div class="doc-list-title">
                     <Icon name="file-text" size="20" />
-                    <a href={doc.type === 'development' ? `/items/${doc.id}` : doc.permalink || `/item/${doc.id}`}>
+                    <a href={`/code-cortex/docs/${doc.id}`}>
                       {doc.title}
                     </a>
                   </div>
