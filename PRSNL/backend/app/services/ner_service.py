@@ -28,7 +28,7 @@ from nltk.chunk import ne_chunk
 from collections import Counter, defaultdict
 
 # PRSNL imports
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

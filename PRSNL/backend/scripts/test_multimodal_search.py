@@ -27,7 +27,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from app.services.multimodal_embedding_service import multimodal_embedding_service
 from app.services.ner_service import ner_service
 from app.services.embedding_manager import embedding_manager
-from app.db.connection import get_db_connection
+from app.db.database import get_db_connection
 
 # Configure logging
 logging.basicConfig(

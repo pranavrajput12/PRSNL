@@ -27,11 +27,11 @@ import base64
 import asyncpg
 from sentence_transformers import SentenceTransformer
 import torch
-import clip
+import open_clip
 
 # PRSNL imports
-from app.core.config import settings
-from app.db.connection import get_db_connection
+from app.config import settings
+from app.db.database import get_db_connection
 from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)
@@ -62,8 +62,8 @@ class MultimodalEmbeddingService:
         try:
             # Initialize CLIP model for image and multimodal embeddings
             logger.info("Loading CLIP model for multimodal embeddings...")
-            self.clip_model, self.clip_preprocess = clip.load(
-                "ViT-B/32", device=self.device
+            self.clip_model, _, self.clip_preprocess = open_clip.create_model_and_transforms(
+                'ViT-B-32', pretrained='openai', device=self.device
             )
             
             # Initialize sentence transformer for local text embeddings (backup)
@@ -225,7 +225,7 @@ class MultimodalEmbeddingService:
             
             # Text component
             if text:
-                text_tokens = clip.tokenize([text]).to(self.device)
+                text_tokens = open_clip.tokenize([text]).to(self.device)
                 with torch.no_grad():
                     text_features = self.clip_model.encode_text(text_tokens)
                     text_features = text_features / text_features.norm(dim=-1, keepdim=True)
