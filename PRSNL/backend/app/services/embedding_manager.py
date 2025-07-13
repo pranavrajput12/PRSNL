@@ -1,6 +1,10 @@
 """
-Embedding Manager Service
-Handles creation, storage, and retrieval of embeddings in normalized table
+Enhanced Embedding Manager Service - Multimodal Support
+Handles creation, storage, and retrieval of embeddings for multiple modalities:
+- Text embeddings (OpenAI)
+- Image embeddings (CLIP)
+- Multimodal embeddings (unified space)
+- Cross-modal similarity search
 """
 import logging
 from datetime import datetime
@@ -11,16 +15,19 @@ import numpy as np
 
 from app.db.database import get_db_pool
 from app.services.unified_ai_service import unified_ai_service
+from app.services.multimodal_embedding_service import multimodal_embedding_service
 from app.utils.fingerprint import calculate_content_fingerprint
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingManager:
-    """Manages embeddings in the normalized embeddings table"""
+    """Enhanced multimodal embedding manager with cross-modal capabilities"""
     
     def __init__(self):
-        self.default_model = "text-embedding-ada-002"
+        self.default_text_model = "text-embedding-ada-002"
+        self.default_image_model = "clip-vit-base-patch32"
+        self.default_multimodal_model = "clip-vit-base-patch32"
         self.default_version = "v1"
     
     async def create_embedding(
@@ -63,10 +70,10 @@ class EmbeddingManager:
             pool = await get_db_pool()
             async with pool.acquire() as conn:
                 async with conn.transaction():
-                    # Check if embedding already exists for this item/model
+                    # Check if embedding already exists for this item/model/type
                     existing = await conn.fetchrow("""
                         SELECT id FROM embeddings
-                        WHERE item_id = $1 AND model_name = $2 AND model_version = $3
+                        WHERE item_id = $1 AND model_name = $2 AND model_version = $3 AND embedding_type = 'text'
                     """, UUID(item_id), model_name, model_version)
                     
                     if existing:
@@ -81,8 +88,8 @@ class EmbeddingManager:
                     else:
                         # Insert new embedding
                         result = await conn.fetchrow("""
-                            INSERT INTO embeddings (item_id, model_name, model_version, vector)
-                            VALUES ($1, $2, $3, $4)
+                            INSERT INTO embeddings (item_id, model_name, model_version, vector, embedding_type, content_source)
+                            VALUES ($1, $2, $3, $4, 'text', 'direct_text')
                             RETURNING id, vector_norm
                         """, UUID(item_id), model_name, model_version, embedding_vector)
                         embedding_id = result['id']
@@ -113,6 +120,109 @@ class EmbeddingManager:
                     
         except Exception as e:
             logger.error(f"Error creating embedding for item {item_id}: {e}")
+            return None
+    
+    async def create_image_embedding(
+        self,
+        item_id: str,
+        image_path: Optional[str] = None,
+        image_data: Optional[bytes] = None,
+        model_name: Optional[str] = None,
+        model_version: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Create and store image embedding for an item.
+        
+        Args:
+            item_id: UUID of the item
+            image_path: Path to image file
+            image_data: Raw image bytes
+            model_name: CLIP model name
+            model_version: Model version
+            
+        Returns:
+            Dict with embedding details or None if failed
+        """
+        model_name = model_name or self.default_image_model
+        model_version = model_version or self.default_version
+        
+        try:
+            # Create image embedding using multimodal service
+            embedding_data = await multimodal_embedding_service.create_image_embedding(
+                image_path=image_path,
+                image_data=image_data,
+                model_name=model_name
+            )
+            
+            # Store in database
+            embedding_id = await multimodal_embedding_service.store_embedding(
+                item_id, embedding_data, model_version
+            )
+            
+            return {
+                "embedding_id": embedding_id,
+                "item_id": item_id,
+                "model_name": model_name,
+                "model_version": model_version,
+                "embedding_type": "image",
+                "vector_length": len(embedding_data['vector'])
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating image embedding for item {item_id}: {e}")
+            return None
+    
+    async def create_multimodal_embedding(
+        self,
+        item_id: str,
+        text: str,
+        image_path: Optional[str] = None,
+        image_data: Optional[bytes] = None,
+        model_name: Optional[str] = None,
+        model_version: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Create and store multimodal embedding for an item.
+        
+        Args:
+            item_id: UUID of the item
+            text: Text content
+            image_path: Optional image path
+            image_data: Optional image bytes
+            model_name: Multimodal model name
+            model_version: Model version
+            
+        Returns:
+            Dict with embedding details or None if failed
+        """
+        model_name = model_name or self.default_multimodal_model
+        model_version = model_version or self.default_version
+        
+        try:
+            # Create multimodal embedding
+            embedding_data = await multimodal_embedding_service.create_multimodal_embedding(
+                text=text,
+                image_path=image_path,
+                image_data=image_data,
+                model_name=model_name
+            )
+            
+            # Store in database
+            embedding_id = await multimodal_embedding_service.store_embedding(
+                item_id, embedding_data, model_version
+            )
+            
+            return {
+                "embedding_id": embedding_id,
+                "item_id": item_id,
+                "model_name": model_name,
+                "model_version": model_version,
+                "embedding_type": "multimodal",
+                "vector_length": len(embedding_data['vector'])
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating multimodal embedding for item {item_id}: {e}")
             return None
     
     async def get_embedding(
@@ -219,6 +329,53 @@ class EmbeddingManager:
                 }
                 for row in results
             ]
+    
+    async def cross_modal_search(
+        self,
+        query_text: Optional[str] = None,
+        query_image_path: Optional[str] = None,
+        query_image_data: Optional[bytes] = None,
+        search_types: List[str] = ['text', 'image', 'multimodal'],
+        limit: int = 20,
+        threshold: float = 0.6
+    ) -> List[Dict[str, Any]]:
+        """
+        Perform cross-modal search across all embedding types.
+        
+        Args:
+            query_text: Text query
+            query_image_path: Image file path for query
+            query_image_data: Image bytes for query
+            search_types: Types of embeddings to search
+            limit: Maximum results
+            threshold: Similarity threshold
+            
+        Returns:
+            Cross-modal search results
+        """
+        try:
+            results = await multimodal_embedding_service.unified_search(
+                query_text=query_text,
+                query_image_path=query_image_path,
+                query_image_data=query_image_data,
+                search_types=search_types,
+                limit=limit,
+                threshold=threshold
+            )
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in cross-modal search: {e}")
+            return []
+    
+    async def get_multimodal_stats(self) -> Dict[str, Any]:
+        """Get statistics about multimodal embeddings."""
+        try:
+            return await multimodal_embedding_service.get_embeddings_stats()
+        except Exception as e:
+            logger.error(f"Error getting multimodal stats: {e}")
+            return {}
     
     async def migrate_legacy_embeddings(self, batch_size: int = 100) -> Dict[str, int]:
         """

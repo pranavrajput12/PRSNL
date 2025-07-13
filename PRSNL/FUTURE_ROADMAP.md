@@ -104,6 +104,16 @@
   - Smart content summarization
   - Duplicate detection enhancements
 
+- [ ] **Multimodal Query Features** (Deferred from 2025-07-13)
+  - Image-to-text search functionality
+  - Upload image to find similar content across knowledge base
+  - Visual similarity browsing and exploration
+  - Advanced cross-modal query combinations (text + image)
+  - Query-by-image interface with drag-and-drop support
+  - **Prerequisites**: Unified multimodal data store (implemented)
+  - **Complexity**: Medium-High (3-4 days implementation)
+  - **Benefits**: Advanced search UX, visual content discovery
+
 - [ ] **Collaboration Features**
   - Shared knowledge bases
   - Team workspaces

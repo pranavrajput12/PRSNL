@@ -28,6 +28,8 @@ from app.services.vision_processor import vision_processor
 from app.services.whisper_cpp_transcription import whisper_cpp_service
 from app.services.unified_ai_service import unified_ai_service
 from app.services.cache import cache_service, CacheKeys
+from app.services.embedding_manager import embedding_manager
+from app.services.ner_service import ner_service
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +98,51 @@ class OCRImageAnalysisAgent:
                 vision_result, item_id
             )
             
-            # Step 4: Create final analysis result
+            # Step 4: Create multimodal embeddings and enhanced tags
+            multimodal_enhancements = {}
+            if item_id:
+                try:
+                    # Create image embedding for visual similarity search
+                    image_embedding = await embedding_manager.create_image_embedding(
+                        item_id, image_path=file_path
+                    )
+                    
+                    # Create multimodal embedding if we have text content
+                    text_content = vision_result.get("text", "")
+                    if text_content:
+                        multimodal_embedding = await embedding_manager.create_multimodal_embedding(
+                            item_id,
+                            text=text_content,
+                            image_path=file_path
+                        )
+                        
+                        # Enhance tags with NER from extracted text
+                        entities = await ner_service.extract_entities(text_content)
+                        current_tags = vision_result.get("tags", [])
+                        enhanced_tags = await ner_service.enhance_tags(
+                            current_tags, entities, max_new_tags=5
+                        )
+                        
+                        multimodal_enhancements = {
+                            "image_embedding_created": bool(image_embedding),
+                            "multimodal_embedding_created": bool(multimodal_embedding),
+                            "enhanced_tags": enhanced_tags,
+                            "entities_extracted": entities.get("summary", {}),
+                            "ner_technical_content": entities.get("summary", {}).get("has_technical_content", False)
+                        }
+                    else:
+                        multimodal_enhancements = {
+                            "image_embedding_created": bool(image_embedding),
+                            "multimodal_embedding_created": False,
+                            "enhanced_tags": vision_result.get("tags", []),
+                            "entities_extracted": {},
+                            "ner_technical_content": False
+                        }
+                except Exception as e:
+                    logger.warning(f"Multimodal enhancement failed for {item_id}: {e}")
+                    multimodal_enhancements = {"error": str(e)}
+            
+            # Step 5: Create final analysis result
             analysis_result = {
                 "ocr_text": vision_result.get("text", ""),
                 "description": vision_result.get("description", ""),
@@ -105,6 +151,7 @@ class OCRImageAnalysisAgent:
                 "vision_provider": vision_result.get("provider", "unknown"),
                 "enhanced_context": enhanced_context,
                 "knowledge_connections": connections,
+                "multimodal_enhancements": multimodal_enhancements,
                 "file_info": {
                     "path": file_path,
                     "size": os.path.getsize(file_path) if os.path.exists(file_path) else 0,
@@ -114,7 +161,8 @@ class OCRImageAnalysisAgent:
                     "text_length": len(vision_result.get("text", "")),
                     "object_count": len(vision_result.get("objects", [])),
                     "tag_count": len(vision_result.get("tags", [])),
-                    "has_enhanced_analysis": bool(enhanced_context)
+                    "has_enhanced_analysis": bool(enhanced_context),
+                    "has_multimodal_embeddings": multimodal_enhancements.get("multimodal_embedding_created", False)
                 }
             }
             
@@ -300,7 +348,42 @@ class VideoTranscriptionAgent:
                 # Step 4: Generate video metadata
                 video_metadata = await self._extract_video_metadata(file_path)
                 
-                # Step 5: Create final result
+                # Step 5: Create multimodal embeddings and enhanced tags
+                multimodal_enhancements = {}
+                if item_id and transcription_result.get("text"):
+                    try:
+                        transcript_text = transcription_result["text"]
+                        
+                        # Create text embedding from transcript
+                        text_embedding = await embedding_manager.create_embedding(
+                            item_id, transcript_text
+                        )
+                        
+                        # Enhance tags with NER from transcript
+                        entities = await ner_service.extract_entities(transcript_text)
+                        current_tags = summary_analysis.get("tags", [])
+                        enhanced_tags = await ner_service.enhance_tags(
+                            current_tags, entities, max_new_tags=8
+                        )
+                        
+                        multimodal_enhancements = {
+                            "text_embedding_created": bool(text_embedding),
+                            "enhanced_tags": enhanced_tags,
+                            "entities_extracted": entities.get("summary", {}),
+                            "ner_technical_content": entities.get("summary", {}).get("has_technical_content", False),
+                            "transcript_length": len(transcript_text),
+                            "semantic_analysis": {
+                                "people_mentioned": len(entities.get("people", [])),
+                                "organizations_mentioned": len(entities.get("organizations", [])),
+                                "technical_terms": len(entities.get("technical", {}).get("programming_languages", []) + 
+                                                     entities.get("technical", {}).get("frameworks", []))
+                            }
+                        }
+                    except Exception as e:
+                        logger.warning(f"Multimodal enhancement failed for video {item_id}: {e}")
+                        multimodal_enhancements = {"error": str(e)}
+                
+                # Step 6: Create final result
                 analysis_result = {
                     "transcription": {
                         "text": transcription_result.get("text", ""),
@@ -314,13 +397,15 @@ class VideoTranscriptionAgent:
                     },
                     "summary_analysis": summary_analysis,
                     "video_metadata": video_metadata,
+                    "multimodal_enhancements": multimodal_enhancements,
                     "quality_metrics": {
                         "transcription_confidence": transcription_result.get("confidence", 0),
                         "transcription_length": len(transcription_result.get("text", "")),
                         "duration_seconds": transcription_result.get("duration", 0),
                         "real_time_factor": transcription_result.get("real_time_factor", 0),
                         "has_word_timestamps": len(transcription_result.get("words", [])) > 0,
-                        "has_summary": bool(summary_analysis)
+                        "has_summary": bool(summary_analysis),
+                        "has_enhanced_tags": bool(multimodal_enhancements.get("enhanced_tags"))
                     }
                 }
                 

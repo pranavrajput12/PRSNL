@@ -109,3 +109,5 @@ ftfy>=6.0.0  # Text normalization for CLIP
 # Additional ML Dependencies
 nltk>=3.9.1  # Natural language processing
 transformers>=4.41.0  # Hugging Face transformers (already included but ensuring version)
+spacy>=3.7.0  # Advanced NLP and NER
+# Note: Run `python -m spacy download en_core_web_sm` after installation
