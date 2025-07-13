@@ -1,0 +1,149 @@
+# LibreChat Configuration for PRSNL Integration
+# =============================================
+
+version: 1.2.0
+
+# Custom endpoints for integrating with PRSNL FastAPI backend
+endpoints:
+  custom:
+    # PRSNL Knowledge Base Endpoint
+    - name: "PRSNL-Knowledge"
+      apiKey: "prsnl-internal-key"
+      baseURL: "http://prsnl_backend:8000/api/ai"
+      models:
+        default: ["prsnl-gpt-4", "prsnl-gpt-35-turbo"]
+        fetch: false
+      titleConvo: true
+      titleModel: "prsnl-gpt-4"
+      modelDisplayLabel: "PRSNL Knowledge Base"
+      summarize: false
+      summaryModel: "prsnl-gpt-35-turbo"
+      forcePrompt: false
+      iconURL: "/assets/prsnl-logo.png"
+      headers:
+        "X-PRSNL-Integration": "librechat"
+        "Content-Type": "application/json"
+
+  # Azure OpenAI Configuration (Primary)
+  azureOpenAI:
+    titleModel: "gpt-4"
+    plugins: true
+    assistants: true
+    groups:
+      - group: "prsnl-production"
+        apiKey: "${AZURE_OPENAI_API_KEY}"
+        instanceName: "airops"
+        version: "2025-01-01-preview"
+        baseURL: "https://airops.openai.azure.com/openai/deployments"
+        models:
+          gpt-4:
+            deploymentName: "gpt-4.1"
+            model: "gpt-4"
+          gpt-3.5-turbo:
+            deploymentName: "gpt-35-turbo"
+            model: "gpt-3.5-turbo"
+          text-embedding-ada-002:
+            deploymentName: "text-embedding-ada-002"
+            model: "text-embedding-ada-002"
+
+# Interface customization
+interface:
+  # Branding
+  privateChat: true
+  hideModel: false
+  hideSidebar: false
+  
+  # Custom styling for PRSNL brand
+  customBranding: true
+  customFooter: "Powered by PRSNL - Your Personal Knowledge Base"
+  customHeader: "PRSNL Second Brain Chat"
+  
+  # Features
+  markdown: true
+  latex: true
+  showCode: true
+
+# RAG Configuration for Knowledge Base
+rag:
+  provider: "custom"
+  enabled: true
+  chunkSize: 1500
+  chunkOverlap: 100
+  collection: "prsnl_knowledge_base"
+  
+  # Search configuration
+  search:
+    enabled: true
+    provider: "meilisearch"
+    
+  # Vector database configuration  
+  vectorStore:
+    provider: "pgvector"
+    connectionString: "${RAG_PGVECTOR_CONNECTION_STRING}"
+    
+  # File processing
+  fileConfig:
+    endpoints:
+      - "azureOpenAI"
+      - "PRSNL-Knowledge"
+    
+    # Supported file types that align with PRSNL
+    supportedMimeTypes:
+      - "application/pdf"
+      - "text/plain"
+      - "text/markdown"
+      - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      - "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      - "text/csv"
+      - "application/json"
+
+# Speech to Text (using existing Whisper deployment)
+speech:
+  enabled: true
+  provider: "azure"
+  model: "whisper"
+  endpoint: "https://airops.openai.azure.com"
+  apiKey: "${AZURE_OPENAI_API_KEY}"
+
+# Text to Speech
+tts:
+  enabled: true
+  provider: "azure"
+  apiKey: "${AZURE_OPENAI_API_KEY}"
+  model: "tts-1"
+  voices: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+
+# Image generation (if needed)
+imageGeneration:
+  enabled: false  # Disable for now to focus on text-based knowledge
+
+# File upload configuration
+fileStrategy: "local"
+fileConfig:
+  serverFileSizeLimit: 100
+  avatarSizeLimit: 2
+
+# Security and moderation
+moderation:
+  enabled: false  # Disable for internal use
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "combined"
+
+# Plugin configuration (disabled initially)
+plugins:
+  enabled: false
+
+# Assistant configuration
+assistants:
+  enabled: true
+  createAssistants: true
+  modifyAssistants: true
+
+# Cache configuration
+cache:
+  enabled: true
+  type: "redis"
+  ttl: 3600
