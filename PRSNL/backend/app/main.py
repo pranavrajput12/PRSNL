@@ -211,6 +211,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
+from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
 from app.api import (
     admin,
     ai,
@@ -259,6 +260,7 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(videos.router, prefix=settings.API_V1_STR)
 app.include_router(vision.router, prefix=settings.API_V1_STR)
 app.include_router(ai_suggest.router, prefix=settings.API_V1_STR)
+app.include_router(crawl_ai_integration.router, prefix=settings.API_V1_STR)  # Crawl.ai multi-agent system
 app.include_router(debug.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(questions.router, prefix=settings.API_V1_STR)

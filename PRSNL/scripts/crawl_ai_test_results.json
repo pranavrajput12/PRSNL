@@ -1,0 +1,795 @@
+{
+  "test_run": {
+    "start_time": "2025-07-13T18:27:30.392125",
+    "end_time": "2025-07-13T18:27:56.730533",
+    "total_tests": 12,
+    "passed": 11,
+    "failed": 1,
+    "errors": []
+  },
+  "agent_tests": {
+    "health_check": {
+      "status": "passed",
+      "response": {
+        "status": "healthy",
+        "agents_available": [
+          "knowledge_curator",
+          "research_synthesizer",
+          "content_explorer",
+          "learning_pathfinder",
+          "image_analyzer",
+          "video_processor",
+          "audio_journal_processor"
+        ],
+        "version": "1.0.0",
+        "last_activity": "2025-07-13T18:27:30.447246"
+      }
+    },
+    "knowledge_curator": {
+      "status": "error",
+      "error": "'categorization'"
+    },
+    "research_synthesizer": {
+      "status": "passed",
+      "response": {
+        "status": "completed",
+        "synthesis": {
+          "error": "BrowserType.launch: Executable doesn't exist at /Users/pronav/Library/Caches/ms-playwright/chromium-1179/chrome-mac/Chromium.app/Contents/MacOS/Chromium\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551 Looks like Playwright was just installed or updated.       \u2551\n\u2551 Please run the following command to download new browsers: \u2551\n\u2551                                                            \u2551\n\u2551     playwright install                                     \u2551\n\u2551                                                            \u2551\n\u2551 <3 Playwright Team                                         \u2551\n\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d"
+        },
+        "execution_time": 0.168809,
+        "timestamp": "2025-07-13T18:27:31.043977"
+      }
+    },
+    "content_explorer": {
+      "status": "passed",
+      "response": {
+        "request_id": "explore-1752411451",
+        "workflow": "topic_exploration",
+        "agents_executed": [
+          "content_explorer"
+        ],
+        "results": {
+          "content_explorer": {
+            "exploration_map": {
+              "center": "Machine Learning",
+              "nodes": [
+                {
+                  "id": "node1",
+                  "title": "Related Concept 1",
+                  "distance": 1,
+                  "connection_type": "conceptual"
+                },
+                {
+                  "id": "node2",
+                  "title": "Application Example",
+                  "distance": 2,
+                  "connection_type": "practical"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "Machine Learning",
+                  "to": "node1",
+                  "weight": 0.8
+                },
+                {
+                  "from": "node1",
+                  "to": "node2",
+                  "weight": 0.6
+                }
+              ]
+            },
+            "discoveries": [
+              {
+                "concept": "Music Composition Algorithms",
+                "explanation": "Deep learning models, especially neural networks, can generate original music. By exploring how models like LSTMs or Transformers compose melodies in Python, you'll see connections between machine learning and the creative arts, revealing the 'musicality' of neural nets.",
+                "creativity_score": 0.85,
+                "learning_potential": "Learn how sequence modeling can be applied to audio data, and how networks can pick up on abstract artistic patterns."
+              },
+              {
+                "concept": "Mythology-Inspired Neural Architectures",
+                "explanation": "Some neural network structures are named after legendary creatures\u2014like GANs (Generative Adversarial Networks) described as a 'duel' between two models, reminiscent of mythic battles. Exploring why architectures get such names can inspire new ways of thinking about model competition and collaboration.",
+                "creativity_score": 0.77,
+                "learning_potential": "Appreciate how metaphor and narrative shape technical thinking, encourage playful exploration, and inspire novel approaches to design."
+              },
+              {
+                "concept": "Quantum-Inspired Deep Learning",
+                "explanation": "Quantum computing concepts like superposition and entanglement are inspiring new types of neural networks. Python libraries are emerging for quantum machine learning, connecting abstract physics with practical AI.",
+                "creativity_score": 0.9,
+                "learning_potential": "Expand your toolkit by exploring quantum principles and how they might accelerate or enrich traditional neural networks."
+              },
+              {
+                "concept": "Ecology and Neural Network Pruning",
+                "explanation": "The process of pruning neural networks (removing redundant connections) is inspired by biological systems where synaptic pruning optimizes brain efficiency. Python's pruning libraries let you experiment with these 'evolutionary' algorithms.",
+                "creativity_score": 0.82,
+                "learning_potential": "Discover how biological principles can optimize model efficiency and generalization in deep learning."
+              },
+              {
+                "concept": "Typographic Style Transfer",
+                "explanation": "Apply deep learning style transfer not just to images, but to digital fonts\u2014generating new typefaces using neural networks in Python. This bridges graphic design and AI, and pushes creative boundaries.",
+                "creativity_score": 0.88,
+                "learning_potential": "Learn about style transfer, generative models, and how AI can collaborate with human creativity in design."
+              }
+            ],
+            "suggested_paths": [
+              {
+                "name": "Quick Overview",
+                "description": "Get a broad understanding",
+                "steps": [
+                  "Introduction",
+                  "Key Concepts",
+                  "Applications"
+                ],
+                "estimated_time": "30 minutes",
+                "difficulty": "beginner"
+              },
+              {
+                "name": "Deep Dive",
+                "description": "Comprehensive exploration",
+                "steps": [
+                  "Theory",
+                  "Implementation",
+                  "Advanced Topics"
+                ],
+                "estimated_time": "2-3 hours",
+                "difficulty": "intermediate"
+              },
+              {
+                "name": "Focus: deep learning",
+                "description": "Explore through the lens of deep learning",
+                "steps": [
+                  "Connection to deep learning",
+                  "Applications",
+                  "Case Studies"
+                ],
+                "estimated_time": "1 hour",
+                "difficulty": "intermediate"
+              }
+            ],
+            "total_connections": 2,
+            "exploration_depth": 2
+          }
+        },
+        "total_execution_time": 6.665806,
+        "timestamp": "2025-07-13T18:27:37.718703"
+      }
+    },
+    "learning_pathfinder": {
+      "status": "passed",
+      "response": {
+        "request_id": "learn-1752411457",
+        "workflow": "learning_path",
+        "agents_executed": [
+          "learning_pathfinder",
+          "content_explorer"
+        ],
+        "results": {
+          "learning_pathfinder": {
+            "learning_path": {
+              "phases": [
+                {
+                  "name": "Foundations of Python & Data Handling",
+                  "duration": "2 weeks",
+                  "objectives": [
+                    "Gain familiarity with Python syntax",
+                    "Understand basic programming concepts",
+                    "Learn data manipulation with NumPy and Pandas"
+                  ],
+                  "topics": [
+                    "Python basics (variables, loops, functions)",
+                    "Jupyter Notebooks",
+                    "NumPy arrays",
+                    "Pandas DataFrames (loading, cleaning, basic analysis)"
+                  ],
+                  "resources": [
+                    "Interactive Python tutorials (e.g., Codecademy, W3Schools)",
+                    "Jupyter Notebook environment (Anaconda, Google Colab)",
+                    "NumPy and Pandas documentation"
+                  ],
+                  "exercises": [
+                    "Write Python scripts to manipulate lists and dictionaries",
+                    "Load a CSV file and perform basic cleaning in Pandas",
+                    "Calculate statistics (mean, median, mode) from a dataset"
+                  ],
+                  "assessment": "Complete a mini-project: Load and summarize a real-world dataset using Pandas"
+                },
+                {
+                  "name": "Introduction to Machine Learning Concepts",
+                  "duration": "2 weeks",
+                  "objectives": [
+                    "Understand core ML concepts (supervised vs unsupervised)",
+                    "Get hands-on with scikit-learn",
+                    "Apply simple ML algorithms"
+                  ],
+                  "topics": [
+                    "Supervised vs. unsupervised learning",
+                    "Features and labels",
+                    "Train/test split",
+                    "Linear regression",
+                    "K-Nearest Neighbors"
+                  ],
+                  "resources": [
+                    "Scikit-learn documentation and tutorials",
+                    "YouTube crash courses (e.g., StatQuest, Data School)"
+                  ],
+                  "exercises": [
+                    "Train a linear regression model on a small dataset",
+                    "Implement KNN for classification",
+                    "Split data into training and testing sets"
+                  ],
+                  "assessment": "Submit a Jupyter Notebook with at least two models trained and evaluated on sample data"
+                },
+                {
+                  "name": "Model Evaluation & Data Visualization",
+                  "duration": "2 weeks",
+                  "objectives": [
+                    "Learn to evaluate model performance",
+                    "Visualize data and results"
+                  ],
+                  "topics": [
+                    "Accuracy, precision, recall, F1-score",
+                    "Confusion matrix",
+                    "Matplotlib and Seaborn basics",
+                    "Cross-validation"
+                  ],
+                  "resources": [
+                    "Matplotlib and Seaborn documentation",
+                    "Scikit-learn metrics module",
+                    "Online tutorials (e.g., Towards Data Science articles)"
+                  ],
+                  "exercises": [
+                    "Plot data distributions and relationships",
+                    "Visualize model predictions vs actuals",
+                    "Calculate and interpret evaluation metrics"
+                  ],
+                  "assessment": "Prepare a short report with plots and metric calculations for a classification task"
+                },
+                {
+                  "name": "Intermediate Machine Learning & Real-World Projects",
+                  "duration": "2 weeks",
+                  "objectives": [
+                    "Apply more advanced ML algorithms",
+                    "Work on an end-to-end mini-project"
+                  ],
+                  "topics": [
+                    "Decision trees and random forests",
+                    "Feature engineering",
+                    "Basic hyperparameter tuning",
+                    "Handling missing data"
+                  ],
+                  "resources": [
+                    "Scikit-learn advanced tutorials",
+                    "Kaggle datasets and notebooks",
+                    "Blog posts on feature engineering"
+                  ],
+                  "exercises": [
+                    "Implement a random forest on a real-world dataset",
+                    "Experiment with feature selection and engineering",
+                    "Tune hyperparameters using GridSearchCV"
+                  ],
+                  "assessment": "Complete and present a mini-project: End-to-end ML workflow on a chosen dataset (data cleaning, modeling, evaluation, visualization)"
+                }
+              ],
+              "learning_approach": "Hands-on, project-based learning with emphasis on coding exercises and real datasets. Each phase builds on the previous, integrating theory with practical implementation in Python. Regular mini-projects and reports foster applied understanding.",
+              "success_metrics": [
+                "Completion of all mini-projects and exercises",
+                "Ability to explain and implement core ML algorithms in Python",
+                "Demonstrated improvement in model performance and evaluation",
+                "Submission of a final end-to-end ML project with clear documentation"
+              ]
+            },
+            "milestones": [
+              {
+                "id": "milestone_1",
+                "phase": "Foundations of Python & Data Handling",
+                "description": "Complete Foundations of Python & Data Handling phase",
+                "success_criteria": [
+                  "Gain familiarity with Python syntax",
+                  "Understand basic programming concepts",
+                  "Learn data manipulation with NumPy and Pandas"
+                ],
+                "estimated_completion": "2 weeks",
+                "dependencies": []
+              },
+              {
+                "id": "milestone_2",
+                "phase": "Introduction to Machine Learning Concepts",
+                "description": "Complete Introduction to Machine Learning Concepts phase",
+                "success_criteria": [
+                  "Understand core ML concepts (supervised vs unsupervised)",
+                  "Get hands-on with scikit-learn",
+                  "Apply simple ML algorithms"
+                ],
+                "estimated_completion": "2 weeks",
+                "dependencies": [
+                  "milestone_1"
+                ]
+              },
+              {
+                "id": "milestone_3",
+                "phase": "Model Evaluation & Data Visualization",
+                "description": "Complete Model Evaluation & Data Visualization phase",
+                "success_criteria": [
+                  "Learn to evaluate model performance",
+                  "Visualize data and results"
+                ],
+                "estimated_completion": "2 weeks",
+                "dependencies": [
+                  "milestone_2"
+                ]
+              },
+              {
+                "id": "milestone_4",
+                "phase": "Intermediate Machine Learning & Real-World Projects",
+                "description": "Complete Intermediate Machine Learning & Real-World Projects phase",
+                "success_criteria": [
+                  "Apply more advanced ML algorithms",
+                  "Work on an end-to-end mini-project"
+                ],
+                "estimated_completion": "2 weeks",
+                "dependencies": [
+                  "milestone_3"
+                ]
+              }
+            ],
+            "goal_analysis": {
+              "domain": "Machine Learning",
+              "sub_topics": [
+                "Python programming basics",
+                "Data preprocessing and cleaning",
+                "Supervised learning algorithms (e.g., regression, classification)",
+                "Unsupervised learning algorithms (e.g., clustering, dimensionality reduction)",
+                "Model evaluation and validation",
+                "Feature engineering",
+                "Use of popular libraries (e.g., scikit-learn, pandas, numpy, matplotlib)",
+                "Hyperparameter tuning",
+                "Deployment of machine learning models"
+              ],
+              "prerequisites": [
+                "Basic programming knowledge (preferably Python)",
+                "Fundamental mathematics (linear algebra, probability, statistics)",
+                "Basic understanding of algorithms and data structures"
+              ],
+              "difficulty_level": "intermediate",
+              "practical_focus": true,
+              "theoretical_depth": "moderate"
+            },
+            "knowledge_assessment": {
+              "readiness_score": 0.0,
+              "known_prerequisites": [],
+              "missing_prerequisites": [
+                "Basic programming knowledge (preferably Python)",
+                "Fundamental mathematics (linear algebra, probability, statistics)",
+                "Basic understanding of algorithms and data structures"
+              ],
+              "strength_areas": [
+                "Python basics",
+                "Basic statistics",
+                "NumPy"
+              ],
+              "recommended_starting_point": "beginner"
+            },
+            "estimated_completion": "8 weeks with moderate commitment"
+          },
+          "content_explorer": {
+            "exploration_map": {
+              "center": "Become proficient in machine learning with Python",
+              "nodes": [
+                {
+                  "id": "node1",
+                  "title": "Related Concept 1",
+                  "distance": 1,
+                  "connection_type": "conceptual"
+                },
+                {
+                  "id": "node2",
+                  "title": "Application Example",
+                  "distance": 2,
+                  "connection_type": "practical"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "Become proficient in machine learning with Python",
+                  "to": "node1",
+                  "weight": 0.8
+                },
+                {
+                  "from": "node1",
+                  "to": "node2",
+                  "weight": 0.6
+                }
+              ]
+            },
+            "discoveries": [
+              {
+                "concept": "Generative Art with Neural Networks",
+                "explanation": "Combining your Python and NumPy knowledge with basic statistics, you can explore how machine learning models (like GANs or neural style transfer) create visually stunning art, turning math into images.",
+                "creativity_score": 0.9,
+                "learning_potential": "Learn about convolutional neural networks, image data structures, and how statistical noise is transformed into complex patterns."
+              },
+              {
+                "concept": "Sports Analytics and Fantasy Leagues",
+                "explanation": "Use Python and basic statistics to analyze real-world sports data, predict outcomes, or even optimize fantasy league drafts using machine learning techniques.",
+                "creativity_score": 0.7,
+                "learning_potential": "Gain insight into real datasets, regression models, feature engineering, and how stats power modern sports strategies."
+              },
+              {
+                "concept": "Music Generation with Markov Chains",
+                "explanation": "With your foundation, you can model musical sequences as statistical processes with NumPy and generate new music using simple machine learning algorithms.",
+                "creativity_score": 0.8,
+                "learning_potential": "Learn about sequences, probabilities, and creative uses of data structures in Python for audio applications."
+              },
+              {
+                "concept": "Detecting Fake News with Natural Language Processing",
+                "explanation": "Dive into text datasets to apply statistical methods and NumPy-powered feature extraction for machine learning models that identify misinformation.",
+                "creativity_score": 0.7,
+                "learning_potential": "Understand NLP basics, feature engineering, and the social impact of machine learning."
+              },
+              {
+                "concept": "Eco-friendly Gardening with Predictive Modeling",
+                "explanation": "Use Python, NumPy, and basic stats to analyze weather and plant data to predict optimal planting times or water usage, making gardening smarter and more sustainable.",
+                "creativity_score": 0.85,
+                "learning_potential": "Learn to handle time-series data, predictive modeling, and the intersection of data science with everyday life."
+              }
+            ],
+            "suggested_paths": [
+              {
+                "name": "Quick Overview",
+                "description": "Get a broad understanding",
+                "steps": [
+                  "Introduction",
+                  "Key Concepts",
+                  "Applications"
+                ],
+                "estimated_time": "30 minutes",
+                "difficulty": "beginner"
+              },
+              {
+                "name": "Deep Dive",
+                "description": "Comprehensive exploration",
+                "steps": [
+                  "Theory",
+                  "Implementation",
+                  "Advanced Topics"
+                ],
+                "estimated_time": "2-3 hours",
+                "difficulty": "intermediate"
+              },
+              {
+                "name": "Focus: Python basics",
+                "description": "Explore through the lens of Python basics",
+                "steps": [
+                  "Connection to Python basics",
+                  "Applications",
+                  "Case Studies"
+                ],
+                "estimated_time": "1 hour",
+                "difficulty": "intermediate"
+              }
+            ],
+            "total_connections": 2,
+            "exploration_depth": 3
+          }
+        },
+        "total_execution_time": 14.602639,
+        "timestamp": "2025-07-13T18:27:52.346772"
+      }
+    },
+    "image_analyzer": {
+      "status": "passed",
+      "note": "Mock test - agent available and configured"
+    },
+    "video_processor": {
+      "status": "passed",
+      "note": "Mock test - agent available and configured"
+    },
+    "audio_journal_processor": {
+      "status": "passed",
+      "note": "Mock test - agent available and configured"
+    }
+  },
+  "endpoint_tests": {
+    "repository_analysis": {
+      "status": "passed",
+      "response": {
+        "request_id": "crawl-1752411472",
+        "workflow": "full",
+        "agents_executed": [
+          "knowledge_curator",
+          "research_synthesizer",
+          "content_explorer"
+        ],
+        "results": {
+          "knowledge_curator": {
+            "error": "BrowserType.launch: Executable doesn't exist at /Users/pronav/Library/Caches/ms-playwright/chromium-1179/chrome-mac/Chromium.app/Contents/MacOS/Chromium\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551 Looks like Playwright was just installed or updated.       \u2551\n\u2551 Please run the following command to download new browsers: \u2551\n\u2551                                                            \u2551\n\u2551     playwright install                                     \u2551\n\u2551                                                            \u2551\n\u2551 <3 Playwright Team                                         \u2551\n\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d"
+          },
+          "research_synthesizer": {
+            "error": "BrowserType.launch: Executable doesn't exist at /Users/pronav/Library/Caches/ms-playwright/chromium-1179/chrome-mac/Chromium.app/Contents/MacOS/Chromium\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551 Looks like Playwright was just installed or updated.       \u2551\n\u2551 Please run the following command to download new browsers: \u2551\n\u2551                                                            \u2551\n\u2551     playwright install                                     \u2551\n\u2551                                                            \u2551\n\u2551 <3 Playwright Team                                         \u2551\n\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d"
+          },
+          "content_explorer": {
+            "exploration_map": {
+              "center": "Content",
+              "nodes": [
+                {
+                  "id": "node1",
+                  "title": "Related Concept 1",
+                  "distance": 1,
+                  "connection_type": "conceptual"
+                },
+                {
+                  "id": "node2",
+                  "title": "Application Example",
+                  "distance": 2,
+                  "connection_type": "practical"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "Content",
+                  "to": "node1",
+                  "weight": 0.8
+                },
+                {
+                  "from": "node1",
+                  "to": "node2",
+                  "weight": 0.6
+                }
+              ]
+            },
+            "discoveries": [
+              {
+                "concept": "Composting",
+                "explanation": "Composting transforms organic waste into fertile soil, much like how content can be transformed and repurposed to nurture new ideas or audiences.",
+                "creativity_score": 0.84,
+                "learning_potential": "Learn about the value of recycling and evolving content, drawing parallels to environmental sustainability and creative processes."
+              },
+              {
+                "concept": "Synesthesia",
+                "explanation": "Synesthesia is a phenomenon where one sense involuntarily triggers another, such as seeing colors when hearing music. Similarly, content can be designed to stimulate multiple senses or emotions at once.",
+                "creativity_score": 0.88,
+                "learning_potential": "Explore multisensory content creation and how cross-modal experiences can deepen engagement."
+              },
+              {
+                "concept": "Cryptographic Hashes",
+                "explanation": "Cryptographic hashes distill complex data into a unique signature; content summaries or taglines do something similar by capturing the essence of a larger body of work.",
+                "creativity_score": 0.77,
+                "learning_potential": "Understand the importance of distillation and uniqueness in both security and communication."
+              },
+              {
+                "concept": "Mushroom Mycelium Networks",
+                "explanation": "Mycelium networks connect and share nutrients across vast forests underground, much like content links ideas and communities across the internet.",
+                "creativity_score": 0.91,
+                "learning_potential": "Learn about the hidden ways information and value are distributed beneath the surface, both in nature and online."
+              },
+              {
+                "concept": "Choose-Your-Own-Adventure Novels",
+                "explanation": "These books let readers decide the story\u2019s path, mirroring how interactive content empowers audiences to shape their own experiences.",
+                "creativity_score": 0.81,
+                "learning_potential": "Discover strategies for making content more participatory and personalized."
+              }
+            ],
+            "suggested_paths": [
+              {
+                "name": "Quick Overview",
+                "description": "Get a broad understanding",
+                "steps": [
+                  "Introduction",
+                  "Key Concepts",
+                  "Applications"
+                ],
+                "estimated_time": "30 minutes",
+                "difficulty": "beginner"
+              },
+              {
+                "name": "Deep Dive",
+                "description": "Comprehensive exploration",
+                "steps": [
+                  "Theory",
+                  "Implementation",
+                  "Advanced Topics"
+                ],
+                "estimated_time": "2-3 hours",
+                "difficulty": "intermediate"
+              }
+            ],
+            "total_connections": 2,
+            "exploration_depth": 2
+          }
+        },
+        "total_execution_time": 4.296919,
+        "timestamp": "2025-07-13T18:27:56.669673"
+      }
+    },
+    "insights_report": {
+      "status": "passed",
+      "response": {
+        "status": "completed",
+        "report": {
+          "period": "week",
+          "focus_areas": [
+            "development",
+            "ai"
+          ],
+          "insights": [
+            "Increased interest in AI and machine learning topics",
+            "Strong focus on practical implementations",
+            "Growing collection of development resources"
+          ],
+          "recommendations": [
+            "Explore more theoretical foundations",
+            "Connect practical knowledge with concepts",
+            "Review and synthesize older content"
+          ],
+          "statistics": {
+            "total_items": 150,
+            "new_items": 23,
+            "categories_covered": 8,
+            "average_quality_score": 0.82
+          },
+          "generated_at": "2025-07-13T18:27:56.703789"
+        },
+        "generated_at": "2025-07-13T18:27:56.703814"
+      }
+    },
+    "agent_capabilities": {
+      "status": "passed",
+      "response": {
+        "agents": {
+          "knowledge_curator": {
+            "name": "Knowledge Curator",
+            "description": "Analyzes new content and suggests categorization, tags, and connections",
+            "available": true,
+            "endpoints": [
+              "/process-content",
+              "/find-connections"
+            ]
+          },
+          "research_synthesizer": {
+            "name": "Research Synthesizer",
+            "description": "Synthesizes information from multiple sources to create comprehensive insights",
+            "available": true,
+            "endpoints": [
+              "/process-content",
+              "/synthesize"
+            ]
+          },
+          "content_explorer": {
+            "name": "Content Explorer",
+            "description": "Discovers hidden connections and creates exploration paths",
+            "available": true,
+            "endpoints": [
+              "/explore-topic",
+              "/process-content"
+            ]
+          },
+          "learning_pathfinder": {
+            "name": "Learning Pathfinder",
+            "description": "Creates personalized learning paths and tracks progress",
+            "available": true,
+            "endpoints": [
+              "/create-learning-path"
+            ]
+          },
+          "image_analyzer": {
+            "name": "OCR Image Analysis Agent",
+            "description": "Extracts text from images, analyzes context, and generates searchable tags",
+            "available": true,
+            "endpoints": []
+          },
+          "video_processor": {
+            "name": "Video Transcription Agent",
+            "description": "Transcribes videos using Whisper CPP and creates intelligent summaries",
+            "available": true,
+            "endpoints": []
+          },
+          "audio_journal_processor": {
+            "name": "Audio Journal Agent",
+            "description": "Processes audio journals with advanced analysis and contextualization",
+            "available": true,
+            "endpoints": []
+          }
+        },
+        "workflows": {
+          "full": "All agents working together",
+          "curate": "Knowledge curation only",
+          "research": "Curation + Research synthesis",
+          "explore": "Curation + Content exploration"
+        }
+      }
+    },
+    "media_capabilities": {
+      "status": "passed",
+      "response": {
+        "media_agents": {
+          "image_analyzer": {
+            "name": "OCR Image Analysis Agent",
+            "description": "Extracts text from images, analyzes context, and generates searchable tags",
+            "supported_formats": [
+              "PNG",
+              "JPG",
+              "JPEG",
+              "GIF",
+              "BMP",
+              "TIFF"
+            ],
+            "features": [
+              "Azure OpenAI GPT-4V vision analysis",
+              "Tesseract OCR fallback",
+              "Enhanced context analysis",
+              "Knowledge base connections",
+              "Automatic tagging"
+            ]
+          },
+          "video_processor": {
+            "name": "Video Transcription Agent",
+            "description": "Transcribes videos using Whisper CPP and creates intelligent summaries",
+            "supported_formats": [
+              "MP4",
+              "AVI",
+              "MOV",
+              "MKV",
+              "WMV",
+              "FLV"
+            ],
+            "features": [
+              "FFmpeg audio extraction",
+              "Whisper.cpp transcription",
+              "AI-powered summarization",
+              "Content analysis and tagging",
+              "Video metadata extraction"
+            ]
+          },
+          "audio_journal_processor": {
+            "name": "Audio Journal Agent",
+            "description": "Processes audio journals with advanced analysis and contextualization",
+            "supported_formats": [
+              "MP3",
+              "WAV",
+              "M4A",
+              "FLAC",
+              "OGG"
+            ],
+            "features": [
+              "Whisper.cpp transcription",
+              "Emotion and mood analysis",
+              "Action item extraction",
+              "Knowledge base connections",
+              "Personal growth insights"
+            ]
+          }
+        },
+        "processing_options": {
+          "whisper_models": [
+            "tiny",
+            "base",
+            "small",
+            "medium",
+            "large"
+          ],
+          "supported_languages": [
+            "en",
+            "es",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "zh",
+            "ja",
+            "ko"
+          ],
+          "batch_processing": true,
+          "async_processing": true,
+          "upload_and_process": true
+        },
+        "workflows": {
+          "image_analysis": "OCR extraction + AI context analysis + tagging",
+          "video_processing": "Audio extraction + transcription + summarization",
+          "audio_journal_processing": "Transcription + emotion analysis + insights",
+          "media_batch_processing": "Process multiple files of different types"
+        }
+      }
+    }
+  }
+}

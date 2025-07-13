@@ -13,7 +13,7 @@ from pydantic import BaseModel, HttpUrl
 from app.config import settings
 from app.core.exceptions import InternalServerError
 from app.services.ai_router import ai_router, AIProvider, AITask, TaskType
-from app.services.scraper import WebScraper
+from app.services.crawl_ai_service import CrawlAIService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -116,32 +116,52 @@ async def get_ai_suggestions(request: SuggestionRequest):
     """
     logger.info(f"Received suggestion request for URL: {request.url}")
 
-    # 1. Scrape content from URL
+    # 1. Crawl content from URL using Crawl4AI
     try:
-        async with WebScraper() as scraper:
-            scraped_data = await scraper.scrape(str(request.url))
+        async with CrawlAIService() as crawler:
+            crawl_result = await crawler.crawl_url(str(request.url), extract_content=True)
+            
+            if crawl_result.error:
+                logger.error(f"Crawling failed for {request.url}: {crawl_result.error}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to crawl the URL: {crawl_result.error}"
+                )
+                
+            scraped_data = crawl_result  # Use crawl result directly
+            
     except Exception as e:
-        logger.error(f"Scraping failed for {request.url}: {e}", exc_info=True)
+        logger.error(f"Crawling failed for {request.url}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to scrape the URL. It might be inaccessible or block scraping."
+            detail="Failed to crawl the URL. It might be inaccessible or block crawling."
         )
 
-    if not scraped_data or not scraped_data.content:
-        logger.error(f"No content scraped from {request.url}. Content extraction failed.")
+    if not crawl_result.content:
+        logger.error(f"No content extracted from {request.url}.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to extract meaningful content from the URL. The page might be empty, dynamic, or block content extraction."
+            detail="Failed to extract meaningful content from the URL. The page might be empty or require JavaScript."
         )
 
-    # 2. Prepare AI task
-    prompt = _create_llm_prompt(request.url, scraped_data.title, scraped_data.content)
+    # 2. Check if AI already analyzed the content (from Crawl4AI)
+    if crawl_result.metadata.get("ai_title") and crawl_result.metadata.get("ai_tags"):
+        # Use pre-analyzed data from Crawl4AI
+        return SuggestionResponse(
+            title=crawl_result.metadata["ai_title"][:120],
+            summary=crawl_result.metadata.get("ai_summary", crawl_result.content[:200])[:200],
+            tags=crawl_result.metadata.get("ai_tags", ["uncategorized"])[:10],
+            category=crawl_result.metadata.get("ai_category", "article")
+        )
+    
+    # 3. Prepare AI task for additional analysis if needed
+    prompt = _create_llm_prompt(request.url, crawl_result.title, crawl_result.content)
     
     fallback_response = {
-        "title": scraped_data.title[:100] if scraped_data.title else "Untitled",
-        "summary": scraped_data.content[:200] if scraped_data.content else "No description available",
-        "tags": ["uncategorized"],
-        "category": "article"
+        "title": crawl_result.title[:100] if crawl_result.title else "Untitled",
+        "summary": crawl_result.content[:200] if crawl_result.content else "No description available",
+        "tags": crawl_result.metadata.get("ai_tags", ["uncategorized"]),
+        "category": crawl_result.metadata.get("ai_category", "article")
     }
 
     ai_task = AITask(
@@ -151,7 +171,7 @@ async def get_ai_suggestions(request: SuggestionRequest):
         priority=8 # High priority for user-facing feature
     )
 
-    # 3. Execute with AI Router for resilience
+    # 4. Execute with AI Router for resilience
     try:
         logger.info(f"Executing suggestion task for {request.url} via AI Router.")
         ai_response_str = await ai_router.execute_with_fallback(
@@ -171,7 +191,7 @@ async def get_ai_suggestions(request: SuggestionRequest):
         logger.error(f"Failed to get AI suggestions for {request.url}: {e}", exc_info=True)
         suggestions = fallback_response
 
-    # 4. Clean and validate the response
+    # 5. Clean and validate the response
     if 'tags' in suggestions and isinstance(suggestions['tags'], list):
         suggestions['tags'] = [str(tag).lower().strip().replace(" ", "-") for tag in suggestions['tags'] if str(tag).strip()][:10]
     else:
