@@ -1,7 +1,8 @@
-import psycopg2
 import json
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+import psycopg2
 
 # Database connection
 conn = psycopg2.connect(

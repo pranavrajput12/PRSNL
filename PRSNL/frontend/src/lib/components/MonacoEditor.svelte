@@ -72,7 +72,7 @@
 
 	$: if (editor && monaco) {
 		const model = editor.getModel();
-		if (model && monaco.editor.getModelLanguage(model) !== language) {
+		if (model && model.getLanguageId() !== language) {
 			monaco.editor.setModelLanguage(model, language);
 		}
 	}

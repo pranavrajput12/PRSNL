@@ -18,10 +18,10 @@ from pydantic import BaseModel, Field
 # CRITICAL: Set environment variables BEFORE any autoagent imports
 os.environ["DEFAULT_LOG"] = "False"  # Disable default logging to avoid directory issue
 os.environ["DEBUG"] = "False"
-# Enable function calling for Azure OpenAI
-os.environ["FN_CALL"] = "True"  # Enable function calling
-# Azure OpenAI supports function calling with API version 2023-07-01-preview or later
-os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Enable function calling
+# Disable function calling for Azure OpenAI - our deployment doesn't support it
+os.environ["FN_CALL"] = "False"  # Disable function calling to fix compatibility
+# Use standard API version
+os.environ["AZURE_OPENAI_API_VERSION"] = "2025-01-01-preview"  # Standard API version
 
 # Add AutoAgent to path
 autoagent_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'autoagent')
@@ -29,6 +29,10 @@ sys.path.insert(0, autoagent_path)
 
 from app.config import settings
 from app.db.database import get_db_connection
+from app.services.autoagent_repository import (
+    project_resource_agent,
+    repository_analyzer_agent,
+)
 from app.services.unified_ai_service import UnifiedAIService
 from autoagent import Agent, MetaChain, Response
 from autoagent.agents.prsnl_agents import PRSNLMultiAgentOrchestrator
@@ -55,6 +59,15 @@ class LearningPathRequest(BaseModel):
     current_knowledge: List[str] = []
     time_commitment: Optional[str] = "moderate"
 
+class RepositoryAnalysisRequest(BaseModel):
+    repo_url: str
+    context: Optional[str] = None
+    
+class ProjectResourceRequest(BaseModel):
+    project_description: str
+    tech_requirements: Optional[List[str]] = []
+    difficulty_preference: Optional[str] = None
+
 class AgentResponse(BaseModel):
     status: str
     agent: str
@@ -79,7 +92,7 @@ litellm.api_base = settings.AZURE_OPENAI_ENDPOINT
 # Also set as env var for AutoAgent with function calling support
 os.environ["AZURE_OPENAI_API_KEY"] = settings.AZURE_OPENAI_API_KEY
 os.environ["AZURE_OPENAI_ENDPOINT"] = settings.AZURE_OPENAI_ENDPOINT
-os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Function calling support
+os.environ["AZURE_OPENAI_API_VERSION"] = "2025-01-01-preview"  # Standard API version
 os.environ["AZURE_OPENAI_DEPLOYMENT"] = settings.AZURE_OPENAI_DEPLOYMENT  # gpt-4.1 deployment
 os.environ["OPENAI_API_KEY"] = settings.AZURE_OPENAI_API_KEY  # Fallback for libraries expecting this
 
@@ -414,3 +427,119 @@ async def autoagent_health():
             "error": str(e),
             "timestamp": datetime.utcnow().isoformat()
         }
+
+
+@router.post("/analyze-repository")
+async def analyze_repository(request: RepositoryAnalysisRequest):
+    """
+    Analyze a repository using AutoAgent Repository Analyzer
+    
+    Provides comprehensive repository analysis with AI-powered insights
+    including tech stack detection, use case classification, and recommendations.
+    """
+    try:
+        logger.info(f"Repository analysis request for: {request.repo_url}", color="blue", title="REPOSITORY ANALYSIS")
+        
+        # Use the repository analyzer agent
+        analysis_result = await repository_analyzer_agent.analyze_repository_deep(
+            repo_url=request.repo_url,
+            context=request.context
+        )
+        
+        return {
+            "status": "success",
+            "repository_url": request.repo_url,
+            "analysis": analysis_result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.info(f"Repository analysis failed: {e}", color="red", title="ERROR")
+        raise HTTPException(status_code=500, detail=f"Repository analysis failed: {str(e)}")
+
+
+@router.post("/find-project-resources")
+async def find_project_resources(request: ProjectResourceRequest):
+    """
+    Find comprehensive project resources using AutoAgent
+    
+    Searches across all knowledge sources including repositories, documentation,
+    and previous projects to provide comprehensive project assistance.
+    """
+    try:
+        logger.info(f"Project resource search for: {request.project_description[:100]}...", color="blue", title="PROJECT RESOURCES")
+        
+        # Use the project resource agent
+        resource_result = await project_resource_agent.find_project_resources(
+            project_description=request.project_description,
+            tech_requirements=request.tech_requirements,
+            difficulty_preference=request.difficulty_preference
+        )
+        
+        return {
+            "status": "success",
+            "project": request.project_description,
+            "resources": resource_result,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.info(f"Project resource search failed: {e}", color="red", title="ERROR")
+        raise HTTPException(status_code=500, detail=f"Project resource search failed: {str(e)}")
+
+
+@router.post("/project-assistant")
+async def project_assistant(request: ProjectResourceRequest):
+    """
+    Comprehensive project assistance combining repository search and multi-agent analysis
+    
+    This endpoint combines repository analysis, content search, and AI guidance
+    to provide complete project planning assistance.
+    """
+    try:
+        logger.info(f"Project assistant request: {request.project_description[:100]}...", color="blue", title="PROJECT ASSISTANT")
+        
+        # Get project resources
+        resources = await project_resource_agent.find_project_resources(
+            project_description=request.project_description,
+            tech_requirements=request.tech_requirements,
+            difficulty_preference=request.difficulty_preference
+        )
+        
+        # Enhance with multi-agent orchestration if repositories found
+        if resources.get("resources", {}).get("repositories"):
+            try:
+                # Create a comprehensive analysis using existing orchestrator
+                orchestration_request = ContentProcessingRequest(
+                    content=f"Project: {request.project_description}\nTech Requirements: {request.tech_requirements}",
+                    title="Project Planning Request",
+                    type="project_planning"
+                )
+                
+                # Use existing multi-agent endpoint logic but for project planning
+                multi_agent_result = await orchestrator.orchestrate_project_analysis(
+                    request.project_description,
+                    resources,
+                    request.tech_requirements
+                )
+                
+                resources["multi_agent_insights"] = multi_agent_result
+                
+            except Exception as e:
+                logger.info(f"Multi-agent enhancement failed: {e}", color="yellow", title="WARNING")
+                # Continue without multi-agent enhancement
+        
+        return {
+            "status": "success",
+            "project": {
+                "description": request.project_description,
+                "tech_requirements": request.tech_requirements,
+                "difficulty_preference": request.difficulty_preference
+            },
+            "comprehensive_analysis": resources,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.info(f"Project assistant failed: {e}", color="red", title="ERROR")
+        raise HTTPException(status_code=500, detail=f"Project assistant failed: {str(e)}")

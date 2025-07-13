@@ -9,13 +9,13 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 # Add the backend directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.services.haystack_rag_service import haystack_rag_service, HAYSTACK_AVAILABLE
 from app.config import settings
+from app.services.haystack_rag_service import HAYSTACK_AVAILABLE, haystack_rag_service
 
 # Configure logging
 logging.basicConfig(

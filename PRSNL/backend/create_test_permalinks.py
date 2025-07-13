@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Script to create test permalinks for existing items."""
 
-import os
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -13,8 +13,9 @@ os.environ['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/prsn
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from app.services.slug_generator import SmartSlugGenerator
+
 from app.db.models import Item
+from app.services.slug_generator import SmartSlugGenerator
 
 engine = create_engine(os.environ['DATABASE_URL'])
 Session = sessionmaker(bind=engine)

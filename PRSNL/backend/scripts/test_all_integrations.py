@@ -5,21 +5,22 @@ Comprehensive Integration Test Suite for PRSNL v4.2.0
 """
 
 import asyncio
-import sys
-import os
 import json
+import os
+import sys
 import time
 from pathlib import Path
 
 # Add the app directory to the Python path
 sys.path.insert(0, '/app')
 
-# Import all services to test
-from app.services.haystack_rag_service import haystack_rag_service, HAYSTACK_AVAILABLE
+from app.config import settings
 from app.services.firecrawl_service import firecrawl_service
+
+# Import all services to test
+from app.services.haystack_rag_service import HAYSTACK_AVAILABLE, haystack_rag_service
 from app.services.openclip_service import openclip_service
 from app.services.unified_ai_service import unified_ai_service
-from app.config import settings
 
 print("🚀 PRSNL v4.2.0 - Comprehensive AI Integration Test Suite")
 print("=" * 70)
@@ -257,7 +258,7 @@ async def test_database_connectivity():
     
     try:
         from app.db.database import get_db_pool
-        
+
         # Test connection
         pool = await get_db_pool()
         async with pool.acquire() as conn:

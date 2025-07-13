@@ -10,9 +10,9 @@ Expected improvements:
 - Faster Azure OpenAI API calls
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 
 # Add the backend directory to Python path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,8 +38,9 @@ def main():
     
     try:
         import uvicorn
+
         from app.config import settings
-        
+
         # Start with uvloop configuration
         uvicorn.run(
             "app.main:app",

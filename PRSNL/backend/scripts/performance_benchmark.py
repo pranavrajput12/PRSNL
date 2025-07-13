@@ -7,13 +7,14 @@ impact of uvloop vs default asyncio event loop.
 """
 
 import asyncio
-import aiohttp
-import asyncpg
-import time
+import os
 import statistics
 import sys
-import os
-from typing import List, Dict, Any
+import time
+from typing import Any, Dict, List
+
+import aiohttp
+import asyncpg
 
 # Add the backend directory to Python path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

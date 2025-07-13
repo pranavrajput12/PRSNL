@@ -11,13 +11,13 @@ import logging
 import sys
 from typing import Dict, List
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import settings
-from app.db.models import Item, ContentUrl, UrlRedirect
-from app.services.url_service import URLService
+from app.db.models import ContentUrl, Item, UrlRedirect
 from app.services.slug_generator import SmartSlugGenerator
+from app.services.url_service import URLService
 
 # Configure logging
 logging.basicConfig(

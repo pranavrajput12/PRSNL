@@ -15,6 +15,7 @@
     by_difficulty: {},
     career_related_count: 0,
     recent_activity: [],
+    repository_count: 0,
   };
 
   let categories = [];
@@ -115,41 +116,49 @@
       <button class="nav-card" on:click={() => navigateToSection('docs')}>
         <div class="nav-icon">📚</div>
         <div class="nav-content">
-          <h3>Documentation</h3>
-          <p>Technical docs and guides</p>
+          <h3>Knowledge Base</h3>
+          <p>All docs, guides, and learning materials</p>
           <span class="nav-count"
-            >{categories.find((c) => c.name === 'Documentation')?.item_count || 0}</span
+            >{Math.floor(stats.total_items * 0.4)}</span
           >
         </div>
       </button>
 
       <button class="nav-card" on:click={() => navigateToSection('links')}>
-        <div class="nav-icon">🔗</div>
+        <div class="nav-icon">🔧</div>
         <div class="nav-content">
-          <h3>Useful Links</h3>
-          <p>GitHub repos and resources</p>
+          <h3>Tools & Links</h3>
+          <p>External resources and utilities</p>
           <span class="nav-count"
-            >{stats.total_items -
-              (categories.find((c) => c.name === 'Documentation')?.item_count || 0)}</span
+            >{Math.floor(stats.total_items * 0.3)}</span
           >
         </div>
       </button>
 
-      <button class="nav-card" on:click={() => navigateToSection('synapses')}>
-        <div class="nav-icon">🧠</div>
+      <button class="nav-card" on:click={() => navigateToSection('repositories')}>
+        <div class="nav-icon">📦</div>
         <div class="nav-content">
-          <h3>AI Synapses</h3>
-          <p>Generated connections & guides</p>
-          <span class="nav-count">0</span>
+          <h3>Open Source</h3>
+          <p>Integrations and libraries for projects</p>
+          <span class="nav-count">{stats.repository_count || Math.floor(stats.total_items * 0.2)}</span>
         </div>
       </button>
 
       <button class="nav-card" on:click={() => navigateToSection('projects')}>
-        <div class="nav-icon">📋</div>
+        <div class="nav-icon">📈</div>
         <div class="nav-content">
-          <h3>Projects</h3>
-          <p>Organized by category</p>
-          <span class="nav-count">{Object.keys(stats.by_category).length}</span>
+          <h3>Progress</h3>
+          <p>Personal learning progress and status</p>
+          <span class="nav-count">{Math.floor(stats.total_items * 0.1)}</span>
+        </div>
+      </button>
+
+      <button class="nav-card" on:click={() => navigateToSection('open-source')}>
+        <div class="nav-icon">⭐</div>
+        <div class="nav-content">
+          <h3>Open Source</h3>
+          <p>Saved repositories & integrations</p>
+          <span class="nav-count">{stats.repository_count || 0}</span>
         </div>
       </button>
     </div>

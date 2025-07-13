@@ -5,14 +5,15 @@ Tests all combinations of content types, AI settings, and input methods
 """
 
 import asyncio
-import asyncpg
-import httpx
 import json
+import os
+import tempfile
 import time
 from datetime import datetime
-from typing import List, Dict, Any
-import tempfile
-import os
+from typing import Any, Dict, List
+
+import asyncpg
+import httpx
 
 # Test configuration
 API_BASE_URL = "http://localhost:8000/api"

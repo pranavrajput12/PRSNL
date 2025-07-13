@@ -5,11 +5,12 @@ This avoids rate limits and is much faster
 """
 
 import asyncio
+import json
+import re
+from datetime import timedelta
+
 import asyncpg
 from youtube_transcript_api import YouTubeTranscriptApi
-import re
-import json
-from datetime import timedelta
 
 # Database connection
 DB_URL = "postgresql://postgres:postgres@db:5432/prsnl"

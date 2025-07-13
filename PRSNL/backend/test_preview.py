@@ -3,14 +3,15 @@
 Test script to debug GitHub preview generation
 """
 import asyncio
+import json
 import os
 import sys
-import json
 
 # Add the backend app to the path
 sys.path.append('/Users/pronav/Personal Knowledge Base/PRSNL/backend')
 
 from app.services.preview_service import preview_service
+
 
 async def test_preview():
     """Test GitHub preview generation"""

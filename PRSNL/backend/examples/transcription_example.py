@@ -8,15 +8,15 @@ Azure OpenAI Whisper (cloud) for optimal performance.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.hybrid_transcription import (
-    hybrid_transcription_service, 
-    TranscriptionStrategy
+    hybrid_transcription_service,
+    TranscriptionStrategy,
 )
 
 

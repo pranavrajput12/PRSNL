@@ -3,9 +3,10 @@
 Integration test script for content fingerprint and embedding vector ID
 """
 import asyncio
-import httpx
 import json
 from datetime import datetime
+
+import httpx
 
 
 async def test_content_fingerprint():

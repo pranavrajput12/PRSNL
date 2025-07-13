@@ -1,12 +1,14 @@
+import json
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
+
+import asyncpg
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.db.database import get_db_pool
-import asyncpg
-from datetime import datetime, timedelta
-from uuid import uuid4
-import json
-from unittest.mock import patch, AsyncMock
+from app.main import app
 
 client = TestClient(app)
 

@@ -3,9 +3,11 @@
 Apply database index optimizations for PRSNL
 """
 import asyncio
-import asyncpg
 import os
 from pathlib import Path
+
+import asyncpg
+
 
 async def apply_indexes():
     """Apply performance indexes to the database"""

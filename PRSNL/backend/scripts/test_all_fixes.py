@@ -4,11 +4,12 @@ Test script to verify all the fixes we've implemented
 """
 
 import asyncio
-import aiohttp
 import json
+
+import aiohttp
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 
 DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
 

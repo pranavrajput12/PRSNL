@@ -1,9 +1,11 @@
 import asyncio
+import json
 import random
 from datetime import datetime, timedelta
+
 from faker import Faker
+
 from app.db.database import get_db_pool
-import json
 
 fake = Faker()
 

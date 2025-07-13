@@ -7,16 +7,18 @@ Test GitHub 3-type classification system:
 """
 
 import asyncio
-import aiohttp
 import json
 import sys
 from pathlib import Path
 from uuid import uuid4
 
+import aiohttp
+
 # Add the backend directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.utils.url_classifier import URLClassifier
+
 
 async def test_github_classification():
     """Test GitHub URL classification and capture logic."""
@@ -171,9 +173,9 @@ async def test_github_classification():
         print(f"\n🔍 Verifying Database Storage")
         print("-" * 40)
         
+        from sqlalchemy import text
         from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
         from sqlalchemy.orm import sessionmaker
-        from sqlalchemy import text
         
         DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
         engine = create_async_engine(DATABASE_URL)

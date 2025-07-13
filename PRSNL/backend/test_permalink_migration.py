@@ -7,18 +7,19 @@ and identifies any issues that need to be fixed.
 """
 
 import asyncio
-import asyncpg
-import sys
 import os
+import sys
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+import asyncpg
 
 # Add the app directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 from app.config import settings
-from app.services.url_service import URLService
 from app.services.slug_generator import SmartSlugGenerator
+from app.services.url_service import URLService
 
 
 class PermalinkMigrationVerifier:

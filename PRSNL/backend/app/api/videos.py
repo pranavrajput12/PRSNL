@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import os
+from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
 
@@ -137,7 +139,7 @@ async def get_video_stream_url(video_id: UUID, db_connection: asyncpg.Connection
     
     # Check if video is downloaded (use local file)
     if video_metadata.get('downloaded', False):
-        logger.info(f"🔵 Video is downloaded, using local file")
+        logger.info("🔵 Video is downloaded, using local file")
         return {
             "type": "local",
             "url": f"/api/videos/{video_id}/stream",

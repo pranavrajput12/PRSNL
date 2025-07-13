@@ -1,11 +1,13 @@
 import asyncio
+import json
 import random
 from datetime import datetime, timedelta
+
 from faker import Faker
+
 from app.db.database import get_db_pool
 from app.services.embedding_service import EmbeddingService
 from app.services.unified_ai_service import UnifiedAIService
-import json
 
 fake = Faker()
 embedding_service = EmbeddingService()

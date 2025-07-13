@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 import time
 from typing import Dict, List, Optional
 from uuid import uuid4
@@ -24,6 +25,7 @@ from app.monitoring.metrics import (
 from app.services.embedding_service import embedding_service
 from app.services.llm_processor import LLMProcessor
 from app.services.preview_service import preview_service
+from app.services.repository_analyzer import repository_analyzer
 from app.services.video_processor import VideoProcessor
 from app.services.websocket_manager import websocket_manager
 from app.utils.media_detector import MediaDetector
@@ -33,6 +35,20 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Force debug level for capture logging
 
 router = APIRouter()
+
+
+def _is_repository_url(url: str) -> bool:
+    """Check if URL is a repository URL (GitHub, GitLab, Bitbucket)"""
+    repo_patterns = [
+        r'github\.com/[^/]+/[^/]+/?$',
+        r'gitlab\.com/[^/]+/[^/]+/?$',
+        r'bitbucket\.org/[^/]+/[^/]+/?$'
+    ]
+    
+    for pattern in repo_patterns:
+        if re.search(pattern, url.lower()):
+            return True
+    return False
 
 @router.get("/capture/debug") 
 async def debug_capture():
@@ -225,25 +241,34 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 url_classification = URLClassifier.classify_url(str(capture_request.url))
                 
                 if url_classification['is_development']:
-                    # Auto-classify as development content
-                    item_type = 'development'
-                    
-                    # Auto-fill development fields if not provided by user
-                    if not capture_request.programming_language and url_classification['programming_language']:
-                        capture_request.programming_language = url_classification['programming_language']
-                    
-                    if not capture_request.project_category and url_classification['project_category']:
-                        capture_request.project_category = url_classification['project_category']
-                    
-                    if not capture_request.difficulty_level and url_classification['difficulty_level']:
-                        capture_request.difficulty_level = url_classification['difficulty_level']
-                    
-                    # Set career-related flag if detected
-                    if url_classification['is_career_related']:
-                        capture_request.is_career_related = True
-                    
-                    logger.info(f"🔍 Auto-detected development content: {url_classification['platform']} → type: {item_type}")
-                    logger.info(f"🔍 Auto-filled: lang={capture_request.programming_language}, category={capture_request.project_category}, difficulty={capture_request.difficulty_level}")
+                    # Check if this is a repository URL
+                    if _is_repository_url(str(capture_request.url)):
+                        item_type = 'repository'
+                        logger.info(f"🔍 Auto-detected repository URL → type: {item_type}")
+                    else:
+                        # Auto-classify as development content
+                        item_type = 'development'
+                        
+                        # Auto-fill development fields if not provided by user
+                        if not capture_request.programming_language and url_classification['programming_language']:
+                            capture_request.programming_language = url_classification['programming_language']
+                        
+                        if not capture_request.project_category and url_classification['project_category']:
+                            capture_request.project_category = url_classification['project_category']
+                        
+                        if not capture_request.difficulty_level and url_classification['difficulty_level']:
+                            capture_request.difficulty_level = url_classification['difficulty_level']
+                        
+                        # Set career-related flag if detected
+                        if url_classification['is_career_related']:
+                            capture_request.is_career_related = True
+                        
+                        logger.info(f"🔍 Auto-detected development content: {url_classification['platform']} → type: {item_type}")
+                        logger.info(f"🔍 Auto-filled: lang={capture_request.programming_language}, category={capture_request.project_category}, difficulty={capture_request.difficulty_level}")
+                elif _is_repository_url(str(capture_request.url)):
+                    # Direct repository URL detection
+                    item_type = 'repository'
+                    logger.info(f"🔍 Auto-detected repository URL → type: {item_type}")
                 else:
                     # Fall back to media detection
                     media_info = MediaDetector.detect_media_type(str(capture_request.url))
@@ -263,7 +288,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 capture_request.content_type not in ['video', 'document', 'image', 'development'] and
                 item_type not in ['development', 'video']):
                 item_type = 'link'
-                logger.info(f"🔗 No summarization requested for URL → type: link")
+                logger.info("🔗 No summarization requested for URL → type: link")
             
             # Handle video processing if item is determined to be video
             if item_type == 'video' and capture_request.url:
@@ -335,9 +360,49 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             # For content-only captures, store content in raw_content field
             # Handle both content and highlight fields (highlight is legacy field name)
             initial_content = capture_request.content if capture_request.content else capture_request.highlight if hasattr(capture_request, 'highlight') else None
+            
+            # Repository-specific processing
+            repository_metadata = None
+            if item_type == 'repository' and capture_request.url:
+                try:
+                    logger.info(f"🔍 Analyzing repository: {capture_request.url}")
+                    repo_analysis = await repository_analyzer.analyze_repository(str(capture_request.url))
+                    repository_metadata = repo_analysis.dict()
+                    
+                    # Auto-fill title if not provided
+                    if not capture_request.title:
+                        capture_request.title = f"{repo_analysis.owner}/{repo_analysis.repo_name}"
+                    
+                    # Auto-fill content if not provided
+                    if not initial_content and repo_analysis.description:
+                        initial_content = repo_analysis.description
+                    
+                    # Auto-fill development fields from AI analysis
+                    if repo_analysis.ai_analysis:
+                        if not capture_request.programming_language and repo_analysis.language:
+                            capture_request.programming_language = repo_analysis.language.lower()
+                        
+                        if not capture_request.project_category and repo_analysis.category:
+                            capture_request.project_category = repo_analysis.category
+                        
+                        if not capture_request.difficulty_level and repo_analysis.difficulty:
+                            capture_request.difficulty_level = repo_analysis.difficulty
+                    
+                    logger.info(f"🔍 Repository analysis completed: {repo_analysis.repo_name}")
+                    logger.info(f"🔍 Tech stack: {repo_analysis.tech_stack}")
+                    logger.info(f"🔍 Category: {repo_analysis.category}")
+                    
+                except Exception as e:
+                    logger.error(f"🔍 Repository analysis failed: {e}")
+                    # Continue with basic repository metadata
+                    repository_metadata = {
+                        "repo_url": str(capture_request.url),
+                        "analysis_error": str(e),
+                        "needs_manual_categorization": True
+                    }
         
             # Add detailed debugging for the INSERT statement
-            logger.info(f"🔍 ABOUT TO EXECUTE INSERT:")
+            logger.info("🔍 ABOUT TO EXECUTE INSERT:")
             logger.info(f"🔍 - item_id: {item_id}")
             logger.info(f"🔍 - url: {capture_request.url}")
             logger.info(f"🔍 - title: {capture_request.title}")
@@ -370,9 +435,10 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             sql_query = """
                 INSERT INTO public.items (
                     id, url, title, raw_content, status, type, content_type, enable_summarization, metadata,
-                    programming_language, project_category, difficulty_level, is_career_related, platform
+                    programming_language, project_category, difficulty_level, is_career_related, platform,
+                    repository_metadata
                 )
-                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13)
+                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb)
             """
             params = (
                 item_id, 
@@ -387,7 +453,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 capture_request.project_category,
                 capture_request.difficulty_level,
                 capture_request.is_career_related,
-                platform
+                platform,
+                json.dumps(repository_metadata) if repository_metadata else None
             )
             
             logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")

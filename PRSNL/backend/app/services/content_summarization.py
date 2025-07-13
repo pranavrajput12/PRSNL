@@ -15,8 +15,12 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import settings
-from app.db.database import get_db_pool
+from app.db.database import get_db, get_db_pool
+from app.db.models import Item
 from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)
@@ -292,7 +296,8 @@ class ContentSummarizationService:
         start_date: datetime,
         end_date: datetime,
         categories: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None
+        tags: Optional[List[str]] = None,
+        db: AsyncSession = None
     ) -> Dict[str, Any]:
         """
         Generate a custom summary for specific criteria
@@ -401,7 +406,8 @@ class ContentSummarizationService:
     async def batch_summarize(
         self,
         item_ids: List[str],
-        summary_type: str = "brief"
+        summary_type: str = "brief",
+        db: AsyncSession = None
     ) -> List[Dict[str, Any]]:
         """
         Summarize multiple items in batch

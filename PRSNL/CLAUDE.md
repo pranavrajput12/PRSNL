@@ -200,11 +200,48 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 - **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/autoagent/agent-status`
 
+## HTTPie Integration for API Testing
+**HTTPie is now installed for improved API debugging and testing.**
+
+### Basic HTTPie Usage
+```bash
+# Health checks (simpler than curl)
+http GET localhost:8000/health
+http GET localhost:8000/api/autoagent/agent-status
+http GET localhost:8000/api/ai/health
+
+# RAG queries
+http POST localhost:8000/api/rag/query query="What is FastAPI?"
+
+# AutoAgent testing
+http POST localhost:8000/api/autoagent/process-content \
+  content="Test content" title="Test"
+
+# LibreChat testing
+http POST localhost:8000/api/ai/chat/completions \
+  model="prsnl-gpt-4" \
+  messages:='[{"role": "user", "content": "Test"}]'
+```
+
+### HTTPie vs curl Comparison
+```bash
+# curl (old way)
+curl -X POST http://localhost:8000/api/rag/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test"}'
+
+# HTTPie (new way)
+http POST localhost:8000/api/rag/query query="test"
+```
+
+**HTTPie Documentation**: `/docs/HTTPIE_USAGE.md` - Complete usage guide with examples
+
 ## Development Tools (Expert Engineer Improvements)
 - Health checks: `make test-health` - Run comprehensive smoke tests
 - Port management: `make kill-ports`, `make check-ports`
 - Clean environment: `make clean-dev`
 - Route debugging: `curl http://localhost:8000/api/debug/routes`
+- **NEW**: HTTPie API testing: `http GET localhost:8000/health`
 
 ## 🏗️ CRITICAL: System Architecture Repository
 **BEFORE BUILDING ANY NEW FEATURE, CONSULT:**
@@ -228,6 +265,14 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 - **Usage**: Reference before any database changes, migrations, or new features
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **NEW: Code Quality Tools (2025-07-13)** - isort + flake8 + Prettier with comprehensive CI/CD integration
+- **NEW: HTTPie Integration (2025-07-13)** - Advanced API debugging and testing capabilities
+- **IN DEVELOPMENT: Open Source Integrations (2025-07-13)** - Game-changing feature for Code Cortex
+  - **Purpose**: Automatic discovery and intelligence for open source integrations
+  - **Features**: AI-powered analysis, categorization by tech stack, integration recommendations
+  - **API Endpoints**: `/api/integrations/*` - Discovery, analysis, recommendations
+  - **Database**: `open_source_integrations` table with comprehensive metadata
+  - **Detection**: Hybrid approach (automatic + user enhancement)
 - **NEW: GitHub Actions CI/CD Pipeline (2025-07-11)** - Comprehensive automated testing, security scanning, and deployment workflows
 - **NEW: Svelte 5 Full Migration v2.3 (2025-07-11)** - Complete upgrade to Svelte 5.35.6, SvelteKit 2.22.5, Vite 7.0.4, Node.js >=24, resolved all security vulnerabilities, AI service fixes
 - **NEW: Advanced Integrations v2.2 (2025-07-11)** - Vosk offline transcription, OpenTelemetry monitoring, pre-commit hooks  
@@ -252,7 +297,15 @@ os.environ["FN_CALL"] = "True"  # Enable function calling
 - **CI/CD**: Version consistency enforced across all environments
 
 ### Future Development Tracking
+- **CURRENT DEVELOPMENT**: Open Source Integrations feature (Game-changing)
+  - **Phase 1**: Database schema + core services (Days 1-5)
+  - **Phase 2**: AI-powered analysis + frontend integration (Days 6-10)
+  - **Phase 3**: Advanced features + analytics dashboard (Days 11-15)
 - **Next Priority**: User authentication system (signup/login pages)
+- **Code Quality**: 22,038 flake8 issues identified (mostly whitespace)
+  - **Critical**: 19 undefined names (F821) - potential bugs
+  - **Medium**: 64 unnecessary f-strings (F541)
+  - **Low**: 42 complex functions (C901) needing refactoring
 - **Security Fixes**: Scheduled after authentication completion
 - **CI/CD Pipeline**: Automatically scans for security issues on every commit
 - **Monitoring**: Weekly scheduled security scans and dependency vulnerability alerts

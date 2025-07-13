@@ -11,6 +11,7 @@ export interface DevelopmentStats {
   by_category: Record<string, number>;
   by_difficulty: Record<string, number>;
   career_related_count: number;
+  repository_count: number;
   recent_activity: Array<{
     id: string;
     title: string;
@@ -66,6 +67,7 @@ export interface DevelopmentDocsFilters {
   career_related?: boolean;
   learning_path?: string;
   search?: string;
+  content_type?: 'knowledge' | 'tools' | 'repositories' | 'progress';
 }
 
 // API Functions

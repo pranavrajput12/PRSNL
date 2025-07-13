@@ -163,15 +163,29 @@ async def enhance_query_with_knowledge_base(
     try:
         # Search knowledge base for relevant content
         async for conn in get_db_connection():
-            # Perform semantic search for relevant items
+            # Perform semantic search for relevant items including repositories
             search_query = """
-                SELECT id, title, summary, content, url, type
+                SELECT 
+                    id, title, summary, content, url, type,
+                    repository_metadata,
+                    CASE 
+                        WHEN repository_metadata IS NOT NULL THEN 'repository'
+                        ELSE type 
+                    END as item_type
                 FROM items 
                 WHERE search_vector @@ plainto_tsquery($1)
                    OR summary ILIKE $2
                    OR content ILIKE $2
-                ORDER BY ts_rank(search_vector, plainto_tsquery($1)) DESC
-                LIMIT 5
+                   OR (repository_metadata IS NOT NULL AND (
+                       repository_metadata->>'repo_name' ILIKE $2
+                       OR repository_metadata->>'description' ILIKE $2
+                       OR repository_metadata->'tech_stack' ? $1
+                       OR repository_metadata->>'use_case' ILIKE $2
+                   ))
+                ORDER BY 
+                    CASE WHEN repository_metadata IS NOT NULL THEN 1 ELSE 2 END,
+                    ts_rank(search_vector, plainto_tsquery($1)) DESC
+                LIMIT 8
             """
             
             search_pattern = f"%{query}%"
@@ -183,19 +197,53 @@ async def enhance_query_with_knowledge_base(
             if relevant_items:
                 context_parts.append("# Relevant Knowledge Base Context")
                 
-                for item in relevant_items:
-                    context_parts.append(f"\n## {item['title']}")
-                    if item['summary']:
-                        context_parts.append(f"Summary: {item['summary']}")
-                    if item['content']:
-                        # Limit content to avoid token limits
-                        content = item['content'][:500]
-                        if len(item['content']) > 500:
-                            content += "..."
-                        context_parts.append(f"Content: {content}")
-                    if item['url']:
-                        context_parts.append(f"Source: {item['url']}")
-                    context_parts.append("")  # Empty line separator
+                # Separate repositories from other content
+                repositories = [item for item in relevant_items if item['repository_metadata']]
+                other_content = [item for item in relevant_items if not item['repository_metadata']]
+                
+                # Add repositories first (prioritized)
+                if repositories:
+                    context_parts.append("\n## 📦 Relevant Repositories")
+                    for repo in repositories:
+                        repo_meta = repo['repository_metadata']
+                        context_parts.append(f"\n### {repo_meta.get('owner', 'unknown')}/{repo_meta.get('repo_name', 'unknown')}")
+                        
+                        if repo_meta.get('description'):
+                            context_parts.append(f"Description: {repo_meta['description']}")
+                        
+                        if repo_meta.get('tech_stack'):
+                            context_parts.append(f"Tech Stack: {', '.join(repo_meta['tech_stack'])}")
+                        
+                        if repo_meta.get('use_case'):
+                            context_parts.append(f"Use Case: {repo_meta['use_case']}")
+                        
+                        if repo_meta.get('category'):
+                            context_parts.append(f"Category: {repo_meta['category']}")
+                        
+                        if repo_meta.get('difficulty'):
+                            context_parts.append(f"Difficulty: {repo_meta['difficulty']}")
+                        
+                        if repo['url']:
+                            context_parts.append(f"Repository URL: {repo['url']}")
+                        
+                        context_parts.append("")  # Empty line separator
+                
+                # Add other content
+                if other_content:
+                    context_parts.append("\n## 📄 Related Documentation & Content")
+                    for item in other_content:
+                        context_parts.append(f"\n### {item['title']}")
+                        if item['summary']:
+                            context_parts.append(f"Summary: {item['summary']}")
+                        if item['content']:
+                            # Limit content to avoid token limits
+                            content = item['content'][:500]
+                            if len(item['content']) > 500:
+                                content += "..."
+                            context_parts.append(f"Content: {content}")
+                        if item['url']:
+                            context_parts.append(f"Source: {item['url']}")
+                        context_parts.append("")  # Empty line separator
             
             knowledge_context = "\n".join(context_parts)
             
@@ -215,7 +263,7 @@ Based on the above context from the user's knowledge base, please answer their q
             # Use LibreChat-specific model for this integration
             model_to_use = settings.AZURE_OPENAI_LIBRECHAT_DEPLOYMENT
             response = await ai_service.complete(
-                prompt=user_message,
+                prompt=query,
                 system_prompt=system_prompt,
                 max_tokens=1000,
                 temperature=0.7,

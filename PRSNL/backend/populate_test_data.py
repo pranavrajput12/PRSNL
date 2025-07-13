@@ -1,8 +1,9 @@
-import requests
 import json
 import time
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+import requests
 
 BASE_URL = "http://localhost:8000/api"
 

@@ -21,6 +21,44 @@
 	let error: string | null = null;
 	let monacoEditor: MonacoEditor;
 
+	function detectLanguageFromFilename(filename: string): string {
+		const ext = filename.split('.').pop()?.toLowerCase() || '';
+		const languageMap: Record<string, string> = {
+			'js': 'javascript',
+			'ts': 'typescript',
+			'py': 'python',
+			'java': 'java',
+			'cpp': 'cpp',
+			'c': 'cpp',
+			'h': 'cpp',
+			'cs': 'csharp',
+			'php': 'php',
+			'rb': 'ruby',
+			'go': 'go',
+			'rs': 'rust',
+			'swift': 'swift',
+			'kt': 'kotlin',
+			'scala': 'scala',
+			'sh': 'shell',
+			'bash': 'shell',
+			'sql': 'sql',
+			'html': 'html',
+			'css': 'css',
+			'scss': 'scss',
+			'sass': 'scss',
+			'less': 'less',
+			'json': 'json',
+			'xml': 'xml',
+			'yaml': 'yaml',
+			'yml': 'yaml',
+			'toml': 'toml',
+			'md': 'markdown',
+			'dockerfile': 'dockerfile',
+			'txt': 'plaintext'
+		};
+		return languageMap[ext] || 'plaintext';
+	}
+
 	// Common repository files to fetch
 	const commonFiles = [
 		'README.md',
@@ -68,7 +106,7 @@
 						if (data.type === 'file' && data.content) {
 							// Decode base64 content
 							const content = atob(data.content);
-							const language = monacoEditor?.detectLanguage(fileName) || 'plaintext';
+							const language = detectLanguageFromFilename(fileName);
 							
 							fetchedFiles.push({
 								name: fileName,

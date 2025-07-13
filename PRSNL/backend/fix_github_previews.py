@@ -3,14 +3,16 @@
 Fix GitHub items by regenerating rich previews
 """
 import asyncio
-import asyncpg
 import json
 import sys
+
+import asyncpg
 
 # Add the backend app to the path
 sys.path.append('/Users/pronav/Personal Knowledge Base/PRSNL/backend')
 
 from app.services.preview_service import preview_service
+
 
 async def fix_github_previews():
     """Update existing GitHub items with rich previews"""

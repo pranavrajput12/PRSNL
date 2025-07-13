@@ -40,22 +40,24 @@ Author: Claude Code
 Date: July 2025
 """
 
-import asyncio
-import asyncpg
-import json
-import re
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from urllib.parse import urlparse
 import argparse
-import sys
+import asyncio
+import json
 import os
+import re
+import sys
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
+
+import asyncpg
 
 # Add the backend directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from app.config import settings
-from app.db.database import create_db_pool, close_db_pool
+from app.db.database import close_db_pool, create_db_pool
+
 
 class DataIntegrityChecker:
     """Main class for performing database integrity checks"""

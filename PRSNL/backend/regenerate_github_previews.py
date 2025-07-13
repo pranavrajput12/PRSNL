@@ -7,16 +7,18 @@ README content that was previously missing due to the placeholder token issue.
 """
 
 import asyncio
-import asyncpg
 import json
-import sys
 import os
-from typing import List, Dict, Any
+import sys
+from typing import Any, Dict, List
+
+import asyncpg
 
 # Add the app directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
 from services.preview_service import preview_service
+
 
 async def regenerate_github_previews():
     """Regenerate GitHub previews for all existing GitHub entries."""

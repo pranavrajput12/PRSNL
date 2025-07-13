@@ -1,11 +1,13 @@
-import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-from app.db.database import get_db_pool
-import asyncpg
+import json
 from datetime import datetime, timedelta
 from uuid import uuid4
-import json
+
+import asyncpg
+import pytest
+from fastapi.testclient import TestClient
+
+from app.db.database import get_db_pool
+from app.main import app
 
 client = TestClient(app)
 

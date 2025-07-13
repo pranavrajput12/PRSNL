@@ -11,15 +11,16 @@ Tests the 6 critical issues that were fixed:
 """
 
 import asyncio
-import aiohttp
 import json
-import time
 import sys
+import time
 from pathlib import Path
+from uuid import uuid4
+
+import aiohttp
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
-from uuid import uuid4
 
 # Add the backend directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))

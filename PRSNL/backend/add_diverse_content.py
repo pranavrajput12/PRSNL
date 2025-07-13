@@ -1,8 +1,9 @@
-import psycopg2
 import json
-from datetime import datetime, timedelta
-import uuid
 import random
+import uuid
+from datetime import datetime, timedelta
+
+import psycopg2
 
 # Database connection
 conn = psycopg2.connect(

@@ -5,9 +5,10 @@ Tests that both old ID-based and new slug-based APIs work
 """
 
 import asyncio
-import aiohttp
 import json
-from typing import Dict, Any
+from typing import Any, Dict
+
+import aiohttp
 
 API_BASE = "http://localhost:8000"
 

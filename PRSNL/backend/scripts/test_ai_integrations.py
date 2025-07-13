@@ -10,13 +10,14 @@ Tests:
 """
 
 import asyncio
-import sys
-import os
 import json
+import os
+import sys
 import time
-import httpx
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import httpx
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

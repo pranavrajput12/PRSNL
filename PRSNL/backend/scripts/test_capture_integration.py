@@ -4,20 +4,21 @@ Test script to verify capture integration logic works correctly
 """
 
 import asyncio
-import aiohttp
 import json
-import time
 import sys
+import time
 from pathlib import Path
+
+import aiohttp
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 
 # Add the backend directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.services.slug_generator import SmartSlugGenerator
 from app.db.models import Item
+from app.services.slug_generator import SmartSlugGenerator
 
 DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
 

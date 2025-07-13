@@ -47,6 +47,7 @@ class DevelopmentStats(BaseModel):
     by_category: Dict[str, int]
     by_difficulty: Dict[str, int]
     career_related_count: int
+    repository_count: int
     recent_activity: List[Dict[str, Any]]
 
 class CodeSnippet(BaseModel):
@@ -145,6 +146,7 @@ async def get_development_docs(
     career_related: Optional[bool] = Query(None),
     learning_path: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    content_type: Optional[str] = Query(None),  # 'knowledge', 'tools', 'repositories', 'progress'
 ):
     """Get development documents with advanced filtering"""
     try:
@@ -182,6 +184,21 @@ async def get_development_docs(
             conditions.append(f"to_tsvector('english', i.title || ' ' || COALESCE(i.summary, '')) @@ plainto_tsquery('english', ${param_count})")
             params.append(search)
             param_count += 1
+            
+        # Content type filtering for new page organization
+        if content_type:
+            if content_type == 'knowledge':
+                # Knowledge Base: Non-URL content or content with summaries (docs, guides, learning materials)
+                conditions.append("(i.url IS NULL OR NOT i.url LIKE 'http%' OR i.summary IS NOT NULL)")
+            elif content_type == 'tools':
+                # Tools & Links: External URLs (tools, utilities, services)
+                conditions.append("(i.url IS NOT NULL AND i.url LIKE 'http%')")
+            elif content_type == 'repositories':
+                # Repositories: GitHub/GitLab/Bitbucket URLs or content with project categories
+                conditions.append("((i.url IS NOT NULL AND (i.url LIKE '%github.com%' OR i.url LIKE '%gitlab.com%' OR i.url LIKE '%bitbucket.%')) OR i.project_category IS NOT NULL)")
+            elif content_type == 'progress':
+                # Progress: Items with learning paths or progress tracking
+                conditions.append("(i.learning_path IS NOT NULL OR i.difficulty_level IS NOT NULL)")
         
         # Add limit and offset
         params.extend([limit, offset])
@@ -274,6 +291,11 @@ async def get_development_stats():
             career_result = await conn.fetchrow(career_query)
             career_related_count = career_result["count"]
             
+            # Repository count
+            repo_query = "SELECT COUNT(*) as count FROM items WHERE repository_metadata IS NOT NULL"
+            repo_result = await conn.fetchrow(repo_query)
+            repository_count = repo_result["count"]
+            
             # Recent activity (last 10 items)
             recent_query = """
                 SELECT i.id, i.title, i.programming_language, i.project_category, i.created_at,
@@ -307,10 +329,40 @@ async def get_development_stats():
                 by_category=by_category,
                 by_difficulty=by_difficulty,
                 career_related_count=career_related_count,
+                repository_count=repository_count,
                 recent_activity=recent_activity
             )
     except Exception as e:
         raise InternalServerError(f"Failed to fetch development stats: {str(e)}")
+
+@router.get("/development/repositories")
+async def get_repositories(limit: int = Query(50, ge=1, le=100)):
+    """Get all saved repositories"""
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            query = """
+                SELECT id, title, url, repository_metadata, created_at
+                FROM items 
+                WHERE repository_metadata IS NOT NULL 
+                ORDER BY created_at DESC
+                LIMIT $1
+            """
+            rows = await conn.fetch(query, limit)
+            
+            items = []
+            for row in rows:
+                items.append({
+                    "id": str(row["id"]),
+                    "title": row["title"],
+                    "url": row["url"],
+                    "repository_metadata": row["repository_metadata"],
+                    "created_at": row["created_at"].isoformat()
+                })
+            
+            return {"items": items}
+    except Exception as e:
+        raise InternalServerError(f"Failed to fetch repositories: {str(e)}")
 
 @router.post("/development/snippet")
 async def save_code_snippet(

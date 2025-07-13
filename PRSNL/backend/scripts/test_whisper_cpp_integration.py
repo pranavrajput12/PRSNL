@@ -10,16 +10,19 @@ Tests:
 """
 
 import asyncio
-import sys
-import os
-import time
 import logging
+import os
+import sys
+import time
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.hybrid_transcription import HybridTranscriptionService, TranscriptionStrategy
+from app.services.hybrid_transcription import (
+    HybridTranscriptionService,
+    TranscriptionStrategy,
+)
 from app.services.whisper_cpp_transcription import whisper_cpp_service
 
 # Configure logging

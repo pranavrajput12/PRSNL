@@ -124,14 +124,14 @@ async def get_ai_suggestions(request: SuggestionRequest):
         logger.error(f"Scraping failed for {request.url}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to scrape the URL. It might be inaccessible or block scraping."
+            detail="Failed to scrape the URL. It might be inaccessible or block scraping."
         )
 
     if not scraped_data or not scraped_data.content:
         logger.error(f"No content scraped from {request.url}. Content extraction failed.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to extract meaningful content from the URL. The page might be empty, dynamic, or block content extraction."
+            detail="Failed to extract meaningful content from the URL. The page might be empty, dynamic, or block content extraction."
         )
 
     # 2. Prepare AI task

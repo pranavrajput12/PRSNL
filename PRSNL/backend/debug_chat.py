@@ -4,9 +4,10 @@ Debug script for chat functionality
 """
 import asyncio
 import logging
-from app.services.unified_ai_service import UnifiedAIService
+
 from app.config import settings
-from app.db.database import get_db_pool, create_db_pool
+from app.db.database import create_db_pool, get_db_pool
+from app.services.unified_ai_service import UnifiedAIService
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
