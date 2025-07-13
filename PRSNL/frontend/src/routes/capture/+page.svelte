@@ -14,6 +14,7 @@
   import PremiumInteractions from '$lib/components/PremiumInteractions.svelte';
   import FileUpload from '$lib/components/FileUpload.svelte';
   import DynamicCaptureInput from '$lib/components/DynamicCaptureInput.svelte';
+  import RepositoryCodePreview from '$lib/components/RepositoryCodePreview.svelte';
   import { contentTypes, getTypeIcon } from '$lib/stores/contentTypes';
 
   // Form fields and state
@@ -47,6 +48,10 @@
   let estimatedDownloadTimeSeconds = 0;
   let videoQuality: 'standard' | 'high' = 'high';
   let thumbnailPreviewUrl: string | null = null;
+
+  // Repository-specific variables
+  let isRepositoryDetected = false;
+  let repositoryPlatform: string | null = null;
 
   // Focus on URL input on mount
   let urlInput: HTMLInputElement;
@@ -146,8 +151,10 @@
 
     // Auto-detect GitHub URLs and set to development
     if (urlToCheck.includes('github.com')) {
+      isRepositoryDetected = true;
+      repositoryPlatform = 'GitHub';
       contentType = 'development';
-      addTerminalLine(`> GITHUB DETECTED: AUTO_SET_TO_DEVELOPMENT`);
+      addTerminalLine(`> REPOSITORY DETECTED: ${repositoryPlatform.toUpperCase()}`);
       addTerminalLine(`> CONTENT_TYPE: DEVELOPMENT_SELECTED`);
 
       // Extract repository name from URL
@@ -159,6 +166,16 @@
           addTerminalLine(`> REPOSITORY: ${owner}/${repoName}`);
         }
       }
+    } else if (urlToCheck.includes('gitlab.com')) {
+      isRepositoryDetected = true;
+      repositoryPlatform = 'GitLab';
+      contentType = 'development';
+      addTerminalLine(`> REPOSITORY DETECTED: ${repositoryPlatform.toUpperCase()}`);
+    } else if (urlToCheck.includes('bitbucket.org')) {
+      isRepositoryDetected = true;
+      repositoryPlatform = 'Bitbucket';
+      contentType = 'development';
+      addTerminalLine(`> REPOSITORY DETECTED: ${repositoryPlatform.toUpperCase()}`);
     }
 
     if (urlToCheck) {
@@ -177,6 +194,11 @@
     videoPlatform = null;
     estimatedDownloadTimeSeconds = 0;
     thumbnailPreviewUrl = null;
+  }
+
+  function resetRepositoryDetection(): void {
+    isRepositoryDetected = false;
+    repositoryPlatform = null;
   }
 
   async function loadRecentTags(): Promise<void> {
@@ -545,6 +567,11 @@
                 <Icon name="video" size="small" color="#DC143C" />
                 <span>{videoPlatform} Video Detected</span>
               </div>
+            {:else if isRepositoryDetected}
+              <div class="input-status repository">
+                <Icon name="github" size="small" color="#0969da" />
+                <span>{repositoryPlatform} Repository Detected</span>
+              </div>
             {/if}
 
             {#if url && stepStatus[1] === 'processing'}
@@ -788,6 +815,16 @@
           </div>
         </div>
       </form>
+
+      <!-- Repository Code Preview -->
+      {#if isRepositoryDetected && url}
+        <div class="repository-preview-section">
+          <RepositoryCodePreview 
+            repositoryUrl={url}
+            height="500px"
+          />
+        </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -1389,5 +1426,21 @@
     .terminal-container {
       border-radius: var(--radius);
     }
+  }
+
+  /* Repository Preview Section */
+  .repository-preview-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(9, 105, 218, 0.05);
+    border: 1px solid rgba(9, 105, 218, 0.2);
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+  }
+
+  .input-status.repository {
+    background: rgba(9, 105, 218, 0.1);
+    border: 1px solid rgba(9, 105, 218, 0.3);
+    color: #0969da;
   }
 </style>
