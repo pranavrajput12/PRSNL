@@ -12,17 +12,20 @@ if (onboardingContainer) {
   console.log('Container innerHTML:', onboardingContainer.innerHTML);
   console.log('Container parent:', onboardingContainer.parentElement);
   console.log('Container siblings:', onboardingContainer.parentElement?.children);
-  
+
   // Check if it's inside the main content area
   const mainContent = document.querySelector('.main-content');
   console.log('Is inside main content:', mainContent?.contains(onboardingContainer));
-  
+
   // Check if it's in the layout
   const appLayout = document.querySelector('.app-layout');
   console.log('Is inside app layout:', appLayout?.contains(onboardingContainer));
-  
+
   // Check for any Svelte component markers
-  console.log('Component data attributes:', Array.from(onboardingContainer.attributes).filter(attr => attr.name.startsWith('data-')));
+  console.log(
+    'Component data attributes:',
+    Array.from(onboardingContainer.attributes).filter((attr) => attr.name.startsWith('data-'))
+  );
 }
 
 // Check for any onboarding overlay

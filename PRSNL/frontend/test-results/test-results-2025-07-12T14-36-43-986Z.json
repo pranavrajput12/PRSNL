@@ -37,9 +37,7 @@
       "[log] Added to FRAME (static): \"Object_5\" - 16900 vertices",
       "[log] Frame: 2 parts, Blades: 1 parts"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/favicon.png"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/favicon.png"],
     "screenshot": "test-screenshots/home.png",
     "loadTime": 3033
   },
@@ -68,9 +66,7 @@
       "[log] 🟡 API Response: JSHandle@object",
       "[log] 🟢 API Success: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "test-screenshots/insights.png",
     "loadTime": 11108
   },
@@ -92,9 +88,7 @@
       "[log] Raw timeline response before transform: JSHandle@object",
       "[log] Timeline response after transform: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "test-screenshots/videos.png",
     "loadTime": 2383
   },
@@ -145,9 +139,7 @@
       "[log] 🔵 Neural Stream: Created 2 groups",
       "[log] 🔵 Neural Stream: Total groups now: 2"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "test-screenshots/timeline.png",
     "loadTime": 2090
   },
@@ -156,10 +148,7 @@
     "path": "/settings",
     "url": "http://localhost:3004/s/settings",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/settings.png",
     "loadTime": 3076
@@ -169,10 +158,7 @@
     "path": "/import",
     "url": "http://localhost:3004/s/import",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/import.png",
     "loadTime": 1103
@@ -222,9 +208,7 @@
       "[debug] [WebSocket] Message received: JSHandle@object",
       "[debug] [WebSocket] Connection established: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "test-screenshots/chat.png",
     "loadTime": 1892
   },
@@ -238,9 +222,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/login"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/login"],
     "screenshot": "test-screenshots/ai.png",
     "loadTime": 2097
   },
@@ -257,9 +239,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "test-screenshots/code-cortex.png",
     "loadTime": 1038
   },
@@ -268,10 +248,7 @@
     "path": "/code-cortex/docs",
     "url": "http://localhost:3004/code-cortex/docs",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-docs.png",
     "loadTime": 1232,
@@ -285,10 +262,7 @@
     "path": "/code-cortex/links",
     "url": "http://localhost:3004/code-cortex/links",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-links.png",
     "loadTime": 957,
@@ -302,10 +276,7 @@
     "path": "/code-cortex/projects",
     "url": "http://localhost:3004/code-cortex/projects",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-projects.png",
     "loadTime": 1162,
@@ -319,10 +290,7 @@
     "path": "/code-cortex/synapses",
     "url": "http://localhost:3004/code-cortex/synapses",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-synapses.png",
     "loadTime": 1607,
@@ -369,9 +337,7 @@
       "[error] 🔴 API Catch Error: JSHandle@object",
       "[error] Error loading video: JSHandle@error"
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/1"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/1"],
     "screenshot": "test-screenshots/video-entry-1.png",
     "loadTime": 3691,
     "content": {

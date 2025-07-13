@@ -216,7 +216,7 @@
                       style="width: {Math.min(
                         100,
                         (stat.count / Math.max(...categoryStats.map((s) => s.count))) * 100
-                     )}%; 
+                      )}%; 
                              background-color: {stat.confidence > 0.7
                         ? 'var(--ai-success)'
                         : stat.confidence > 0.4

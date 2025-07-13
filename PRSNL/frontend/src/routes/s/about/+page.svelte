@@ -4,7 +4,10 @@
 
 <svelte:head>
   <title>About PRSNL | Your Digital Brain</title>
-  <meta name="description" content="PRSNL is a personal knowledge management system that acts as your digital brain, helping you capture, organize, and retrieve information efficiently." />
+  <meta
+    name="description"
+    content="PRSNL is a personal knowledge management system that acts as your digital brain, helping you capture, organize, and retrieve information efficiently."
+  />
 </svelte:head>
 
 <div class="about-page">
@@ -19,10 +22,10 @@
     <div class="section">
       <h2>What is PRSNL?</h2>
       <p>
-        PRSNL (Personal Research & Synapse Neural Link) is a comprehensive personal knowledge 
-        management system designed to act as your digital brain. It helps you capture, organize, 
-        and retrieve information from various sources, creating meaningful connections between 
-        your ideas and content.
+        PRSNL (Personal Research & Synapse Neural Link) is a comprehensive personal knowledge
+        management system designed to act as your digital brain. It helps you capture, organize, and
+        retrieve information from various sources, creating meaningful connections between your
+        ideas and content.
       </p>
     </div>
 
@@ -32,17 +35,25 @@
         <div class="feature-card">
           <Icon name="brain" size={32} />
           <h3>Neural Organization</h3>
-          <p>Intelligent categorization and tagging system that mimics how your brain organizes information.</p>
+          <p>
+            Intelligent categorization and tagging system that mimics how your brain organizes
+            information.
+          </p>
         </div>
         <div class="feature-card">
           <Icon name="zap" size={32} />
           <h3>Instant Capture</h3>
-          <p>Quickly save articles, videos, notes, and ideas from anywhere with our browser extension.</p>
+          <p>
+            Quickly save articles, videos, notes, and ideas from anywhere with our browser
+            extension.
+          </p>
         </div>
         <div class="feature-card">
           <Icon name="search" size={32} />
           <h3>Smart Search</h3>
-          <p>AI-powered search that understands context and finds exactly what you're looking for.</p>
+          <p>
+            AI-powered search that understands context and finds exactly what you're looking for.
+          </p>
         </div>
         <div class="feature-card">
           <Icon name="trending-up" size={32} />
@@ -62,19 +73,19 @@
           <strong>Process</strong> - PRSNL automatically extracts key information and generates summaries
         </li>
         <li>
-          <strong>Connect</strong> - AI analyzes your content to find relationships and build your knowledge graph
+          <strong>Connect</strong> - AI analyzes your content to find relationships and build your knowledge
+          graph
         </li>
         <li>
-          <strong>Retrieve</strong> - Access your information through smart search, timeline, or visual interfaces
+          <strong>Retrieve</strong> - Access your information through smart search, timeline, or visual
+          interfaces
         </li>
       </ol>
     </div>
 
     <div class="section">
       <h2>Privacy & Security</h2>
-      <p>
-        Your knowledge is your own. PRSNL is designed with privacy-first principles:
-      </p>
+      <p>Your knowledge is your own. PRSNL is designed with privacy-first principles:</p>
       <ul>
         <li>Self-hosted option available for complete data control</li>
         <li>End-to-end encryption for sensitive content</li>
@@ -85,7 +96,10 @@
 
     <div class="section cta-section">
       <h2>Start Building Your Digital Brain</h2>
-      <p>Join thousands of researchers, students, and knowledge workers who trust PRSNL to manage their digital knowledge.</p>
+      <p>
+        Join thousands of researchers, students, and knowledge workers who trust PRSNL to manage
+        their digital knowledge.
+      </p>
       <div class="cta-buttons">
         <a href="/p/capture" class="btn btn-primary">
           <Icon name="plus" />
@@ -111,7 +125,11 @@
     text-align: center;
     padding: 4rem 0;
     margin-bottom: 3rem;
-    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary-light) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light) 0%,
+      var(--color-secondary-light) 100%
+    );
     border-radius: 1rem;
   }
 

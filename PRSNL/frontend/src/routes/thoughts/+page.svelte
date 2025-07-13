@@ -16,31 +16,34 @@
   let selectedType = 'all';
   let sortBy = 'recent';
 
-  $: filteredThoughts = thoughts.filter(thought => {
-    const matchesSearch = !searchQuery || 
-      thought.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      thought.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      thought.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesType = selectedType === 'all' || thought.type === selectedType;
-    
-    return matchesSearch && matchesType;
-  }).sort((a, b) => {
-    if (sortBy === 'recent') {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    } else if (sortBy === 'title') {
-      return (a.title || '').localeCompare(b.title || '');
-    }
-    return 0;
-  });
+  $: filteredThoughts = thoughts
+    .filter((thought) => {
+      const matchesSearch =
+        !searchQuery ||
+        thought.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        thought.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        thought.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  $: thoughtTypes = [...new Set(thoughts.map(t => t.type))].filter(Boolean);
+      const matchesType = selectedType === 'all' || thought.type === selectedType;
+
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'recent') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === 'title') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      return 0;
+    });
+
+  $: thoughtTypes = [...new Set(thoughts.map((t) => t.type))].filter(Boolean);
 
   async function loadThoughts() {
     try {
       isLoading = true;
       error = null;
-      
+
       const response = await getTimeline();
       if (response.success) {
         thoughts = response.data.items || [];
@@ -148,10 +151,7 @@
       <div class="thoughts-grid">
         {#each filteredThoughts as thought (thought.id)}
           <div class="thought-card-wrapper">
-            <ItemCard 
-              item={thought} 
-              on:click={() => handleThoughtClick(thought)}
-            />
+            <ItemCard item={thought} on:click={() => handleThoughtClick(thought)} />
           </div>
         {/each}
       </div>

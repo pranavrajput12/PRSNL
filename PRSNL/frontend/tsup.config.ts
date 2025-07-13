@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/**/*.ts'],
@@ -13,5 +13,5 @@ export default defineConfig({
   external: ['svelte', '@sveltejs/kit', 'fs', 'path'],
   splitting: false,
   shims: false,
-  onSuccess: 'echo "✅ TypeScript build completed successfully!"'
-})
+  onSuccess: 'echo "✅ TypeScript build completed successfully!"',
+});

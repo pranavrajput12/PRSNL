@@ -226,7 +226,12 @@
       <h2>Recent Development Activity</h2>
       <div class="activity-feed">
         {#each stats.recent_activity as activity}
-          <a href={activity.type === 'development' ? `/items/${activity.id}` : (activity.permalink || `/item/${activity.id}`)} class="activity-item clickable">
+          <a
+            href={activity.type === 'development'
+              ? `/items/${activity.id}`
+              : activity.permalink || `/item/${activity.id}`}
+            class="activity-item clickable"
+          >
             <div class="activity-icon">
               {getLanguageIcon(activity.programming_language || 'unknown')}
             </div>

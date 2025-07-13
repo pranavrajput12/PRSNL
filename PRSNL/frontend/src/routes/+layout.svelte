@@ -730,7 +730,13 @@
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, var(--brand-accent), var(--highlight), var(--error), var(--brand-hover));
+    background: linear-gradient(
+      45deg,
+      var(--brand-accent),
+      var(--highlight),
+      var(--error),
+      var(--brand-hover)
+    );
     border-radius: 12px;
     z-index: -1;
     opacity: 0;
@@ -1082,7 +1088,13 @@
   }
 
   .prsnl-logo-text {
-    background: linear-gradient(135deg, var(--brand-accent), var(--highlight), var(--error), var(--brand-hover));
+    background: linear-gradient(
+      135deg,
+      var(--brand-accent),
+      var(--highlight),
+      var(--error),
+      var(--brand-hover)
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1734,8 +1746,20 @@
     right: 0;
     bottom: 0;
     background:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, var(--success) 40px, var(--success) 42px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, var(--success) 40px, var(--success) 42px);
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 40px,
+        var(--success) 40px,
+        var(--success) 42px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        var(--success) 40px,
+        var(--success) 42px
+      );
   }
 
   .circuit-nodes {

@@ -385,7 +385,14 @@
               </div>
             {/if}
 
-            <a href={link.type === 'development' ? `/items/${link.id}` : (link.permalink || `/item/${link.id}`)} class="link-button secondary"> View Details </a>
+            <a
+              href={link.type === 'development'
+                ? `/items/${link.id}`
+                : link.permalink || `/item/${link.id}`}
+              class="link-button secondary"
+            >
+              View Details
+            </a>
             <a href={link.url} target="_blank" rel="noopener noreferrer" class="link-button">
               <Icon name="external-link" size="small" />
               Visit

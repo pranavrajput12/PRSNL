@@ -353,7 +353,12 @@
           </div>
 
           <h3 class="doc-title">
-            <a href={doc.type === 'development' ? `/items/${doc.id}` : (doc.permalink || `/item/${doc.id}`)} class="doc-link">{doc.title}</a>
+            <a
+              href={doc.type === 'development'
+                ? `/items/${doc.id}`
+                : doc.permalink || `/item/${doc.id}`}
+              class="doc-link">{doc.title}</a
+            >
             {#if doc.url}
               <a
                 href={doc.url}
@@ -375,16 +380,22 @@
           <div class="readme-preview">
             <h4>📄 README Preview</h4>
             <div class="readme-content">
-              <MarkdownViewer 
-                content={doc.metadata.preview_data.readme.snippet} 
-                enableSyntaxHighlight={true} 
-                theme="neural" 
-                compact={true} 
+              <MarkdownViewer
+                content={doc.metadata.preview_data.readme.snippet}
+                enableSyntaxHighlight={true}
+                theme="neural"
+                compact={true}
               />
             </div>
             {#if doc.metadata.preview_data.readme.full_length > doc.metadata.preview_data.readme.snippet.length}
-              <a href={doc.type === 'development' ? `/items/${doc.id}` : (doc.permalink || `/item/${doc.id}`)} class="read-more-link">
-                Read full README ({Math.round(doc.metadata.preview_data.readme.full_length / 1000)}k chars)
+              <a
+                href={doc.type === 'development'
+                  ? `/items/${doc.id}`
+                  : doc.permalink || `/item/${doc.id}`}
+                class="read-more-link"
+              >
+                Read full README ({Math.round(doc.metadata.preview_data.readme.full_length / 1000)}k
+                chars)
               </a>
             {/if}
           </div>

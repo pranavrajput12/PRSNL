@@ -233,7 +233,7 @@
               <div class="video-overlay">
                 <button
                   class="play-command"
-                  on:click={() => window.location.href = video.permalink || `/videos/${video.id}`}
+                  on:click={() => (window.location.href = video.permalink || `/videos/${video.id}`)}
                 >
                   EXECUTE
                 </button>

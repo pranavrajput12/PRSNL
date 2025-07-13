@@ -3,35 +3,35 @@
 /* --- Core NeurOS Tokens --- */
 :root {
   /* Canvas */
-  --bg-primary: #0D1B2A;      /* Night-navy */
-  --bg-secondary: #161A1E;    /* Graphite */
-  --bg-tertiary: #1F2A38;     /* Panel */
-  
+  --bg-primary: #0d1b2a; /* Night-navy */
+  --bg-secondary: #161a1e; /* Graphite */
+  --bg-tertiary: #1f2a38; /* Panel */
+
   /* Brand & Interaction */
-  --brand-accent: #FF6B6B;    /* Pulse Coral */
-  --brand-hover:  #E65B5B;    /* Darken 10% */
-  
+  --brand-accent: #ff6b6b; /* Pulse Coral */
+  --brand-hover: #e65b5b; /* Darken 10% */
+
   /* Supporting Spectrum */
-  --highlight:  #FFD166;      /* Axon Amber */
-  --info:       #4ECDC4;      /* Synapse Teal */
-  --success:    #63D471;      /* Neuro-Green (muted) */
-  --warning:    #FFB454;      /* Warm Amber */
-  --error:      #E64848;      /* Alert Red */
-  
+  --highlight: #ffd166; /* Axon Amber */
+  --info: #4ecdc4; /* Synapse Teal */
+  --success: #63d471; /* Neuro-Green (muted) */
+  --warning: #ffb454; /* Warm Amber */
+  --error: #e64848; /* Alert Red */
+
   /* Text */
-  --text-primary:   #E8EAF2;
-  --text-secondary: #AAB1C4;
-  --text-muted:     #6E7489;
-  
+  --text-primary: #e8eaf2;
+  --text-secondary: #aab1c4;
+  --text-muted: #6e7489;
+
   /* Border / Dividers */
-  --border: rgba(255,255,255,0.08);
-  
+  --border: rgba(255, 255, 255, 0.08);
+
   /* Legacy mappings for backward compatibility */
   --pulse-coral: var(--brand-accent);
   --axon-amber: var(--highlight);
   --synapse-teal: var(--info);
   --synapse-teal-40: rgba(78, 205, 196, 0.4);
-  
+
   /* Accent mappings */
   --accent: var(--brand-accent);
   --accent-hover: var(--brand-hover);
@@ -41,23 +41,23 @@
   --accent-red-dim: var(--error);
   --man-united-red: var(--brand-accent);
   --neural-green: var(--info);
-  
+
   /* Typography */
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  
+
   /* Border Radius */
   --radius: 12px;
   --radius-sm: 8px;
   --radius-lg: 16px;
-  
+
   /* Shadows (with subtle color tints) */
   --shadow-sm: 0 2px 8px rgba(13, 27, 42, 0.4);
   --shadow-md: 0 4px 16px rgba(13, 27, 42, 0.5);
   --shadow-lg: 0 8px 32px rgba(13, 27, 42, 0.6);
   --shadow-glow: 0 0 20px rgba(78, 205, 196, 0.4);
-  
+
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);

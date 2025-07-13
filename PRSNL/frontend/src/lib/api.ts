@@ -458,7 +458,7 @@ export async function getAISuggestions(url: string): Promise<{
       include_summary: true,
       include_tags: true,
       include_category: true,
-      max_tags: 5
+      max_tags: 5,
     }),
   });
 }

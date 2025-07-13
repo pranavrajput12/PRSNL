@@ -32,11 +32,13 @@ function createContentTypesStore() {
       const unsubscribe = subscribe((t) => (types = t));
       unsubscribe();
 
-      return types.find((t) => t.type === typeName) || {
-        type: typeName,
-        count: 0,
-        description: `${typeName} content`,
-      };
+      return (
+        types.find((t) => t.type === typeName) || {
+          type: typeName,
+          count: 0,
+          description: `${typeName} content`,
+        }
+      );
     },
 
     // Refresh content types from backend

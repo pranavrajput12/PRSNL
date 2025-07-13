@@ -185,88 +185,88 @@
 {#if isValidMode}
   <div class="onboarding-overlay" transition:fade={{ duration: 300 }}>
     <div class="onboarding-container" transition:fly={{ y: 50, duration: 500 }}>
-    <button class="skip-button" on:click={skip}>
-      Skip
-      <Icon name="x" size={16} />
-    </button>
+      <button class="skip-button" on:click={skip}>
+        Skip
+        <Icon name="x" size={16} />
+      </button>
 
-    {#if slides[currentSlide]}
-      <div class="slide-content">
-        {#if slides[currentSlide].icon}
-          <div class="mode-icon-large" style="background: {mode.color}">
-            <Icon name={slides[currentSlide].icon} size={48} color="white" />
-          </div>
-        {/if}
+      {#if slides[currentSlide]}
+        <div class="slide-content">
+          {#if slides[currentSlide].icon}
+            <div class="mode-icon-large" style="background: {mode.color}">
+              <Icon name={slides[currentSlide].icon} size={48} color="white" />
+            </div>
+          {/if}
 
-        <h2>{slides[currentSlide].title}</h2>
-        <p class="subtitle">{slides[currentSlide].subtitle}</p>
+          <h2>{slides[currentSlide].title}</h2>
+          <p class="subtitle">{slides[currentSlide].subtitle}</p>
 
-        {#if slides[currentSlide].description}
-          <p class="description">{slides[currentSlide].description}</p>
-        {/if}
+          {#if slides[currentSlide].description}
+            <p class="description">{slides[currentSlide].description}</p>
+          {/if}
 
-        {#if slides[currentSlide].features}
-          <div class="features-grid">
-            {#each slides[currentSlide].features as feature}
-              <div class="feature-item">
-                <Icon name="check" size={16} color={mode.color} />
-                <span>{feature}</span>
-              </div>
-            {/each}
-          </div>
-        {/if}
-
-        {#if slides[currentSlide].examples}
-          <div class="examples-section">
-            <h3>Example Uses:</h3>
-            {#each slides[currentSlide].examples as example}
-              <div class="example-card">
-                <div class="example-query">
-                  <Icon name="message-square" size={16} />
-                  "{example.query}"
+          {#if slides[currentSlide].features}
+            <div class="features-grid">
+              {#each slides[currentSlide].features as feature}
+                <div class="feature-item">
+                  <Icon name="check" size={16} color={mode.color} />
+                  <span>{feature}</span>
                 </div>
-                <p class="example-description">{example.description}</p>
-              </div>
-            {/each}
-          </div>
-        {/if}
+              {/each}
+            </div>
+          {/if}
 
-        {#if slides[currentSlide].tip}
-          <div class="tip-box" style="border-color: {mode.color}">
-            <Icon name="info" size={20} color={mode.color} />
-            <p>{slides[currentSlide].tip}</p>
-          </div>
-        {/if}
-      </div>
-    {/if}
+          {#if slides[currentSlide].examples}
+            <div class="examples-section">
+              <h3>Example Uses:</h3>
+              {#each slides[currentSlide].examples as example}
+                <div class="example-card">
+                  <div class="example-query">
+                    <Icon name="message-square" size={16} />
+                    "{example.query}"
+                  </div>
+                  <p class="example-description">{example.description}</p>
+                </div>
+              {/each}
+            </div>
+          {/if}
 
-    <div class="navigation">
-      <div class="dots">
-        {#each slides as _, index}
-          <button
-            class="dot {currentSlide === index ? 'active' : ''}"
-            style="background: {currentSlide === index ? mode.color : 'rgba(255, 255, 255, 0.3)'}"
-            on:click={() => (currentSlide = index)}
-          />
-        {/each}
-      </div>
+          {#if slides[currentSlide].tip}
+            <div class="tip-box" style="border-color: {mode.color}">
+              <Icon name="info" size={20} color={mode.color} />
+              <p>{slides[currentSlide].tip}</p>
+            </div>
+          {/if}
+        </div>
+      {/if}
 
-      <div class="nav-buttons">
-        {#if currentSlide > 0}
-          <button class="nav-btn secondary" on:click={previousSlide}>
-            <Icon name="arrow-left" size={16} />
-            Previous
+      <div class="navigation">
+        <div class="dots">
+          {#each slides as _, index}
+            <button
+              class="dot {currentSlide === index ? 'active' : ''}"
+              style="background: {currentSlide === index ? mode.color : 'rgba(255, 255, 255, 0.3)'}"
+              on:click={() => (currentSlide = index)}
+            />
+          {/each}
+        </div>
+
+        <div class="nav-buttons">
+          {#if currentSlide > 0}
+            <button class="nav-btn secondary" on:click={previousSlide}>
+              <Icon name="arrow-left" size={16} />
+              Previous
+            </button>
+          {/if}
+
+          <button class="nav-btn primary" style="background: {mode.color}" on:click={nextSlide}>
+            {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
+            <Icon name="arrow-right" size={16} />
           </button>
-        {/if}
-
-        <button class="nav-btn primary" style="background: {mode.color}" on:click={nextSlide}>
-          {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
-          <Icon name="arrow-right" size={16} />
-        </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 {/if}
 
 <style>

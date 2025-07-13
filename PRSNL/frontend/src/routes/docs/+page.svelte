@@ -348,8 +348,20 @@
     right: 0;
     bottom: 0;
     background:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, var(--synapse-teal) 40px, var(--synapse-teal) 42px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, var(--synapse-teal) 40px, var(--synapse-teal) 42px);
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 40px,
+        var(--synapse-teal) 40px,
+        var(--synapse-teal) 42px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        var(--synapse-teal) 40px,
+        var(--synapse-teal) 42px
+      );
   }
 
   .circuit-nodes {

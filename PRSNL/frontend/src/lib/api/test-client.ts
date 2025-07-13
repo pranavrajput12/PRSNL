@@ -15,7 +15,7 @@ import type { CaptureItemApiCapturePostMutationBody } from './generated';
 export function testApiClient() {
   // These are just query key generators, not hooks
   const healthQueryKey = getHealthCheckApiHealthGetQueryKey();
-  const searchQueryKey = getSearchItemsApiSearchGetQueryKey({ 
+  const searchQueryKey = getSearchItemsApiSearchGetQueryKey({
     query: 'test search',
     limit: 10,
     offset: 0,

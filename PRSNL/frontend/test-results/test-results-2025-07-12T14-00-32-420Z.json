@@ -37,9 +37,7 @@
       "[log] Added to FRAME (static): \"Object_5\" - 16900 vertices",
       "[log] Frame: 2 parts, Blades: 1 parts"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/favicon.png"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/favicon.png"],
     "screenshot": "",
     "loadTime": 2796
   },
@@ -136,9 +134,7 @@
       "[log] 🔵 Neural Stream: Created 2 groups",
       "[log] 🔵 Neural Stream: Total groups now: 2"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 1567
   },
@@ -147,10 +143,7 @@
     "path": "/settings",
     "url": "http://localhost:3004/s/settings",
     "status": "failed",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "",
     "loadTime": 1642
@@ -160,10 +153,7 @@
     "path": "/import",
     "url": "http://localhost:3004/s/import",
     "status": "failed",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "",
     "loadTime": 823
@@ -213,9 +203,7 @@
       "[debug] [WebSocket] Message received: JSHandle@object",
       "[debug] [WebSocket] Connection established: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 2107
   },
@@ -229,9 +217,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/login"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/login"],
     "screenshot": "",
     "loadTime": 978
   },
@@ -248,9 +234,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 1377
   },
@@ -270,9 +254,7 @@
       "[error] 🔴 API Catch Error: JSHandle@object",
       "[error] Error loading video: JSHandle@error"
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/1"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/1"],
     "screenshot": "",
     "loadTime": 1552,
     "content": {}
@@ -293,9 +275,7 @@
       "[error] 🔴 API Catch Error: JSHandle@object",
       "[error] Error loading video: JSHandle@error"
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/2"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/2"],
     "screenshot": "",
     "loadTime": 782,
     "content": {}
@@ -314,9 +294,7 @@
       "[error] 🔴 API Error: JSHandle@object",
       "[error] 🔴 API Catch Error: JSHandle@object"
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/1"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/1"],
     "screenshot": "",
     "loadTime": 1203,
     "content": {}
@@ -335,9 +313,7 @@
       "[error] 🔴 API Error: JSHandle@object",
       "[error] 🔴 API Catch Error: JSHandle@object"
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/2"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/2"],
     "screenshot": "",
     "loadTime": 815,
     "content": {}
@@ -356,9 +332,7 @@
       "[error] 🔴 API Catch Error: JSHandle@object",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "422 Unprocessable Entity - http://localhost:3004/api/items/3"
-    ],
+    "networkErrors": ["422 Unprocessable Entity - http://localhost:3004/api/items/3"],
     "screenshot": "",
     "loadTime": 763,
     "content": {}
@@ -373,9 +347,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/code-cortex/1"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/code-cortex/1"],
     "screenshot": "",
     "loadTime": 865,
     "content": {}
@@ -390,9 +362,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/code-cortex/2"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/code-cortex/2"],
     "screenshot": "",
     "loadTime": 704,
     "content": {}

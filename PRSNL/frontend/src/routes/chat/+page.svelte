@@ -598,7 +598,10 @@
               <h4><Icon name="link" size={14} /> Sources</h4>
               <div class="citations-list">
                 {#each message.citations as citation}
-                  <button class="citation-chip" on:click={() => navigateToItem(citation.item_id, citation.permalink)}>
+                  <button
+                    class="citation-chip"
+                    on:click={() => navigateToItem(citation.item_id, citation.permalink)}
+                  >
                     <Icon name="file-text" size={12} />
                     {citation.title}
                   </button>
@@ -622,7 +625,10 @@
               <h4><Icon name="compass" size={14} /> Explore Further</h4>
               <div class="suggestions-list">
                 {#each message.suggestedItems as item}
-                  <button class="suggestion-item" on:click={() => navigateToItem(item.id, item.permalink)}>
+                  <button
+                    class="suggestion-item"
+                    on:click={() => navigateToItem(item.id, item.permalink)}
+                  >
                     <Icon name="arrow-right" size={14} />
                     <div>
                       <div class="item-title">{item.title}</div>

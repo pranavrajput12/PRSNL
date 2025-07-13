@@ -3,7 +3,7 @@
   export let size: 'small' | 'medium' | 'large' | string | number = 'medium';
   export let color = 'currentColor';
   export let strokeWidth = 2;
-  
+
   // Add support for class prop
   let className = '';
   export { className as class };
@@ -14,8 +14,8 @@
     large: 24,
   };
 
-  $: width = typeof size === 'number' ? size : (sizeMap[size] || 20);
-  $: height = typeof size === 'number' ? size : (sizeMap[size] || 20);
+  $: width = typeof size === 'number' ? size : sizeMap[size] || 20;
+  $: height = typeof size === 'number' ? size : sizeMap[size] || 20;
 </script>
 
 {#if name === 'capture'}
@@ -43,7 +43,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.35-4.35" />
@@ -57,7 +58,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
@@ -70,7 +72,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
@@ -84,7 +87,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
@@ -98,7 +102,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="20 6 9 17 4 12" />
   </svg>
@@ -111,7 +116,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="10" />
     <line x1="12" y1="8" x2="12" y2="12" />
@@ -126,7 +132,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="10" />
     <line x1="12" y1="16" x2="12" y2="12" />
@@ -141,7 +148,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
     <line x1="7" y1="7" x2="7.01" y2="7" />
@@ -155,7 +163,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -169,7 +178,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
     <line x1="16" y1="2" x2="16" y2="6" />
@@ -185,7 +195,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </svg>
@@ -198,7 +209,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path
       d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"
@@ -217,7 +229,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <!-- Neural Network Core -->
     <circle cx="12" cy="12" r="4" fill={color} opacity="0.1" />
@@ -266,7 +279,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <line x1="5" y1="12" x2="19" y2="12" />
     <polyline points="12 5 19 12 12 19" />
@@ -280,7 +294,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
     <polyline points="15 3 21 3 21 9" />
@@ -295,7 +310,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
     <polygon points="10 8 16 12 10 16 10 8" />
@@ -309,7 +325,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
@@ -323,7 +340,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <rect x="3" y="3" width="7" height="7" />
     <rect x="14" y="3" width="7" height="7" />
@@ -343,7 +361,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M12 2L8 8h8l-4-6z" />
     <path d="M8 8v4c0 2.21 1.79 4 4 4s4-1.79 4-4V8" />
@@ -360,7 +379,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M4 12h16" />
     <path d="M4 6h16" />
@@ -378,7 +398,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="3" />
     <circle cx="6" cy="6" r="2" />
@@ -400,7 +421,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M3 21h18" />
     <path d="M5 21V7l8-6 8 6v14" />
@@ -420,7 +442,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
@@ -434,7 +457,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M23 4v6h-6" />
     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
@@ -450,7 +474,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path
       d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
@@ -465,7 +490,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="17 8 12 3 7 8" />
@@ -480,7 +506,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="10" />
     <polyline points="12 6 12 12 16 14" />
@@ -494,7 +521,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
@@ -511,7 +539,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polygon points="3 11 22 2 13 21 11 13 3 11" />
   </svg>
@@ -524,7 +553,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="3" />
     <path
@@ -540,7 +570,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="9 18 15 12 9 6" />
   </svg>
@@ -553,7 +584,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="15 18 9 12 15 6" />
   </svg>
@@ -566,7 +598,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="16 18 22 12 16 6" />
     <polyline points="8 6 2 12 8 18" />
@@ -580,7 +613,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
@@ -594,7 +628,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polygon points="5 3 19 12 5 21 5 3" />
   </svg>
@@ -607,7 +642,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M9 21h6" />
     <path d="M12 17h.01" />
@@ -622,10 +658,13 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    <path
+      d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+    />
   </svg>
 {:else if name === 'loader'}
   <svg
@@ -636,7 +675,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <line x1="12" y1="2" x2="12" y2="6" />
     <line x1="12" y1="18" x2="12" y2="22" />
@@ -656,7 +696,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="10" />
     <line x1="12" y1="8" x2="12" y2="12" />
@@ -671,7 +712,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <line x1="19" y1="12" x2="5" y2="12" />
     <polyline points="12 19 5 12 12 5" />
@@ -685,7 +727,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
@@ -702,7 +745,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
     <line x1="3" y1="9" x2="21" y2="9" />
@@ -717,7 +761,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <circle cx="12" cy="12" r="1" />
     <circle cx="12" cy="5" r="1" />
@@ -732,7 +777,8 @@
     stroke={color}
     stroke-width={strokeWidth}
     stroke-linecap="round"
-    stroke-linejoin="round" class={className}
+    stroke-linejoin="round"
+    class={className}
   >
     <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
   </svg>

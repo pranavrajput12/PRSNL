@@ -28,18 +28,18 @@
 
   async function loadItem() {
     if (!slug) return;
-    
+
     try {
       isLoading = true;
       error = null;
-      
+
       // Try to get item by slug first, fallback to ID if slug is numeric
       const isNumericId = /^\d+$/.test(slug);
       const response = await getItem(slug);
-      
+
       if (response.success) {
         item = response.data;
-        
+
         // If accessed by numeric ID but item has a proper slug, redirect
         if (isNumericId && item.slug && item.slug !== slug) {
           goto(`/thoughts/${item.slug}`, { replaceState: true });
@@ -64,7 +64,7 @@
     try {
       await navigator.clipboard.writeText(window.location.href);
       copyNotification = true;
-      setTimeout(() => copyNotification = false, 2000);
+      setTimeout(() => (copyNotification = false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
     }
@@ -73,8 +73,8 @@
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
+      month: 'long',
+      day: 'numeric',
     });
   }
 </script>
@@ -82,9 +82,15 @@
 <svelte:head>
   {#if item}
     <title>{item.title || 'Thought'} - PRSNL</title>
-    <meta name="description" content={item.summary || item.content?.substring(0, 160) || 'Personal knowledge thought'} />
+    <meta
+      name="description"
+      content={item.summary || item.content?.substring(0, 160) || 'Personal knowledge thought'}
+    />
     <meta property="og:title" content={item.title || 'Thought'} />
-    <meta property="og:description" content={item.summary || item.content?.substring(0, 160) || 'Personal knowledge thought'} />
+    <meta
+      property="og:description"
+      content={item.summary || item.content?.substring(0, 160) || 'Personal knowledge thought'}
+    />
     <meta property="og:url" content={`/thoughts/${slug}`} />
     {#if item.thumbnail_url}
       <meta property="og:image" content={item.thumbnail_url} />
@@ -124,9 +130,9 @@
           <span class="thought-type">{item.type}</span>
           <span class="thought-date">{formatDate(item.created_at)}</span>
         </div>
-        
+
         <h1 class="thought-title">{item.title || 'Untitled Thought'}</h1>
-        
+
         {#if item.summary}
           <p class="thought-summary">{item.summary}</p>
         {/if}
@@ -135,7 +141,11 @@
           <button on:click={copyLink} class="action-btn" title="Copy link">
             <Icon name="link" size={16} />
           </button>
-          <button on:click={() => showQuickActions = !showQuickActions} class="action-btn" title="More actions">
+          <button
+            on:click={() => (showQuickActions = !showQuickActions)}
+            class="action-btn"
+            title="More actions"
+          >
             <Icon name="more-horizontal" size={16} />
           </button>
         </div>
@@ -160,9 +170,13 @@
       {#if item.tags && item.tags.length > 0}
         <div class="thought-tags">
           {#each item.tags as tag}
-            <span class="tag" role="button" tabindex="0" 
-                  on:click={() => goto(`/search?q=tag:${tag}`)}
-                  on:keydown={(e) => e.key === 'Enter' && goto(`/search?q=tag:${tag}`)}>
+            <span
+              class="tag"
+              role="button"
+              tabindex="0"
+              on:click={() => goto(`/search?q=tag:${tag}`)}
+              on:keydown={(e) => e.key === 'Enter' && goto(`/search?q=tag:${tag}`)}
+            >
               #{tag}
             </span>
           {/each}
@@ -316,11 +330,11 @@
       grid-template-columns: 1fr;
       padding: 1rem;
     }
-    
+
     .thought-title {
       font-size: 2rem;
     }
-    
+
     .thought-actions {
       position: static;
       margin-top: 1rem;

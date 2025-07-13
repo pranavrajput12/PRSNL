@@ -21,7 +21,7 @@
     style="width: {pixelSize}px; height: {pixelSize}px; border-width: {Math.max(
       2,
       pixelSize / 10
-   )}px;"
+    )}px;"
   ></div>
 
   {#if message}

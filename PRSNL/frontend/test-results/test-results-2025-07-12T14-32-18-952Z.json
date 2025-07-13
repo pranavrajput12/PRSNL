@@ -9,9 +9,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/favicon.png"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/favicon.png"],
     "screenshot": "",
     "loadTime": 5661
   },
@@ -40,9 +38,7 @@
       "[log] 🟢 API Success: JSHandle@object",
       "[log] 🟢 API Success: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 9987
   },
@@ -60,9 +56,7 @@
       "[debug] [vite] connected.",
       "[log] 🔵 API Request: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 4034
   },
@@ -85,9 +79,7 @@
       "[log] 🔵 Neural Stream: Mounting timeline...",
       "[log] 🔵 API Request: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 5936
   },
@@ -113,10 +105,7 @@
     "path": "/import",
     "url": "http://localhost:3004/s/import",
     "status": "failed",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "",
     "loadTime": 4005
@@ -161,9 +150,7 @@
       "[debug] [Chat] Connecting to WebSocket with clientId: by64um",
       "[debug] [WebSocket] Creating connection to: ws://localhost:3004/ws/chat/by64um"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 11668
   },
@@ -182,9 +169,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/login"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/login"],
     "screenshot": "",
     "loadTime": 7493
   },
@@ -201,9 +186,7 @@
       "[debug] [vite] connecting...",
       "[debug] [vite] connected."
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"
-    ],
+    "networkErrors": ["404 Not Found - http://localhost:3004/p/%7Bvideo.thumbnailUrl"],
     "screenshot": "",
     "loadTime": 7362
   },
@@ -212,10 +195,7 @@
     "path": "/code-cortex/docs",
     "url": "http://localhost:3004/code-cortex/docs",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-docs.png",
     "loadTime": 5637,
@@ -229,10 +209,7 @@
     "path": "/code-cortex/links",
     "url": "http://localhost:3004/code-cortex/links",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-links.png",
     "loadTime": 9345,
@@ -246,10 +223,7 @@
     "path": "/code-cortex/projects",
     "url": "http://localhost:3004/code-cortex/projects",
     "status": "success",
-    "consoleMessages": [
-      "[debug] [vite] connecting...",
-      "[debug] [vite] connected."
-    ],
+    "consoleMessages": ["[debug] [vite] connecting...", "[debug] [vite] connected."],
     "networkErrors": [],
     "screenshot": "test-screenshots/code-projects.png",
     "loadTime": 3904,

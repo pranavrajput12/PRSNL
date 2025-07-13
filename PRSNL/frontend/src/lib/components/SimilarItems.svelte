@@ -98,7 +98,7 @@
               </div>
               {#if item.similarity !== undefined}
                 <div class="similarity-score">
-                  {Math.round(item.similarity *} 100)}%
+                  {Math.round(item.similarity * 100)}%
                 </div>
               {/if}
             </button>

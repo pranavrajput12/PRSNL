@@ -264,7 +264,12 @@
                     <h3 class="project-title">
                       <a href={project.permalink || `/item/${project.id}`}>{project.title}</a>
                       {#if project.url}
-                        <a href={project.url} target="_blank" rel="noopener noreferrer" class="external-link-inline">
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="external-link-inline"
+                        >
                           <Icon name="external-link" size="small" />
                         </a>
                       {/if}

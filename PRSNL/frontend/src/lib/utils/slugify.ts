@@ -15,11 +15,11 @@ export function slugify(text: string): string {
  */
 export function generateSlug(title: string, id?: string | number): string {
   const baseSlug = slugify(title);
-  
+
   if (!baseSlug || baseSlug.length < 3) {
     return id ? `item-${id}` : `item-${Date.now()}`;
   }
-  
+
   return baseSlug;
 }
 
@@ -29,10 +29,10 @@ export function generateSlug(title: string, id?: string | number): string {
 export function createDateSlug(title: string, date?: Date): string {
   const datePrefix = (date || new Date()).toISOString().split('T')[0];
   const titleSlug = slugify(title);
-  
+
   if (!titleSlug || titleSlug.length < 3) {
     return `${datePrefix}-thought`;
   }
-  
+
   return `${datePrefix}-${titleSlug}`;
 }

@@ -348,7 +348,7 @@
             </div>
             <div class="neural-results-grid">
               {#each searchResults.slice(0, 5) as result}
-                <a href="{result.url || `/item/${result.id}`}" class="neural-result-node">
+                <a href={result.url || `/item/${result.id}`} class="neural-result-node">
                   <div class="node-connection">
                     <div class="connection-pulse"></div>
                   </div>
@@ -559,7 +559,13 @@
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, var(--border), var(--bg-secondary), var(--border), var(--bg-tertiary));
+    background: linear-gradient(
+      45deg,
+      var(--border),
+      var(--bg-secondary),
+      var(--border),
+      var(--bg-tertiary)
+    );
     z-index: -1;
   }
 
@@ -952,7 +958,13 @@
     left: -1px;
     right: -1px;
     bottom: -1px;
-    background: linear-gradient(45deg, var(--synapse-teal), var(--pulse-coral), var(--axon-amber), var(--synapse-teal));
+    background: linear-gradient(
+      45deg,
+      var(--synapse-teal),
+      var(--pulse-coral),
+      var(--axon-amber),
+      var(--synapse-teal)
+    );
     z-index: -1;
     animation: badge-border-flow 3s linear infinite;
   }
@@ -971,7 +983,12 @@
     font-weight: 700;
     line-height: 1;
     margin-bottom: 25px;
-    background: linear-gradient(135deg, var(--pulse-coral) 0%, var(--brand-accent) 50%, var(--synapse-teal) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--pulse-coral) 0%,
+      var(--brand-accent) 50%,
+      var(--synapse-teal) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1323,7 +1340,13 @@
     left: 20%;
     right: 20%;
     height: 4px;
-    background: repeating-linear-gradient(90deg, var(--text-muted), var(--text-muted) 3px, var(--bg-tertiary) 3px, var(--bg-tertiary) 6px);
+    background: repeating-linear-gradient(
+      90deg,
+      var(--text-muted),
+      var(--text-muted) 3px,
+      var(--bg-tertiary) 3px,
+      var(--bg-tertiary) 6px
+    );
   }
 
   .pin-row.bottom {
@@ -1331,7 +1354,13 @@
     left: 20%;
     right: 20%;
     height: 4px;
-    background: repeating-linear-gradient(90deg, var(--text-muted), var(--text-muted) 3px, var(--bg-tertiary) 3px, var(--bg-tertiary) 6px);
+    background: repeating-linear-gradient(
+      90deg,
+      var(--text-muted),
+      var(--text-muted) 3px,
+      var(--bg-tertiary) 3px,
+      var(--bg-tertiary) 6px
+    );
   }
 
   .pin-row.left {
@@ -1339,7 +1368,13 @@
     top: 20%;
     bottom: 20%;
     width: 4px;
-    background: repeating-linear-gradient(0deg, var(--text-muted), var(--text-muted) 3px, var(--bg-tertiary) 3px, var(--bg-tertiary) 6px);
+    background: repeating-linear-gradient(
+      0deg,
+      var(--text-muted),
+      var(--text-muted) 3px,
+      var(--bg-tertiary) 3px,
+      var(--bg-tertiary) 6px
+    );
   }
 
   .pin-row.right {
@@ -1347,7 +1382,13 @@
     top: 20%;
     bottom: 20%;
     width: 4px;
-    background: repeating-linear-gradient(0deg, var(--text-muted), var(--text-muted) 3px, var(--bg-tertiary) 3px, var(--bg-tertiary) 6px);
+    background: repeating-linear-gradient(
+      0deg,
+      var(--text-muted),
+      var(--text-muted) 3px,
+      var(--bg-tertiary) 3px,
+      var(--bg-tertiary) 6px
+    );
   }
 
   .silicon-die {
@@ -1419,7 +1460,13 @@
     left: 4px;
     right: 4px;
     bottom: 2px;
-    background: repeating-linear-gradient(90deg, var(--text-muted), var(--text-muted) 2px, var(--bg-tertiary) 2px, var(--bg-tertiary) 4px);
+    background: repeating-linear-gradient(
+      90deg,
+      var(--text-muted),
+      var(--text-muted) 2px,
+      var(--bg-tertiary) 2px,
+      var(--bg-tertiary) 4px
+    );
     border-radius: 2px;
   }
 

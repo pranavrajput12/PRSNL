@@ -24,7 +24,10 @@
   export let lazyLoad: boolean = true;
   // Use url as fallback if src is not provided
   $: actualSrc = src || url || '';
-  export let videoId: string = actualSrc && actualSrc.length > 0 ? (actualSrc.split('/').pop() || Math.random().toString(36).substring(2, 9)) : Math.random().toString(36).substring(2, 9);
+  export let videoId: string =
+    actualSrc && actualSrc.length > 0
+      ? actualSrc.split('/').pop() || Math.random().toString(36).substring(2, 9)
+      : Math.random().toString(36).substring(2, 9);
   export let showControls: boolean = true;
 
   // Helper function to ensure thumbnail URLs are properly formatted
