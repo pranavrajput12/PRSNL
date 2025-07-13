@@ -287,6 +287,213 @@ LibreChat bridge health check
 }
 ```
 
+## 🔄 Job Persistence & Processing - Unified Job Management
+
+### Job Lifecycle Management
+
+The unified job persistence system provides comprehensive tracking and coordination for all processing operations including media processing, AI analysis, and background tasks.
+
+#### POST /api/persistence/save
+Save job results with jobId coordination (idempotent operation)
+
+**Request Body:**
+```json
+{
+  "job_id": "media_image_20250713_abc123",
+  "result_data": {
+    "ocr_text": "Sample text extracted from image",
+    "objects_detected": ["person", "computer", "desk"],
+    "confidence": 0.95,
+    "processing_time": 2.3
+  },
+  "status": "completed"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Results saved successfully for job media_image_20250713_abc123",
+  "job_id": "media_image_20250713_abc123",
+  "status": "completed",
+  "completed_at": "2025-07-13T18:49:10.377177+00:00",
+  "result_size": 143
+}
+```
+
+#### GET /api/persistence/status/{jobId}
+Get comprehensive job status and results
+
+**Path Parameters:**
+- `jobId` (string, required) - Job identifier
+
+**Response:**
+```json
+{
+  "job_id": "media_image_20250713_abc123",
+  "job_type": "media_image",
+  "status": "completed",
+  "item_id": "550e8400-e29b-41d4-a716-446655440000",
+  "progress_percentage": 100,
+  "current_stage": "database_save",
+  "stage_message": "Analysis results saved to database",
+  "error_message": null,
+  "result_data": {
+    "ocr_text": "Sample text",
+    "objects": ["cat", "dog"],
+    "confidence": 0.95
+  },
+  "created_at": "2025-07-13T18:48:51.163023Z",
+  "started_at": "2025-07-13T18:48:52.100000Z",
+  "completed_at": "2025-07-13T18:49:10.377177Z",
+  "last_updated": "2025-07-13T18:49:10.377177Z",
+  "retry_count": 0,
+  "tags": ["media", "image_analysis"]
+}
+```
+
+#### PUT /api/persistence/update
+Update job status during processing
+
+**Query Parameters:**
+- `job_id` (string, required) - Job identifier
+- `status` (string, optional) - New job status (pending, processing, completed, failed, cancelled)
+- `progress` (integer, optional) - Progress percentage (0-100)
+- `stage` (string, optional) - Current processing stage
+- `message` (string, optional) - Stage message
+- `error` (string, optional) - Error message
+
+**Example:**
+```bash
+PUT /api/persistence/update?job_id=media_image_20250713_abc123&status=processing&progress=75&stage=analysis&message=Analyzing image content
+```
+
+**Response:**
+```json
+{
+  "message": "Job media_image_20250713_abc123 updated successfully",
+  "job_id": "media_image_20250713_abc123",
+  "status": "processing",
+  "progress_percentage": 75,
+  "updated_at": "now"
+}
+```
+
+#### GET /api/persistence/jobs
+List jobs with filtering and pagination
+
+**Query Parameters:**
+- `job_type` (string, optional) - Filter by job type (media_image, media_video, media_audio, etc.)
+- `status` (string, optional) - Filter by status (pending, processing, completed, failed, cancelled)
+- `item_id` (UUID, optional) - Filter by associated item
+- `limit` (integer, optional, default: 50, max: 200) - Maximum results
+- `offset` (integer, optional, default: 0) - Pagination offset
+
+**Response:**
+```json
+{
+  "jobs": [
+    {
+      "job_id": "media_image_20250713_abc123",
+      "job_type": "media_image",
+      "status": "completed",
+      "progress_percentage": 100,
+      "created_at": "2025-07-13T18:48:51.163023Z",
+      "completed_at": "2025-07-13T18:49:10.377177Z",
+      "tags": ["media", "image_analysis"]
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+#### POST /api/persistence/create
+Create a new processing job
+
+**Request Body:**
+```json
+{
+  "job_type": "media_image",
+  "input_data": {
+    "file_path": "/uploads/image.jpg",
+    "item_id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "metadata": {
+    "source": "api",
+    "priority": "normal"
+  },
+  "tags": ["media", "user_upload"]
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Job created successfully",
+  "job_id": "media_image_20250713_def456",
+  "job_type": "media_image",
+  "status": "pending"
+}
+```
+
+#### POST /api/persistence/retry/{jobId}
+Retry a failed job (increments retry count)
+
+**Response:**
+```json
+{
+  "message": "Job media_image_20250713_abc123 marked for retry",
+  "job_id": "media_image_20250713_abc123",
+  "status": "pending"
+}
+```
+
+#### DELETE /api/persistence/cancel/{jobId}
+Cancel a pending or processing job
+
+**Response:**
+```json
+{
+  "message": "Job media_image_20250713_abc123 cancelled successfully",
+  "job_id": "media_image_20250713_abc123",
+  "status": "cancelled"
+}
+```
+
+#### GET /api/persistence/health
+Health check for job persistence service
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "job_persistence",
+  "database_connected": true,
+  "timestamp": "now"
+}
+```
+
+### Job Status Values
+- `pending` - Job created, waiting to be processed
+- `processing` - Job currently being processed
+- `completed` - Job completed successfully
+- `failed` - Job failed (can be retried)
+- `retrying` - Job is being retried after failure
+- `cancelled` - Job was manually cancelled
+
+### Job Types
+- `media_image` - Image processing (OCR, analysis)
+- `media_video` - Video processing (transcription, analysis) 
+- `media_audio` - Audio processing (transcription, analysis)
+- `embedding` - Embedding generation
+- `crawl_ai` - Web crawling and analysis
+- `ai_analysis` - AI-powered content analysis
+
+### Integration with Media Processing
+The job persistence system is fully integrated with media processing agents. When processing media through `/api/crawl-ai/process-*` endpoints, jobs are automatically created and tracked, providing real-time progress updates and result persistence.
+
 ## Core API Endpoints
 
 ### 📊 Timeline

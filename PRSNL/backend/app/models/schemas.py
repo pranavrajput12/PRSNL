@@ -281,3 +281,133 @@ class CleanupRequest(BaseModel):
     hours: int = Field(default=24, ge=1, le=720)  # Max 30 days
 
 
+# Job Persistence Schemas for Unified Job System
+class JobStatus(str, Enum):
+    """Job processing status enumeration"""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    RETRYING = "retrying"
+    CANCELLED = "cancelled"
+
+
+class ProcessingJobCreate(BaseModel):
+    """Schema for creating a new processing job"""
+    job_type: str = Field(..., description="Type of job (media_image, media_video, etc.)")
+    input_data: Dict[str, Any] = Field(..., description="Original input parameters")
+    item_id: Optional[UUID] = Field(None, description="Associated item ID")
+    job_id: Optional[str] = Field(None, description="Custom job ID (auto-generated if not provided)")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Tags for categorization")
+    
+    @validator('job_type')
+    def validate_job_type(cls, v):
+        """Validate job type format"""
+        if not re.match(r'^[a-z_]+$', v):
+            raise ValueError("Job type must be lowercase snake_case")
+        return v
+    
+    @validator('tags')
+    def validate_tags_field(cls, v):
+        return validate_tags(v) if v else []
+
+
+class ProcessingJobUpdate(BaseModel):
+    """Schema for updating job status and progress"""
+    status: Optional[JobStatus] = Field(None, description="New job status")
+    progress_percentage: Optional[int] = Field(None, ge=0, le=100, description="Progress percentage (0-100)")
+    current_stage: Optional[str] = Field(None, description="Current processing stage")
+    stage_message: Optional[str] = Field(None, description="Human-readable stage description")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+    error_details: Optional[Dict[str, Any]] = Field(None, description="Detailed error information")
+
+
+class JobResult(BaseModel):
+    """Schema for job results"""
+    job_id: str = Field(..., description="Job identifier")
+    status: JobStatus = Field(..., description="Final job status")
+    result_data: Optional[Dict[str, Any]] = Field(None, description="Processing results")
+    created_at: datetime = Field(..., description="Job creation timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Job completion timestamp")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+
+
+class ProcessingJobResponse(BaseModel):
+    """Schema for job status responses"""
+    job_id: str = Field(..., description="Job identifier")
+    job_type: str = Field(..., description="Type of processing job")
+    status: JobStatus = Field(..., description="Current job status")
+    item_id: Optional[UUID] = Field(None, description="Associated item ID")
+    progress_percentage: int = Field(0, ge=0, le=100, description="Progress percentage")
+    current_stage: Optional[str] = Field(None, description="Current processing stage")
+    stage_message: Optional[str] = Field(None, description="Stage description")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+    result_data: Optional[Dict[str, Any]] = Field(None, description="Processing results")
+    created_at: datetime = Field(..., description="Job creation timestamp")
+    started_at: Optional[datetime] = Field(None, description="Job start timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Job completion timestamp")
+    last_updated: datetime = Field(..., description="Last update timestamp")
+    retry_count: int = Field(0, ge=0, description="Number of retry attempts")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Job tags")
+    
+    class Config:
+        from_attributes = True
+        use_enum_values = True
+
+
+class JobPersistenceRequest(BaseModel):
+    """Schema for saving job results via persistence API"""
+    job_id: str = Field(..., description="Job identifier")
+    result_data: Dict[str, Any] = Field(..., description="Processing results to save")
+    status: JobStatus = Field(JobStatus.COMPLETED, description="Final job status")
+    
+    @validator('job_id')
+    def validate_job_id(cls, v):
+        """Validate job ID format"""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Job ID cannot be empty")
+        return v.strip()
+
+
+class JobListRequest(BaseModel):
+    """Schema for listing jobs with filters"""
+    job_type: Optional[str] = Field(None, description="Filter by job type")
+    status: Optional[JobStatus] = Field(None, description="Filter by status")
+    item_id: Optional[UUID] = Field(None, description="Filter by associated item")
+    limit: int = Field(50, ge=1, le=200, description="Maximum results")
+    offset: int = Field(0, ge=0, description="Pagination offset")
+
+
+class JobListResponse(BaseModel):
+    """Schema for job list responses"""
+    jobs: List[ProcessingJobResponse] = Field(..., description="List of jobs")
+    total: int = Field(..., ge=0, description="Total number of jobs matching filter")
+    limit: int = Field(..., description="Page limit")
+    offset: int = Field(..., description="Page offset")
+
+
+# Media Agent Integration Schemas
+class MediaJobRequest(BaseModel):
+    """Schema for media processing job requests"""
+    file_path: str = Field(..., description="Path to media file")
+    job_type: str = Field(..., description="Type of media processing")
+    item_id: Optional[UUID] = Field(None, description="Associated item ID")
+    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Processing parameters")
+    
+    @validator('job_type')
+    def validate_media_job_type(cls, v):
+        """Validate media job types"""
+        allowed_types = ['media_image', 'media_video', 'media_audio']
+        if v not in allowed_types:
+            raise ValueError(f"Media job type must be one of: {', '.join(allowed_types)}")
+        return v
+
+
+class MediaJobResponse(BaseModel):
+    """Schema for media processing job responses"""
+    job_id: str = Field(..., description="Generated job identifier")
+    message: str = Field(..., description="Response message")
+    estimated_duration: Optional[int] = Field(None, description="Estimated processing time in seconds")
+
+

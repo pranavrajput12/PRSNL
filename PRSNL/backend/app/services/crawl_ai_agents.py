@@ -22,6 +22,7 @@ from app.services.unified_ai_service import unified_ai_service
 from app.services.cache import cache_service, CacheKeys
 from app.services.media_agents import MEDIA_AGENTS, MediaAgentResult
 from app.services.media_persistence_service import media_persistence_service
+from app.services.job_persistence_service import JobPersistenceService
 
 logger = logging.getLogger(__name__)
 
@@ -849,6 +850,13 @@ class CrawlAIOrchestrator:
             "audio_journal_processor": MEDIA_AGENTS["audio_journal_processor"]
         }
         self.logger = logger
+        self.job_service = None  # Initialize lazily when needed
+    
+    async def _get_job_service(self):
+        """Get job persistence service with database connection"""
+        from app.db.database import get_db_connection
+        async for conn in get_db_connection():
+            yield JobPersistenceService(conn)
     
     async def process_content(
         self,
@@ -1039,7 +1047,8 @@ class CrawlAIOrchestrator:
         self,
         file_path: str,
         item_id: Optional[str] = None,
-        enhance_analysis: bool = True
+        enhance_analysis: bool = True,
+        job_id: Optional[str] = None
     ) -> MultiAgentResult:
         """
         Process an image through OCR and AI analysis
@@ -1048,6 +1057,7 @@ class CrawlAIOrchestrator:
             file_path: Path to image file
             item_id: Optional item ID for database linking
             enhance_analysis: Whether to run enhanced context analysis
+            job_id: Optional job ID for tracking (auto-generated if not provided)
             
         Returns:
             MultiAgentResult with OCR text, description, objects, and tags
@@ -1055,58 +1065,144 @@ class CrawlAIOrchestrator:
         request_id = f"image-{int(datetime.utcnow().timestamp())}"
         start_time = time.time()
         
-        try:
-            # Execute image analysis agent
-            agent = self.agents["image_analyzer"]
-            result = await agent.execute({
-                "file_path": file_path,
-                "item_id": item_id,
-                "enhance_analysis": enhance_analysis
-            })
+        # Initialize job tracking
+        async for job_service in self._get_job_service():
+            if not job_id:
+                job_id = await job_service.generate_job_id("media_image", item_id)
             
-            # Save results to database
-            if result.status == "completed":
-                try:
-                    saved_item_id = await media_persistence_service.save_image_analysis(
-                        item_id=item_id,
-                        file_path=file_path,
-                        result=result
+            # Create job entry
+            await job_service.create_job(
+                job_type="media_image",
+                input_data={
+                    "file_path": file_path,
+                    "item_id": item_id,
+                    "enhance_analysis": enhance_analysis
+                },
+                item_id=item_id,
+                job_id=job_id,
+                metadata={"agent": "image_analyzer", "request_id": request_id}
+            )
+            
+            try:
+                # Update job to processing
+                await job_service.update_job_status(
+                    job_id=job_id,
+                    status="processing",
+                    progress_percentage=10,
+                    current_stage="image_analysis",
+                    stage_message="Starting image analysis and OCR processing"
+                )
+                
+                # Execute image analysis agent
+                agent = self.agents["image_analyzer"]
+                result = await agent.execute({
+                    "file_path": file_path,
+                    "item_id": item_id,
+                    "enhance_analysis": enhance_analysis
+                })
+                
+                # Update progress
+                await job_service.update_job_status(
+                    job_id=job_id,
+                    progress_percentage=70,
+                    current_stage="database_save",
+                    stage_message="Saving analysis results to database"
+                )
+                
+                # Save results to database
+                if result.status == "completed":
+                    try:
+                        saved_item_id = await media_persistence_service.save_image_analysis(
+                            item_id=item_id,
+                            file_path=file_path,
+                            result=result
+                        )
+                        # Add database info to results
+                        result.results["database"] = {
+                            "item_id": saved_item_id,
+                            "saved": True,
+                            "save_timestamp": datetime.utcnow().isoformat()
+                        }
+                        self.logger.info(f"✅ Image analysis saved to database: {saved_item_id}")
+                        
+                        # Save job results
+                        await job_service.save_job_result(
+                            job_id=job_id,
+                            result_data={
+                                "analysis_result": result.results,
+                                "database_item_id": saved_item_id,
+                                "file_path": file_path,
+                                "success": True
+                            },
+                            status="completed"
+                        )
+                        
+                    except Exception as e:
+                        self.logger.error(f"❌ Failed to save image analysis to database: {e}")
+                        result.results["database"] = {
+                            "saved": False,
+                            "error": str(e)
+                        }
+                        
+                        # Save job with error
+                        await job_service.save_job_result(
+                            job_id=job_id,
+                            result_data={
+                                "analysis_result": result.results,
+                                "database_error": str(e),
+                                "file_path": file_path,
+                                "success": False
+                            },
+                            status="failed"
+                        )
+                else:
+                    # Agent execution failed
+                    await job_service.update_job_status(
+                        job_id=job_id,
+                        status="failed",
+                        error_message=f"Image analysis failed: {result.error_message}",
+                        progress_percentage=0
                     )
-                    # Add database info to results
-                    result.results["database"] = {
-                        "item_id": saved_item_id,
-                        "saved": True,
-                        "save_timestamp": datetime.utcnow().isoformat()
-                    }
-                    self.logger.info(f"✅ Image analysis saved to database: {saved_item_id}")
-                except Exception as e:
-                    self.logger.error(f"❌ Failed to save image analysis to database: {e}")
-                    result.results["database"] = {
-                        "saved": False,
-                        "error": str(e)
-                    }
-            
-            execution_time = time.time() - start_time
-            
-            return MultiAgentResult(
-                request_id=request_id,
-                workflow="image_analysis",
-                agents_executed=["image_analyzer"],
-                results={"image_analyzer": result.results},
-                total_execution_time=execution_time
-            )
-            
-        except Exception as e:
-            self.logger.error(f"Image processing failed: {e}")
-            execution_time = time.time() - start_time
-            
-            return MultiAgentResult(
-                request_id=request_id,
-                workflow="image_analysis",
-                agents_executed=[],
-                results={"error": str(e)},
-                total_execution_time=execution_time
-            )
+                
+                execution_time = time.time() - start_time
+                
+                # Add job information to results
+                result.results["job"] = {
+                    "job_id": job_id,
+                    "tracking_enabled": True,
+                    "status": "completed" if result.status == "completed" else "failed"
+                }
+                
+                return MultiAgentResult(
+                    request_id=request_id,
+                    workflow="image_analysis",
+                    agents_executed=["image_analyzer"],
+                    results={"image_analyzer": result.results, "job_id": job_id},
+                    total_execution_time=execution_time
+                )
+                
+            except Exception as e:
+                self.logger.error(f"Image processing failed: {e}")
+                execution_time = time.time() - start_time
+                
+                # Update job with error
+                try:
+                    await job_service.update_job_status(
+                        job_id=job_id,
+                        status="failed",
+                        error_message=str(e),
+                        progress_percentage=0
+                    )
+                except Exception:
+                    pass  # Don't fail if job update fails
+                
+                return MultiAgentResult(
+                    request_id=request_id,
+                    workflow="image_analysis",
+                    agents_executed=[],
+                    results={"error": str(e), "job_id": job_id},
+                    total_execution_time=execution_time
+                )
     
     async def process_video(
         self,

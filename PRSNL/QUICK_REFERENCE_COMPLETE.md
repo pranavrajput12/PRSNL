@@ -98,6 +98,39 @@ curl http://localhost:8000/api/ai/models
 curl http://localhost:8000/api/ai/health
 ```
 
+### Job Persistence System - NEW (2025-07-13)
+```bash
+# Check job persistence service health
+curl http://localhost:8000/api/persistence/health
+
+# Get job status
+curl http://localhost:8000/api/persistence/status/media_image_20250713_abc123
+
+# List all jobs with filtering
+curl "http://localhost:8000/api/persistence/jobs?job_type=media_image&status=completed&limit=10"
+
+# Update job progress
+curl -X PUT "http://localhost:8000/api/persistence/update?job_id=test_job&status=processing&progress=50&stage=analysis&message=Processing%20image"
+
+# Save job results
+curl -X POST http://localhost:8000/api/persistence/save \
+  -H "Content-Type: application/json" \
+  -d '{
+    "job_id": "test_job_123",
+    "result_data": {"ocr_text": "Sample text", "confidence": 0.95},
+    "status": "completed"
+  }'
+
+# Create new job
+curl -X POST http://localhost:8000/api/persistence/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "job_type": "media_image",
+    "input_data": {"file_path": "/uploads/test.jpg"},
+    "tags": ["media", "test"]
+  }'
+```
+
 ### Azure OpenAI Testing
 ```bash
 # Test prsnl-gpt-4 (complex reasoning)

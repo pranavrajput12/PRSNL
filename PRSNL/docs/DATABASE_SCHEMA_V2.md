@@ -454,6 +454,154 @@ SELECT
     idx_tup_read,
     idx_tup_fetch
 FROM pg_stat_user_indexes
-WHERE tablename IN ('items', 'embeddings')
+WHERE tablename IN ('items', 'embeddings', 'processing_jobs')
 ORDER BY idx_scan DESC;
 ```
+
+---
+
+## Processing Jobs Table (Unified Job Persistence)
+
+### Overview
+The `processing_jobs` table provides unified job lifecycle tracking for all processing operations including media processing, AI analysis, web crawling, and background tasks. This system ensures reliable processing with proper error handling, retry mechanisms, and progress tracking.
+
+### Table Schema
+```sql
+CREATE TABLE processing_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id VARCHAR(255) UNIQUE NOT NULL, -- External job identifier for API coordination
+    job_type VARCHAR(100) NOT NULL, -- 'media_image', 'media_video', 'media_audio', 'embedding', 'crawl_ai', etc.
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed', 'retrying'
+    
+    -- Associated data
+    item_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    input_data JSONB NOT NULL DEFAULT '{}', -- Original input parameters
+    result_data JSONB DEFAULT '{}', -- Final processing results
+    
+    -- Progress tracking
+    progress_percentage INTEGER DEFAULT 0 CHECK (progress_percentage >= 0 AND progress_percentage <= 100),
+    current_stage VARCHAR(100), -- Current processing stage
+    stage_message TEXT, -- Human-readable stage description
+    
+    -- Error handling
+    error_message TEXT,
+    error_details JSONB DEFAULT '{}',
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    
+    -- Timing
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}',
+    tags TEXT[], -- For categorization and filtering
+    
+    -- Constraints
+    CONSTRAINT chk_processing_jobs_status CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'retrying', 'cancelled')),
+    CONSTRAINT chk_processing_jobs_type CHECK (job_type ~ '^[a-z_]+$') -- Enforce snake_case
+);
+```
+
+### Indexes and Performance
+```sql
+-- Core indexes
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_job_id ON processing_jobs(job_id);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_status ON processing_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_type ON processing_jobs(job_type);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_item_id ON processing_jobs(item_id);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_created_at ON processing_jobs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_status_type ON processing_jobs(status, job_type);
+```
+
+### Triggers and Functions
+```sql
+-- Auto-update timestamps and status transitions
+CREATE OR REPLACE FUNCTION update_processing_jobs_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_updated = NOW();
+    
+    -- Auto-set started_at when status changes to 'processing'
+    IF OLD.status != 'processing' AND NEW.status = 'processing' THEN
+        NEW.started_at = NOW();
+    END IF;
+    
+    -- Auto-set completed_at when status changes to completed/failed
+    IF OLD.status NOT IN ('completed', 'failed', 'cancelled') 
+       AND NEW.status IN ('completed', 'failed', 'cancelled') THEN
+        NEW.completed_at = NOW();
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER processing_jobs_update_timestamp
+    BEFORE UPDATE ON processing_jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_processing_jobs_timestamp();
+```
+
+### Job Statistics View
+```sql
+CREATE OR REPLACE VIEW processing_job_stats AS
+SELECT 
+    job_type,
+    status,
+    COUNT(*) as count,
+    AVG(EXTRACT(EPOCH FROM (completed_at - started_at))) as avg_duration_seconds,
+    MIN(created_at) as earliest_job,
+    MAX(created_at) as latest_job
+FROM processing_jobs 
+WHERE started_at IS NOT NULL
+GROUP BY job_type, status;
+```
+
+### Common Query Patterns
+```sql
+-- List active jobs with progress
+SELECT job_id, job_type, status, progress_percentage, current_stage, stage_message
+FROM processing_jobs 
+WHERE status IN ('pending', 'processing')
+ORDER BY created_at DESC;
+
+-- Failed jobs ready for retry
+SELECT job_id, job_type, error_message, retry_count, max_retries
+FROM processing_jobs 
+WHERE status = 'failed' AND retry_count < max_retries
+ORDER BY created_at DESC;
+
+-- Job performance by type
+SELECT job_type, 
+       COUNT(*) as total_jobs,
+       COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+       COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed,
+       AVG(CASE WHEN status = 'completed' THEN 
+           EXTRACT(EPOCH FROM (completed_at - started_at)) END) as avg_duration
+FROM processing_jobs 
+GROUP BY job_type;
+
+-- Recent job activity (last 24 hours)
+SELECT job_type, status, COUNT(*) as count
+FROM processing_jobs 
+WHERE created_at >= NOW() - INTERVAL '24 hours'
+GROUP BY job_type, status
+ORDER BY job_type, status;
+```
+
+### Job Types and Integration
+- **`media_image`** - Image processing with OCR and AI analysis (integrated with CrawlAI agents)
+- **`media_video`** - Video transcription and summarization using Whisper CPP
+- **`media_audio`** - Audio journal processing with emotion analysis
+- **`embedding`** - Vector embedding generation for semantic search
+- **`crawl_ai`** - Web crawling and content analysis using Crawl.ai
+- **`ai_analysis`** - General AI-powered content analysis
+
+### Migration Information
+- **Added in**: Migration `008_processing_jobs_table.sql`
+- **Version**: Database Schema v2.5
+- **Compatible with**: All existing processing systems
+- **Dependencies**: None (independent table)

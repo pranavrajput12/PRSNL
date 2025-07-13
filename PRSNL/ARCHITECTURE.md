@@ -107,6 +107,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
   - **Vector Search**: Semantic similarity search for knowledge discovery
   - **High Performance**: ARM64 optimization for Apple Silicon
   - **ACID Compliance**: Reliable data integrity for AI workflows
+  - **Job Persistence**: Unified job tracking for all processing operations
 - **Schema**:
   ```sql
   items (
@@ -127,6 +128,19 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
   item_tags (
     item_id UUID REFERENCES items,
     tag_id UUID REFERENCES tags
+  )
+  
+  processing_jobs (
+    id UUID PRIMARY KEY,
+    job_id VARCHAR(255) UNIQUE,
+    job_type VARCHAR(100),
+    status VARCHAR(50),
+    item_id UUID REFERENCES items,
+    input_data JSONB,
+    result_data JSONB,
+    progress_percentage INTEGER,
+    created_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ
   )
   ```
 

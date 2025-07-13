@@ -96,6 +96,12 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
        - Automatic preview generation for ALL GitHub URLs
        - Rate limit handling with graceful fallback messages
        - Retroactive enhancement script for existing entries
+   - ✅ **Unified Job Persistence System** - **NEW** (2025-07-13)
+     - Comprehensive job lifecycle tracking for all processing operations
+     - `/api/persistence/*` endpoints for job management and monitoring
+     - Database persistence with `processing_jobs` table for robust tracking
+     - Integration with media processing agents for reliable workflows
+     - Real-time progress updates and error handling with retry mechanisms
    - Thought stream with lazy loading - **Thought Stream** page
    - Full-text search (FIXED: was looking for wrong field in API response) - **Neural Nest** page
    - Tag management
