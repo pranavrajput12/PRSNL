@@ -226,8 +226,8 @@ async def transcribe_audio(
         )
 
 
-@router.get("/models")
-async def get_available_models(
+@router.get("/transcription/models")
+async def get_available_transcription_models(
     current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """Get information about available transcription models."""
