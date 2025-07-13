@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     # LLM
     AZURE_OPENAI_API_KEY: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
-    AZURE_OPENAI_DEPLOYMENT: str = "prsnl-gpt-4"  # Main GPT deployment with vision capability
-    AZURE_OPENAI_LIBRECHAT_DEPLOYMENT: str = "gpt-4.1-mini"  # Fast model for LibreChat
+    AZURE_OPENAI_DEPLOYMENT: str = "gpt-4.1"  # Main GPT deployment with vision capability
+    AZURE_OPENAI_LIBRECHAT_DEPLOYMENT: str = "gpt-4.1"  # Fast model for LibreChat
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT: str = "text-embedding-ada-002"  # Model version 2
     AZURE_OPENAI_WHISPER_DEPLOYMENT: str = "whisper"  # Model version 001
     AZURE_OPENAI_API_VERSION: str = "2025-01-01-preview"
