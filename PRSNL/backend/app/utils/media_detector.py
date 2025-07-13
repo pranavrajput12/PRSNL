@@ -1,10 +1,11 @@
 """
 Media Detection Utilities - Detect videos, images, and other media types
 """
-import re
-from urllib.parse import urlparse, parse_qs
-from typing import Dict, Optional, List, Tuple
 import mimetypes
+import re
+from typing import Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
+
 
 class MediaDetector:
     """Detect and extract information about media content"""
@@ -190,8 +191,9 @@ class MediaDetector:
         """
         Extract image URLs from HTML content
         """
-        from bs4 import BeautifulSoup
         from urllib.parse import urljoin
+
+        from bs4 import BeautifulSoup
         
         soup = BeautifulSoup(html, 'html.parser')
         images = []

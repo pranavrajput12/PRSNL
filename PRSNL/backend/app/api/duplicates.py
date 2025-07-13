@@ -1,12 +1,13 @@
 """
 Duplicate Detection API endpoints
 """
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.services.duplicate_detection import duplicate_detection
 from app.core.auth import get_current_user
+from app.services.duplicate_detection import duplicate_detection
 
 router = APIRouter()
 

@@ -1,11 +1,12 @@
 import logging
 import time
 import uuid
+
+from fastapi import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
-from fastapi import HTTPException
 
 from ..core.exceptions import ErrorResponse, InternalServerError
 

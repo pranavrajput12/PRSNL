@@ -1,8 +1,10 @@
 """Database connection with safe pgvector handling"""
-import asyncpg
-from typing import Optional
-from app.config import settings
 import logging
+from typing import Optional
+
+import asyncpg
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

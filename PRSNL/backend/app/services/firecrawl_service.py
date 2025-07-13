@@ -3,12 +3,13 @@ Firecrawl Web Scraping Service for PRSNL
 Advanced web scraping with JS rendering and content extraction
 """
 
-import logging
-import httpx
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
+import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
+
+import httpx
 
 from app.config import settings
 

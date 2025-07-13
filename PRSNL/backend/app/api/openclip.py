@@ -3,17 +3,19 @@ OpenCLIP REST API Endpoints for PRSNL
 Advanced image understanding and visual-semantic search
 """
 
-import logging
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 import base64
 import io
-from PIL import Image
+import logging
+from typing import Any, Dict, List, Optional
+
 import numpy as np
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
+from PIL import Image
+from pydantic import BaseModel, Field
 
 from app.services.openclip_service import openclip_service
+
 # Rate limiting temporarily disabled for testing
 # from app.middleware.rate_limit import openclip_limiter
 

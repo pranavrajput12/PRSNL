@@ -1,9 +1,10 @@
 import asyncio
 import logging
+from typing import Any, Callable, Dict
+from uuid import UUID
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from typing import Callable, Dict, Any
-from uuid import UUID
 
 from app.core.websocket_manager import manager
 from app.models.schemas import ProcessingProgressUpdate

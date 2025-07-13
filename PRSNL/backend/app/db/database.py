@@ -1,9 +1,11 @@
 """Database connection and pooling"""
-import asyncpg
-from typing import Optional, List, AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from app.config import settings
 import logging
+from typing import AsyncGenerator, List, Optional
+
+import asyncpg
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

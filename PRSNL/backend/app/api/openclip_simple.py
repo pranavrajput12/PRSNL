@@ -3,14 +3,15 @@ OpenCLIP REST API Endpoints for PRSNL (Simplified Version)
 Advanced image understanding and visual-semantic search
 """
 
-import logging
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 import base64
 import io
+import logging
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from PIL import Image
+from pydantic import BaseModel, Field
 
 from app.services.openclip_service import openclip_service
 

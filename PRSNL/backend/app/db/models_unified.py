@@ -2,12 +2,25 @@
 Unified SQLAlchemy models for PRSNL database
 This matches the unified schema exactly to prevent column mismatch errors
 """
-from sqlalchemy import Column, String, Text, JSON, TIMESTAMP, Integer, Float, ForeignKey, Table, Boolean, BigInteger
-from sqlalchemy.dialects.postgresql import UUID, INET
-from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.sql import func
-from pgvector.sqlalchemy import Vector
 import uuid
+
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    JSON,
+    String,
+    Table,
+    Text,
+    TIMESTAMP,
+)
+from sqlalchemy.dialects.postgresql import INET, UUID
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 

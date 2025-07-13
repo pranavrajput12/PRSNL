@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
 from typing import List
+
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from app.core.exceptions import InternalServerError

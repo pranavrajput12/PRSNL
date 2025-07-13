@@ -6,10 +6,12 @@ For production use, please use HybridTranscriptionService which provides
 intelligent routing between cloud and offline transcription.
 """
 
-import os
-import httpx
-from typing import Optional
 import logging
+import os
+from typing import Optional
+
+import httpx
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)

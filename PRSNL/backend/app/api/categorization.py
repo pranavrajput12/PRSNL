@@ -1,14 +1,15 @@
 """
 Smart Categorization API endpoints
 """
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List, Dict, Optional
-from pydantic import BaseModel
-import asyncpg
+from typing import Dict, List, Optional
 
-from app.services.smart_categorization import smart_categorization
-from app.db.database import get_db_pool
+import asyncpg
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from app.core.auth import get_current_user
+from app.db.database import get_db_pool
+from app.services.smart_categorization import smart_categorization
 
 router = APIRouter()
 

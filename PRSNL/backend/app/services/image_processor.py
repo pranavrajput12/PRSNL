@@ -2,17 +2,19 @@
 Image Processing Service - Extract and store images from content
 """
 import asyncio
-import httpx
 import hashlib
-import os
-from typing import List, Dict, Optional
-from urllib.parse import urlparse, urljoin
 import logging
-from pathlib import Path
-from PIL import Image
+import os
 from io import BytesIO
-from app.utils.media_detector import MediaDetector
+from pathlib import Path
+from typing import Dict, List, Optional
+from urllib.parse import urljoin, urlparse
+
+import httpx
+from PIL import Image
+
 from app.config import settings
+from app.utils.media_detector import MediaDetector
 
 logger = logging.getLogger(__name__)
 

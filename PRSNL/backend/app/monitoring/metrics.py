@@ -1,4 +1,4 @@
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Gauge, Histogram
 
 # Define metrics for video operations
 VIDEO_CAPTURE_REQUESTS = Counter(

@@ -2,17 +2,19 @@
 Unified AI Service Layer for all AI-powered features
 Uses Azure OpenAI for all LLM operations
 """
+import asyncio
+import hashlib
 import json
 import logging
-from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
-import asyncio
-from openai import AsyncAzureOpenAI
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+from openai import AsyncAzureOpenAI
+
 from app.config import settings
-from app.services.cache import cache_service, CacheKeys
-import hashlib
 from app.services.ai_validation_service import ai_validation_service
+from app.services.cache import cache_service, CacheKeys
 
 logger = logging.getLogger(__name__)
 

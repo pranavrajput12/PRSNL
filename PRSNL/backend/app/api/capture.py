@@ -1,27 +1,33 @@
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends, Request
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict, List
 import asyncio
 import json
+import logging
+import time
+from typing import Dict, List, Optional
 from uuid import uuid4
 
-from app.core.exceptions import InvalidInput, InternalServerError
-from app.core.capture_engine import CaptureEngine
-from app.services.video_processor import VideoProcessor
-from app.services.llm_processor import LLMProcessor
-from app.db.database import get_db_pool, get_db_connection, update_item_embedding
-from app.services.embedding_service import embedding_service
-from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
-from app.middleware.rate_limit import capture_limiter, capture_throttle_limiter
-import logging
 import asyncpg
-from app.monitoring.metrics import VIDEO_CAPTURE_REQUESTS, VIDEO_DOWNLOAD_OUTCOMES, VIDEO_DOWNLOAD_DURATION_SECONDS, VIDEO_PROCESSING_DURATION_SECONDS
-import time
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from pydantic import BaseModel, HttpUrl
+
 from app.api.instagram_handler import process_instagram_bookmark
+from app.core.capture_engine import CaptureEngine
+from app.core.exceptions import InternalServerError, InvalidInput
+from app.db.database import get_db_connection, get_db_pool, update_item_embedding
+from app.middleware.rate_limit import capture_limiter, capture_throttle_limiter
+from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
+from app.monitoring.metrics import (
+    VIDEO_CAPTURE_REQUESTS,
+    VIDEO_DOWNLOAD_DURATION_SECONDS,
+    VIDEO_DOWNLOAD_OUTCOMES,
+    VIDEO_PROCESSING_DURATION_SECONDS,
+)
+from app.services.embedding_service import embedding_service
+from app.services.llm_processor import LLMProcessor
+from app.services.preview_service import preview_service
+from app.services.video_processor import VideoProcessor
 from app.services.websocket_manager import websocket_manager
 from app.utils.media_detector import MediaDetector
 from app.utils.url_classifier import URLClassifier
-from app.services.preview_service import preview_service
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Force debug level for capture logging
@@ -92,7 +98,8 @@ async def _update_video_processing_progress(item_id: uuid4, progress_data: Dict)
         """, item_id, progress_data)
     logger.info(f"Item {item_id} progress: {progress_data.get('status')} {progress_data.get('percent', 0):.1f}%")
 
-from app.services.cache import invalidate_cache, CacheKeys
+from app.services.cache import CacheKeys, invalidate_cache
+
 
 @router.post("/capture", status_code=status.HTTP_201_CREATED)
 @capture_throttle_limiter

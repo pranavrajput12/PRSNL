@@ -1,14 +1,16 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.services.llm_processor import LLMProcessor
-from app.core.websocket_manager import manager
-from app.services.unified_ai_service import UnifiedAIService
-from app.db.database import get_db_pool
-import logging
-import json
-import uuid
 import asyncio
+import json
+import logging
 import random
-from typing import List, Dict
+import uuid
+from typing import Dict, List
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from app.core.websocket_manager import manager
+from app.db.database import get_db_pool
+from app.services.llm_processor import LLMProcessor
+from app.services.unified_ai_service import UnifiedAIService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

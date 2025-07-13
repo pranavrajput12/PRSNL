@@ -1,16 +1,17 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import timedelta
 import time
+from datetime import timedelta
+from typing import List, Optional
 
-from app.core.exceptions import InvalidInput, InternalServerError
-from app.core.search_engine import SearchEngine
-from app.db.database import get_db_connection, find_similar_items_by_embedding
-from app.services.embedding_service import EmbeddingService
-from app.services.cache import cache_service, CacheKeys, cache_result
-from app.config import settings
 import asyncpg
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
+from app.config import settings
+from app.core.exceptions import InternalServerError, InvalidInput
+from app.core.search_engine import SearchEngine
+from app.db.database import find_similar_items_by_embedding, get_db_connection
+from app.services.cache import cache_result, cache_service, CacheKeys
+from app.services.embedding_service import EmbeddingService
 
 router = APIRouter()
 
@@ -80,7 +81,8 @@ async def search_items(
     except Exception as e:
         raise InternalServerError(f"Failed to perform search: {e}")
 
-from app.services.cache import cache_service, CacheKeys, cache_result
+from app.services.cache import cache_result, cache_service, CacheKeys
+
 
 @router.get("/search/similar/{item_id}")
 @cache_result(prefix=CacheKeys.SIMILAR, expire=timedelta(days=1))

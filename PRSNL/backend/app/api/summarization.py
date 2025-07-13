@@ -2,15 +2,16 @@
 Content Summarization API endpoints
 """
 
+import logging
+from datetime import date, datetime, timedelta
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional, List
-from datetime import datetime, date, timedelta
 from pydantic import BaseModel, Field
 
+from app.core.auth import get_current_user_optional
 from app.db.database import get_db_pool
 from app.services.content_summarization import ContentSummarizationService
-from app.core.auth import get_current_user_optional
-import logging
 
 logger = logging.getLogger(__name__)
 

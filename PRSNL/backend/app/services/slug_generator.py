@@ -5,13 +5,14 @@ Generates SEO-friendly, unique slugs for content with collision detection.
 Optimized for the simplified /c/category/slug URL structure.
 """
 
-import re
 import asyncio
-from typing import Optional, Dict, List
-from sqlalchemy import select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-from slugify import slugify
+import re
+from typing import Dict, List, Optional
+
 from nanoid import generate
+from slugify import slugify
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.db.models import ContentUrl, Item

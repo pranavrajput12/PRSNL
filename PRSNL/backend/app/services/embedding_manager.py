@@ -3,10 +3,11 @@ Embedding Manager Service
 Handles creation, storage, and retrieval of embeddings in normalized table
 """
 import logging
-from typing import List, Optional, Dict, Any, Tuple
-from uuid import UUID
-import numpy as np
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
+
+import numpy as np
 
 from app.db.database import get_db_pool
 from app.services.unified_ai_service import unified_ai_service

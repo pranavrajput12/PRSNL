@@ -1,9 +1,10 @@
 """LLM processing service - Wrapper around UnifiedAIService for backward compatibility"""
 import json
-from typing import List, Optional, Dict, AsyncGenerator
-from dataclasses import dataclass
-from app.config import settings
 import logging
+from dataclasses import dataclass
+from typing import AsyncGenerator, Dict, List, Optional
+
+from app.config import settings
 from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)

@@ -5,14 +5,17 @@ Combines Azure OpenAI Whisper (cloud) with whisper.cpp (offline) transcription.
 Automatically selects best service based on context, availability, and user preferences.
 """
 
-import os
-import logging
-from typing import Optional, Dict, Any, Literal
-from enum import Enum
 import asyncio
+import logging
+import os
+from enum import Enum
+from typing import Any, Dict, Literal, Optional
 
-from .whisper_cpp_transcription import WhisperCppTranscriptionService, WHISPER_CPP_AVAILABLE
-from .vosk_transcription import VoskTranscriptionService, VOSK_AVAILABLE
+from .vosk_transcription import VOSK_AVAILABLE, VoskTranscriptionService
+from .whisper_cpp_transcription import (
+    WHISPER_CPP_AVAILABLE,
+    WhisperCppTranscriptionService,
+)
 
 # Import existing transcription service if available
 try:

@@ -1,15 +1,17 @@
 """
 Dynamic Insights API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
-from app.db.database import get_db
-from app.services.dynamic_insights import DynamicInsightsService
-from app.core.auth import get_current_user_optional
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.auth import get_current_user_optional
+from app.db.database import get_db
+from app.services.dynamic_insights import DynamicInsightsService
 
 logger = logging.getLogger(__name__)
 
@@ -304,9 +306,10 @@ async def get_timeline_trends(
     Get daily content type counts for timeline trends visualization
     """
     try:
-        from sqlalchemy import func, text
         from datetime import datetime, timedelta
-        
+
+        from sqlalchemy import func, text
+
         # Parse time range
         days = _parse_time_range(time_range)
         
@@ -401,7 +404,7 @@ async def get_top_tags(
     """
     try:
         from sqlalchemy import func, text
-        
+
         # Parse time range
         days = _parse_time_range(time_range)
         
@@ -469,9 +472,10 @@ async def get_personality_analysis(
     Analyze user's content and tags to determine personality type
     """
     try:
-        from sqlalchemy import func, text
         from datetime import datetime, timedelta
-        
+
+        from sqlalchemy import func, text
+
         # Parse time range
         days = _parse_time_range(time_range)
         cutoff_date = datetime.utcnow() - timedelta(days=days)
@@ -722,9 +726,10 @@ async def get_top_content(
     Get top-rated content for Memory Palace visualization
     """
     try:
-        from sqlalchemy import func, text
         from datetime import datetime, timedelta
-        
+
+        from sqlalchemy import func, text
+
         # Parse time range
         days = _parse_time_range(time_range)
         cutoff_date = datetime.utcnow() - timedelta(days=days)

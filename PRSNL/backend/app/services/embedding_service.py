@@ -1,8 +1,10 @@
-import httpx
 import asyncio
-from typing import List, Optional, Dict
-from app.config import settings
 import logging
+from typing import Dict, List, Optional
+
+import httpx
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

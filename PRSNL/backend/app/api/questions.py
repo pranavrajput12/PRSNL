@@ -2,9 +2,10 @@
 Questions API - Provides suggested questions for the frontend
 This is a placeholder implementation that will be enhanced with Azure models later
 """
-from fastapi import APIRouter, Query
-from typing import List, Dict, Optional
 import random
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 

@@ -1,30 +1,31 @@
 """Video processing service for Instagram and other platforms"""
-import yt_dlp
-import os
 import asyncio
-import httpx
-from pathlib import Path
-from typing import List, Optional, Dict, Callable, Any, Coroutine
-from datetime import datetime, timedelta
-from dataclasses import dataclass
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
-import time
 import json
 import logging
 import math
+import os
 import re
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Callable, Coroutine, Dict, List, Optional
+
+import httpx
+import yt_dlp
 from PIL import Image
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from app.config import settings
+from app.monitoring.metrics import VIDEO_PROCESSING_DURATION_SECONDS
 from app.services.platforms import PlatformProcessor
 from app.services.platforms.instagram import InstagramProcessor
-from app.services.platforms.youtube import YouTubeProcessor
-from app.services.platforms.twitter import TwitterProcessor
 from app.services.platforms.tiktok import TikTokProcessor
+from app.services.platforms.twitter import TwitterProcessor
 from app.services.platforms.vimeo import VimeoProcessor
-from app.monitoring.metrics import VIDEO_PROCESSING_DURATION_SECONDS
-from app.services.whisper_only_transcription import transcription_service
+from app.services.platforms.youtube import YouTubeProcessor
 from app.services.websocket_manager import websocket_manager
+from app.services.whisper_only_transcription import transcription_service
 
 logger = logging.getLogger(__name__)
 

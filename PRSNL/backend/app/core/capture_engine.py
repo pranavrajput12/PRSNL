@@ -1,16 +1,20 @@
 """Core capture engine for processing items"""
 import asyncio
-import time
 import json
-from uuid import UUID
-from app.services.scraper import WebScraper
-from app.services.llm_processor import LLMProcessor
-from app.services.embedding_service import EmbeddingService
-from app.services.embedding_manager import embedding_manager
-from app.db.database import get_db_pool, update_item_embedding
-from app.utils.content_fingerprint import generate_content_fingerprint, ContentFingerprintManager
-from app.utils.fingerprint import calculate_content_fingerprint
 import logging
+import time
+from uuid import UUID
+
+from app.db.database import get_db_pool, update_item_embedding
+from app.services.embedding_manager import embedding_manager
+from app.services.embedding_service import EmbeddingService
+from app.services.llm_processor import LLMProcessor
+from app.services.scraper import WebScraper
+from app.utils.content_fingerprint import (
+    ContentFingerprintManager,
+    generate_content_fingerprint,
+)
+from app.utils.fingerprint import calculate_content_fingerprint
 
 logger = logging.getLogger(__name__)
 

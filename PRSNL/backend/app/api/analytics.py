@@ -1,18 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Any
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
-from app.db.database import get_db_connection
-from app.core.exceptions import InternalServerError
-from app.services.ai_router import ai_router, AITask, TaskType, AIProvider
-from app.config import settings
-from openai import AzureOpenAI
 import asyncpg
+from fastapi import APIRouter, Depends, HTTPException
+from openai import AzureOpenAI
+
+from app.config import settings
+from app.core.exceptions import InternalServerError
+from app.db.database import get_db_connection
+from app.services.ai_router import ai_router, AIProvider, AITask, TaskType
 
 router = APIRouter()
 
-from app.services.cache import cache_service, CacheKeys, cache_result
+from app.services.cache import cache_result, cache_service, CacheKeys
+
 
 @router.get("/analytics/trends")
 @cache_result(prefix=CacheKeys.STATS, expire=timedelta(hours=1))

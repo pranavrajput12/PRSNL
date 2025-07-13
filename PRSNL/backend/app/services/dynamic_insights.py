@@ -2,18 +2,20 @@
 Dynamic Insights Service - Generates intelligent insights about the user's knowledge base
 """
 import json
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
+import logging
 from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text
+
 from app.db.database import get_db
-from app.db.models import Item, Tag, item_tags
-from app.services.llm_processor import LLMProcessor
+from app.db.models import Item, item_tags, Tag
 from app.services.embedding_service import EmbeddingService
 from app.services.knowledge_graph import KnowledgeGraphService
-import logging
-import numpy as np
+from app.services.llm_processor import LLMProcessor
 
 logger = logging.getLogger(__name__)
 

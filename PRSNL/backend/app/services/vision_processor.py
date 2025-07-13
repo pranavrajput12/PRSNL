@@ -5,13 +5,14 @@ Handles image analysis, OCR, and visual content understanding
 import base64
 import io
 import logging
-from typing import Dict, List, Optional, Any
-from PIL import Image
-import pytesseract
-import httpx
+from typing import Any, Dict, List, Optional
 
-from app.services.ai_router import ai_router, AITask, TaskType, AIProvider
+import httpx
+import pytesseract
+from PIL import Image
+
 from app.config import settings
+from app.services.ai_router import ai_router, AIProvider, AITask, TaskType
 
 logger = logging.getLogger(__name__)
 

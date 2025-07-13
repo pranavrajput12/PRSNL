@@ -1,13 +1,14 @@
 """
 Authentication middleware for PRSNL API
 """
+import logging
 import os
 from typing import Optional
+
 from fastapi import HTTPException, Request, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-import logging
 
 logger = logging.getLogger(__name__)
 

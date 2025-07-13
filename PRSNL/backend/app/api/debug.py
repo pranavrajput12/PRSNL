@@ -1,10 +1,11 @@
 """
 Debug endpoints for troubleshooting
 """
-from fastapi import APIRouter, Depends, Request
-import asyncpg
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+import asyncpg
+from fastapi import APIRouter, Depends, Request
 
 from app.db.database import get_db_connection
 

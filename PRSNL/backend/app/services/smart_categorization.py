@@ -2,16 +2,17 @@
 Smart Categorization Service using Azure OpenAI
 Automatically categorizes and organizes content based on AI analysis
 """
-import logging
-from typing import List, Dict, Optional, Tuple
-from collections import defaultdict
 import asyncio
-
-from app.services.unified_ai_service import unified_ai_service
-from app.db.database import get_db_pool
-from app.config import settings
 import json
+import logging
+from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+
+from app.config import settings
+from app.db.database import get_db_pool
+from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)
 

@@ -5,15 +5,15 @@ Provides local, privacy-focused transcription as alternative to cloud services.
 Supports multiple languages and handles rate limiting concerns.
 """
 
-import os
-import json
-import wave
 import asyncio
+import json
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+import os
 import subprocess
 import tempfile
+import wave
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     import vosk
@@ -78,9 +78,10 @@ class VoskTranscriptionService:
     
     async def _download_and_extract_model(self, url: str, extract_path: Path):
         """Download and extract Vosk model."""
-        import httpx
         import zipfile
-        
+
+        import httpx
+
         # Download model
         async with httpx.AsyncClient() as client:
             async with client.stream("GET", url) as response:

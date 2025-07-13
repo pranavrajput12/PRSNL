@@ -3,16 +3,17 @@ API endpoints for the simplified permalink system.
 Handles content URLs with /c/category/slug structure.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, desc
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.db.models import ContentUrl, Item, UrlRedirect
-from app.services.url_service import URLService
 from app.services.slug_generator import SmartSlugGenerator
+from app.services.url_service import URLService
 
 router = APIRouter(prefix="/api", tags=["content-urls"])
 

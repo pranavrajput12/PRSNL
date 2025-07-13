@@ -1,7 +1,9 @@
 """Search engine using PostgreSQL full-text search"""
-from typing import List, Optional
 from datetime import datetime, timedelta
+from typing import List, Optional
+
 import asyncpg
+
 from app.models.schemas import SearchResult
 
 

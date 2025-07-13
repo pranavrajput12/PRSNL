@@ -1,19 +1,21 @@
-from fastapi import FastAPI, Request, Response, status, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import asyncio
+import logging
 import os
+import shutil
+import socket
+import sys
+import tempfile
+
 import asyncpg
 import httpx
-import shutil
-import logging
-import sys
-import socket
-import tempfile
+from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Configure uvloop for 2-4x async performance boost
 try:
     import uvloop
+
     # Only install on non-Windows platforms (uvloop doesn't support Windows)
     if sys.platform != 'win32':
         uvloop.install()
@@ -55,17 +57,17 @@ logger = logging.getLogger(__name__)
 # Initialize Sentry before other imports
 # init_sentry()  # Temporarily disabled
 
+from prometheus_client import generate_latest
+from starlette_exporter import handle_metrics, PrometheusMiddleware
+
+from app.api.middleware import ExceptionHandlerMiddleware, RequestIDMiddleware
 from app.config import settings
-from app.worker import listen_for_notifications
-from app.api.middleware import RequestIDMiddleware, ExceptionHandlerMiddleware
+from app.core.errors import generic_error_handler, standard_error_handler, StandardError
 from app.middleware.auth import AuthMiddleware
 from app.middleware.logging import APIResponseTimeMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
-from app.core.errors import StandardError, standard_error_handler, generic_error_handler
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
-
-from prometheus_client import generate_latest
-from starlette_exporter import PrometheusMiddleware, handle_metrics
+from app.worker import listen_for_notifications
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -100,10 +102,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.db.database import create_db_pool, close_db_pool, apply_migrations, init_sqlalchemy
 from app.core.background_tasks import background_tasks
-from app.services.storage_manager import StorageManager
+from app.db.database import (
+    apply_migrations,
+    close_db_pool,
+    create_db_pool,
+    init_sqlalchemy,
+)
 from app.services.cache import cache_service
+from app.services.storage_manager import StorageManager
 
 # Placeholder for worker task
 worker_task = None
@@ -201,14 +208,41 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
         await asyncio.sleep(600) # Update every 10 minutes (600 seconds)
 
 from fastapi.staticfiles import StaticFiles
-from app.api import capture, search, timeline, items, admin, videos, tags, vision, ws, ai_suggest, debug
-from app.api import enhanced_search, embeddings
-from app.api import analytics, questions, video_streaming
-from app.api import categorization, duplicates, summarization, health
-from app.api import insights, import_data, file_upload, content_types, development, ai, firecrawl, content_urls, rag
-from app.api import librechat_bridge  # New LibreChat integration bridge
+
 from app.api import autoagent_integration  # AutoAgent second brain transformation
+from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
+from app.api import (
+    admin,
+    ai,
+    ai_suggest,
+    analytics,
+    capture,
+    categorization,
+    content_types,
+    content_urls,
+    debug,
+    development,
+    duplicates,
+    embeddings,
+    enhanced_search,
+    file_upload,
+    firecrawl,
+    health,
+    import_data,
+    insights,
+    items,
+    questions,
+    rag,
+    search,
+    summarization,
+    tags,
+    timeline,
+    video_streaming,
+    videos,
+    vision,
+    ws,
+)
 from app.api.v2 import items as v2_items
 
 # STEP 3: Debug capture router inclusion

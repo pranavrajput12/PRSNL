@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
-from typing import Dict, Any
+from typing import Any, Dict
 
-from app.services.metrics_service import metrics_service
+from fastapi import APIRouter, Depends
+
 from app.core.exceptions import InternalServerError
+from app.services.metrics_service import metrics_service
 
 router = APIRouter()
 

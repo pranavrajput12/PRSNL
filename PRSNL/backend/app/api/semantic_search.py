@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
-from pydantic import BaseModel
-import asyncpg
 import logging
+from typing import List, Optional
+
+import asyncpg
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from app.db.database import get_db_pool
 from app.services.embedding_service import embedding_service

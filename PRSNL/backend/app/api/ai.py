@@ -8,15 +8,19 @@ Provides REST API access to AI services including:
 - Transcription
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Literal
 import logging
+from typing import Any, Dict, List, Literal, Optional
 
-from app.services.unified_ai_service import unified_ai_service
-from app.services.whisper_only_transcription import transcription_service, TranscriptionModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
 # Guardrails removed per SDE2 recommendation
 from app.core.auth import get_current_user_optional
+from app.services.unified_ai_service import unified_ai_service
+from app.services.whisper_only_transcription import (
+    transcription_service,
+    TranscriptionModel,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["AI"])

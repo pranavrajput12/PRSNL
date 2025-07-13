@@ -2,15 +2,16 @@
 Video Streaming API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
-from pydantic import BaseModel, Field
+import logging
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.services.video_streaming import VideoStreamingService
-from app.core.auth import get_current_user
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -212,9 +213,10 @@ async def batch_process_videos(
     Process all unprocessed video items in the database
     """
     try:
-        from sqlalchemy import select, and_, or_
+        from sqlalchemy import and_, or_, select
+
         from app.models.item import Item
-        
+
         # Find items that look like videos but haven't been processed
         query = select(Item).where(
             and_(
@@ -331,9 +333,10 @@ async def get_video_stats(
     Get statistics about video content
     """
     try:
-        from sqlalchemy import select, func
+        from sqlalchemy import func, select
+
         from app.models.item import Item
-        
+
         # Total video count
         total_query = select(func.count(Item.id)).where(Item.type == "video")
         total_result = await db.execute(total_query)

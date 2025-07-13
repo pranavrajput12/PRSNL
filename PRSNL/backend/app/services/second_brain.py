@@ -2,16 +2,18 @@
 Second Brain Chat Service - Conversational interface for knowledge base
 """
 import json
-from typing import List, Dict, Any, Optional, Tuple
+import logging
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text
+
 from app.db.database import get_db
-from app.db.models import Item, Tag, ItemTag
-from app.services.llm_processor import LLMProcessor
+from app.db.models import Item, ItemTag, Tag
 from app.services.embedding_service import EmbeddingService
 from app.services.knowledge_graph import KnowledgeGraphService
-import logging
+from app.services.llm_processor import LLMProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +197,7 @@ Encourage exploration and 'what if' thinking."""
         """
         # Simple keyword extraction - in production, use NLP
         import re
-        
+
         # Remove common words
         stop_words = {
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',

@@ -2,16 +2,17 @@
 Firecrawl API endpoints for advanced web scraping
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field, HttpUrl
-from typing import Optional, List, Dict, Any, Union
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
-from app.services.firecrawl_service import firecrawl_service
+import asyncpg
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field, HttpUrl
+
 from app.core.auth import get_current_user_optional
 from app.db.database import get_db_pool
-import asyncpg
+from app.services.firecrawl_service import firecrawl_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/firecrawl", tags=["Firecrawl"])

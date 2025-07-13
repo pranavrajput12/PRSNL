@@ -1,6 +1,19 @@
 [flake8]
 max-line-length = 88
-extend-ignore = E203, E266, W503
+extend-ignore = 
+    # E203: whitespace before ':' (conflicts with Black)
+    E203,
+    # E266: too many leading '#' for block comment
+    E266,
+    # E501: line too long (handled by Black)
+    E501,
+    # W503: line break before binary operator (conflicts with Black)
+    W503,
+    # F403: 'from module import *' used
+    F403,
+    # F401: module imported but unused (temporarily)
+    F401
+max-complexity = 10
 exclude = 
     .git,
     __pycache__,
@@ -10,6 +23,17 @@ exclude =
     dist,
     *.egg-info,
     .pytest_cache,
-    .mypy_cache
+    .mypy_cache,
+    migrations,
+    .tox,
+    .coverage,
+    htmlcov,
+    .DS_Store
 per-file-ignores =
     __init__.py:F401
+    */migrations/*:E501
+    */autoagent/*:E501,F401
+    */tests/*:F401,F811
+statistics = True
+count = True
+show-source = True

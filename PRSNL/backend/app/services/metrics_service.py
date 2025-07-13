@@ -1,6 +1,6 @@
 import logging
-from typing import Dict, Any
 import time
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,12 @@
 """Special handler for Instagram content that can't be downloaded"""
-import logging
 import json
+import logging
 from uuid import UUID
-from app.services.scraper import WebScraper
-from app.services.llm_processor import LLMProcessor
+
 from app.db.database import get_db_pool
 from app.services.embedding_service import embedding_service
+from app.services.llm_processor import LLMProcessor
+from app.services.scraper import WebScraper
 
 logger = logging.getLogger(__name__)
 

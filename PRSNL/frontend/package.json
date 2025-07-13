@@ -13,6 +13,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.svelte --fix",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate-api": "orval --config orval.config.cjs"
   },
   "devDependencies": {

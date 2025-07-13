@@ -9,15 +9,15 @@ This service provides AI-powered content summarization with multiple modes:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-from collections import defaultdict
+import json
 import logging
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from app.config import settings
-from app.services.unified_ai_service import unified_ai_service
 from app.db.database import get_db_pool
-import json
+from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)
 

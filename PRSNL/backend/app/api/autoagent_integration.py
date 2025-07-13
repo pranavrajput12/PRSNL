@@ -5,14 +5,15 @@ This module provides FastAPI endpoints that expose AutoAgent's
 multi-agent capabilities to the PRSNL frontend.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
-import json
 import asyncio
-from datetime import datetime
-import sys
+import json
 import os
+import sys
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 # CRITICAL: Set environment variables BEFORE any autoagent imports
 os.environ["DEFAULT_LOG"] = "False"  # Disable default logging to avoid directory issue
@@ -26,14 +27,13 @@ os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Enable function
 autoagent_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'autoagent')
 sys.path.insert(0, autoagent_path)
 
-from autoagent import MetaChain, Agent, Response
-from autoagent.memory.prsnl_memory import PRSNLMemory
+from app.config import settings
+from app.db.database import get_db_connection
+from app.services.unified_ai_service import UnifiedAIService
+from autoagent import Agent, MetaChain, Response
 from autoagent.agents.prsnl_agents import PRSNLMultiAgentOrchestrator
 from autoagent.logger import MetaChainLogger
-
-from app.config import settings
-from app.services.unified_ai_service import UnifiedAIService
-from app.db.database import get_db_connection
+from autoagent.memory.prsnl_memory import PRSNLMemory
 
 router = APIRouter(prefix="/api/autoagent", tags=["autoagent"])
 
@@ -72,6 +72,7 @@ class MultiAgentResponse(BaseModel):
 # Initialize shared resources
 # Set environment variables for AutoAgent to use Azure OpenAI
 import litellm
+
 litellm.azure_key = settings.AZURE_OPENAI_API_KEY
 litellm.api_base = settings.AZURE_OPENAI_ENDPOINT
 

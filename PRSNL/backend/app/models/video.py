@@ -1,7 +1,9 @@
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict
 from datetime import datetime
+from typing import Dict, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, HttpUrl
+
 
 class VideoMetadata(BaseModel):
     width: Optional[int] = None

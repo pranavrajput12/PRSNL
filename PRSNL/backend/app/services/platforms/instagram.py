@@ -1,7 +1,8 @@
-from typing import Dict, Optional
-import yt_dlp
 import asyncio
 import logging
+from typing import Dict, Optional
+
+import yt_dlp
 
 from . import PlatformProcessor
 

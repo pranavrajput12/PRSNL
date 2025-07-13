@@ -5,13 +5,14 @@ Manages URL generation, redirects, and SEO optimization for the /c/category/slug
 """
 
 import re
-from typing import Optional, Dict, List, Tuple
 from datetime import datetime
-from sqlalchemy import select, update, and_, or_
+from typing import Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.db.models import ContentUrl, UrlRedirect, Item
+from app.db.models import ContentUrl, Item, UrlRedirect
 from app.services.slug_generator import SmartSlugGenerator
 from app.utils.url_classifier import URLClassifier
 

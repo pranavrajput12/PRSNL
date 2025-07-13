@@ -6,7 +6,7 @@ Provides SHA-256 fingerprinting for content deduplication and versioning.
 
 import hashlib
 import json
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
 
 
 def generate_content_fingerprint(raw_content: Optional[str]) -> Optional[str]:

@@ -5,19 +5,20 @@ This module provides OpenAI-compatible endpoints that LibreChat can use
 to interface with PRSNL's knowledge base and AI services.
 """
 
-from fastapi import APIRouter, HTTPException, Header, Request
-from fastapi.responses import StreamingResponse
-from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field
-import json
 import asyncio
-import time
+import json
 import logging
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
-from app.services.unified_ai_service import UnifiedAIService
-from app.db.database import get_db_connection
+from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
 from app.config import settings
+from app.db.database import get_db_connection
+from app.services.unified_ai_service import UnifiedAIService
 
 logger = logging.getLogger(__name__)
 

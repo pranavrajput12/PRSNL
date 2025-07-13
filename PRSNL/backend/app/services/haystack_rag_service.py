@@ -10,11 +10,11 @@ Features:
 - Answer generation with citations
 """
 
-import logging
-from typing import List, Dict, Any, Optional, Union
-from datetime import datetime
 import asyncio
+import logging
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from app.config import settings
 from app.db.database import get_db_pool
@@ -26,17 +26,22 @@ try:
     import os
     os.environ['SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL'] = 'True'
     
-    from haystack import Pipeline, Document
-    from haystack.utils import Secret
+    from haystack import Document, Pipeline
+    from haystack.components.builders import AnswerBuilder, PromptBuilder
+    from haystack.components.embedders import (
+        SentenceTransformersDocumentEmbedder,
+        SentenceTransformersTextEmbedder,
+    )
+    from haystack.components.generators import AzureOpenAIGenerator, OpenAIGenerator
     from haystack.components.preprocessors import DocumentCleaner, DocumentSplitter
-    from haystack.components.embedders import SentenceTransformersDocumentEmbedder, SentenceTransformersTextEmbedder
-    from haystack.components.builders import PromptBuilder, AnswerBuilder
-    from haystack.components.generators import OpenAIGenerator, AzureOpenAIGenerator
     from haystack.components.retrievers import InMemoryEmbeddingRetriever
-    from haystack.document_stores.in_memory import InMemoryDocumentStore
     from haystack.components.writers import DocumentWriter
+    from haystack.document_stores.in_memory import InMemoryDocumentStore
+    from haystack.utils import Secret
+    from haystack_integrations.components.retrievers.pgvector import (
+        PgvectorEmbeddingRetriever,
+    )
     from haystack_integrations.document_stores.pgvector import PgvectorDocumentStore
-    from haystack_integrations.components.retrievers.pgvector import PgvectorEmbeddingRetriever
     
     HAYSTACK_AVAILABLE = True
     logger.info("Haystack v2 successfully imported")

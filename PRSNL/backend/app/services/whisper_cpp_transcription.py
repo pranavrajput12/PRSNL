@@ -5,17 +5,17 @@ Provides high-accuracy local transcription using whisper.cpp.
 Significantly better accuracy than Vosk with CPU optimization.
 """
 
-import os
-import json
-import wave
 import asyncio
+import hashlib
+import json
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple, AsyncGenerator
+import os
 import subprocess
 import tempfile
 import time
-import hashlib
+import wave
+from pathlib import Path
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 try:
     from pywhispercpp.model import Model as WhisperModel

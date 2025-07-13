@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 from uuid import UUID
 
-from app.services.job_scheduler import job_scheduler
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.core.exceptions import InternalServerError
-from app.models.schemas import JobQueueStatus, Job, JobCancelResponse, JobStatus
+from app.models.schemas import Job, JobCancelResponse, JobQueueStatus, JobStatus
+from app.services.job_scheduler import job_scheduler
 
 router = APIRouter()
 

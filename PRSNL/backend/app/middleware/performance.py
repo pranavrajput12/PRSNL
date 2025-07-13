@@ -1,11 +1,12 @@
+import logging
 import time
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
 from app.services.metrics_service import metrics_service
-import logging
 
 logger = logging.getLogger(__name__)
 

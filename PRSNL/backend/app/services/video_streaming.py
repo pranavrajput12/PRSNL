@@ -9,23 +9,23 @@ This service handles:
 """
 
 import asyncio
+import json
+import logging
 import re
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any
-from urllib.parse import urlparse, parse_qs
-import logging
-import json
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, text
-from youtube_transcript_api import YouTubeTranscriptApi
 import httpx
+from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+from youtube_transcript_api import YouTubeTranscriptApi
 
-from app.models.schemas import Item
 from app.config import settings
-from app.services.llm_processor import LLMProcessor
-from app.services.embedding_service import EmbeddingService
 from app.db.database import get_db
+from app.models.schemas import Item
+from app.services.embedding_service import EmbeddingService
+from app.services.llm_processor import LLMProcessor
 
 logger = logging.getLogger(__name__)
 # settings already imported above

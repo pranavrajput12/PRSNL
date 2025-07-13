@@ -1,17 +1,18 @@
 """
 Enhanced Search API endpoints using new embedding architecture
 """
-from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Literal
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
-from app.services.enhanced_search_service import enhanced_search_service
-from app.services.embedding_manager import embedding_manager
-from app.utils.fingerprint import calculate_content_fingerprint
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
 from app.core.auth import get_current_user_optional
-from app.middleware.rate_limit import semantic_search_limiter, embedding_limiter
+from app.middleware.rate_limit import embedding_limiter, semantic_search_limiter
+from app.services.embedding_manager import embedding_manager
+from app.services.enhanced_search_service import enhanced_search_service
+from app.utils.fingerprint import calculate_content_fingerprint
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["Enhanced Search"])

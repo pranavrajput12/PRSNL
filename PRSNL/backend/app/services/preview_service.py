@@ -5,19 +5,20 @@ Generates rich previews for GitHub repositories, Stack Overflow questions,
 and other development-related content to enhance timeline display.
 """
 
+import asyncio
+import json
+import logging
 import os
 import re
-import json
-import asyncio
-import httpx
-from typing import Dict, Optional, List, Any
-from urllib.parse import urlparse, parse_qs
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import logging
+from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlparse
 
-from app.utils.url_classifier import URLClassifier
+import httpx
+from bs4 import BeautifulSoup
+
 from app.services.cache_service import cache_service
+from app.utils.url_classifier import URLClassifier
 
 logger = logging.getLogger(__name__)
 

@@ -7,9 +7,11 @@ classify development-related links and extract metadata.
 
 import re
 from typing import Dict, Optional, Tuple
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
+
 import requests
 from bs4 import BeautifulSoup
+
 
 class URLClassifier:
     """Classifier for detecting and categorizing development-related URLs."""

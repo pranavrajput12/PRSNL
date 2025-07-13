@@ -1,18 +1,19 @@
 """
 Duplicate Detection Service using embeddings and content analysis
 """
-import logging
-from typing import List, Dict, Optional, Tuple, Any
-import hashlib
-from urllib.parse import urlparse, unquote
 import asyncio
+import hashlib
+import json
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import unquote, urlparse
 
+import numpy as np
+
+from app.config import settings
 from app.db.database import get_db_pool
 from app.services.unified_ai_service import unified_ai_service
-from app.config import settings
 from app.utils.fingerprint import calculate_content_fingerprint
-import json
-import numpy as np
 
 logger = logging.getLogger(__name__)
 

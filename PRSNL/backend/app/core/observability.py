@@ -5,25 +5,25 @@ Provides comprehensive monitoring with traces, metrics, and logs.
 Two-line drop-in instrumentation for FastAPI application.
 """
 
-import os
 import logging
-from typing import Optional
+import os
 from contextlib import asynccontextmanager
+from typing import Optional
 
 # OpenTelemetry imports
-from opentelemetry import trace, metrics
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
-from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 # Prometheus FastAPI instrumentator
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -221,7 +221,7 @@ class ObservabilityManager:
     
     def _track_ai_processing_time(self):
         """Custom metric: Track AI processing performance."""
-        from prometheus_client import Histogram, Counter
+        from prometheus_client import Counter, Histogram
         
         ai_duration = Histogram(
             "prsnl_ai_processing_duration_seconds",

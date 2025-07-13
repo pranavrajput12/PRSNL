@@ -5,17 +5,18 @@ Powered by Haystack v2
 Provides intelligent question-answering and knowledge retrieval
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Literal
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
-from app.services.haystack_rag_service import haystack_rag_service, HAYSTACK_AVAILABLE
+import asyncpg
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel, Field
+
+from app.config import settings
 from app.core.auth import get_current_user_optional
 from app.db.database import get_db_pool
-from app.config import settings
-import asyncpg
+from app.services.haystack_rag_service import HAYSTACK_AVAILABLE, haystack_rag_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rag", tags=["RAG"])

@@ -2,15 +2,16 @@
 Knowledge Graph API endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
-from pydantic import BaseModel, Field
+import logging
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.services.knowledge_graph import KnowledgeGraphService
-from app.core.auth import get_current_user
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -252,8 +253,9 @@ async def get_item_relationships(
     """
     try:
         from sqlalchemy import select
+
         from app.models.item import Item
-        
+
         # Get the item
         result = await db.execute(
             select(Item).where(Item.id == item_id)
@@ -323,8 +325,9 @@ async def delete_relationship(
     """
     try:
         from sqlalchemy import select
+
         from app.models.item import Item
-        
+
         # Get the source item
         result = await db.execute(
             select(Item).where(Item.id == source_id)

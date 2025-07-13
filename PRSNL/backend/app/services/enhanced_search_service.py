@@ -3,14 +3,15 @@ Enhanced Search Service using new embedding architecture
 Provides unified search across content with fingerprint-based deduplication
 """
 import logging
-from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 from app.db.database import get_db_pool
-from app.services.unified_ai_service import unified_ai_service
-from app.services.embedding_manager import embedding_manager
 from app.services.duplicate_detection import duplicate_detection
+from app.services.embedding_manager import embedding_manager
+from app.services.unified_ai_service import unified_ai_service
 from app.utils.fingerprint import calculate_content_fingerprint
 
 logger = logging.getLogger(__name__)

@@ -1,15 +1,28 @@
 """
 SQLAlchemy model for Synaptic Echo audio journaling system
 """
-from sqlalchemy import Column, String, Text, JSON, TIMESTAMP, Integer, Float, ForeignKey, Boolean
-from sqlalchemy.dialects.postgresql import UUID, POINT
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from app.db.models import Base
 import uuid
 from datetime import datetime
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    JSON,
+    String,
+    Text,
+    TIMESTAMP,
+)
+from sqlalchemy.dialects.postgresql import POINT, UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from app.db.models import Base
+
 
 class PrivacyLevel(str, Enum):
     PUBLIC = "public"
@@ -232,8 +245,8 @@ def add_audio_journal_relationships():
     Add relationships to existing Item and File models.
     This should be called after all models are defined.
     """
-    from app.db.models import Item, File
-    
+    from app.db.models import File, Item
+
     # Add relationship to Item model
     if not hasattr(Item, 'audio_journal'):
         Item.audio_journal = relationship("AudioJournal", back_populates="item", uselist=False)

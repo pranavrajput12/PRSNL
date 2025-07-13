@@ -1,6 +1,8 @@
-import asyncpg
-from typing import List, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import asyncpg
+
 
 async def get_knowledge_graph_tags(db_connection: asyncpg.Connection) -> List[Dict[str, Any]]:
     """

@@ -1,23 +1,24 @@
 """Document processing service for handling uploaded files"""
-import os
-import hashlib
-import mimetypes
 import asyncio
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Union
-from uuid import UUID
+import csv
+import hashlib
+import io
 import logging
+import mimetypes
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+from uuid import UUID
+
 import aiofiles
 import aiofiles.os
+import docx
 
 # For text extraction
 import PyPDF2
-import docx
 import pytesseract
 from PIL import Image
-import io
-import csv
 
 # For file type detection
 try:

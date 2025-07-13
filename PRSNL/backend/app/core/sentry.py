@@ -1,14 +1,16 @@
 """
 Sentry error tracking and performance monitoring configuration
 """
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.starlette import StarletteIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
-from sentry_sdk.integrations.asyncio import AsyncioIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
 import logging
+
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)

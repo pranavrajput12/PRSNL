@@ -3,12 +3,13 @@ AI Router Service - Intelligently routes AI tasks to appropriate providers
 Optimizes for cost, performance, and availability
 """
 import asyncio
-import logging
-from typing import Dict, List, Optional, Any, Literal
-from enum import Enum
-from dataclasses import dataclass
-import time
 import json
+import logging
+import time
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)

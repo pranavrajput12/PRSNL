@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
-from app.db.database import get_db_pool
 import logging
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, HTTPException
+
+from app.db.database import get_db_pool
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
 """Web scraping service"""
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Dict, List, Optional
+from urllib.parse import urljoin
+
 import httpx
 from bs4 import BeautifulSoup
 from readability.readability import Document
-from datetime import datetime
-from typing import Optional
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict
-from urllib.parse import urljoin
-import logging
 
 logger = logging.getLogger(__name__)
 

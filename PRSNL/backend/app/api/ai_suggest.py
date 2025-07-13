@@ -7,13 +7,13 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, HttpUrl
 from openai import AzureOpenAI
+from pydantic import BaseModel, HttpUrl
 
-from app.core.exceptions import InternalServerError
-from app.services.ai_router import AITask, TaskType, ai_router, AIProvider
-from app.services.scraper import WebScraper
 from app.config import settings
+from app.core.exceptions import InternalServerError
+from app.services.ai_router import ai_router, AIProvider, AITask, TaskType
+from app.services.scraper import WebScraper
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -1,17 +1,19 @@
 """
 Second Brain Chat API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
-from app.db.database import get_db
-from app.services.second_brain import SecondBrainService
-from app.core.auth import get_current_user_optional
+import asyncio
 import json
 import logging
-import asyncio
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.auth import get_current_user_optional
+from app.db.database import get_db
+from app.services.second_brain import SecondBrainService
 
 logger = logging.getLogger(__name__)
 

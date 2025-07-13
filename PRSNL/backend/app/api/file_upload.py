@@ -1,22 +1,37 @@
 """File upload API endpoints"""
-from fastapi import APIRouter, HTTPException, status, UploadFile, File, Form, Depends, BackgroundTasks, Request
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 import asyncio
 import json
-from uuid import uuid4, UUID
 import logging
-import asyncpg
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+from uuid import UUID, uuid4
 
-from app.core.exceptions import InvalidInput, InternalServerError
-from app.services.document_processor import DocumentProcessor
-from app.services.file_ai_processor import FileAIProcessor
-from app.services.embedding_service import embedding_service
-from app.db.database import get_db_pool, get_db_connection, update_item_embedding
+import asyncpg
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    status,
+    UploadFile,
+)
+from pydantic import BaseModel
+
+from app.core.exceptions import InternalServerError, InvalidInput
+from app.db.database import get_db_connection, get_db_pool, update_item_embedding
+from app.middleware.rate_limit import (
+    bulk_operation_limiter,
+    capture_limiter,
+    file_upload_limiter,
+)
 from app.models.schemas import ItemStatus
-from app.middleware.rate_limit import capture_limiter, file_upload_limiter, bulk_operation_limiter
-from app.services.cache import invalidate_cache, CacheKeys
+from app.services.cache import CacheKeys, invalidate_cache
+from app.services.document_processor import DocumentProcessor
+from app.services.embedding_service import embedding_service
+from app.services.file_ai_processor import FileAIProcessor
 
 logger = logging.getLogger(__name__)
 

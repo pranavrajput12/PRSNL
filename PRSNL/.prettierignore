@@ -1,0 +1,87 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Build outputs
+dist/
+build/
+.svelte-kit/
+coverage/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Caches
+.cache/
+.pytest_cache/
+.mypy_cache/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.*
+
+# Generated files
+*.generated.*
+**/generated/**
+migrations/
+
+# Data files
+*.db
+*.sqlite
+*.sqlite3
+
+# Media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.webm
+*.svg
+
+# Specific directories
+backend/media/
+frontend/static/assets/
+extension/
+
+# Documentation that shouldn't be formatted
+CHANGELOG.md
+SECURITY_FIXES.md
+
+# Lock files
+package-lock.json
+yarn.lock
+poetry.lock
+requirements.txt
+
+# Test snapshots
+**/__snapshots__/**
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Config files that should keep their formatting
+nginx.conf
+*.conf

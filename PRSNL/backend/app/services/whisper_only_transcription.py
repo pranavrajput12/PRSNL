@@ -5,12 +5,15 @@ This replaces the hybrid transcription service with a simpler,
 whisper.cpp-only implementation for maximum accuracy and simplicity.
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any, List
+import os
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from .whisper_cpp_transcription import WhisperCppTranscriptionService, WHISPER_CPP_AVAILABLE
+from .whisper_cpp_transcription import (
+    WHISPER_CPP_AVAILABLE,
+    WhisperCppTranscriptionService,
+)
 
 logger = logging.getLogger(__name__)
 

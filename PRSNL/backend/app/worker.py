@@ -1,11 +1,12 @@
 import asyncio
-import logging
-import asyncpg
 import json
+import logging
+from uuid import UUID
+
+import asyncpg
 
 from app.core.capture_engine import CaptureEngine
 from app.db.database import get_db_pool
-from uuid import UUID
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

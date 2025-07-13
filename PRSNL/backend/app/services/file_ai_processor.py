@@ -1,13 +1,13 @@
 """AI processing pipeline for file content"""
-import logging
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass
-from uuid import UUID
 import asyncio
+import logging
 import re
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
-from app.services.llm_processor import LLMProcessor
 from app.services.document_processor import DocumentProcessor
+from app.services.llm_processor import LLMProcessor
 
 logger = logging.getLogger(__name__)
 

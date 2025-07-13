@@ -3,16 +3,17 @@ OpenCLIP Vision Service for PRSNL
 Advanced image understanding and visual-semantic search
 """
 
-import logging
-from typing import Dict, Any, List, Optional, Union, Tuple
 import asyncio
-import numpy as np
-from datetime import datetime
-from pathlib import Path
 import base64
 import io
-from PIL import Image
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
+from PIL import Image
 
 from app.config import settings
 

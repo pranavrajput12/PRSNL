@@ -10,21 +10,21 @@ This service builds and manages relationships between knowledge items:
 """
 
 import asyncio
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Set, Any
-from collections import defaultdict, deque
-import logging
 import json
+import logging
+from collections import defaultdict, deque
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, Tuple
 
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, text
 from sqlalchemy.orm import selectinload
 
-from app.db.models import Item
 from app.config import settings
+from app.db.database import get_db
+from app.db.models import Item
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_processor import LLMProcessor
-from app.db.database import get_db
 
 logger = logging.getLogger(__name__)
 

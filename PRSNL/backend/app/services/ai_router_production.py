@@ -4,10 +4,10 @@ Simplified for consistent performance and quality in production
 """
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any
-from enum import Enum
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +124,9 @@ class AIRouter:
     
     async def stream_task(self, task: AITask):
         """Stream AI response using Azure OpenAI"""
-        from app.config import settings
         import json
+
+        from app.config import settings
         
         try:
             # Stream from Azure OpenAI
