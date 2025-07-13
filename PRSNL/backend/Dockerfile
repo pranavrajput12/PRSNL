@@ -1,34 +1,65 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bullseye AS builder
 
 # Set environment variables
-# Prevent Python from creating .pyc files (zero-cache reloads)
 ENV PYTHONDONTWRITEBYTECODE=1
-# Force Python to output everything immediately (no buffering)
 ENV PYTHONUNBUFFERED=1
-# Poetry version
-ENV POETRY_VERSION=1.7.1
 
-# Install system dependencies
+# Install system dependencies needed for building
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    postgresql-client \
     build-essential \
     gcc \
     g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+
+# Install dependencies in chunks to avoid memory issues
+# First install lighter dependencies
+RUN pip install --no-cache-dir \
+    fastapi==0.109.0 \
+    uvicorn[standard]==0.27.0 \
+    uvloop==0.21.0 \
+    python-dotenv==1.0.0 \
+    pydantic-settings==2.1.0 \
+    slowapi==0.1.9 \
+    asyncpg==0.29.0 \
+    sqlalchemy==2.0.25 \
+    pgvector==0.2.0 \
+    redis==5.0.1 \
+    beautifulsoup4==4.12.3 \
+    httpx==0.26.0 \
+    aiohttp==3.9.3
+
+# Then install ML dependencies separately
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir open-clip-torch transformers sentence-transformers
+
+# Finally install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Final stage
+FROM python:3.11-slim-bullseye
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
     tesseract-ocr \
     ffmpeg \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN pip install --no-cache-dir poetry==$POETRY_VERSION
-
 WORKDIR /app
 
-# Copy only requirements first to leverage Docker cache
-COPY requirements.txt .
-
-# Install Python dependencies as root
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY ./app /app/app
