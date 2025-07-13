@@ -88,6 +88,11 @@
         e.preventDefault();
         window.location.href = '/code-cortex';
       }
+      // CMD/CTRL + E for conversations
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+        e.preventDefault();
+        window.location.href = '/conversations';
+      }
       // CMD/CTRL + B for toggle sidebar
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         e.preventDefault();
@@ -552,6 +557,29 @@
           </div>
           {#if !sidebarCollapsed}
             <div class="process-info">MEM: 256MB | CPU: 10%</div>
+          {/if}
+        </a>
+
+        <a
+          href="/conversations"
+          class="nav-link terminal-process {$page.url.pathname.startsWith('/conversations')
+            ? 'active'
+            : ''}"
+          title="Neural Echo"
+        >
+          <div class="process-header">
+            <div class="process-name">Neural Echo</div>
+            <div class="process-status">
+              <div
+                class="status-indicator {$page.url.pathname.startsWith('/conversations')
+                  ? 'active'
+                  : ''}"
+              ></div>
+              <span>{$page.url.pathname.startsWith('/conversations') ? 'ACTIVE' : 'READY'}</span>
+            </div>
+          </div>
+          {#if !sidebarCollapsed}
+            <div class="process-info">MEM: 224MB | CPU: 7%</div>
           {/if}
         </a>
 

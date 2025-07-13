@@ -11,6 +11,9 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
-    "webext-storage": "^2.0.1"
+    "webext-storage": "^2.0.1",
+    "dompurify": "^3.0.0",
+    "uuid": "^9.0.0",
+    "turndown": "^7.1.0"
   }
 }

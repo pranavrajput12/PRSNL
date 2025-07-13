@@ -222,6 +222,8 @@ from app.api import (
     categorization,
     content_types,
     content_urls,
+    conversations,  # Neural Echo - AI chat conversations
+    conversation_intelligence,  # AI-powered conversation analysis
     debug,
     development,
     duplicates,
@@ -272,6 +274,8 @@ app.include_router(summarization.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(import_data.router, prefix=settings.API_V1_STR)
+app.include_router(conversations.router, prefix=settings.API_V1_STR)  # Neural Echo - AI chat conversations
+app.include_router(conversation_intelligence.router, prefix=settings.API_V1_STR)  # AI-powered analysis
 # Backward compatibility alias
 @app.get("/api/import-data")
 async def import_data_alias():

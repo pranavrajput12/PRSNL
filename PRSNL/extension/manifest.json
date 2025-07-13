@@ -14,8 +14,17 @@
   ],
   "host_permissions": [
     "http://localhost:8000/*",
-    "http://localhost:3004/*"
+    "http://localhost:3004/*",
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://perplexity.ai/*",
+    "https://bard.google.com/*",
+    "https://gemini.google.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; object-src 'self';"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

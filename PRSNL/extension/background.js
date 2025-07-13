@@ -153,11 +153,51 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
+// Ensure content script is injected
+async function ensureContentScriptInjected(tabId) {
+  try {
+    // Test if content script is already available
+    const response = await chrome.tabs.sendMessage(tabId, { action: 'ping' });
+    return true; // Content script is available
+  } catch (error) {
+    console.log('🔄 [BACKGROUND] Content script not available, injecting...');
+    try {
+      // Inject content script programmatically
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ['content.js']
+      });
+      
+      // Wait a moment for the script to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('✅ [BACKGROUND] Content script injected successfully');
+      return true;
+    } catch (injectError) {
+      console.error('❌ [BACKGROUND] Failed to inject content script:', injectError);
+      return false;
+    }
+  }
+}
+
 // Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('📨 [BACKGROUND] Received message:', message);
   
-  if (message.action === 'capture') {
+  if (message.action === 'ensureContentScript') {
+    console.log('🔧 [BACKGROUND] Ensuring content script injection for tab:', message.tabId);
+    
+    ensureContentScriptInjected(message.tabId)
+      .then(success => {
+        console.log('🔧 [BACKGROUND] Content script injection result:', success);
+        sendResponse({ success });
+      })
+      .catch(error => {
+        console.error('❌ [BACKGROUND] Error ensuring content script:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
+  } else if (message.action === 'capture') {
     console.log('🎯 [BACKGROUND] Processing capture action');
     console.log('📄 [BACKGROUND] Capture data received:', message.data);
     
@@ -172,5 +212,87 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       });
     return true; // Keep channel open for async response
+  } else if (message.action === 'importConversation') {
+    console.log('🎯 [BACKGROUND] Processing conversation import');
+    console.log('📄 [BACKGROUND] Conversation data received:', message.data);
+
+    // Send the conversation data to the new backend endpoint
+    sendConversationImportRequest(message.data)
+      .then(result => {
+        console.log('✅ [BACKGROUND] Conversation import successful, sending response:', result);
+        sendResponse({ success: true, ...result });
+      })
+      .catch(error => {
+        console.error('❌ [BACKGROUND] Conversation import failed:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
   }
 });
+
+// Send conversation import request with retry logic
+async function sendConversationImportRequest(data, retries = 3) {
+  console.log('🚀 [BACKGROUND] Starting conversation import request:', data);
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔄 [BACKGROUND] Attempt ${i + 1}/${retries}`);
+      console.log('📤 [BACKGROUND] Sending to:', `${API_BASE_URL}/conversations/import`);
+      console.log('📦 [BACKGROUND] Request body:', JSON.stringify(data, null, 2));
+
+      const response = await fetch(`${API_BASE_URL}/conversations/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      console.log('📥 [BACKGROUND] Response status:', response.status);
+      console.log('📥 [BACKGROUND] Response headers:', [...response.headers.entries()]);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [BACKGROUND] Success response:', result);
+        return { success: true, ...result };
+      }
+
+      // Handle error responses
+      const errorText = await response.text();
+      console.error('❌ [BACKGROUND] Error response:', errorText);
+      console.error('❌ [BACKGROUND] Response status:', response.status);
+
+      // Handle specific error codes
+      if (response.status === 429) {
+        console.log('⏳ [BACKGROUND] Rate limited, retrying...');
+        // Rate limited - wait and retry
+        await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
+        continue;
+      }
+
+      // Don't retry business logic errors (400 range except 429)
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        console.log('🚫 [BACKGROUND] Business logic error, not retrying');
+        // Break out of retry loop for client errors
+        break;
+      }
+
+      // Try to parse error JSON
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.detail || errorJson.message || errorMessage;
+        console.error('❌ [BACKGROUND] Parsed error:', errorJson);
+      } catch (e) {
+        console.error('❌ [BACKGROUND] Could not parse error JSON');
+      }
+
+      throw new Error(errorMessage);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+}

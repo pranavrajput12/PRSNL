@@ -39,7 +39,44 @@ This document outlines medium and long-term improvements for the PRSNL project, 
 - Automatic validation and error messages
 - Self-documenting configuration
 
-### 3. Automated Recovery Scripts (Score: 6.3/10)
+### 3. Intelligent Conversation Processing Pipeline (Score: 8.5/10)
+**What**: Robust preprocessing pipeline for AI conversation imports with validation, chunking, and progressive processing.
+
+**Why**: Current direct DOM→AI approach is fragile and inefficient. A preprocessing layer improves reliability, reduces costs, and enables better error handling.
+
+**Implementation**:
+
+**Phase 1: Extension Enhancement (2-3 hours)**
+- Add message validation and cleaning layer in content script
+- Implement smart chunking for large conversations
+- Filter empty messages, system noise, and duplicates
+- Send structured metadata first, then process messages progressively
+
+**Phase 2: Backend Pipeline (2-3 hours)**
+- Accept structured metadata + message batches instead of raw dumps
+- Add validation layer to ensure data quality before AI processing
+- Implement queue system for incremental processing with status updates
+- Enhanced error handling and recovery mechanisms
+
+**Phase 3: AI Agent Optimization (1-2 hours)**
+- Work with clean, structured data for better AI analysis
+- Progressive processing to handle large conversations without timeouts
+- Improved prompts optimized for validated content
+- Real-time status reporting for processing progress
+
+**Benefits**:
+- **Resilient extraction**: Better handling of DOM structure changes
+- **Optimized costs**: Only process quality content with expensive AI
+- **Better UX**: Progressive loading, clear error messages, status updates
+- **Scalable**: Handle conversations of any size efficiently
+- **Maintainable**: Clean separation of concerns, easier debugging
+
+**Architecture**:
+```
+Extension (Parse/Clean) → Backend (Validate/Queue) → AI Agents (Process)
+```
+
+### 4. Automated Recovery Scripts (Score: 6.3/10)
 **What**: Scripts that can automatically detect and recover from common failure states.
 
 **Why**: Reduces manual intervention and improves developer experience.
@@ -120,11 +157,12 @@ These ideas were evaluated but deemed too complex or low-value for the current s
 
 Based on impact and effort, implement in this order:
 
-1. **Single Source of Truth** - High impact on daily development
-2. **Docker Dev Environment** - Solves environment issues permanently
-3. **Automated Recovery** - Saves time on common problems
-4. **Observability** - Important for production
-5. **Progressive Enhancement** - Nice to have for resilience
+1. **Intelligent Conversation Processing Pipeline** - Critical for conversation import reliability and AI efficiency (Score: 8.5/10)
+2. **Single Source of Truth** - High impact on daily development (Score: 7.7/10)
+3. **Docker Dev Environment** - Solves environment issues permanently (Score: 6.7/10)
+4. **Automated Recovery** - Saves time on common problems (Score: 6.3/10)
+5. **Observability** - Important for production (Score: 5.7/10)
+6. **Progressive Enhancement** - Nice to have for resilience (Score: 5.7/10)
 
 ## Measuring Success
 

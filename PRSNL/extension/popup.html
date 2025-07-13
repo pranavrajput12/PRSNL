@@ -7,112 +7,229 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header class="extension-header">
-      <div class="header-text">
-        <h1 class="gradient-text">PRSNL</h1>
-        <h2>Neural Capture</h2>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-section">
+        <div class="neural-logo">🧠</div>
+        <div class="app-title">
+          <h1>PRSNL</h1>
+          <span>Neural Capture</span>
+        </div>
+      </div>
+      <div class="connection-status" id="connection-status">
+        <div class="status-dot"></div>
       </div>
     </header>
 
-    <div class="capture-form">
-      <!-- URL Preview Section -->
-      <div class="url-preview">
-        <div id="favicon-container"></div>
-        <div id="url-info">
-          <div id="page-title" class="truncate"></div>
-          <div id="page-url" class="truncate"></div>
-        </div>
+    <!-- Carousel Container -->
+    <div class="carousel-container">
+      <!-- Card Navigation -->
+      <div class="card-navigation">
+        <button class="nav-dot active" data-card="0"></button>
+        <button class="nav-dot" data-card="1"></button>
       </div>
-      
-      <!-- Content Type Selector -->
-      <div class="form-group">
-        <label for="content-type">Content Type</label>
-        <select id="content-type" class="form-select">
-          <option value="auto">Auto-detect</option>
-          <option value="article">Article</option>
-          <option value="tutorial">Tutorial</option>
-          <option value="video">Video</option>
-          <option value="development">Development</option>
-          <option value="document">Document</option>
-          <option value="note">Note</option>
-          <option value="link">Link</option>
-        </select>
-      </div>
-      
-      <!-- Development-specific fields (hidden by default) -->
-      <div id="development-fields" class="development-section" style="display: none;">
-        <div class="form-group">
-          <label for="programming-language">Programming Language</label>
-          <input type="text" id="programming-language" placeholder="e.g., Python, JavaScript" />
-        </div>
+
+      <!-- Cards Wrapper -->
+      <div class="cards-wrapper" id="cards-wrapper">
         
-        <div class="form-group">
-          <label for="project-category">Project Category</label>
-          <input type="text" id="project-category" placeholder="e.g., Web Development, Machine Learning" />
-        </div>
-        
-        <div class="form-group">
-          <label for="difficulty-level">Difficulty Level</label>
-          <div class="difficulty-selector">
-            <input type="range" id="difficulty-level" min="1" max="5" value="3" />
-            <div class="difficulty-labels">
-              <span>Beginner</span>
-              <span>Advanced</span>
+        <!-- Card 1: Content Capture -->
+        <div class="capture-card active" data-card="0">
+          <div class="card-header">
+            <div class="card-icon">🔗</div>
+            <div class="card-title">
+              <h2>Content Capture</h2>
+              <p>Save links, articles, videos & more</p>
             </div>
           </div>
+
+          <div class="card-body">
+            <!-- URL Preview -->
+            <div class="url-preview-section">
+              <div class="url-preview">
+                <div class="favicon" id="favicon-container">🌐</div>
+                <div class="url-details">
+                  <div class="page-title" id="page-title">Loading...</div>
+                  <div class="page-url" id="page-url">Loading...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Type Selection -->
+            <div class="content-type-section">
+              <label class="section-label">Content Type</label>
+              <div class="type-grid">
+                <button class="type-button active" data-type="auto">
+                  <div class="type-icon">✨</div>
+                  <span>Auto</span>
+                </button>
+                <button class="type-button" data-type="article">
+                  <div class="type-icon">📄</div>
+                  <span>Article</span>
+                </button>
+                <button class="type-button" data-type="video">
+                  <div class="type-icon">🎥</div>
+                  <span>Video</span>
+                </button>
+                <button class="type-button" data-type="development">
+                  <div class="type-icon">💻</div>
+                  <span>Code</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden Form Fields -->
+            <div class="hidden-form-fields">
+              <select id="content-type" style="display: none;">
+                <option value="auto">Auto-detect</option>
+                <option value="article">Article</option>
+                <option value="video">Video</option>
+                <option value="development">Development</option>
+                <option value="document">Document</option>
+              </select>
+              
+              <div id="development-fields" style="display: none;">
+                <select id="programming-language">
+                  <option value="">Select language</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="go">Go</option>
+                  <option value="rust">Rust</option>
+                  <option value="other">Other</option>
+                </select>
+                <select id="project-category">
+                  <option value="">Select category</option>
+                  <option value="open-source">Open Source</option>
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="learning">Learning</option>
+                </select>
+                <select id="difficulty-level">
+                  <option value="1">Beginner</option>
+                  <option value="2">Intermediate</option>
+                  <option value="3">Advanced</option>
+                  <option value="4">Expert</option>
+                </select>
+                <input type="checkbox" id="career-related" />
+              </div>
+
+              <input type="text" id="tag-input" style="display: none;" />
+              <div id="tags-container" style="display: none;"></div>
+              <input type="checkbox" id="enable-summarization" checked style="display: none;" />
+              <div id="selection-container" style="display: none;">
+                <div id="selection-text"></div>
+              </div>
+            </div>
+
+            <!-- Quick Options -->
+            <div class="quick-options">
+              <div class="option-toggle">
+                <input type="checkbox" id="ai-summary" checked>
+                <label for="ai-summary">
+                  <div class="toggle-icon">🤖</div>
+                  <span>AI Summary</span>
+                </label>
+              </div>
+              <div class="option-toggle">
+                <input type="checkbox" id="auto-tags">
+                <label for="auto-tags">
+                  <div class="toggle-icon">🏷️</div>
+                  <span>Auto Tags</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="capture-button" id="capture-btn">
+              <div class="button-content">
+                <div class="btn-icon">⚡</div>
+                <span class="btn-text">Capture Now</span>
+                <div class="btn-loader" style="display: none;">
+                  <div class="loading-spinner"></div>
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="career-related" />
-            <span>Career/Job Related</span>
-          </label>
+
+        <!-- Card 2: AI Conversation Import -->
+        <div class="capture-card" data-card="1">
+          <div class="card-header">
+            <div class="card-icon">🧠</div>
+            <div class="card-title">
+              <h2>Neural Echo</h2>
+              <p>Import AI conversations</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Platform Detection -->
+            <div class="platform-detection">
+              <div class="detection-result" id="detection-result">
+                <div class="detection-icon" id="detection-icon">🔍</div>
+                <div class="detection-text">
+                  <div class="platform-name" id="platform-text">Scanning platform...</div>
+                  <div class="detection-status" id="detection-status">Please wait</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Platform Grid -->
+            <div class="platform-grid">
+              <div class="platform-item" data-platform="chatgpt">
+                <div class="platform-logo">🤖</div>
+                <span class="platform-name">ChatGPT</span>
+                <div class="platform-status"></div>
+              </div>
+              <div class="platform-item" data-platform="claude">
+                <div class="platform-logo">🎭</div>
+                <span class="platform-name">Claude</span>
+                <div class="platform-status"></div>
+              </div>
+              <div class="platform-item" data-platform="perplexity">
+                <div class="platform-logo">🔍</div>
+                <span class="platform-name">Perplexity</span>
+                <div class="platform-status"></div>
+              </div>
+              <div class="platform-item" data-platform="bard">
+                <div class="platform-logo">✨</div>
+                <span class="platform-name">Bard</span>
+                <div class="platform-status"></div>
+              </div>
+            </div>
+
+            <!-- Import Status -->
+            <div class="import-status" id="import-status" style="display: none;">
+              <div class="status-message"></div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="import-button" id="import-conversation-btn" disabled>
+              <div class="button-content">
+                <div class="btn-icon">🚀</div>
+                <span class="btn-text">Import Conversation</span>
+                <div class="btn-loader" style="display: none;">
+                  <div class="neural-pulse"></div>
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <!-- AI Summarization Toggle -->
-      <div class="form-group">
-        <label class="toggle-label">
-          <input type="checkbox" id="enable-summarization" checked />
-          <span class="toggle-switch"></span>
-          <span>Enable AI Summarization</span>
-        </label>
-      </div>
-      
-      <!-- Tags Section -->
-      <div class="tag-input-container">
-        <label for="tag-input">
-          <svg><!-- tag icon --></svg>
-          Add Tags
-        </label>
-        <div class="tag-input-wrapper">
-          <input type="text" id="tag-input" placeholder="Type tags and press Enter" />
-        </div>
-        <div id="tags-container"></div>
-      </div>
-      
-      <!-- Selection Preview -->
-      <div class="selection-preview" id="selection-container" style="display: none;">
-        <label>Selected Text</label>
-        <div id="selection-text" class="selection-text"></div>
+
       </div>
     </div>
 
-    <div class="actions">
-        <button id="capture-btn" class="chip-button">
-          <span class="btn-text">Capture</span>
-          <span class="btn-loader" style="display: none;">
-            <svg class="spinner"></svg>
-          </span>
-        </button>
-        <button id="cancel-btn" class="chip-button secondary-btn">Cancel</button>
-    </div>
+    <!-- Global Status -->
+    <div class="global-status" id="status-message" style="display: none;"></div>
 
-    <div id="status-message" class="status"></div>
-
-    <div class="neural-bg"></div>
+    <!-- Hidden Platform Status Element -->
+    <div id="platform-status" style="display: none;"></div>
   </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>
