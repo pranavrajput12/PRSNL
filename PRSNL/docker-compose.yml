@@ -35,7 +35,7 @@ services:
       - "${LIBRECHAT_PORT:-3080}:3080"
     depends_on:
       - librechat-mongo
-      - librechat-meilisearch
+      # - librechat-meilisearch  # Disabled - search functionality turned off
     env_file:
       - ./librechat.env
     environment:
@@ -59,41 +59,41 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${LIBRECHAT_MONGO_PASSWORD:-secure_mongo_password}
     volumes:
       - librechat_mongo_data:/data/db
-    command: mongod --noauth
 
   # MeiliSearch for LibreChat search functionality
-  librechat-meilisearch:
-    image: getmeili/meilisearch:v1.5
-    container_name: prsnl_librechat_meilisearch
-    restart: unless-stopped
-    environment:
-      MEILI_MASTER_KEY: ${LIBRECHAT_MEILI_KEY:-secure_meili_key}
-      MEILI_NO_ANALYTICS: true
-      MEILI_ENV: production
-    volumes:
-      - librechat_meili_data:/meili_data
+  # Uncomment this service and set SEARCH=true in librechat.env to enable chat search
+  # librechat-meilisearch:
+  #   image: getmeili/meilisearch:v1.5
+  #   container_name: prsnl_librechat_meilisearch
+  #   restart: unless-stopped
+  #   environment:
+  #     MEILI_MASTER_KEY: ${LIBRECHAT_MEILI_KEY:-secure_meili_key}
+  #     MEILI_NO_ANALYTICS: true
+  #     MEILI_ENV: production
+  #   volumes:
+  #     - librechat_meili_data:/meili_data
 
-  # LibreChat RAG API for document processing
-  librechat-rag:
-    image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
-    container_name: prsnl_librechat_rag
-    restart: unless-stopped
-    environment:
-      RAG_PORT: 8000
-      RAG_HOST: 0.0.0.0
-      VECTOR_DB_TYPE: pgvector
-      COLLECTION_NAME: prsnl_knowledge_base
-      CHUNK_SIZE: 1500
-      CHUNK_OVERLAP: 100
-      RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5433/prsnl
-      EMBEDDINGS_PROVIDER: azure
-      EMBEDDINGS_MODEL: text-embedding-ada-002
-      RAG_AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
-      RAG_AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
-    volumes:
-      - librechat_uploads:/app/uploads
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # LibreChat RAG API - Disabled in favor of PRSNL's Haystack RAG
+  # librechat-rag:
+  #   image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
+  #   container_name: prsnl_librechat_rag
+  #   restart: unless-stopped
+  #   environment:
+  #     RAG_PORT: 8000
+  #     RAG_HOST: 0.0.0.0
+  #     VECTOR_DB_TYPE: pgvector
+  #     COLLECTION_NAME: prsnl_knowledge_base
+  #     CHUNK_SIZE: 1500
+  #     CHUNK_OVERLAP: 100
+  #     RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5433/prsnl
+  #     EMBEDDINGS_PROVIDER: azure
+  #     EMBEDDINGS_MODEL: text-embedding-ada-002
+  #     RAG_AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com
+  #     RAG_AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+  #   volumes:
+  #     - librechat_uploads:/app/uploads
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
 
   redis:
     image: docker.dragonflydb.io/dragonflydb/dragonfly

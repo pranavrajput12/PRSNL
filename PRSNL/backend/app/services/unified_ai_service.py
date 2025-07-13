@@ -89,7 +89,8 @@ class UnifiedAIService:
         system_prompt: str = None,
         temperature: float = 0.7,
         max_tokens: int = 1000,
-        response_format: Optional[Dict] = None
+        response_format: Optional[Dict] = None,
+        model: Optional[str] = None
     ) -> str:
         """Generate completion with Azure OpenAI"""
         messages = []
@@ -99,7 +100,7 @@ class UnifiedAIService:
         
         try:
             kwargs = {
-                "model": self.deployment_name,
+                "model": model or self.deployment_name,
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens

@@ -14,6 +14,14 @@ from datetime import datetime
 import sys
 import os
 
+# CRITICAL: Set environment variables BEFORE any autoagent imports
+os.environ["DEFAULT_LOG"] = "False"  # Disable default logging to avoid directory issue
+os.environ["DEBUG"] = "False"
+# Enable function calling for Azure OpenAI
+os.environ["FN_CALL"] = "True"  # Enable function calling
+# Azure OpenAI supports function calling with API version 2023-07-01-preview or later
+os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Enable function calling
+
 # Add AutoAgent to path
 autoagent_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'autoagent')
 sys.path.insert(0, autoagent_path)
@@ -62,13 +70,30 @@ class MultiAgentResponse(BaseModel):
     timestamp: str
 
 # Initialize shared resources
+# Set environment variables for AutoAgent to use Azure OpenAI
+import litellm
+litellm.azure_key = settings.AZURE_OPENAI_API_KEY
+litellm.api_base = settings.AZURE_OPENAI_ENDPOINT
+
+# Also set as env var for AutoAgent with function calling support
+os.environ["AZURE_OPENAI_API_KEY"] = settings.AZURE_OPENAI_API_KEY
+os.environ["AZURE_OPENAI_ENDPOINT"] = settings.AZURE_OPENAI_ENDPOINT
+os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Function calling support
+os.environ["AZURE_OPENAI_DEPLOYMENT"] = settings.AZURE_OPENAI_DEPLOYMENT  # gpt-4.1 deployment
+os.environ["OPENAI_API_KEY"] = settings.AZURE_OPENAI_API_KEY  # Fallback for libraries expecting this
+
 memory = PRSNLMemory(
-    db_url=settings.DATABASE_URL,
-    collection_name="prsnl_knowledge_base"
+    db_url=settings.DATABASE_URL
 )
 
+# Create logs directory if it doesn't exist
+log_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# Environment variables already set above before imports
+
 logger = MetaChainLogger(
-    log_path=os.path.join(os.path.dirname(__file__), '..', '..', '..', 'logs', 'autoagent.log')
+    log_path=os.path.join(log_dir, 'autoagent.log')
 )
 
 orchestrator = PRSNLMultiAgentOrchestrator(memory, logger)
@@ -76,8 +101,12 @@ orchestrator = PRSNLMultiAgentOrchestrator(memory, logger)
 @router.on_event("startup")
 async def startup():
     """Initialize AutoAgent resources on startup."""
-    await memory.initialize()
-    logger.info("AutoAgent integration initialized")
+    try:
+        await memory.initialize()
+        logger.info("AutoAgent integration initialized", title="Startup", color="green")
+    except Exception as e:
+        logger.info(f"Failed to initialize AutoAgent: {e}", color="red", title="ERROR")
+        # Don't raise - allow service to start even if AutoAgent init fails
 
 @router.on_event("shutdown")
 async def shutdown():
@@ -121,7 +150,7 @@ async def process_new_content(request: ContentProcessingRequest):
         )
         
     except Exception as e:
-        logger.error(f"Error processing content: {e}")
+        logger.info(f"Error processing content: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Content processing failed: {str(e)}")
 
 @router.post("/explore-topic", response_model=MultiAgentResponse)
@@ -154,7 +183,7 @@ async def explore_topic(request: TopicExplorationRequest):
         )
         
     except Exception as e:
-        logger.error(f"Error exploring topic: {e}")
+        logger.info(f"Error exploring topic: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Topic exploration failed: {str(e)}")
 
 @router.post("/create-learning-path", response_model=AgentResponse)
@@ -163,23 +192,33 @@ async def create_learning_path(request: LearningPathRequest):
     Create a personalized learning path for a specific goal.
     """
     try:
-        # Use the learning pathfinder agent directly
+        # Use the learning pathfinder agent through MetaChain
         agent = orchestrator.learning_pathfinder
         
-        result = await agent.create_learning_path(
-            goal=request.goal,
-            current_knowledge=request.current_knowledge
+        messages = [
+            {"role": "system", "content": "You are the Learning Pathfinder Agent. Create personalized learning sequences."},
+            {"role": "user", "content": f"Create a comprehensive learning path for the goal: '{request.goal}'. Consider the user's current knowledge in: {', '.join(request.current_knowledge)}. Time commitment: {request.time_commitment}. Include milestones, resources, and practical exercises."}
+        ]
+        
+        # Run agent through MetaChain
+        response = await orchestrator.metachain.run_async(
+            agent=agent,
+            messages=messages,
+            context_variables={"goal": request.goal, "current_knowledge": request.current_knowledge}
         )
+        
+        # Extract the result from the response
+        result_content = response.messages[-1]["content"] if response.messages else "No learning path generated."
         
         return AgentResponse(
             status="completed",
             agent="learning_pathfinder",
-            results=result,
+            results={"learning_path": result_content},
             timestamp=datetime.utcnow().isoformat()
         )
         
     except Exception as e:
-        logger.error(f"Error creating learning path: {e}")
+        logger.info(f"Error creating learning path: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Learning path creation failed: {str(e)}")
 
 @router.get("/insights-report")
@@ -197,7 +236,7 @@ async def generate_insights_report(time_period: str = "week"):
         }
         
     except Exception as e:
-        logger.error(f"Error generating insights report: {e}")
+        logger.info(f"Error generating insights report: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Insights report generation failed: {str(e)}")
 
 @router.post("/find-connections/{item_id}")
@@ -234,7 +273,7 @@ async def find_connections(item_id: str, limit: int = 5):
         }
         
     except Exception as e:
-        logger.error(f"Error finding connections: {e}")
+        logger.info(f"Error finding connections: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Connection finding failed: {str(e)}")
 
 @router.post("/synthesize")
@@ -245,20 +284,45 @@ async def synthesize_items(item_ids: List[str], focus: Optional[str] = None):
     try:
         agent = orchestrator.research_synthesizer
         
-        synthesis = await agent.synthesize_sources(
-            item_ids=item_ids,
-            focus=focus
+        # Fetch items from database
+        items_content = []
+        async for conn in get_db_connection():
+            for item_id in item_ids:
+                row = await conn.fetchrow(
+                    "SELECT title, content, summary FROM items WHERE id = $1::uuid",
+                    item_id
+                )
+                if row:
+                    items_content.append(f"Title: {row['title']}\nSummary: {row['summary']}\nContent: {row['content'][:500]}...")
+        
+        if not items_content:
+            raise HTTPException(status_code=404, detail="No items found with provided IDs")
+        
+        # Create synthesis request
+        messages = [
+            {"role": "system", "content": "You are the Research Synthesis Agent. Synthesize information from multiple sources."},
+            {"role": "user", "content": f"Synthesize the following items{' with focus on: ' + focus if focus else ''}:\n\n" + "\n\n---\n\n".join(items_content) + "\n\nProvide a comprehensive synthesis with key findings, patterns, contradictions, gaps, and insights."}
+        ]
+        
+        # Run agent through MetaChain
+        response = await orchestrator.metachain.run_async(
+            agent=agent,
+            messages=messages,
+            context_variables={"item_ids": item_ids, "focus": focus}
         )
+        
+        # Extract the synthesis
+        synthesis_content = response.messages[-1]["content"] if response.messages else "No synthesis generated."
         
         return {
             "status": "completed",
-            "synthesis": synthesis,
+            "synthesis": synthesis_content,
             "items_processed": len(item_ids),
             "timestamp": datetime.utcnow().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"Error synthesizing items: {e}")
+        logger.info(f"Error synthesizing items: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Synthesis failed: {str(e)}")
 
 @router.get("/agent-status")
@@ -321,7 +385,7 @@ async def custom_agent_query(agent_name: str, query: str, context: Optional[Dict
         }
         
     except Exception as e:
-        logger.error(f"Error in custom agent query: {e}")
+        logger.info(f"Error in custom agent query: {e}", color="red", title="ERROR")
         raise HTTPException(status_code=500, detail=f"Agent query failed: {str(e)}")
 
 @router.get("/health")

@@ -1,60 +1,78 @@
-# PRSNL Architecture Documentation
+# PRSNL Architecture Documentation - Phase 3 Complete
 
 ## Overview
 
-PRSNL is a modern personal knowledge management system built with a microservices architecture, emphasizing AI-powered content processing and intelligent search capabilities.
+PRSNL is a modern personal knowledge management system that has evolved into an intelligent AI second brain. With Phase 3 complete, PRSNL now features a multi-agent AI system (AutoAgent) for autonomous knowledge curation and a LibreChat integration for conversational AI interactions, all powered by Azure OpenAI.
 
-## System Architecture
+## System Architecture - Phase 3 AI Second Brain
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                              User Interface Layer                          │
+│                           User Interface Layer                             │
 ├────────────────┬──────────────────┬────────────────┬───────────────────┤
-│  Web Browser   │  Chrome Extension │  API Clients   │   iOS App (PRSNL) │
+│  Web Browser   │  Chrome Extension │  LibreChat UI  │   iOS App (PRSNL) │
+│  (Port 3004)   │    (Integrated)   │ (OpenAI Compat)│    (External)      │
 └────────────────┴──────────────────┴────────────────┴───────────────────┘
                                      │
                     ┌────────────────┴────────────────┐
                     │     SvelteKit Frontend          │
-                    │   (Port 3003, TypeScript)       │
+                    │   (Port 3004, TypeScript)       │ 
+                    │     Phase 3 AI Interface        │
                     └────────────────┬────────────────┘
                                      │ HTTP/WebSocket
                     ┌────────────────┴────────────────┐
                     │      FastAPI Backend            │
                     │    (Port 8000, Python)          │
+                    │   uvloop Performance Boost      │
                     └────────────────┬────────────────┘
                                      │
         ┌────────────────────────────┴────────────────────────────┐
-        │                    Service Layer                         │
+        │                 Multi-Agent AI Layer                     │
         ├─────────────┬──────────────┬─────────────┬─────────────┤
-        │  AI Router  │ Video Proc.  │  Scraper    │  Storage    │
-        │  Service    │  Service     │  Service    │  Manager    │
+        │  AutoAgent  │ LibreChat    │  Unified    │  Embedding  │
+        │ Orchestrator│  Bridge      │  AI Service │  Generator  │
+        │ (4 Agents)  │ (OpenAI API) │ (Azure)     │ (Semantic)  │
         └─────────────┴──────────────┴─────────────┴─────────────┘
                                      │
         ┌────────────────────────────┴────────────────────────────┐
-        │                    AI/ML Layer                           │
+        │              AI Agents & Intelligence                    │
         ├─────────────┬──────────────┬─────────────┬─────────────┤
-        │ Azure OpenAI │  Whisper    │ Embeddings  │
-        │   (Cloud)    │   (ASR)     │  Service    │
+        │ Knowledge   │ Research     │ Content     │ Learning    │
+        │ Curator     │ Synthesizer  │ Explorer    │ Pathfinder  │
+        │ (Analysis)  │ (Insights)   │ (Discovery) │ (Planning)  │
         └─────────────┴──────────────┴─────────────┴─────────────┘
                                      │
         ┌────────────────────────────┴────────────────────────────┐
-        │                   Data Layer                             │
-        ├─────────────────────┬───────────────────────────────────┤
-        │    PostgreSQL       │        File Storage               │
-        │   + pgvector        │    (Videos, Thumbnails)           │
-        └─────────────────────┴───────────────────────────────────┘
+        │                 Cloud AI Services                        │
+        ├─────────────┬──────────────┬─────────────┬─────────────┤
+        │ Azure OpenAI │ Function     │ Model       │ Streaming   │
+        │ (prsnl-gpt-4)│ Calling      │ Optimization│ Responses   │
+        │(gpt-4.1-mini)│ (Tools API)  │ (2 Models)  │ (Real-time) │
+        └─────────────┴──────────────┴─────────────┴─────────────┘
+                                     │
+        ┌────────────────────────────┴────────────────────────────┐
+        │              High-Performance Data Layer                 │
+        ├─────────────────────┬──────────────┬────────────────────┤
+        │  PostgreSQL 16      │ DragonflyDB  │   File Storage     │
+        │  ARM64 + pgvector   │ (25x Redis)  │ (Videos/Thumbnails)│
+        │  (Port 5433)        │ (Port 6379)  │   (Local/Cloud)    │
+        └─────────────────────┴──────────────┴────────────────────┘
 ```
 
 ## Core Components
 
-### Frontend (SvelteKit)
-- **Technology**: SvelteKit, TypeScript, Tailwind CSS
+### Frontend (SvelteKit) - Phase 3 AI Interface
+- **Technology**: SvelteKit 2.22.5, TypeScript, Tailwind CSS, TanStack Query v5
+- **Port**: 3004 (development), 3003 (production container)
 - **Key Features**:
-  - Reactive UI with real-time updates
-  - Progressive Web App capabilities
-  - Optimistic UI updates
+  - Phase 3 AI-powered interface with AutoAgent integration
+  - Real-time AI agent status monitoring
+  - LibreChat conversation interface
+  - Progressive Web App capabilities with AI enhancements
+  - Optimistic UI updates with background refetch
   - Responsive design (mobile-first)
   - Dark theme with Manchester United red accent
+  - TanStack Query v5 for optimal state management
 
 ### iOS App (PRSNL APP)
 - **Technology**: Native iOS application (Swift)
@@ -66,17 +84,29 @@ PRSNL is a modern personal knowledge management system built with a microservice
   - Push notifications
   - Syncs with backend API
 
-### Backend (FastAPI)
-- **Technology**: FastAPI, Python 3.11, AsyncIO
+### Backend (FastAPI) - Phase 3 AI Engine
+- **Technology**: FastAPI, Python 3.11, AsyncIO with uvloop (2-4x performance)
+- **Port**: 8000 (local development)
 - **Key Features**:
-  - Async request handling
-  - Automatic API documentation
+  - **AutoAgent Integration**: Multi-agent AI orchestration system
+  - **LibreChat Bridge**: OpenAI-compatible API for chat interactions
+  - **Azure OpenAI Integration**: Unified AI service with function calling
+  - **High-Performance Async**: uvloop for enhanced async performance
+  - **Multi-Model Support**: Optimized model selection (gpt-4.1-mini, prsnl-gpt-4)
+  - Automatic API documentation with real-time updates
   - Type safety with Pydantic
-  - Background task processing
-  - WebSocket support (upcoming)
+  - Background task processing with AI workflows
+  - WebSocket support for real-time AI interactions
 
-### Database (PostgreSQL)
-- **Extensions**: pgvector for semantic search
+### Database (PostgreSQL 16 ARM64) - High-Performance Knowledge Store
+- **Version**: PostgreSQL 16 (ARM64 optimized)
+- **Port**: 5433 (exclusive ARM64 installation)
+- **Extensions**: pgvector for semantic search and AI embeddings
+- **Key Features**:
+  - **AutoAgent Memory**: Persistent storage for AI agent context and learning
+  - **Vector Search**: Semantic similarity search for knowledge discovery
+  - **High Performance**: ARM64 optimization for Apple Silicon
+  - **ACID Compliance**: Reliable data integrity for AI workflows
 - **Schema**:
   ```sql
   items (
@@ -100,16 +130,104 @@ PRSNL is a modern personal knowledge management system built with a microservice
   )
   ```
 
+### DragonflyDB - Ultra-High Performance Cache
+- **Technology**: DragonflyDB (25x faster than Redis)
+- **Port**: 6379 (Docker container)
+- **Key Features**:
+  - **Memory Efficiency**: Superior memory utilization vs Redis
+  - **Multi-threading**: Better CPU utilization
+  - **Drop-in Replacement**: Redis protocol compatibility
+  - **AI Caching**: Optimized for AI response caching and session storage
+
+## Phase 3 AI Components
+
+### AutoAgent - Multi-Agent AI Orchestration System
+- **Technology**: Custom multi-agent framework with Azure OpenAI integration
+- **Purpose**: Autonomous knowledge curation and intelligent content processing
+- **Architecture**:
+  ```
+  AutoAgent Orchestrator
+  ├── Knowledge Curator Agent
+  │   ├── Content Analysis & Categorization
+  │   ├── Tag Suggestion & Enhancement
+  │   └── Quality Assessment & Improvement
+  ├── Research Synthesizer Agent
+  │   ├── Multi-source Information Synthesis
+  │   ├── Pattern Recognition & Trend Analysis
+  │   └── Insight Generation & Knowledge Gaps
+  ├── Content Explorer Agent
+  │   ├── Relationship Discovery & Mapping
+  │   ├── Serendipitous Connection Finding
+  │   └── Exploration Path Generation
+  └── Learning Pathfinder Agent
+      ├── Personalized Learning Sequence Creation
+      ├── Progress Tracking & Adaptation
+      └── Skill Development Planning
+  ```
+
+**API Endpoints**:
+- `/api/autoagent/process-content` - Multi-agent content processing
+- `/api/autoagent/create-learning-path` - Personalized learning plans
+- `/api/autoagent/explore-topic` - Topic exploration and discovery
+- `/api/autoagent/agent-status` - Real-time agent monitoring
+
+### LibreChat Integration - Conversational AI Bridge
+- **Technology**: OpenAI-compatible API bridge with Azure OpenAI backend
+- **Purpose**: Seamless chat interface with knowledge base integration
+- **Features**:
+  - **OpenAI API Compatibility**: Drop-in replacement for OpenAI API
+  - **Knowledge Base Context**: Automatic integration of PRSNL knowledge
+  - **Streaming Support**: Real-time response streaming
+  - **Model Optimization**: Dedicated gpt-4.1-mini for fast responses
+
+**API Endpoints**:
+- `/api/ai/chat/completions` - OpenAI-compatible chat completions
+- `/api/ai/models` - Available model listing
+- `/api/ai/health` - LibreChat bridge health check
+
+### Unified AI Service - Azure OpenAI Integration Layer
+- **Technology**: Centralized Azure OpenAI service with dual-model optimization
+- **Models**:
+  - **prsnl-gpt-4**: Complex reasoning and multi-agent workflows (AutoAgent)
+  - **gpt-4.1-mini**: Fast responses and chat interactions (LibreChat)
+- **Features**:
+  - **Function Calling**: Full Azure OpenAI tools API support
+  - **Model Routing**: Intelligent model selection based on use case
+  - **Performance Optimization**: 5.5s LibreChat, 9.5s AutoAgent response times
+  - **Caching & Context**: Efficient AI response management
+
+## Performance Metrics - Phase 3
+
+### Response Times (Verified Testing)
+- **LibreChat (gpt-4.1-mini)**:
+  - Regular completion: 5.5 seconds
+  - Streaming completion: 4.0 seconds
+- **AutoAgent (prsnl-gpt-4)**:
+  - Learning path creation: 9.5 seconds
+  - Multi-agent content processing: 10.5 seconds
+  - Agent status check: <1 second
+
+### Infrastructure Performance
+- **DragonflyDB**: 25x faster than Redis for caching operations
+- **PostgreSQL 16 ARM64**: Optimized for Apple Silicon M1/M2 architecture
+- **uvloop**: 2-4x async performance boost for Python backend
+- **TanStack Query v5**: Optimized frontend state management
+
+### Model Optimization Strategy
+- **Cost-Effective**: gpt-4.1-mini for frequent chat operations
+- **High-Intelligence**: prsnl-gpt-4 for complex multi-agent reasoning
+- **Function Calling**: Full Azure OpenAI tools API compatibility
+- **Streaming**: Real-time response delivery for both models
+
 ## Service Architecture
 
-### AI Router Service
+### Legacy Service Architecture (Pre-Phase 3)
+*Note: The following services have been superseded by the Phase 3 AI architecture above*
+
+### AI Router Service (SUPERSEDED by Unified AI Service)
 Intelligently routes AI tasks to the most appropriate provider:
 - **Providers**: Azure OpenAI (cloud)
-- **Features**:
-  - Cost optimization
-  - Automatic fallback
-  - Load balancing
-  - Performance tracking
+- **Status**: ⚠️ **Superseded by Unified AI Service with AutoAgent integration**
 
 ### Video Processor Service
 Handles video download and processing:

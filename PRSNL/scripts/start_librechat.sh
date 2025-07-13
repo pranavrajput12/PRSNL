@@ -33,9 +33,17 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-# Load environment variables
+# Load environment variables (skip complex values)
 if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        if [[ ! "$key" =~ ^# ]] && [[ -n "$key" ]]; then
+            # Skip complex values like arrays
+            if [[ ! "$value" =~ ^\[ ]]; then
+                export "$key=$value"
+            fi
+        fi
+    done < .env
 fi
 
 # Set default ports if not specified

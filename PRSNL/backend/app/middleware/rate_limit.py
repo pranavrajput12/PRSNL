@@ -40,6 +40,9 @@ semantic_search_limiter = limiter.limit("50 per minute")
 # File upload throttling
 file_upload_limiter = limiter.limit("15 per 5 minutes")
 
+# OpenCLIP vision processing throttling
+openclip_limiter = limiter.limit("30 per minute")
+
 # Configure rate limit response
 def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     """Custom rate limit exceeded handler"""
@@ -67,6 +70,7 @@ __all__ = [
     'capture_throttle_limiter',
     'semantic_search_limiter',
     'file_upload_limiter',
+    'openclip_limiter',
     'rate_limit_handler',
     'RateLimitExceeded'
 ]

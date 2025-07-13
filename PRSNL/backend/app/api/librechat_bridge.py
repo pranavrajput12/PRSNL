@@ -161,7 +161,7 @@ async def enhance_query_with_knowledge_base(
     """
     try:
         # Search knowledge base for relevant content
-        async with get_db_connection() as conn:
+        async for conn in get_db_connection():
             # Perform semantic search for relevant items
             search_query = """
                 SELECT id, title, summary, content, url, type
@@ -211,11 +211,14 @@ Based on the above context from the user's knowledge base, please answer their q
             # Generate response using AI service
             messages = [{"role": "system", "content": system_prompt}] + conversation_history
             
-            response = await ai_service.get_ai_response(
-                messages=messages,
-                model="gpt-4",  # Use GPT-4 for enhanced responses
+            # Use LibreChat-specific model for this integration
+            model_to_use = settings.AZURE_OPENAI_LIBRECHAT_DEPLOYMENT
+            response = await ai_service.complete(
+                prompt=user_message,
+                system_prompt=system_prompt,
                 max_tokens=1000,
-                temperature=0.7
+                temperature=0.7,
+                model=model_to_use
             )
             
             return response
@@ -224,11 +227,14 @@ Based on the above context from the user's knowledge base, please answer their q
         logger.error(f"Knowledge base enhancement error: {e}")
         # Fallback to simple AI response without enhancement
         ai_service = UnifiedAIService()
-        return await ai_service.get_ai_response(
-            messages=conversation_history,
-            model="gpt-4",
+        # Get the last user message
+        last_user_msg = next((msg['content'] for msg in reversed(conversation_history) if msg['role'] == 'user'), query)
+        return await ai_service.complete(
+            prompt=last_user_msg,
+            system_prompt="You are a helpful AI assistant.",
             max_tokens=1000,
-            temperature=0.7
+            temperature=0.7,
+            model=settings.AZURE_OPENAI_LIBRECHAT_DEPLOYMENT
         )
 
 async def stream_chat_response(response: str, request: ChatCompletionRequest):

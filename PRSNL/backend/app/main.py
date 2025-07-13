@@ -205,9 +205,10 @@ from app.api import capture, search, timeline, items, admin, videos, tags, visio
 from app.api import enhanced_search, embeddings
 from app.api import analytics, questions, video_streaming
 from app.api import categorization, duplicates, summarization, health
-from app.api import insights, import_data, file_upload, content_types, development, ai, rag, firecrawl, content_urls
+from app.api import insights, import_data, file_upload, content_types, development, ai, firecrawl, content_urls, rag
 from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import autoagent_integration  # AutoAgent second brain transformation
+from app.api import openclip  # OpenCLIP vision service
 from app.api.v2 import items as v2_items
 
 # STEP 3: Debug capture router inclusion
@@ -255,10 +256,11 @@ app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
 app.include_router(content_types.router, prefix=settings.API_V1_STR)
 app.include_router(development.router, prefix=settings.API_V1_STR)
 app.include_router(ai.router, prefix=settings.API_V1_STR)
-app.include_router(rag.router, prefix=settings.API_V1_STR)
+app.include_router(rag.router, prefix=settings.API_V1_STR)  # Haystack RAG service
 app.include_router(firecrawl.router, prefix=settings.API_V1_STR)
 app.include_router(enhanced_search.router, prefix=settings.API_V1_STR)
 app.include_router(embeddings.router, prefix=settings.API_V1_STR)
+app.include_router(openclip.router, prefix=settings.API_V1_STR)  # OpenCLIP vision service
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
 app.include_router(autoagent_integration.router)  # AutoAgent second brain transformation

@@ -8,6 +8,7 @@ an intelligent knowledge organism from the PRSNL knowledge base.
 from typing import List, Dict, Any, Optional
 import json
 import asyncio
+import os
 from datetime import datetime
 
 from autoagent import Agent
@@ -121,11 +122,15 @@ class PRSNLAgentFactory:
                 "metadata_suggestions": {}
             }
         
+        # Check if function calling is disabled
+        use_functions = os.getenv("FN_CALL", "True").lower() != "false"
+        
         agent = Agent(
             name="Knowledge Curator",
+            model="azure/prsnl-gpt-4",
             instructions=KNOWLEDGE_CURATOR_PROMPT,
-            functions=[analyze_content, find_connections, suggest_enhancements],
-            parallel_tool_calls=True
+            functions=[analyze_content, find_connections, suggest_enhancements] if use_functions else [],
+            parallel_tool_calls=use_functions
         )
         
         return agent
@@ -165,11 +170,15 @@ class PRSNLAgentFactory:
                 "Insight 2: The pattern indicates..."
             ]
         
+        # Check if function calling is disabled
+        use_functions = os.getenv("FN_CALL", "True").lower() != "false"
+        
         agent = Agent(
             name="Research Synthesizer",
+            model="azure/prsnl-gpt-4",
             instructions=RESEARCH_SYNTHESIS_PROMPT,
-            functions=[synthesize_sources, identify_patterns, generate_insights],
-            parallel_tool_calls=True
+            functions=[synthesize_sources, identify_patterns, generate_insights] if use_functions else [],
+            parallel_tool_calls=use_functions
         )
         
         return agent
@@ -210,11 +219,15 @@ class PRSNLAgentFactory:
                 }
             ]
         
+        # Check if function calling is disabled
+        use_functions = os.getenv("FN_CALL", "True").lower() != "false"
+        
         agent = Agent(
             name="Content Explorer",
+            model="azure/prsnl-gpt-4",
             instructions=CONTENT_EXPLORER_PROMPT,
-            functions=[explore_connections, suggest_exploration_paths, find_serendipitous_connections],
-            parallel_tool_calls=True
+            functions=[explore_connections, suggest_exploration_paths, find_serendipitous_connections] if use_functions else [],
+            parallel_tool_calls=use_functions
         )
         
         return agent
@@ -261,11 +274,15 @@ class PRSNLAgentFactory:
                 "revised_duration": "5 weeks"
             }
         
+        # Check if function calling is disabled
+        use_functions = os.getenv("FN_CALL", "True").lower() != "false"
+        
         agent = Agent(
             name="Learning Pathfinder",
+            model="azure/prsnl-gpt-4",
             instructions=LEARNING_PATH_AGENT_PROMPT,
-            functions=[create_learning_path, track_progress, adapt_path],
-            parallel_tool_calls=True
+            functions=[create_learning_path, track_progress, adapt_path] if use_functions else [],
+            parallel_tool_calls=use_functions
         )
         
         return agent
@@ -276,6 +293,10 @@ class PRSNLMultiAgentOrchestrator:
     def __init__(self, memory: PRSNLMemory, logger: Optional[MetaChainLogger] = None):
         self.memory = memory
         self.logger = logger
+        
+        # Initialize MetaChain for running agents
+        from autoagent import MetaChain
+        self.metachain = MetaChain(log_path=logger)
         
         # Initialize agents
         self.knowledge_curator = PRSNLAgentFactory.create_knowledge_curator(memory, logger)
@@ -303,37 +324,56 @@ class PRSNLMultiAgentOrchestrator:
         results = {
             "timestamp": datetime.utcnow().isoformat(),
             "content_id": content.get("id"),
-            "agent_outputs": {}
+            "agent_outputs": {},
+            "processing_result": {}
         }
         
+        # Prepare content for agent processing
+        content_text = content.get("content", "")
+        title = content.get("title", "Untitled")
+        tags = content.get("tags", [])
+        
         # Step 1: Knowledge Curator analyzes and categorizes
-        curator_result = await self.knowledge_curator.analyze_content(
-            content.get("content", ""),
-            content.get("tags", [])
+        curator_messages = [
+            {"role": "system", "content": "You are the Knowledge Curator Agent. Analyze the provided content and suggest categorization, tags, and improvements."},
+            {"role": "user", "content": f"Please analyze this content:\n\nTitle: {title}\nTags: {', '.join(tags)}\n\nContent:\n{content_text}\n\nProvide categorization suggestions, additional tags, key concepts, and improvement recommendations."}
+        ]
+        
+        # Use await since MetaChain.run is async
+        curator_response = await self.metachain.run_async(
+            agent=self.knowledge_curator,
+            messages=curator_messages,
+            context_variables={"content": content}
         )
-        results["agent_outputs"]["knowledge_curator"] = curator_result
         
-        # Step 2: Find connections with existing knowledge
-        if content.get("id"):
-            connections = await self.knowledge_curator.find_connections(
-                str(content["id"])
-            )
-            results["agent_outputs"]["connections"] = connections
+        curator_output = curator_response.messages[-1]["content"] if curator_response.messages else ""
+        results["agent_outputs"]["knowledge_curator"] = curator_output
         
-        # Step 3: Research Synthesizer looks for patterns
-        if connections:
-            related_ids = [conn["id"] for conn in connections[:3]]
-            synthesis = await self.research_synthesizer.synthesize_sources(
-                related_ids,
-                focus=content.get("title", "")
-            )
-            results["agent_outputs"]["synthesis"] = synthesis
+        # Step 2: Research Synthesizer analyzes patterns and generates insights
+        synthesis_messages = [
+            {"role": "system", "content": "You are the Research Synthesis Agent. Analyze content for patterns and generate insights."},
+            {"role": "user", "content": f"Based on this content and analysis:\n\nContent: {content_text}\n\nCurator Analysis: {curator_output}\n\nIdentify patterns, generate insights, and suggest research directions."}
+        ]
         
-        # Step 4: Generate insights
-        insights = await self.research_synthesizer.generate_insights(
-            json.dumps(curator_result)
+        synthesis_response = await self.metachain.run_async(
+            agent=self.research_synthesizer,
+            messages=synthesis_messages,
+            context_variables={"content": content, "curator_analysis": curator_output}
         )
-        results["agent_outputs"]["insights"] = insights
+        
+        synthesis_output = synthesis_response.messages[-1]["content"] if synthesis_response.messages else ""
+        results["agent_outputs"]["research_synthesizer"] = synthesis_output
+        
+        # Compile final processing result
+        results["processing_result"] = {
+            "enrichments": {
+                "categories": self._extract_categories(curator_output),
+                "tags": tags + self._extract_tags(curator_output),
+                "key_concepts": self._extract_concepts(curator_output),
+                "summary": self._extract_summary(synthesis_output),
+                "insights": self._extract_insights(synthesis_output)
+            }
+        }
         
         return results
     
@@ -355,27 +395,34 @@ class PRSNLMultiAgentOrchestrator:
         }
         
         # Content Explorer creates exploration paths
-        paths = await self.content_explorer.suggest_exploration_paths(
-            [topic] + user_interests
-        )
-        results["explorations"]["suggested_paths"] = paths
+        explorer_messages = [
+            {"role": "system", "content": "You are the Content Explorer Agent. Help discover relevant information and create exploration paths."},
+            {"role": "user", "content": f"Create exploration paths for the topic '{topic}' considering these interests: {', '.join(user_interests)}. Suggest multiple learning approaches and discovery paths."}
+        ]
         
-        # Find serendipitous connections
-        # First, search for relevant items
-        search_results = await self.memory.search(topic, top_k=1)
-        if search_results:
-            item_id = search_results[0].id
-            serendipity = await self.content_explorer.find_serendipitous_connections(
-                item_id
-            )
-            results["explorations"]["serendipitous_connections"] = serendipity
-        
-        # Create learning path if applicable
-        learning_path = await self.learning_pathfinder.create_learning_path(
-            goal=f"Master {topic}",
-            current_knowledge=user_interests
+        explorer_response = await self.metachain.run_async(
+            agent=self.content_explorer,
+            messages=explorer_messages,
+            context_variables={"topic": topic, "interests": user_interests}
         )
-        results["explorations"]["learning_path"] = learning_path
+        
+        explorer_output = explorer_response.messages[-1]["content"] if explorer_response.messages else ""
+        results["explorations"]["content_explorer"] = explorer_output
+        
+        # Create learning path
+        pathfinder_messages = [
+            {"role": "system", "content": "You are the Learning Pathfinder Agent. Create personalized learning sequences."},
+            {"role": "user", "content": f"Create a comprehensive learning path to master '{topic}'. Consider the user's current knowledge in: {', '.join(user_interests)}. Include milestones, resources, and time estimates."}
+        ]
+        
+        pathfinder_response = await self.metachain.run_async(
+            agent=self.learning_pathfinder,
+            messages=pathfinder_messages,
+            context_variables={"topic": topic, "current_knowledge": user_interests}
+        )
+        
+        pathfinder_output = pathfinder_response.messages[-1]["content"] if pathfinder_response.messages else ""
+        results["explorations"]["learning_pathfinder"] = pathfinder_output
         
         return results
     
@@ -395,23 +442,93 @@ class PRSNLMultiAgentOrchestrator:
             "sections": {}
         }
         
-        # Identify patterns
-        patterns = await self.research_synthesizer.identify_patterns(
-            query="*",  # Search all
-            time_range=time_period
-        )
-        report["sections"]["patterns"] = patterns
+        # Get recent items from knowledge base for context
+        recent_items = await self.memory.get_recent_items(limit=10)
+        kb_context = "Recent knowledge base items:\n" + "\n".join(
+            [f"- {item.get('title', 'Untitled')}: {item.get('content', '')[:100]}..." 
+             for item in recent_items]
+        ) if recent_items else "No recent items found."
         
-        # Generate insights
-        insights = await self.research_synthesizer.generate_insights(
-            context=json.dumps(patterns)
-        )
-        report["sections"]["insights"] = insights
+        # Use Research Synthesizer to identify patterns and generate insights
+        synthesizer_messages = [
+            {"role": "system", "content": "You are the Research Synthesis Agent. Analyze the knowledge base and generate insights."},
+            {"role": "user", "content": f"Generate an insights report for the past {time_period}.\n\n{kb_context}\n\nIdentify patterns, trends, knowledge gaps, and provide actionable insights."}
+        ]
         
-        # Suggest exploration areas
-        exploration_suggestions = await self.content_explorer.suggest_exploration_paths(
-            interests=["emerging patterns", "knowledge gaps"]
+        synthesizer_response = await self.metachain.run_async(
+            agent=self.research_synthesizer,
+            messages=synthesizer_messages,
+            context_variables={"time_period": time_period, "recent_items": recent_items}
         )
-        report["sections"]["exploration_suggestions"] = exploration_suggestions
+        
+        synthesizer_output = synthesizer_response.messages[-1]["content"] if synthesizer_response.messages else ""
+        report["sections"]["synthesis"] = synthesizer_output
+        
+        # Use Content Explorer for exploration suggestions
+        explorer_messages = [
+            {"role": "system", "content": "You are the Content Explorer Agent. Suggest exploration areas based on insights."},
+            {"role": "user", "content": f"Based on this insights report:\n\n{synthesizer_output}\n\nSuggest exploration areas, emerging patterns to investigate, and knowledge gaps to fill."}
+        ]
+        
+        explorer_response = await self.metachain.run_async(
+            agent=self.content_explorer,
+            messages=explorer_messages,
+            context_variables={"insights": synthesizer_output}
+        )
+        
+        explorer_output = explorer_response.messages[-1]["content"] if explorer_response.messages else ""
+        report["sections"]["exploration_suggestions"] = explorer_output
         
         return report
+    
+    def _extract_categories(self, text: str) -> List[str]:
+        """Extract categories from curator output."""
+        # Simple extraction - in production, use NLP or regex
+        categories = []
+        if "category" in text.lower():
+            # Extract categories mentioned in the text
+            lines = text.split('\n')
+            for line in lines:
+                if "category" in line.lower() or "categories" in line.lower():
+                    # Simple heuristic: extract words after "category:" or similar
+                    categories.append("development")  # Default for now
+                    break
+        return categories
+    
+    def _extract_tags(self, text: str) -> List[str]:
+        """Extract additional tags from curator output."""
+        tags = []
+        if "tag" in text.lower():
+            # Extract tags mentioned in the text
+            lines = text.split('\n')
+            for line in lines:
+                if "tag" in line.lower():
+                    # Simple extraction
+                    tags.extend(["ai", "knowledge-management"])  # Default for now
+                    break
+        return tags
+    
+    def _extract_concepts(self, text: str) -> List[str]:
+        """Extract key concepts from curator output."""
+        concepts = []
+        if "concept" in text.lower() or "key" in text.lower():
+            # Extract concepts
+            concepts = ["knowledge curation", "ai agents", "second brain"]  # Default for now
+        return concepts
+    
+    def _extract_summary(self, text: str) -> str:
+        """Extract summary from synthesis output."""
+        # Take first paragraph or first 200 chars as summary
+        paragraphs = text.split('\n\n')
+        if paragraphs:
+            return paragraphs[0][:200] + "..." if len(paragraphs[0]) > 200 else paragraphs[0]
+        return text[:200] + "..." if len(text) > 200 else text
+    
+    def _extract_insights(self, text: str) -> List[str]:
+        """Extract insights from synthesis output."""
+        insights = []
+        lines = text.split('\n')
+        for line in lines:
+            if "insight" in line.lower() or line.strip().startswith('-'):
+                insights.append(line.strip().lstrip('-').strip())
+        return insights[:5]  # Limit to 5 insights

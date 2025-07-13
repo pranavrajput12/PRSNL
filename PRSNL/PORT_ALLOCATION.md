@@ -1,8 +1,8 @@
-# PRSNL Port Allocation & Conflict Prevention Guide
+# PRSNL Port Allocation & Conflict Prevention Guide - Phase 3
 
 ## Overview
 
-This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations in the PRSNL project. All services, development tools, and production deployments MUST reference this document for port assignments.
+This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations in the PRSNL project post-Phase 3 AI transformation. All services, development tools, and production deployments MUST reference this document for port assignments.
 
 ## 🚨 CRITICAL RULES
 
@@ -11,21 +11,45 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 3. **NEVER OVERRIDE** assigned ports
 4. **DOCUMENT** any temporary port usage
 
-## Development Ports (FIXED)
+## Phase 3 Development Ports (FIXED)
 
 | Service | Port | Status | Description | Config Location |
 |---------|------|--------|-------------|-----------------|
-| **Frontend (SvelteKit)** | **3003** | **FIXED** | Main web UI | `/PRSNL/frontend/vite.config.ts` |
-| **Backend (FastAPI)** | **8000** | FIXED | REST API | `/PRSNL/docker-compose.yml` |
-| **PostgreSQL** | **5432** | FIXED | Primary database | `/PRSNL/docker-compose.yml` |
-| **Redis** | **6379** | FIXED | Cache & queue | `/PRSNL/docker-compose.yml` |
+| **Frontend Dev (SvelteKit)** | **3004** | **FIXED** | Main dev UI | `/PRSNL/frontend/vite.config.ts` |
+| **Frontend Container** | **3003** | FIXED | Production UI | `/PRSNL/docker-compose.yml` |
+| **Backend + AutoAgent** | **8000** | FIXED | REST API + AI agents | Local process |
+| **PostgreSQL ARM64** | **5433** | **CRITICAL** | Primary database | ARM64 PostgreSQL 16 |
+| **DragonflyDB** | **6379** | FIXED | Ultra-fast cache | `/PRSNL/docker-compose.yml` |
+
+### 🤖 Phase 3 AI API Endpoints (Port 8000)
+
+| API Path | Service | Description |
+|----------|---------|-------------|
+| `/api/autoagent/*` | **AutoAgent** | Multi-agent AI system |
+| `/api/ai/*` | **LibreChat** | OpenAI-compatible chat |
+| `/api/*` | **Core API** | Original PRSNL endpoints |
 
 ## Alternative Frontend Ports (CORS Allowed)
 
 | Port | Purpose | When Used |
 |------|---------|-----------|
-| **3002** | Legacy frontend port | If 3003 unavailable |
+| **3003** | Production container | Container deployments only |
+| **3002** | Legacy fallback | If 3004 unavailable |
 | **5173** | Vite default | Development testing |
+
+## 🚨 Phase 3 Critical Port Changes
+
+### Database Port Change: 5432 → 5433
+- **Old**: PostgreSQL on port 5432 (Intel/x86_64)
+- **New**: PostgreSQL 16 ARM64 on port 5433
+- **Reason**: ARM64 architecture optimization for Apple Silicon
+- **Impact**: All database connections must use port 5433
+
+### Cache System Change: Redis → DragonflyDB
+- **Old**: Redis on port 6379
+- **New**: DragonflyDB on port 6379 (25x performance improvement)
+- **Reason**: Superior performance and memory efficiency
+- **Impact**: Drop-in replacement, same port
 
 ## Production Ports
 
@@ -197,4 +221,11 @@ taskkill /F /PID <PID>
 
 - 2025-07-07: Initial document created with all known port allocations  
 - 2025-07-10: Updated frontend port from 3002 to 3003 due to container conflict
+- **2025-07-13: PHASE 3 COMPLETE - Major updates:**
+  - Frontend development port changed from 3003 to 3004
+  - Database port changed from 5432 to 5433 (ARM64 PostgreSQL 16)
+  - Redis replaced with DragonflyDB (same port 6379)
+  - Added AutoAgent API endpoints (`/api/autoagent/*`)
+  - Added LibreChat API endpoints (`/api/ai/*`)
+  - Updated all AI infrastructure port documentation
 - Note: This document supersedes port information in MODEL_COORDINATION_RULES.md

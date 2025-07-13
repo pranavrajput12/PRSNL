@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 # Try to import Haystack components
 try:
+    import os
+    os.environ['SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL'] = 'True'
+    
     from haystack import Pipeline, Document
     from haystack.utils import Secret
     from haystack.components.preprocessors import DocumentCleaner, DocumentSplitter
@@ -40,6 +43,10 @@ try:
     
 except ImportError as e:
     logger.error(f"Haystack import failed: {e}")
+    HAYSTACK_AVAILABLE = False
+except ValueError as e:
+    # Handle numpy/sklearn incompatibility
+    logger.error(f"Haystack initialization failed due to numpy/sklearn incompatibility: {e}")
     HAYSTACK_AVAILABLE = False
     
     # Create dummy classes to prevent runtime errors

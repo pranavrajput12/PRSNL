@@ -15,11 +15,26 @@ from datetime import datetime
 import json
 import logging
 
-from autoagent.memory.rag_memory import RagMemory
-from autoagent.memory.utils import Document, SearchResult
+from autoagent.memory.rag_memory import Memory as RagMemory
 from autoagent.types import Message
 
 logger = logging.getLogger(__name__)
+
+# Define missing types
+class Document:
+    """Document class for storing content with metadata."""
+    def __init__(self, content: str, metadata: Dict[str, Any] = None, embedding: Optional[List[float]] = None):
+        self.content = content
+        self.metadata = metadata or {}
+        self.embedding = embedding
+
+class SearchResult:
+    """Search result class for returning query results."""
+    def __init__(self, id: str, content: str, metadata: Dict[str, Any], score: float):
+        self.id = id
+        self.content = content
+        self.metadata = metadata
+        self.score = score
 
 class PRSNLMemory(RagMemory):
     """
@@ -39,8 +54,23 @@ class PRSNLMemory(RagMemory):
         self.embedding_dimension = embedding_dimension
         self.pool = None
         
-        # Initialize parent class
-        super().__init__(collection_name=collection_name)
+        # Initialize parent class with a dummy project path (we don't use file-based storage)
+        # Set OPENAI_API_KEY env var temporarily for parent class initialization
+        import os
+        original_key = os.environ.get("OPENAI_API_KEY")
+        os.environ["OPENAI_API_KEY"] = os.environ.get("AZURE_OPENAI_API_KEY", "dummy-key")
+        try:
+            super().__init__(
+                project_path="/tmp/prsnl_autoagent",  # Not used, but required by parent
+                db_name=".prsnl",
+                platform="SentenceTransformer"  # Use local embeddings to avoid API key issues
+            )
+        finally:
+            # Restore original key
+            if original_key:
+                os.environ["OPENAI_API_KEY"] = original_key
+            elif "OPENAI_API_KEY" in os.environ:
+                del os.environ["OPENAI_API_KEY"]
         
     async def initialize(self):
         """Initialize database connection pool."""
@@ -276,8 +306,8 @@ class PRSNLMemory(RagMemory):
             # Get the embedding for the source item
             embedding = await conn.fetchval("""
                 SELECT embedding FROM embeddings 
-                WHERE item_id = $1 AND model = $2
-            """, int(item_id), self.embedding_model)
+                WHERE item_id = $1::uuid AND model = $2
+            """, item_id, self.embedding_model)
             
             if not embedding:
                 return []
@@ -289,10 +319,10 @@ class PRSNLMemory(RagMemory):
                     1 - (e.embedding <=> $1::vector) as similarity
                 FROM items i
                 JOIN embeddings e ON i.id = e.item_id
-                WHERE e.model = $2 AND i.id != $3
+                WHERE e.model = $2 AND i.id != $3::uuid
                 ORDER BY e.embedding <=> $1::vector
                 LIMIT $4
-            """, embedding, self.embedding_model, int(item_id), limit)
+            """, embedding, self.embedding_model, item_id, limit)
             
             return [
                 {
@@ -364,3 +394,42 @@ class PRSNLMemory(RagMemory):
             )
             
         return str(edge_id)
+    
+    async def get_recent_items(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get recent items from the knowledge base.
+        
+        Args:
+            limit: Maximum number of items to return
+            
+        Returns:
+            List of recent items
+        """
+        await self.initialize()
+        
+        items = []
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch("""
+                SELECT 
+                    id, title, content, summary, url, type, tags,
+                    created_at, updated_at, metadata
+                FROM items
+                ORDER BY created_at DESC
+                LIMIT $1
+            """, limit)
+            
+            for row in rows:
+                items.append({
+                    'id': str(row['id']),
+                    'title': row['title'],
+                    'content': row['content'],
+                    'summary': row['summary'],
+                    'url': row['url'],
+                    'type': row['type'],
+                    'tags': row['tags'],
+                    'created_at': row['created_at'].isoformat(),
+                    'updated_at': row['updated_at'].isoformat(),
+                    'metadata': json.loads(row['metadata'] or '{}')
+                })
+        
+        return items

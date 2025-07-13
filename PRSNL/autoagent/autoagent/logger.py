@@ -3,7 +3,17 @@ from rich.console import Console
 from rich.markup import escape
 import json
 from typing import List
-from constant import DEBUG, DEFAULT_LOG, LOG_PATH, MC_MODE
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+try:
+    from constant import DEBUG, DEFAULT_LOG, LOG_PATH, MC_MODE
+except ImportError:
+    # Fallback if constant file doesn't exist
+    DEBUG = False
+    DEFAULT_LOG = False
+    LOG_PATH = None
+    MC_MODE = False
 from pathlib import Path
 BAR_LENGTH = 60
 class MetaChainLogger:
@@ -160,12 +170,18 @@ if DEFAULT_LOG:
         # logger = MetaChainLogger(log_path=log_path)
         LoggerManager.set_logger(MetaChainLogger(log_path=log_path))
     else:
+        # Check if LOG_PATH is a directory and fix it
+        if os.path.isdir(LOG_PATH):
+            log_path = os.path.join(LOG_PATH, f"agent_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+        else:
+            log_path = LOG_PATH
         # logger = MetaChainLogger(log_path=LOG_PATH)
-        LoggerManager.set_logger(MetaChainLogger(log_path=LOG_PATH))
+        LoggerManager.set_logger(MetaChainLogger(log_path=log_path))
     # logger.info("Log file is saved to", logger.log_path, "...", title="Log Path", color="light_cyan3")
-    LoggerManager.get_logger().info("Log file is saved to", 
-                                  LoggerManager.get_logger().log_path, "...", 
-                                  title="Log Path", color="light_cyan3")
+    if LoggerManager.get_logger():
+        LoggerManager.get_logger().info("Log file is saved to", 
+                                      LoggerManager.get_logger().log_path, "...", 
+                                      title="Log Path", color="light_cyan3")
 else:
     # logger = None
     LoggerManager.set_logger(None)

@@ -40,17 +40,20 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 3. Verify database is on port 5433 in `.env` and `config.py`
 4. pgvector should already be installed in ARM64 PostgreSQL
 
-## Container Runtime
+## Container Runtime - Phase 3 Configuration
 - We use Rancher Desktop for containers
-- Only Redis runs in Docker now
-- Backend runs locally for better development experience
+- **DragonflyDB** runs in Docker (replaced Redis - 25x faster)
+- Backend runs locally for better development experience with AutoAgent integration
+- AutoAgent agents run as part of backend process (not containerized)
 
-## Ports (Exclusive Port Ownership)
+## Ports (Exclusive Port Ownership) - Phase 3 Updated
 - Frontend Development: **3004** (Updated from 3003 after Svelte 5 upgrade - container conflict resolved)
 - Frontend Container: **3003** (production deployments only)
-- Backend API: **8000**
+- Backend API: **8000** (includes AutoAgent API endpoints)
 - PostgreSQL: **5433** (ARM64 PostgreSQL 16 - NOT 5432!)
-- Redis: **6379**
+- DragonflyDB: **6379** (replaced Redis - 25x performance improvement)
+- **NEW**: AutoAgent API: `/api/autoagent/*` endpoints
+- **NEW**: LibreChat API: `/api/ai/*` endpoints
 
 **Port Conflict Resolution:**
 ```bash
@@ -64,7 +67,9 @@ lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
 ## Running Services - CRITICAL DISTINCTION
 **DEVELOPMENT MODE (WHAT WE USE):**
 - Frontend: Run locally with `cd frontend && npm run dev -- --port 3004` (port 3004)
-- Backend/DB/Redis: Run in Rancher containers
+- Backend: Run locally with AutoAgent integration
+- Database: Local ARM64 PostgreSQL 16 on port 5433
+- Cache: DragonflyDB in Rancher container
 
 **PRODUCTION/CONTAINER MODE:**
 - Frontend: Container runs on port 3003
@@ -81,20 +86,119 @@ lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
 docker-compose stop frontend
 ```
 
-## Common Issues & Solutions
+## Phase 3 AI Development Patterns
+
+### AutoAgent Development
+**Key Principles:**
+1. **Multi-Agent Architecture**: 4 specialized agents working in orchestration
+2. **Azure OpenAI Integration**: Use prsnl-gpt-4 for complex reasoning
+3. **Function Calling**: Ensure Azure OpenAI API version 2023-12-01-preview
+4. **Agent Memory**: Persistent context through PRSNLMemory database integration
+
+**Agent Development Pattern:**
+```python
+# Always check FN_CALL environment variable for function calling
+use_functions = os.getenv("FN_CALL", "True").lower() != "false"
+
+agent = Agent(
+    name="Agent Name",
+    model="azure/prsnl-gpt-4",  # Use prsnl-gpt-4 for AutoAgent
+    instructions=AGENT_PROMPT,
+    functions=[func1, func2] if use_functions else [],
+    parallel_tool_calls=use_functions
+)
+```
+
+**Testing AutoAgent:**
+```bash
+# Test agent status
+curl http://localhost:8000/api/autoagent/agent-status
+
+# Test learning path creation
+curl -X POST http://localhost:8000/api/autoagent/create-learning-path \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "Test goal", "current_knowledge": ["basics"]}'
+
+# Test multi-agent content processing  
+curl -X POST http://localhost:8000/api/autoagent/process-content \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Test content", "title": "Test"}'
+```
+
+### LibreChat Development
+**Key Principles:**
+1. **OpenAI Compatibility**: Maintain full OpenAI API compatibility
+2. **Knowledge Base Integration**: Automatically enhance responses with PRSNL context
+3. **Model Optimization**: Use gpt-4.1-mini for fast, cost-effective responses
+4. **Streaming Support**: Real-time response delivery
+
+**LibreChat Pattern:**
+```python
+# Use LibreChat-specific model
+model_to_use = settings.AZURE_OPENAI_LIBRECHAT_DEPLOYMENT  # gpt-4.1-mini
+response = await ai_service.complete(
+    prompt=user_message,
+    system_prompt=system_prompt,
+    model=model_to_use  # Pass model explicitly
+)
+```
+
+**Testing LibreChat:**
+```bash
+# Test chat completion
+curl -X POST http://localhost:8000/api/ai/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-PRSNL-Integration: test" \
+  -d '{"model": "prsnl-gpt-4", "messages": [{"role": "user", "content": "Test"}]}'
+
+# Test streaming
+curl -X POST http://localhost:8000/api/ai/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "prsnl-gpt-4", "messages": [{"role": "user", "content": "Test"}], "stream": true}'
+```
+
+### Azure OpenAI Configuration
+**Critical Environment Variables:**
+```bash
+# Set these in autoagent_integration.py BEFORE imports
+os.environ["AZURE_OPENAI_API_VERSION"] = "2023-12-01-preview"  # Function calling
+os.environ["AZURE_OPENAI_DEPLOYMENT"] = settings.AZURE_OPENAI_DEPLOYMENT
+os.environ["FN_CALL"] = "True"  # Enable function calling
+```
+
+**Model Selection Strategy:**
+- **prsnl-gpt-4**: Complex reasoning, multi-agent workflows, function calling
+- **gpt-4.1-mini**: Fast chat responses, simple queries, cost optimization
+
+## Common Issues & Solutions - Phase 3 Updated
 1. **Old design showing**: Clear Vite cache with `rm -rf node_modules/.vite .svelte-kit`
 2. **API errors**: Backend is at http://localhost:8000/api/
 3. **Container issues**: Check Rancher Desktop app, NOT Docker
+4. **AutoAgent Issues**:
+   - **Function calling errors**: Check Azure OpenAI API version is 2023-12-01-preview
+   - **Model not found**: Ensure prsnl-gpt-4 deployment exists in Azure OpenAI
+   - **Python cache issues**: Clear with `find autoagent/ -name "*.pyc" -delete && find autoagent/ -name "__pycache__" -exec rm -rf {} +`
+   - **Agent not responding**: Check agent status with `curl http://localhost:8000/api/autoagent/agent-status`
+5. **LibreChat Issues**:
+   - **No response**: Verify model deployment gpt-4.1-mini exists
+   - **Slow responses**: Check if using correct model (should be fast)
+   - **Context missing**: Ensure knowledge base integration is working
+6. **DragonflyDB Issues**:
+   - **Connection errors**: Restart with `docker-compose restart dragonflydb`
+   - **Performance issues**: Check Rancher Desktop memory allocation
 
 ## Git Workflow
 - Current branch: main
 - Remote: https://github.com/pranavrajput12/PRSNL.git
 - ALWAYS verify which commit to rollback to before suggesting git reset
 
-## Testing Commands
+## Testing Commands - Phase 3 Enhanced
 - Lint: `npm run lint`
 - Type check: `npm run check`
 - Format: `npm run format`
+- **NEW**: AutoAgent health: `curl http://localhost:8000/api/autoagent/health`
+- **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
+- **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/autoagent/agent-status`
 
 ## Development Tools (Expert Engineer Improvements)
 - Health checks: `make test-health` - Run comprehensive smoke tests

@@ -13,6 +13,7 @@
   let mouseX = spring(0);
   let mouseY = spring(0);
   let isHovering = false;
+  let isPressed = false;
 
   // Animation values
   const shimmer = tweened(0, { duration: 2000 });
@@ -44,7 +45,7 @@
     if (isHovering) {
       const curve = 50 + Math.sin((x / 100) * Math.PI) * 20;
       morphPath.set(
-        `M 0,${curve} Q 25,${50} + (curve - 50) * 0.5} 50,50 T 100,${100} - curve} L 100,100 L 0,100 Z`
+        `M 0,${curve} Q 25,${50 + (curve - 50) * 0.5} 50,50 T 100,${100 - curve} L 100,100 L 0,100 Z`
       );
     }
   }

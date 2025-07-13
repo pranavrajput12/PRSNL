@@ -1,14 +1,18 @@
-# 📚 PRSNL API Documentation
+# 📚 PRSNL API Documentation - Phase 3 AI Second Brain
 
 ## Base URL
 - Development: `http://localhost:8000/api`
-- Frontend Proxy: `http://localhost:3003/api`
+- Frontend Proxy: `http://localhost:3004/api` (updated from 3003)
 - iOS App: Configured in iOS app settings
+- **NEW**: AutoAgent API: `http://localhost:8000/api/autoagent`
+- **NEW**: LibreChat API: `http://localhost:8000/api/ai`
 
 ## Client Applications
-- **SvelteKit Frontend**: Web application (port 3003)
+- **SvelteKit Frontend**: Web application (port 3004 dev, 3003 container)
 - **iOS App (PRSNL APP)**: Native iOS application - *separate codebase*
 - **Chrome Extension**: Browser extension
+- **NEW**: LibreChat Integration - OpenAI-compatible chat interface
+- **NEW**: AutoAgent Multi-Agent System - Autonomous AI workflows
 
 ## Navigation Structure (Neural Nest Theme)
 - **Neural Nest** (`/`) - Main dashboard and knowledge hub
@@ -25,7 +29,265 @@ Currently no authentication required (development mode)
 
 **Note**: iOS app may require additional authentication mechanisms for production use.
 
-## Endpoints
+## Phase 3 AI API Endpoints
+
+### 🤖 AutoAgent - Multi-Agent AI System
+
+#### GET /api/autoagent/agent-status
+Get the status of all AutoAgent AI agents
+
+**Response:**
+```json
+{
+  "total_agents": 4,
+  "agents": [
+    {
+      "name": "knowledge_curator",
+      "status": "active",
+      "capabilities": ["analyze_content", "find_connections", "suggest_enhancements"]
+    },
+    {
+      "name": "research_synthesizer",
+      "status": "active", 
+      "capabilities": ["synthesize_sources", "identify_patterns", "generate_insights"]
+    },
+    {
+      "name": "content_explorer",
+      "status": "active",
+      "capabilities": ["explore_connections", "suggest_exploration_paths", "find_serendipitous_connections"]
+    },
+    {
+      "name": "learning_pathfinder",
+      "status": "active",
+      "capabilities": ["create_learning_path", "track_progress", "adapt_path"]
+    }
+  ],
+  "memory_status": "connected",
+  "timestamp": "2025-07-13T02:44:11.779449"
+}
+```
+
+#### POST /api/autoagent/process-content
+Process content through the multi-agent workflow (Knowledge Curator + Research Synthesizer)
+
+**Request Body:**
+```json
+{
+  "content": "Content to analyze and process",
+  "title": "Optional title",
+  "tags": ["tag1", "tag2"],
+  "url": "https://example.com",
+  "type": "article"
+}
+```
+
+**Response:**
+```json
+{
+  "request_id": "content-1752355349.848207",
+  "status": "completed",
+  "results": {
+    "agent_outputs": {
+      "knowledge_curator": "Detailed categorization and enhancement suggestions...",
+      "research_synthesizer": "Comprehensive synthesis and insights..."
+    },
+    "processing_result": {
+      "enrichments": {
+        "categories": ["programming", "web-development"],
+        "tags": ["python", "api", "fastapi"],
+        "key_concepts": ["async programming", "web frameworks"],
+        "insights": ["Key insights and patterns identified..."]
+      }
+    }
+  },
+  "agents_involved": ["knowledge_curator", "research_synthesizer"],
+  "execution_time": 10.546185,
+  "timestamp": "2025-07-13T02:52:40.394418"
+}
+```
+
+#### POST /api/autoagent/create-learning-path
+Create a personalized learning path using the Learning Pathfinder agent
+
+**Request Body:**
+```json
+{
+  "goal": "Master FastAPI and async Python for building high-performance APIs",
+  "current_knowledge": ["Python basics", "HTTP fundamentals", "REST APIs"],
+  "time_commitment": "intensive"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "completed",
+  "agent": "learning_pathfinder",
+  "results": {
+    "learning_path": "Comprehensive 5-stage learning plan with milestones, resources, and exercises..."
+  },
+  "timestamp": "2025-07-13T02:51:53.385826"
+}
+```
+
+#### POST /api/autoagent/explore-topic
+Explore a topic using Content Explorer and Learning Pathfinder agents
+
+**Request Body:**
+```json
+{
+  "topic": "Machine Learning for Knowledge Management",
+  "user_interests": ["python", "ai", "automation"],
+  "depth": 3
+}
+```
+
+**Response:**
+```json
+{
+  "topic": "Machine Learning for Knowledge Management",
+  "status": "completed",
+  "results": {
+    "explorations": {
+      "content_explorer": "Exploration paths and discovery suggestions...",
+      "learning_pathfinder": "Structured learning approach..."
+    }
+  },
+  "timestamp": "2025-07-13T02:52:29.848995"
+}
+```
+
+#### GET /api/autoagent/insights-report
+Generate comprehensive insights report across the knowledge base
+
+**Query Parameters:**
+- `time_period` (string, default: "week") - Time period for analysis
+
+**Response:**
+```json
+{
+  "status": "completed",
+  "report": {
+    "period": "week",
+    "sections": {
+      "synthesis": "Pattern analysis and insights...",
+      "exploration_suggestions": "Areas to explore based on insights..."
+    }
+  },
+  "generated_at": "2025-07-13T02:52:29.848995"
+}
+```
+
+#### GET /api/autoagent/health
+AutoAgent health check
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "prsnl-autoagent",
+  "memory_connected": true,
+  "agents_loaded": true,
+  "agent_count": 4,
+  "timestamp": "2025-07-13T02:44:11.779449"
+}
+```
+
+### 💬 LibreChat - Conversational AI Bridge
+
+#### POST /api/ai/chat/completions
+OpenAI-compatible chat completions with knowledge base integration
+
+**Headers:**
+- `Content-Type: application/json`
+- `X-PRSNL-Integration: test-client` (optional)
+
+**Request Body:**
+```json
+{
+  "model": "prsnl-gpt-4",
+  "messages": [
+    {"role": "user", "content": "Hello! Can you help me understand how PRSNL works as a second brain system?"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 150,
+  "stream": false
+}
+```
+
+**Response:**
+```json
+{
+  "id": "chatcmpl-1752374596",
+  "object": "chat.completion",
+  "created": 1752374596,
+  "model": "prsnl-gpt-4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hello! I'd be happy to explain how PRSNL works as a second brain system...",
+        "name": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 14,
+    "completion_tokens": 350,
+    "total_tokens": 364
+  }
+}
+```
+
+**Streaming Response** (when `"stream": true`):
+```
+data: {"id": "chatcmpl-1752374627", "object": "chat.completion.chunk", "created": 1752374627, "model": "prsnl-gpt-4", "choices": [{"index": 0, "delta": {"content": " Enhanced Information"}, "finish_reason": null}]}
+
+data: {"id": "chatcmpl-1752374627", "object": "chat.completion.chunk", "created": 1752374627, "model": "prsnl-gpt-4", "choices": [{"index": 0, "delta": {"content": " Retrieval: AI can"}, "finish_reason": null}]}
+
+data: [DONE]
+```
+
+#### GET /api/ai/models
+List available models for LibreChat integration
+
+**Response:**
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "prsnl-gpt-4",
+      "object": "model",
+      "created": 1752374596,
+      "owned_by": "prsnl"
+    },
+    {
+      "id": "prsnl-gpt-35-turbo",
+      "object": "model", 
+      "created": 1752374596,
+      "owned_by": "prsnl"
+    }
+  ]
+}
+```
+
+#### GET /api/ai/health
+LibreChat bridge health check
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "prsnl-librechat-bridge",
+  "timestamp": "2025-07-13T02:44:11.779449",
+  "models": 2
+}
+```
+
+## Core API Endpoints
 
 ### 📊 Timeline
 
