@@ -1,0 +1,8 @@
+# If you create a new GitHub OAuth App, update these in your .env file:
+
+GITHUB_CLIENT_ID=your_new_client_id_here
+GITHUB_CLIENT_SECRET=your_new_client_secret_here
+GITHUB_OAUTH_REDIRECT_URI=http://localhost:3004/code-cortex/github-callback
+
+# For production deployment, update the redirect URI to:
+# GITHUB_OAUTH_REDIRECT_URI=https://yourdomain.com/code-cortex/github-callback

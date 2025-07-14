@@ -20,6 +20,14 @@ This is your single source of truth for completing tasks properly. Use this simp
 - **LibreChat**: Azure OpenAI integration bridge (Phase 2)
 - **DO NOT**: Use Docker database, rebuild Docker containers unnecessarily
 
+### 🚨 CRASH RECOVERY PROCEDURES
+**When Terminal Crashes During Task:**
+1. **Check Last Commit**: `git log -1 --oneline` to see context
+2. **Review Modified Files**: `git status` to see work in progress
+3. **Check Session State**: Read `CURRENT_SESSION_STATE.md` for task details
+4. **Resume Work**: Use context from documentation to continue
+5. **Verify Services**: Ensure backend (8000) and frontend (3004) are running
+
 ### 🤖 What AI Will Do Automatically
 When you tag this file, the AI will:
 1. **Read Context Documentation**: Check all files for current state understanding
@@ -245,6 +253,42 @@ pytest tests/[your_test_file].py
 
 # 3. Verify integration
 # Test that your script/utility works with the main system
+```
+
+### 🔍 CodeMirror Tasks (Claude) - IMPLEMENTED
+**What You Changed**: Repository analysis, pattern detection, AI insights
+**Required Updates**:
+- ✅ `TASK_HISTORY.md` - Mark as COMPLETED with files modified
+- ✅ `API_DOCUMENTATION.md` - Document CodeMirror endpoints
+- ✅ `PROJECT_STATUS.md` - Update Code Cortex capabilities
+- ✅ `QUICK_REFERENCE_COMPLETE.md` - Add CodeMirror commands
+- ⚠️ `DATABASE_SCHEMA.md` - Only if schema changes
+
+**Sanity Checks - Run These**:
+```bash
+# 1. Test CodeMirror health
+curl http://localhost:8000/api/codemirror/health
+
+# 2. Test analysis endpoint
+curl -X POST "http://localhost:8000/api/codemirror/analyze/1cbb79ce-8994-490c-87ce-56911ab03807" \
+  -H "Content-Type: application/json" \
+  -d '{"repo_id": "1cbb79ce-8994-490c-87ce-56911ab03807", "analysis_depth": "standard"}'
+
+# 3. Check frontend integration
+# Navigate to http://localhost:3004/code-cortex/codemirror
+
+# 4. Verify job system
+curl http://localhost:8000/api/persistence/status/[job_id]
+```
+
+**Update Template**:
+```markdown
+# In API_DOCUMENTATION.md - Add section:
+### CodeMirror - AI Repository Intelligence
+- **POST /api/codemirror/analyze/{repo_id}**: Start repository analysis
+- **GET /api/codemirror/analyses/{user_id}**: Get user's analyses
+- **GET /api/codemirror/patterns/{analysis_id}**: Get detected patterns
+- **GET /api/codemirror/insights/{analysis_id}**: Get AI insights
 ```
 
 ### 📚 Documentation Tasks (Claude) - COMPLETED

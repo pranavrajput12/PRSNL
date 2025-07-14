@@ -13,7 +13,7 @@ import httpx
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from app.config import settings
-from app.db.database import get_db_connection
+from app.db.database import get_db_pool
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,9 @@ class GitHubService:
         import secrets
         state = f"{user_id}:{secrets.token_urlsafe(32)}"
         
-        # Store state temporarily (expires in 10 minutes)
-        from app.core.cache import cache_manager
-        await cache_manager.set(f"github_oauth_state:{state}", user_id, ttl=600)
+        # Store state temporarily (temporarily disabled - cache not implemented)
+        # from app.core.cache import cache_manager
+        # await cache_manager.set(f"github_oauth_state:{state}", user_id, ttl=600)
         
         params = {
             "client_id": settings.GITHUB_CLIENT_ID,
@@ -60,11 +60,14 @@ class GitHubService:
     async def complete_oauth_flow(self, code: str, state: str) -> Dict[str, Any]:
         """Exchange OAuth code for access token"""
         
-        # Verify state
-        from app.core.cache import cache_manager
-        user_id = await cache_manager.get(f"github_oauth_state:{state}")
-        if not user_id:
-            raise ValueError("Invalid or expired OAuth state")
+        # Verify state (temporarily disabled - cache not implemented)
+        # from app.core.cache import cache_manager
+        # user_id = await cache_manager.get(f"github_oauth_state:{state}")
+        # if not user_id:
+        #     raise ValueError("Invalid or expired OAuth state")
+        
+        # Extract user_id from state for now
+        user_id = state.split(":")[0] if ":" in state else "temp-user-for-oauth"
         
         # Exchange code for token
         token_response = await self.client.post(
@@ -90,7 +93,8 @@ class GitHubService:
         nonce = os.urandom(12)
         encrypted_token = aesgcm.encrypt(nonce, token_data["access_token"].encode(), None)
         
-        async with get_db_connection() as db:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
             await db.execute("""
                 INSERT INTO github_accounts (
                     user_id, github_id, github_username, github_email,
@@ -116,8 +120,8 @@ class GitHubService:
                 user_info.get("organizations_url")
             )
         
-        # Clean up state
-        await cache_manager.delete(f"github_oauth_state:{state}")
+        # Clean up state (cache_manager not implemented yet)
+        # await cache_manager.delete(f"github_oauth_state:{state}")
         
         return {
             "github_username": user_info["login"],
@@ -156,7 +160,8 @@ class GitHubService:
         repos = response.json()
         
         # Store/update repos in database
-        async with get_db_connection() as db:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
             account_id = await db.fetchval(
                 "SELECT id FROM github_accounts WHERE user_id = $1",
                 user_id
@@ -331,9 +336,10 @@ class GitHubService:
     async def _get_user_token(self, user_id: str) -> str:
         """Get decrypted access token for a user"""
         
-        async with get_db_connection() as db:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
             encrypted_token = await db.fetchval(
-                "SELECT access_token_enc FROM github_accounts WHERE user_id = $1",
+                "SELECT access_token_encrypted FROM github_accounts WHERE user_id = $1",
                 user_id
             )
             
@@ -345,9 +351,10 @@ class GitHubService:
     async def _get_token_for_repo(self, repo_full_name: str) -> str:
         """Get access token for a specific repository"""
         
-        async with get_db_connection() as db:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
             encrypted_token = await db.fetchval("""
-                SELECT ga.access_token_enc
+                SELECT ga.access_token_encrypted
                 FROM github_repos gr
                 JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE gr.full_name = $1

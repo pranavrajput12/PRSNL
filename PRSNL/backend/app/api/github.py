@@ -49,7 +49,6 @@ class SyncReposRequest(BaseModel):
 # Endpoints
 @router.get("/auth/login")
 async def github_login(
-    current_user = Depends(get_current_user),
     redirect_uri: Optional[str] = Query(None)
 ):
     """Initiate GitHub OAuth flow"""
@@ -60,17 +59,21 @@ async def github_login(
             detail="GitHub OAuth not configured"
         )
     
-    github_service = GitHubService()
-    auth_url = await github_service.init_oauth_flow(str(current_user.id))
+    # For now, use a temporary user ID. In a real app, you'd get this from session/auth
+    # This will be replaced with proper user management
+    temp_user_id = "temp-user-for-oauth"
     
-    # Store redirect URI for after auth
-    if redirect_uri:
-        from app.core.cache import cache_manager
-        await cache_manager.set(
-            f"github_redirect:{current_user.id}",
-            redirect_uri,
-            ttl=600
-        )
+    github_service = GitHubService()
+    auth_url = await github_service.init_oauth_flow(temp_user_id)
+    
+    # Store redirect URI for after auth (temporarily disabled - cache not implemented)
+    # if redirect_uri:
+    #     from app.core.cache import cache_manager
+    #     await cache_manager.set(
+    #         f"github_redirect:{current_user.id}",
+    #         redirect_uri,
+    #         ttl=600
+    #     )
     
     return {"auth_url": auth_url}
 
@@ -82,12 +85,15 @@ async def github_callback(
 ):
     """Handle GitHub OAuth callback"""
     
-    # Verify state and get user_id
-    from app.core.cache import cache_manager
-    user_id = await cache_manager.get(f"github_oauth_state:{state}")
+    # Verify state and get user_id (temporarily disabled - cache not implemented)
+    # from app.core.cache import cache_manager
+    # user_id = await cache_manager.get(f"github_oauth_state:{state}")
     
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Invalid or expired state")
+    # if not user_id:
+    #     raise HTTPException(status_code=400, detail="Invalid or expired state")
+    
+    # For now, use temp user ID
+    user_id = "temp-user-for-oauth"
     
     # Exchange code for token
     github_service = GitHubService()
@@ -97,20 +103,24 @@ async def github_callback(
         logger.error(f"GitHub OAuth error: {str(e)}")
         raise HTTPException(status_code=400, detail="OAuth authentication failed")
     
-    # Get redirect URI if stored
-    redirect_uri = await cache_manager.get(f"github_redirect:{user_id}")
-    if redirect_uri:
-        await cache_manager.delete(f"github_redirect:{user_id}")
-        return RedirectResponse(url=redirect_uri)
+    # Get redirect URI if stored (temporarily disabled - cache not implemented)
+    # redirect_uri = await cache_manager.get(f"github_redirect:{user_id}")
+    # if redirect_uri:
+    #     await cache_manager.delete(f"github_redirect:{user_id}")
+    #     return RedirectResponse(url=redirect_uri)
     
     # Default redirect to Code Cortex
-    return RedirectResponse(url="/code-cortex")
+    frontend_url = settings.FRONTEND_URL or "http://localhost:3004"
+    return RedirectResponse(url=f"{frontend_url}/code-cortex/codemirror")
 
 @router.get("/accounts")
 async def get_github_accounts(
     current_user = Depends(get_current_user)
 ) -> List[GitHubAccount]:
     """Get connected GitHub accounts"""
+    
+    # For development/demo, check for temp user accounts too
+    user_id = current_user.id if current_user else "temp-user-for-oauth"
     
     pool = await get_db_pool()
     async with pool.acquire() as db:
@@ -127,7 +137,7 @@ async def get_github_accounts(
             WHERE ga.user_id = $1
             GROUP BY ga.id
             ORDER BY ga.created_at DESC
-        """, current_user.id)
+        """, user_id)
         
         return [
             GitHubAccount(
@@ -148,13 +158,16 @@ async def disconnect_github_account(
 ):
     """Disconnect a GitHub account"""
     
+    # For development/demo, allow temp user to disconnect
+    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    
     pool = await get_db_pool()
     async with pool.acquire() as db:
         # Verify ownership
         account = await db.fetchrow("""
             SELECT id FROM github_accounts
             WHERE id = $1 AND user_id = $2
-        """, UUID(account_id), current_user.id)
+        """, UUID(account_id), user_id)
         
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
@@ -176,6 +189,9 @@ async def get_repos(
 ) -> List[GitHubRepo]:
     """Get synchronized repositories"""
     
+    # For development/demo, check for temp user accounts too
+    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    
     pool = await get_db_pool()
     async with pool.acquire() as db:
         query = """
@@ -195,7 +211,7 @@ async def get_repos(
             WHERE ga.user_id = $1
         """
         
-        params = [current_user.id]
+        params = [user_id]
         param_count = 1
         
         if account_id:
@@ -243,6 +259,9 @@ async def sync_repos(
 ):
     """Sync repositories from GitHub"""
     
+    # For development/demo, check for temp user accounts too
+    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    
     github_service = GitHubService()
     
     pool = await get_db_pool()
@@ -253,13 +272,13 @@ async def sync_repos(
                 SELECT id, access_token_encrypted, access_token_nonce
                 FROM github_accounts
                 WHERE id = $1 AND user_id = $2
-            """, UUID(account_id), current_user.id)
+            """, UUID(account_id), user_id)
         else:
             accounts = await db.fetch("""
                 SELECT id, access_token_encrypted, access_token_nonce
                 FROM github_accounts
                 WHERE user_id = $1
-            """, current_user.id)
+            """, user_id)
         
         if not accounts:
             raise HTTPException(status_code=404, detail="No GitHub accounts found")

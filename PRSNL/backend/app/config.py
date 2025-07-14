@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     # GitHub OAuth
     GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID", None)
     GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET", None)
+    GITHUB_OAUTH_REDIRECT_URI: Optional[str] = os.getenv("GITHUB_OAUTH_REDIRECT_URI", None)
     
     # Firecrawl Web Scraping
     FIRECRAWL_API_KEY: Optional[str] = None

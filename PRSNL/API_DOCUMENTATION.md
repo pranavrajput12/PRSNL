@@ -370,6 +370,171 @@ Process intelligence for multiple conversations
 }
 ```
 
+## 🔍 CodeMirror - AI Repository Intelligence
+
+CodeMirror provides deep AI-powered analysis of code repositories, detecting patterns, generating insights, and providing intelligent code understanding.
+
+### Repository Analysis
+
+#### POST /api/codemirror/analyze/{repo_id}
+Start AI-powered analysis of a GitHub repository
+
+**Path Parameters:**
+- `repo_id` (UUID) - The repository ID from github_repos table
+
+**Request Body:**
+```json
+{
+  "repo_id": "1cbb79ce-8994-490c-87ce-56911ab03807",
+  "analysis_depth": "standard",
+  "include_patterns": true,
+  "include_insights": true
+}
+```
+
+**Analysis Depth Options:**
+- `quick` - Fast surface-level analysis
+- `standard` - Balanced depth and speed (default)
+- `deep` - Comprehensive analysis with advanced patterns
+
+**Response:**
+```json
+{
+  "job_id": "codemirror_1cbb79ce-8994-490c-87ce-56911ab03807_1752491022.319806",
+  "status": "pending",
+  "message": "CodeMirror analysis started with standard depth",
+  "monitor_url": "/api/persistence/status/codemirror_1cbb79ce-8994-490c-87ce-56911ab03807_1752491022.319806",
+  "websocket_channel": "codemirror.codemirror_1cbb79ce-8994-490c-87ce-56911ab03807_1752491022.319806"
+}
+```
+
+#### GET /api/codemirror/analyses/{user_id}
+Get all analyses for a user
+
+**Response:**
+```json
+{
+  "analyses": [
+    {
+      "id": "analysis_123",
+      "repo_id": "1cbb79ce-8994-490c-87ce-56911ab03807",
+      "repo_name": "PRSNL",
+      "status": "completed",
+      "analysis_type": "repository_analysis",
+      "analysis_depth": "standard",
+      "progress": 100,
+      "created_at": "2025-07-14T11:03:41Z",
+      "completed_at": "2025-07-14T11:05:22Z"
+    }
+  ]
+}
+```
+
+#### GET /api/codemirror/patterns/{analysis_id}
+Get detected code patterns from an analysis
+
+**Response:**
+```json
+{
+  "patterns": [
+    {
+      "id": "pattern_456",
+      "pattern_signature": "singleton_pattern",
+      "pattern_type": "design_pattern",
+      "description": "Singleton pattern detected in service classes",
+      "occurrence_count": 12,
+      "solutions": [
+        {
+          "type": "refactor",
+          "description": "Consider dependency injection",
+          "code_example": "..."
+        }
+      ],
+      "confidence": 0.92
+    }
+  ]
+}
+```
+
+#### GET /api/codemirror/insights/{analysis_id}
+Get AI-generated insights from an analysis
+
+**Response:**
+```json
+{
+  "insights": [
+    {
+      "id": "insight_789",
+      "insight_type": "architecture",
+      "title": "Microservices Architecture Recommendation",
+      "description": "The codebase shows patterns that would benefit from service separation",
+      "severity": "medium",
+      "recommendation": "Consider extracting authentication logic into a separate service",
+      "confidence_score": 0.87
+    }
+  ]
+}
+```
+
+#### POST /api/codemirror/cli/sync
+Sync analysis results from CodeMirror CLI
+
+**Request Body:**
+```json
+{
+  "cli_analysis_id": "cli_analysis_123",
+  "cli_version": "1.0.0",
+  "machine_id": "machine_abc123",
+  "analysis_results": {
+    "patterns": [...],
+    "insights": [...],
+    "metrics": {...}
+  },
+  "local_path": "/Users/dev/projects/myrepo",
+  "repo_name": "myrepo"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "analysis_id": "analysis_456",
+  "message": "CLI analysis synced successfully"
+}
+```
+
+#### GET /api/codemirror/health
+CodeMirror service health check
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "codemirror",
+  "agents_available": true,
+  "timestamp": "2025-07-14T11:04:00Z"
+}
+```
+
+### WebSocket Progress Updates
+
+Connect to WebSocket for real-time analysis progress:
+```javascript
+const ws = new WebSocket(`ws://localhost:8000/ws?channel=${websocket_channel}`);
+ws.onmessage = (event) => {
+  const update = JSON.parse(event.data);
+  console.log(`Progress: ${update.progress}%, Stage: ${update.stage}`);
+};
+```
+
+### Integration with Job Persistence
+
+CodeMirror analyses are tracked through the unified job persistence system:
+- Job type: `codemirror_analysis`
+- Monitor progress via `/api/persistence/status/{job_id}`
+- Results stored in job persistence for reliability
+
 ## 🔄 Job Persistence & Processing - Unified Job Management
 
 ### Job Lifecycle Management

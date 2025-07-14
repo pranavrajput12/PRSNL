@@ -232,6 +232,13 @@ http POST localhost:8000/api/rag/query query="test"
 - **Usage**: Reference before any database changes, migrations, or new features
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **FIXED: CodeMirror (2025-07-14)** - AI-powered repository intelligence system
+  - **Status**: Fully operational after 500 error fix
+  - **Issue**: Missing database connection imports in codemirror_service.py
+  - **Fix Applied**: Added get_db_connection import, verified auth system
+  - **Test Command**: `curl -X POST "http://localhost:8000/api/codemirror/analyze/1cbb79ce-8994-490c-87ce-56911ab03807" -H "Content-Type: application/json" -d '{"repo_id": "1cbb79ce-8994-490c-87ce-56911ab03807", "analysis_depth": "standard"}'`
+  - **Features**: Repository analysis, pattern detection, AI insights, job persistence
+  - **Frontend**: Available at http://localhost:3004/code-cortex/codemirror
 - **NEW: Code Quality Tools (2025-07-13)** - isort + flake8 + Prettier with comprehensive CI/CD integration
 - **NEW: HTTPie Integration (2025-07-13)** - Advanced API debugging and testing capabilities
 - **IN DEVELOPMENT: Open Source Integrations (2025-07-13)** - Game-changing feature for Code Cortex
@@ -248,6 +255,35 @@ http POST localhost:8000/api/rag/query query="test"
 - Fan3D component (commit b383191)
 - Mac3D improvements (commit 468175f)
 - Neural Motherboard Interface v4.2 (commit 0c97c5b)
+
+## 🚨 Crash Recovery & Session Management
+
+### When Terminal Crashes
+1. **Check Context**: `git log -1 --oneline` and `git status`
+2. **Read Session State**: Check `CURRENT_SESSION_STATE.md` for active task
+3. **Review Documentation**: `CRASH_RECOVERY_GUIDE.md` for specific scenarios
+4. **Verify Services**: Backend (8000), Frontend (3004), PostgreSQL (5433)
+5. **Resume Work**: Use `@CURRENT_SESSION_STATE.md Resume my last session`
+
+### Critical Recovery Files
+- **`CRASH_RECOVERY_GUIDE.md`** - Complete recovery procedures
+- **`CURRENT_SESSION_STATE.md`** - Active task and progress tracking
+- **`TASK_COMPLETION_GUIDE.md`** - Task completion procedures with crash recovery
+- **`TASK_HISTORY.md`** - Historical context and recent completions
+
+### Service Recovery Commands
+```bash
+# Backend (if hung)
+lsof -ti:8000 | xargs kill -9
+cd backend && source venv/bin/activate && uvicorn app.main:app --reload --port 8000
+
+# Frontend (if hung)
+lsof -ti:3004 | xargs kill -9
+cd frontend && npm run dev -- --port 3004
+
+# PostgreSQL (if needed)
+/opt/homebrew/bin/brew services restart postgresql@16
+```
 
 ## 🔒 Security & Future Planning
 

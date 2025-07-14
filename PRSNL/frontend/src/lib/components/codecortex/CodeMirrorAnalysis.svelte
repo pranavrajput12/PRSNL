@@ -1,16 +1,14 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import AIProcessingIndicator from '../AIProcessingIndicator.svelte';
   
   interface Props {
     selectedRepo: any;
     activeAnalysis: any;
     analyses: any[];
+    synthesize: (problem: string) => void;
   }
   
-  let { selectedRepo, activeAnalysis, analyses = [] }: Props = $props();
-  
-  const dispatch = createEventDispatcher();
+  let { selectedRepo, activeAnalysis, analyses = [], synthesize }: Props = $props();
   
   // Calculate progress based on job data  
   let analysisProgress = $derived(activeAnalysis ? {
@@ -31,7 +29,7 @@
   }
   
   function handleSynthesize(problem: string) {
-    dispatch('synthesize', problem);
+    synthesize(problem);
   }
 </script>
 

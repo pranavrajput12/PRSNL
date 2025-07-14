@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  
   interface Props {
     patterns: any[];
+    onRefresh: () => void;
+    synthesize: (problem: string) => void;
   }
   
-  let { patterns = [] }: Props = $props();
-  
-  const dispatch = createEventDispatcher();
+  let { patterns = [], onRefresh, synthesize }: Props = $props();
   
   let selectedType = $state('all');
   let searchQuery = $state('');
@@ -45,19 +43,25 @@
   }
   
   function handleSynthesize(pattern: any) {
-    dispatch('synthesize', pattern.pattern_signature);
+    synthesize(pattern.pattern_signature);
   }
 </script>
 
 <div class="pattern-history">
   <div class="pattern-controls">
-    <div class="search-box">
-      <input 
-        type="text"
-        placeholder="Search patterns..."
-        bind:value={searchQuery}
-        class="search-input"
-      />
+    <div class="controls-top">
+      <div class="search-box">
+        <input 
+          type="text"
+          placeholder="Search patterns..."
+          bind:value={searchQuery}
+          class="search-input"
+        />
+      </div>
+      
+      <button class="refresh-btn" onclick={onRefresh}>
+        🔄 Refresh Patterns
+      </button>
     </div>
     
     <div class="type-filters">
@@ -147,8 +151,14 @@
     margin-bottom: 2rem;
   }
   
-  .search-box {
+  .controls-top {
+    display: flex;
+    gap: 1rem;
     margin-bottom: 1rem;
+  }
+  
+  .search-box {
+    flex: 1;
   }
   
   .search-input {
@@ -163,6 +173,23 @@
   
   .search-input::placeholder {
     color: var(--text-secondary);
+  }
+  
+  .refresh-btn {
+    padding: 0.75rem 1.25rem;
+    background: rgba(96, 165, 250, 0.2);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: #60a5fa;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  
+  .refresh-btn:hover {
+    background: rgba(96, 165, 250, 0.3);
+    transform: translateY(-1px);
   }
   
   .type-filters {
