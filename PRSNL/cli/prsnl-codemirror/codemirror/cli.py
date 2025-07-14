@@ -64,8 +64,11 @@ def version():
 @click.option('--advanced', 
               is_flag=True,
               help='Run advanced analysis with GitPython, PyDriller, and Semgrep')
+@click.option('--realtime', 
+              is_flag=True,
+              help='Enable real-time sync with PRSNL web interface')
 @click.pass_context
-def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, patterns: bool, insights: bool, advanced: bool):
+def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, patterns: bool, insights: bool, advanced: bool, realtime: bool):
     """Audit and analyze a repository with AI."""
     config = ctx.obj['config']
     repo_path = Path(repo_path).resolve()
@@ -74,6 +77,8 @@ def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, 
     console.print(f"[dim]Analysis depth: {depth}[/dim]")
     if advanced:
         console.print(f"[dim]Advanced analysis: Enabled (GitPython, PyDriller, Semgrep)[/dim]")
+    if realtime:
+        console.print(f"[dim]Real-time sync: Enabled[/dim]")
     
     try:
         # Initialize analyzer
@@ -91,7 +96,8 @@ def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, 
                 repo_path=repo_path,
                 depth=depth,
                 include_patterns=patterns,
-                include_insights=insights
+                include_insights=insights,
+                enable_realtime=realtime
             ))
             
             progress.update(task, description="Analysis complete!")

@@ -8,6 +8,7 @@
   import InsightsList from '$lib/components/codecortex/InsightsList.svelte';
   import AnalysisOverview from '$lib/components/codecortex/AnalysisOverview.svelte';
   import AnalysisTypeSelector from '$lib/components/codecortex/AnalysisTypeSelector.svelte';
+  import RealtimeAnalysisProgress from '$lib/components/codecortex/RealtimeAnalysisProgress.svelte';
 
   // State management
   let activeTab = $state('overview');
@@ -323,6 +324,12 @@
               
               <!-- Analysis Overview Component -->
               <AnalysisOverview repoId={selectedRepo?.id} />
+              
+              <!-- Real-time Progress Display -->
+              <div class="realtime-section">
+                <h3>🚀 Active Analyses</h3>
+                <RealtimeAnalysisProgress showAllActive={true} />
+              </div>
               
               <!-- Repository Selection -->
               <div class="repo-selection-section">
@@ -708,6 +715,20 @@ pip install -e .</code>
     color: rgba(255, 255, 255, 0.7);
     margin-bottom: 2rem;
     text-align: center;
+  }
+  
+  .realtime-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(96, 165, 250, 0.05);
+    border: 1px solid rgba(96, 165, 250, 0.1);
+    border-radius: 1rem;
+  }
+  
+  .realtime-section h3 {
+    margin: 0 0 1rem 0;
+    color: #60a5fa;
+    font-size: 1.125rem;
   }
   
   .repo-selection-section {

@@ -16,6 +16,7 @@ from pygments.lexers import get_lexer_for_filename
 from pygments.util import ClassNotFound
 
 from .analyzers.advanced_analyzer import AdvancedAnalyzer, DEFAULT_COMBY_PATTERNS
+from .realtime_sync import RealtimeSyncClient, RealtimeProgressReporter
 
 
 class RepositoryAnalyzer:
@@ -25,6 +26,7 @@ class RepositoryAnalyzer:
         self.config = config
         self.console = console
         self.advanced_analyzer = None  # Will be initialized when needed
+        self.realtime_sync = None  # Will be initialized when needed
         self.supported_languages = {
             '.py': 'Python',
             '.js': 'JavaScript', 
@@ -58,18 +60,44 @@ class RepositoryAnalyzer:
         }
     
     async def analyze_repository(self, repo_path: Path, depth: str = 'standard', 
-                               include_patterns: bool = True, include_insights: bool = True) -> Dict[str, Any]:
+                               include_patterns: bool = True, include_insights: bool = True,
+                               enable_realtime: bool = False, analysis_id: str = None) -> Dict[str, Any]:
         """Perform comprehensive repository analysis."""
         repo_info = self.get_repository_info(repo_path)
         
+        # Set up real-time progress reporting if enabled
+        progress_reporter = None
+        if enable_realtime and self.config.prsnl_url and self.config.prsnl_token:
+            try:
+                if not self.realtime_sync:
+                    self.realtime_sync = RealtimeSyncClient(self.config, self.console)
+                
+                # Connect to real-time sync
+                connected = await self.realtime_sync.connect()
+                if connected:
+                    # Generate analysis ID if not provided
+                    if not analysis_id:
+                        analysis_id = f"cli_{repo_info['name']}_{datetime.utcnow().timestamp()}"
+                    
+                    progress_reporter = RealtimeProgressReporter(self.realtime_sync, analysis_id)
+                    await progress_reporter.update(0, "initializing", {"repository": repo_info['name']})
+            except Exception as e:
+                self.console.print(f"[yellow]Warning: Real-time sync unavailable: {e}[/yellow]")
+        
         # Collect files for analysis
+        if progress_reporter:
+            await progress_reporter.update(10, "scanning_files")
         files = self._collect_files(repo_path)
         
         # Basic analysis
+        if progress_reporter:
+            await progress_reporter.update(20, "analyzing_structure")
+            
         result = {
             'repository': repo_info,
             'analysis_depth': depth,
             'timestamp': datetime.utcnow().isoformat(),
+            'analysis_id': analysis_id,
             'stats': self._calculate_stats(files),
             'languages': self._analyze_languages(files),
             'structure': self._analyze_structure(repo_path, files),
@@ -79,20 +107,35 @@ class RepositoryAnalyzer:
         
         # Pattern detection (if requested)
         if include_patterns:
-            result['patterns'] = await self._detect_patterns(files, depth)
+            if progress_reporter:
+                await progress_reporter.update(40, "detecting_patterns")
+            result['patterns'] = await self._detect_patterns(files, depth, progress_reporter)
         
         # AI insights (if requested and configured)
         if include_insights and (self.config.openai_key or self.config.prsnl_url):
-            result['insights'] = await self._generate_insights(result, depth)
+            if progress_reporter:
+                await progress_reporter.update(60, "generating_insights")
+            result['insights'] = await self._generate_insights(result, depth, progress_reporter)
         
         # Advanced analysis (if depth is standard or deep)
         if depth in ['standard', 'deep']:
-            advanced_results = await self._run_advanced_analysis(repo_path, depth)
+            if progress_reporter:
+                await progress_reporter.update(80, "advanced_analysis")
+            advanced_results = await self._run_advanced_analysis(repo_path, depth, progress_reporter)
             if advanced_results:
                 result['advanced_analysis'] = advanced_results
         
+        # Complete analysis
+        if progress_reporter:
+            await progress_reporter.update(100, "completed")
+            await progress_reporter.complete(result)
+        
         # Cache results
         self._cache_results(repo_info['name'], result)
+        
+        # Disconnect real-time sync if it was created for this analysis
+        if self.realtime_sync and enable_realtime:
+            await self.realtime_sync.disconnect()
         
         return result
     
@@ -350,7 +393,8 @@ class RepositoryAnalyzer:
                     pass
         return total_size
     
-    async def _detect_patterns(self, files: List[Dict[str, Any]], depth: str) -> List[Dict[str, Any]]:
+    async def _detect_patterns(self, files: List[Dict[str, Any]], depth: str, 
+                             progress_reporter: Optional[RealtimeProgressReporter] = None) -> List[Dict[str, Any]]:
         """Detect code patterns and architectural decisions."""
         patterns = []
         
@@ -483,7 +527,8 @@ class RepositoryAnalyzer:
         
         return patterns
     
-    async def _generate_insights(self, analysis_result: Dict[str, Any], depth: str) -> List[Dict[str, Any]]:
+    async def _generate_insights(self, analysis_result: Dict[str, Any], depth: str,
+                               progress_reporter: Optional[RealtimeProgressReporter] = None) -> List[Dict[str, Any]]:
         """Generate AI-powered insights."""
         insights = []
         
@@ -501,6 +546,11 @@ class RepositoryAnalyzer:
         else:
             rule_insights = self._generate_rule_based_insights(analysis_result)
             insights.extend(rule_insights)
+        
+        # Report insights in real-time
+        if progress_reporter:
+            for insight in insights:
+                await progress_reporter.insight_found(insight)
         
         return insights
     
@@ -577,7 +627,8 @@ class RepositoryAnalyzer:
                 pass
         return []
     
-    async def _run_advanced_analysis(self, repo_path: Path, depth: str) -> Optional[Dict[str, Any]]:
+    async def _run_advanced_analysis(self, repo_path: Path, depth: str,
+                                    progress_reporter: Optional[RealtimeProgressReporter] = None) -> Optional[Dict[str, Any]]:
         """Run advanced analysis using GitPython, PyDriller, Semgrep, and Comby."""
         try:
             # Initialize advanced analyzer if not already done

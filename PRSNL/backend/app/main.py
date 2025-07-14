@@ -111,6 +111,7 @@ from app.db.database import (
 )
 from app.services.cache import cache_service
 from app.services.storage_manager import StorageManager
+from app.services.codemirror_realtime_service import realtime_service
 
 # Placeholder for worker task
 worker_task = None
@@ -145,6 +146,10 @@ async def startup_event():
     # Initialize cache
     if settings.CACHE_ENABLED:
         await cache_service.connect()
+    
+    # Start CodeMirror real-time service
+    await realtime_service.start()
+    logger.info("✅ CodeMirror real-time service started")
     
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
@@ -181,6 +186,10 @@ async def shutdown_event():
     if settings.CACHE_ENABLED:
         await cache_service.disconnect()
     
+    # Stop CodeMirror real-time service
+    await realtime_service.stop()
+    logger.info("✅ CodeMirror real-time service stopped")
+    
     await close_db_pool()
     await background_tasks.shutdown()
 
@@ -214,6 +223,7 @@ from app.api import openclip  # OpenCLIP vision service
 from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
 from app.api import persistence  # New unified job persistence system
 from app.api import codemirror  # CodeMirror - AI repository intelligence
+from app.api import codemirror_websocket  # CodeMirror WebSocket for real-time sync
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import (
     admin,
@@ -305,6 +315,7 @@ app.include_router(embeddings.router, prefix=settings.API_V1_STR)
 app.include_router(openclip.router, prefix=settings.API_V1_STR)  # OpenCLIP vision service
 app.include_router(persistence.router, prefix=settings.API_V1_STR + "/persistence", tags=["persistence"])  # Unified job persistence system
 app.include_router(codemirror.router)  # CodeMirror - AI repository intelligence (includes /api/code-cortex/codemirror prefix)
+app.include_router(codemirror_websocket.router)  # CodeMirror WebSocket endpoints for real-time sync
 app.include_router(github.router)  # GitHub OAuth and repository sync
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
