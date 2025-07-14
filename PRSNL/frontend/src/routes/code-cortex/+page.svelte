@@ -138,8 +138,8 @@
       <button class="nav-card" on:click={() => navigateToSection('repositories')}>
         <div class="nav-icon">📦</div>
         <div class="nav-content">
-          <h3>Open Source</h3>
-          <p>Integrations and libraries for projects</p>
+          <h3>Repositories</h3>
+          <p>Code libraries and integrations</p>
           <span class="nav-count">{stats.repository_count || Math.floor(stats.total_items * 0.2)}</span>
         </div>
       </button>
@@ -159,6 +159,24 @@
           <h3>Open Source</h3>
           <p>Saved repositories & integrations</p>
           <span class="nav-count">{stats.repository_count || 0}</span>
+        </div>
+      </button>
+
+      <button class="nav-card" on:click={() => navigateToSection('codemirror')}>
+        <div class="nav-icon">🔍</div>
+        <div class="nav-content">
+          <h3>CodeMirror</h3>
+          <p>AI-powered repository intelligence</p>
+          <span class="nav-count">AI</span>
+        </div>
+      </button>
+
+      <button class="nav-card" on:click={() => navigateToSection('synapses')}>
+        <div class="nav-icon">🧠</div>
+        <div class="nav-content">
+          <h3>Synapses</h3>
+          <p>Neural connections & insights</p>
+          <span class="nav-count">∞</span>
         </div>
       </button>
     </div>

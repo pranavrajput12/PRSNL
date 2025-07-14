@@ -470,3 +470,7 @@ class JobPersistenceService:
         except Exception as e:
             logger.error(f"Failed to cleanup old jobs: {e}")
             raise
+
+
+# Note: JobPersistenceService requires a database connection
+# Use get_job_persistence_service() function to get an instance with connection

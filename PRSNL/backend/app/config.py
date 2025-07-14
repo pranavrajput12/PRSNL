@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     PRSNL_API_KEY: Optional[str] = None
     GITHUB_TOKEN: Optional[str] = None
     
+    # Security
+    ENCRYPTION_KEY: str = os.getenv("ENCRYPTION_KEY", "default-encryption-key-change-in-production")
+    
+    # GitHub OAuth
+    GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID", None)
+    GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET", None)
+    
     # Firecrawl Web Scraping
     FIRECRAWL_API_KEY: Optional[str] = None
     FIRECRAWL_BASE_URL: str = "https://api.firecrawl.dev"
@@ -75,6 +82,9 @@ class Settings(BaseSettings):
     FRONTEND_PORT: int = int(os.getenv("FRONTEND_PORT", "3003"))
     POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    
+    # Frontend URL for OAuth callbacks
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3003")
     
     # Sentry Error Tracking & Performance Monitoring
     SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", None)
