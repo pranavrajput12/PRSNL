@@ -9,6 +9,9 @@ pathspec>=0.10.0
 
 # Code analysis
 pygments>=2.15.0
+pydriller>=2.5
+semgrep>=1.45.0
+comby-python>=0.1.0
 
 # AI integration (optional)
 openai>=1.0.0

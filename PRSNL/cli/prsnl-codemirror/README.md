@@ -11,6 +11,9 @@ AI-powered repository intelligence for offline analysis and GitHub integration.
 - 💡 **AI Insights**: Get intelligent recommendations and code quality insights
 - 📦 **Framework Detection**: Automatic detection of Svelte, React, FastAPI, and more
 - 🏗️ **Architecture Analysis**: Identify MVC, microservices, and other patterns
+- 🔧 **Advanced Analysis Tools**: GitPython, PyDriller, Semgrep, and Comby integration
+- 📈 **Git History Analysis**: Code hotspots, ownership patterns, commit trends
+- 🔐 **Security Scanning**: Vulnerability detection with Semgrep
 
 ## Installation
 
@@ -51,6 +54,9 @@ prsnl-codemirror audit /path/to/your/repo
 # Deep analysis with patterns and insights
 prsnl-codemirror audit /path/to/your/repo --depth deep --patterns --insights
 
+# Advanced analysis with GitPython, PyDriller, and Semgrep
+prsnl-codemirror audit /path/to/your/repo --depth deep --advanced
+
 # Analysis with automatic upload to PRSNL
 prsnl-codemirror audit /path/to/your/repo --upload
 
@@ -87,6 +93,7 @@ prsnl-codemirror audit [OPTIONS] REPO_PATH
 - `--upload`: Upload results to PRSNL after analysis
 - `--patterns`: Include pattern detection in analysis
 - `--insights`: Generate AI insights from analysis
+- `--advanced`: Run advanced analysis with GitPython, PyDriller, and Semgrep
 
 **Examples:**
 ```bash
@@ -95,6 +102,9 @@ prsnl-codemirror audit ./my-project --depth quick
 
 # Full analysis with all features
 prsnl-codemirror audit ./my-project --depth deep --patterns --insights --upload
+
+# Advanced analysis with security scanning and git history
+prsnl-codemirror audit ./my-project --depth deep --advanced --output advanced-analysis.json
 
 # Save detailed analysis to file
 prsnl-codemirror audit ./my-project --output detailed-analysis.json
@@ -180,6 +190,21 @@ prsnl-codemirror info [OPTIONS] REPO_PATH
 - Advanced pattern detection
 - Security and performance analysis
 - Longer execution time (2-10 minutes)
+
+### Advanced Analysis (--advanced flag)
+- Git history analysis with PyDriller
+  - Commit patterns and frequency
+  - Code ownership mapping
+  - Hotspot detection (frequently changed files)
+  - Refactoring pattern identification
+- Security scanning with Semgrep
+  - Automatic vulnerability detection
+  - Code quality issues
+  - Best practice violations
+- Pattern matching with Comby
+  - Custom pattern detection
+  - Code transformation analysis
+  - Anti-pattern identification
 
 ## Configuration
 

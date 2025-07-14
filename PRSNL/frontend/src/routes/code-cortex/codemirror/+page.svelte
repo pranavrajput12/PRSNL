@@ -6,6 +6,8 @@
   import CodeMirrorAnalysis from '$lib/components/codecortex/CodeMirrorAnalysis.svelte';
   import PatternHistory from '$lib/components/codecortex/PatternHistory.svelte';
   import InsightsList from '$lib/components/codecortex/InsightsList.svelte';
+  import AnalysisOverview from '$lib/components/codecortex/AnalysisOverview.svelte';
+  import AnalysisTypeSelector from '$lib/components/codecortex/AnalysisTypeSelector.svelte';
 
   // State management
   let activeTab = $state('overview');
@@ -17,6 +19,7 @@
   let activeAnalysis = $state(null);
   let analyses = $state([]);
   let isAnalyzing = $state(false);
+  let showAnalysisSelector = $state(false);
 
   onMount(async () => {
     // Check if user needs onboarding
@@ -63,14 +66,29 @@
     activeTab = tab;
   }
   
-  async function startAnalysis() {
-    if (!selectedRepo) return;
+  function startAnalysis() {
+    if (!selectedRepo) {
+      alert('Please select a repository first');
+      return;
+    }
+    showAnalysisSelector = true;
+  }
+  
+  async function handleAnalysisStart(event) {
+    const { type, depth } = event.detail;
     
+    if (type === 'cli') {
+      // Switch to CLI tab to show instructions
+      activeTab = 'cli';
+      return;
+    }
+    
+    // Web-based analysis
     isAnalyzing = true;
     try {
       const response = await api.post(`/codemirror/analyze/${selectedRepo.id}`, {
         repo_id: selectedRepo.id,
-        analysis_depth: 'standard',
+        analysis_depth: depth,
         include_patterns: true,
         include_insights: true
       });
@@ -94,6 +112,11 @@
     } finally {
       isAnalyzing = false;
     }
+  }
+  
+  function handleShowCLI() {
+    showAnalysisSelector = false;
+    activeTab = 'cli';
   }
   
   async function pollAnalysisStatus(jobId: string) {
@@ -294,30 +317,38 @@
       <div class="tab-content">
         {#if activeTab === 'overview'}
           <div class="overview-tab">
-            <div class="welcome-back">
+            <div class="welcome-section">
               <h2>Welcome back to CodeMirror</h2>
               <p>Your repositories are connected and ready for AI analysis.</p>
-              <RepoSelector bind:selected={selectedRepo} />
               
-              {#if selectedRepo}
-                <div class="selected-repo-actions">
-                  <div class="selected-repo-info">
-                    <h3>Selected Repository</h3>
-                    <div class="repo-details">
-                      <span class="repo-name">{selectedRepo.name}</span>
-                      <span class="repo-language">{selectedRepo.language || 'Unknown'}</span>
+              <!-- Analysis Overview Component -->
+              <AnalysisOverview repoId={selectedRepo?.id} />
+              
+              <!-- Repository Selection -->
+              <div class="repo-selection-section">
+                <h3>Select Repository for Analysis</h3>
+                <RepoSelector bind:selected={selectedRepo} />
+                
+                {#if selectedRepo}
+                  <div class="selected-repo-actions">
+                    <div class="selected-repo-info">
+                      <h4>Selected Repository</h4>
+                      <div class="repo-details">
+                        <span class="repo-name">{selectedRepo.name}</span>
+                        <span class="repo-language">{selectedRepo.language || 'Unknown'}</span>
+                      </div>
                     </div>
+                    
+                    <button 
+                      class="start-analysis-btn"
+                      onclick={startAnalysis}
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? '🔄 Starting...' : '🚀 Start Analysis'}
+                    </button>
                   </div>
-                  
-                  <button 
-                    class="start-analysis-btn"
-                    onclick={startAnalysis}
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? '🔄 Starting...' : '🚀 Start Analysis'}
-                  </button>
-                </div>
-              {/if}
+                {/if}
+              </div>
             </div>
           </div>
         {/if}
@@ -353,11 +384,17 @@
             <div class="cli-install">
               <h3>1. Install the CLI tool</h3>
               <div class="code-block">
-                <code>pip install prsnl-codemirror</code>
-                <button class="copy-btn" onclick={() => navigator.clipboard.writeText('pip install prsnl-codemirror')}>
+                <code># Clone the repository
+git clone https://github.com/pranavrajput12/PRSNL.git
+cd PRSNL/cli/prsnl-codemirror
+
+# Install in development mode
+pip install -e .</code>
+                <button class="copy-btn" onclick={() => navigator.clipboard.writeText('git clone https://github.com/pranavrajput12/PRSNL.git\ncd PRSNL/cli/prsnl-codemirror\npip install -e .')}>
                   Copy
                 </button>
               </div>
+              <p class="install-note">Note: Public PyPI release coming soon!</p>
             </div>
 
             <div class="cli-usage">
@@ -401,6 +438,14 @@
   {#if showOnboarding}
     <OnboardingWizard onComplete={completeOnboarding} />
   {/if}
+  
+  <!-- Analysis Type Selector -->
+  <AnalysisTypeSelector 
+    {selectedRepo}
+    bind:show={showAnalysisSelector}
+    onstart={handleAnalysisStart}
+    onshowCLI={handleShowCLI}
+  />
 </div>
 
 <style>
@@ -648,17 +693,34 @@
 
   /* Overview Tab */
   .overview-tab {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .welcome-section h2 {
+    margin: 0 0 0.5rem 0;
+    color: #60a5fa;
+    font-size: 1.5rem;
     text-align: center;
   }
 
-  .welcome-back h2 {
-    margin: 0 0 1rem 0;
-    color: #60a5fa;
-  }
-
-  .welcome-back p {
+  .welcome-section > p {
     color: rgba(255, 255, 255, 0.7);
     margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .repo-selection-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .repo-selection-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.125rem;
+    text-align: center;
   }
   
   /* Selected Repository Actions */
@@ -767,6 +829,14 @@
   .code-block code {
     color: #60a5fa;
     font-size: 0.9rem;
+    white-space: pre-wrap;
+  }
+  
+  .install-note {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
   }
 
   .copy-btn {

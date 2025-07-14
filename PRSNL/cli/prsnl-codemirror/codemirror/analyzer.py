@@ -15,6 +15,8 @@ import aiohttp
 from pygments.lexers import get_lexer_for_filename
 from pygments.util import ClassNotFound
 
+from .analyzers.advanced_analyzer import AdvancedAnalyzer, DEFAULT_COMBY_PATTERNS
+
 
 class RepositoryAnalyzer:
     """Analyzes repositories using AI and pattern detection."""
@@ -22,6 +24,7 @@ class RepositoryAnalyzer:
     def __init__(self, config, console):
         self.config = config
         self.console = console
+        self.advanced_analyzer = None  # Will be initialized when needed
         self.supported_languages = {
             '.py': 'Python',
             '.js': 'JavaScript', 
@@ -81,6 +84,12 @@ class RepositoryAnalyzer:
         # AI insights (if requested and configured)
         if include_insights and (self.config.openai_key or self.config.prsnl_url):
             result['insights'] = await self._generate_insights(result, depth)
+        
+        # Advanced analysis (if depth is standard or deep)
+        if depth in ['standard', 'deep']:
+            advanced_results = await self._run_advanced_analysis(repo_path, depth)
+            if advanced_results:
+                result['advanced_analysis'] = advanced_results
         
         # Cache results
         self._cache_results(repo_info['name'], result)
@@ -567,3 +576,33 @@ class RepositoryAnalyzer:
             except Exception:
                 pass
         return []
+    
+    async def _run_advanced_analysis(self, repo_path: Path, depth: str) -> Optional[Dict[str, Any]]:
+        """Run advanced analysis using GitPython, PyDriller, Semgrep, and Comby."""
+        try:
+            # Initialize advanced analyzer if not already done
+            if not self.advanced_analyzer:
+                self.advanced_analyzer = AdvancedAnalyzer(repo_path)
+            
+            # Configure analysis based on depth
+            config = {
+                'git_history': True,
+                'security_scan': depth == 'deep',
+                'patterns': DEFAULT_COMBY_PATTERNS if depth == 'deep' else {},
+                'custom_patterns': []
+            }
+            
+            # Run the analysis
+            self.console.print("[cyan]Running advanced analysis tools...[/cyan]")
+            advanced_results = await self.advanced_analyzer.run_full_analysis(config)
+            
+            # Generate insights from advanced analysis
+            advanced_insights = self.advanced_analyzer.generate_insights(advanced_results)
+            if advanced_insights:
+                advanced_results['insights'] = advanced_insights
+            
+            return advanced_results
+            
+        except Exception as e:
+            self.console.print(f"[yellow]Warning: Advanced analysis failed: {e}[/yellow]")
+            return None

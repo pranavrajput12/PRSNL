@@ -18,6 +18,7 @@ from app.db.database import get_db_pool
 from app.services.job_persistence_service import JobPersistenceService
 from app.services.codemirror_service import CodeMirrorService
 from app.services.codemirror_knowledge_agent import CodeMirrorKnowledgeAgent
+from app.services.codemirror_knowledge_agent_v2 import CodeMirrorKnowledgeAgentV2
 
 logger = logging.getLogger(__name__)
 
@@ -604,8 +605,8 @@ async def get_analysis_knowledge(
             except:
                 pass
         
-        # Use knowledge agent to find relevant content
-        knowledge_agent = CodeMirrorKnowledgeAgent()
+        # Use V2 knowledge agent for enhanced search with embeddings
+        knowledge_agent = CodeMirrorKnowledgeAgentV2()
         knowledge_results = await knowledge_agent.find_relevant_content(
             repository_name=repository_name,
             analysis_results=analysis_results,

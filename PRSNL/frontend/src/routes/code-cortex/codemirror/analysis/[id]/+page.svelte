@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import CodeMirrorBreadcrumbs from '$lib/components/codecortex/CodeMirrorBreadcrumbs.svelte';
 	
 	let analysisId = $page.params.id;
 	let analysis = null;
@@ -108,18 +109,7 @@
 	<!-- Header -->
 	<div class="border-b border-gray-700">
 		<div class="container mx-auto px-6 py-4">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center space-x-4">
-					<button
-						on:click={goBack}
-						class="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-						</svg>
-						<span>Back to CodeMirror</span>
-					</button>
-				</div>
+			<div class="flex items-center justify-between mb-2">
 				<div class="flex items-center space-x-3">
 					<div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,6 +122,7 @@
 					</div>
 				</div>
 			</div>
+			<CodeMirrorBreadcrumbs />
 		</div>
 	</div>
 
@@ -457,6 +448,124 @@
 													<span>Score: {note.relevance_score}</span>
 												</div>
 												<span>{new Date(note.updated_at).toLocaleDateString()}</span>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+						
+						<!-- Open Source Integrations -->
+						{#if knowledgeContent.open_source_integrations && knowledgeContent.open_source_integrations.length > 0}
+							<div>
+								<h4 class="text-md font-semibold text-white mb-3 flex items-center space-x-2">
+									<svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+									</svg>
+									<span>Relevant Open Source Tools ({knowledgeContent.open_source_integrations.length})</span>
+								</h4>
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									{#each knowledgeContent.open_source_integrations as integration}
+										<div class="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:bg-gray-700/70 transition-colors">
+											<div class="flex items-start justify-between mb-2">
+												<h5 class="font-medium text-white">{integration.name}</h5>
+												<span class="text-xs bg-indigo-900/30 text-indigo-400 px-2 py-1 rounded">
+													{integration.category}
+												</span>
+											</div>
+											<p class="text-sm text-gray-300 mb-3">{integration.description}</p>
+											
+											{#if integration.matched_use_cases && integration.matched_use_cases.length > 0}
+												<div class="mb-3">
+													<span class="text-xs text-gray-400">Matching use cases:</span>
+													<div class="flex flex-wrap gap-1 mt-1">
+														{#each integration.matched_use_cases as useCase}
+															<span class="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded">
+																{useCase}
+															</span>
+														{/each}
+													</div>
+												</div>
+											{/if}
+											
+											<div class="flex items-center justify-between text-xs">
+												<div class="flex items-center space-x-2 text-gray-400">
+													<span>⭐ {integration.popularity_score || 0}</span>
+													<span>Score: {integration.relevance_score?.toFixed(2) || 'N/A'}</span>
+												</div>
+												{#if integration.repository_url}
+													<a 
+														href={integration.repository_url} 
+														target="_blank" 
+														class="text-indigo-400 hover:text-indigo-300"
+													>
+														View Repo →
+													</a>
+												{/if}
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+						
+						<!-- ChatGPT Conversations -->
+						{#if knowledgeContent.chatgpt_conversations && knowledgeContent.chatgpt_conversations.length > 0}
+							<div>
+								<h4 class="text-md font-semibold text-white mb-3 flex items-center space-x-2">
+									<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+									</svg>
+									<span>Related ChatGPT Discussions ({knowledgeContent.chatgpt_conversations.length})</span>
+								</h4>
+								<div class="space-y-4">
+									{#each knowledgeContent.chatgpt_conversations as conversation}
+										<div class="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:bg-gray-700/70 transition-colors">
+											<h5 class="font-medium text-white mb-2">{conversation.title}</h5>
+											<p class="text-sm text-gray-300 mb-3">{conversation.summary}</p>
+											
+											{#if conversation.relevant_snippets && conversation.relevant_snippets.length > 0}
+												<div class="mb-3">
+													<span class="text-xs text-gray-400">Code examples:</span>
+													<div class="space-y-2 mt-2">
+														{#each conversation.relevant_snippets as snippet}
+															<div class="bg-gray-800 rounded p-2">
+																<div class="flex items-center justify-between mb-1">
+																	<span class="text-xs text-gray-400">{snippet.language}</span>
+																	{#if snippet.description}
+																		<span class="text-xs text-gray-500">{snippet.description}</span>
+																	{/if}
+																</div>
+																<pre class="text-xs text-gray-300 overflow-x-auto"><code>{snippet.code}</code></pre>
+															</div>
+														{/each}
+													</div>
+												</div>
+											{/if}
+											
+											<div class="flex items-center justify-between text-xs text-gray-400">
+												<div class="flex items-center space-x-3">
+													{#if conversation.key_topics && conversation.key_topics.length > 0}
+														<div class="flex items-center space-x-1">
+															<span>Topics:</span>
+															{#each conversation.key_topics.slice(0, 3) as topic}
+																<span class="bg-emerald-900/30 text-emerald-400 px-2 py-1 rounded">
+																	{topic}
+																</span>
+															{/each}
+														</div>
+													{/if}
+													<span>Score: {conversation.similarity_score?.toFixed(2) || 'N/A'}</span>
+												</div>
+												{#if conversation.url}
+													<a 
+														href={conversation.url} 
+														target="_blank" 
+														class="text-emerald-400 hover:text-emerald-300"
+													>
+														View Chat →
+													</a>
+												{/if}
 											</div>
 										</div>
 									{/each}

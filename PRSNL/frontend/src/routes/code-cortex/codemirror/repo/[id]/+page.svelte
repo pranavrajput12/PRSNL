@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import CodeMirrorBreadcrumbs from '$lib/components/codecortex/CodeMirrorBreadcrumbs.svelte';
 	
 	let repoId = $page.params.id;
 	let repository = null;
@@ -98,18 +99,7 @@
 	<!-- Header -->
 	<div class="border-b border-gray-700">
 		<div class="container mx-auto px-6 py-4">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center space-x-4">
-					<button
-						on:click={goBack}
-						class="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-						</svg>
-						<span>Back to CodeMirror</span>
-					</button>
-				</div>
+			<div class="flex items-center justify-between mb-2">
 				<div class="flex items-center space-x-3">
 					<div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,6 +112,7 @@
 					</div>
 				</div>
 			</div>
+			<CodeMirrorBreadcrumbs />
 		</div>
 	</div>
 

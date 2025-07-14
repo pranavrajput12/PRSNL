@@ -61,14 +61,19 @@ def version():
 @click.option('--insights', 
               is_flag=True,
               help='Generate AI insights from analysis')
+@click.option('--advanced', 
+              is_flag=True,
+              help='Run advanced analysis with GitPython, PyDriller, and Semgrep')
 @click.pass_context
-def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, patterns: bool, insights: bool):
+def audit(ctx, repo_path: str, depth: str, output: Optional[str], upload: bool, patterns: bool, insights: bool, advanced: bool):
     """Audit and analyze a repository with AI."""
     config = ctx.obj['config']
     repo_path = Path(repo_path).resolve()
     
     console.print(f"[bold blue]🔍 Auditing repository:[/bold blue] {repo_path}")
     console.print(f"[dim]Analysis depth: {depth}[/dim]")
+    if advanced:
+        console.print(f"[dim]Advanced analysis: Enabled (GitPython, PyDriller, Semgrep)[/dim]")
     
     try:
         # Initialize analyzer
@@ -262,6 +267,18 @@ def _display_analysis_results(result: Dict[str, Any]):
     table.add_row("Patterns Found", str(len(result.get('patterns', []))))
     table.add_row("Insights Generated", str(len(result.get('insights', []))))
     
+    # Advanced analysis metrics
+    if result.get('advanced_analysis'):
+        advanced = result['advanced_analysis']
+        if advanced.get('analyses', {}).get('git_history'):
+            git_history = advanced['analyses']['git_history']
+            if git_history.get('commit_patterns'):
+                table.add_row("Commit Patterns", str(len(git_history['commit_patterns'].get('commit_messages', []))))
+                table.add_row("Code Hotspots", str(len(git_history['commit_patterns'].get('top_hotspots', []))))
+        if advanced.get('analyses', {}).get('security'):
+            security = advanced['analyses']['security']
+            table.add_row("Security Findings", str(security.get('total_findings', 0)))
+    
     console.print(table)
     
     # Languages
@@ -295,6 +312,31 @@ def _display_analysis_results(result: Dict[str, Any]):
             console.print(f"[{severity_color}]• {insight.get('title', 'Untitled')}[/{severity_color}]")
             if insight.get('description'):
                 console.print(f"  [dim]{insight['description'][:100]}...[/dim]")
+    
+    # Advanced analysis results
+    if result.get('advanced_analysis'):
+        advanced = result['advanced_analysis']
+        
+        # Code hotspots
+        if advanced.get('analyses', {}).get('git_history', {}).get('commit_patterns', {}).get('top_hotspots'):
+            console.print("\n[bold]🔥 Code Hotspots:[/bold]")
+            hotspots = advanced['analyses']['git_history']['commit_patterns']['top_hotspots']
+            for file, changes in hotspots[:5]:
+                console.print(f"[yellow]• {file}[/yellow] - {changes} changes")
+        
+        # Security findings
+        if advanced.get('analyses', {}).get('security', {}).get('findings'):
+            console.print("\n[bold]🔐 Security Findings:[/bold]")
+            findings = advanced['analyses']['security']['findings']
+            for finding in findings[:5]:
+                severity_color = {
+                    'HIGH': 'red',
+                    'MEDIUM': 'yellow',
+                    'LOW': 'green'
+                }.get(finding.get('severity', 'unknown'), 'white')
+                console.print(f"[{severity_color}]• {finding.get('check_id', 'Unknown')}[/{severity_color}] in {finding.get('path', 'Unknown')}:{finding.get('line', '?')}")
+                if finding.get('message'):
+                    console.print(f"  [dim]{finding['message'][:100]}...[/dim]")
 
 
 def _display_config(config: CLIConfig):

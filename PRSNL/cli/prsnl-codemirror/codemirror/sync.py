@@ -33,21 +33,18 @@ class PRSNLSync:
                 if not repo_data:
                     return None
                 
-                # Upload the analysis
+                # Upload the analysis - match backend CLISyncRequest model
                 upload_data = {
-                    'repo_id': repo_data['id'],
-                    'analysis_type': 'cli',
-                    'analysis_depth': analysis_result.get('analysis_depth', 'standard'),
-                    'analysis_data': analysis_result,
-                    'metadata': {
-                        'cli_version': '1.0.0',
-                        'timestamp': datetime.utcnow().isoformat(),
-                        'source': 'cli'
-                    }
+                    'cli_analysis_id': analysis_result.get('id', f"cli_{datetime.utcnow().timestamp()}"),
+                    'cli_version': '1.0.0',
+                    'machine_id': self.config.machine_id if hasattr(self.config, 'machine_id') else None,
+                    'analysis_results': analysis_result,
+                    'local_path': analysis_result.get('repository_path', ''),
+                    'repo_name': analysis_result.get('repository_name', '')
                 }
                 
                 async with session.post(
-                    f'{self.base_url}/api/code-cortex/codemirror/cli/sync',
+                    f'{self.base_url}/api/codemirror/cli/sync',
                     headers=self.headers,
                     json=upload_data
                 ) as response:
@@ -56,7 +53,7 @@ class PRSNLSync:
                         return {
                             'success': True,
                             'analysis_id': result.get('analysis_id'),
-                            'analysis_url': f"{self.base_url}/code-cortex/codemirror?analysis={result.get('analysis_id')}"
+                            'analysis_url': f"{self.base_url}/code-cortex/codemirror/analysis/{result.get('analysis_id')}"
                         }
                     else:
                         error_text = await response.text()
