@@ -224,6 +224,8 @@ from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
 from app.api import persistence  # New unified job persistence system
 from app.api import codemirror  # CodeMirror - AI repository intelligence
 from app.api import codemirror_websocket  # CodeMirror WebSocket for real-time sync
+from app.api import task_monitoring  # Enterprise task monitoring for Celery
+from app.api import package_intelligence  # Package dependency intelligence
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import (
     admin,
@@ -316,6 +318,8 @@ app.include_router(openclip.router, prefix=settings.API_V1_STR)  # OpenCLIP visi
 app.include_router(persistence.router, prefix=settings.API_V1_STR + "/persistence", tags=["persistence"])  # Unified job persistence system
 app.include_router(codemirror.router)  # CodeMirror - AI repository intelligence (includes /api/code-cortex/codemirror prefix)
 app.include_router(codemirror_websocket.router)  # CodeMirror WebSocket endpoints for real-time sync
+app.include_router(task_monitoring.router)  # Enterprise task monitoring for Celery
+app.include_router(package_intelligence.router)  # Package dependency intelligence
 app.include_router(github.router)  # GitHub OAuth and repository sync
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge

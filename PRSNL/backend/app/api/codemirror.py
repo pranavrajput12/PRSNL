@@ -110,23 +110,29 @@ async def start_analysis(
             tags=["codemirror", "repository_analysis", request.analysis_depth]
         )
     
-    # Queue background analysis
-    # Use asyncio.create_task with proper error handling
-    import asyncio
+    # Queue analysis using Celery for enterprise-grade processing
+    from app.workers.codemirror_tasks import analyze_repository
     
-    async def run_analysis():
-        try:
-            service = CodeMirrorService()
-            await service.analyze_repository(
-                repo_id,
-                job_id,
-                str(current_user.id),
-                request.analysis_depth
-            )
-        except Exception as e:
-            logger.error(f"Background analysis task failed: {e}", exc_info=True)
+    # Start Celery workflow
+    task = analyze_repository.delay(
+        repo_id=repo_id,
+        job_id=job_id,
+        user_id=str(current_user.id),
+        analysis_depth=request.analysis_depth,
+        options={
+            "include_patterns": request.include_patterns,
+            "include_insights": request.include_insights
+        }
+    )
     
-    asyncio.create_task(run_analysis())
+    # Store Celery task ID with job
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        await conn.execute("""
+            UPDATE processing_jobs
+            SET metadata = metadata || jsonb_build_object('celery_task_id', $2)
+            WHERE job_id = $1
+        """, job_id, task.id)
     
     return {
         "job_id": job_id,
@@ -158,7 +164,7 @@ async def get_analyses(
         if not has_access:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        # Get analyses
+        # Get analyses with package intelligence summary
         analyses = await db.fetch("""
             SELECT 
                 ca.id,
@@ -170,9 +176,15 @@ async def get_analyses(
                 ca.quality_score,
                 ca.created_at,
                 pj.status as job_status,
-                pj.progress_percentage as progress
+                pj.progress_percentage as progress,
+                pas.total_dependencies,
+                pas.total_vulnerabilities,
+                pas.security_score as package_security_score,
+                pas.package_managers
             FROM codemirror_analyses ca
             LEFT JOIN processing_jobs pj ON ca.job_id = pj.job_id
+            LEFT JOIN package_analysis_summary pas ON ca.repo_id = pas.repo_id 
+                AND ca.id::text = pas.analysis_id::text
             WHERE ca.repo_id = $1
             ORDER BY ca.created_at DESC
             LIMIT $2
@@ -619,3 +631,139 @@ async def get_analysis_knowledge(
         await knowledge_agent.store_knowledge_mapping(analysis_id, knowledge_results)
         
         return knowledge_results
+
+@router.get("/analysis/{analysis_id}/packages")
+async def get_analysis_packages(
+    analysis_id: str,
+    current_user = Depends(get_current_user)
+):
+    """Get package analysis results for a specific analysis"""
+    
+    pool = await get_db_pool()
+    async with pool.acquire() as db:
+        # Verify access
+        has_access = await db.fetchval("""
+            SELECT EXISTS(
+                SELECT 1 FROM codemirror_analyses ca
+                LEFT JOIN github_repos gr ON ca.repo_id = gr.id
+                LEFT JOIN github_accounts ga ON gr.account_id = ga.id
+                WHERE ca.id = $1 AND (ga.user_id = $2 OR $2 = 'temp-user-for-oauth')
+            )
+        """, UUID(analysis_id), str(current_user.id) if current_user else 'temp-user-for-oauth')
+        
+        if not has_access:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+        
+        # Get package analysis summary
+        summary = await db.fetchrow("""
+            SELECT * FROM package_analysis_summary 
+            WHERE analysis_id = $1
+        """, UUID(analysis_id))
+        
+        # Get package dependencies
+        dependencies = await db.fetch("""
+            SELECT 
+                pd.*,
+                pm.description,
+                pm.license,
+                pm.deprecated,
+                pm.maintenance_score,
+                COUNT(pv.id) as vulnerability_count
+            FROM package_dependencies pd
+            LEFT JOIN package_metadata pm ON pd.package_name = pm.package_name 
+                AND pd.package_manager = pm.package_manager
+            LEFT JOIN package_vulnerabilities pv ON pd.package_name = pv.package_name 
+                AND pd.package_manager = pv.package_manager
+            WHERE pd.analysis_id = $1
+            GROUP BY pd.id, pm.description, pm.license, pm.deprecated, pm.maintenance_score
+            ORDER BY vulnerability_count DESC, pd.package_name
+        """, UUID(analysis_id))
+        
+        # Get vulnerabilities
+        vulnerabilities = await db.fetch("""
+            SELECT DISTINCT pv.*
+            FROM package_vulnerabilities pv
+            JOIN package_dependencies pd ON pv.package_name = pd.package_name 
+                AND pv.package_manager = pd.package_manager
+            WHERE pd.analysis_id = $1
+            ORDER BY 
+                CASE pv.severity 
+                    WHEN 'critical' THEN 1
+                    WHEN 'high' THEN 2  
+                    WHEN 'moderate' THEN 3
+                    ELSE 4
+                END,
+                pv.published_date DESC
+        """, UUID(analysis_id))
+        
+        # Get license information
+        licenses = await db.fetch("""
+            SELECT * FROM package_licenses 
+            WHERE analysis_id = $1
+            ORDER BY risk_level DESC, package_count DESC
+        """, UUID(analysis_id))
+        
+        return {
+            "analysis_id": analysis_id,
+            "summary": dict(summary) if summary else None,
+            "dependencies": [dict(dep) for dep in dependencies],
+            "vulnerabilities": [dict(vuln) for vuln in vulnerabilities],
+            "licenses": [dict(lic) for lic in licenses]
+        }
+
+@router.get("/repo/{repo_id}/package-overview")
+async def get_repo_package_overview(
+    repo_id: str,
+    current_user = Depends(get_current_user)
+):
+    """Get package overview for a repository across all analyses"""
+    
+    pool = await get_db_pool()
+    async with pool.acquire() as db:
+        # Verify access
+        has_access = await db.fetchval("""
+            SELECT EXISTS(
+                SELECT 1 FROM github_repos gr
+                JOIN github_accounts ga ON gr.account_id = ga.id
+                WHERE gr.id = $1 AND ga.user_id = $2
+            )
+        """, UUID(repo_id), current_user.id)
+        
+        if not has_access:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get latest package summary
+        latest_summary = await db.fetchrow("""
+            SELECT * FROM package_analysis_summary 
+            WHERE repo_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        """, UUID(repo_id))
+        
+        # Get high-risk packages
+        high_risk = await db.fetch("""
+            SELECT * FROM high_risk_packages 
+            WHERE repo_id = $1 
+            ORDER BY has_critical DESC, vulnerability_count DESC
+            LIMIT 10
+        """, UUID(repo_id))
+        
+        # Get package manager trends
+        trends = await db.fetch("""
+            SELECT 
+                package_managers,
+                total_dependencies,
+                total_vulnerabilities,
+                created_at
+            FROM package_analysis_summary 
+            WHERE repo_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        """, UUID(repo_id))
+        
+        return {
+            "repo_id": repo_id,
+            "latest_summary": dict(latest_summary) if latest_summary else None,
+            "high_risk_packages": [dict(pkg) for pkg in high_risk],
+            "analysis_trends": [dict(trend) for trend in trends]
+        }

@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     # Cache (Redis optional)
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL", None)
     CACHE_ENABLED: bool = bool(os.getenv("REDIS_URL", False))
+    
+    # Celery configuration for distributed task processing
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+    CELERY_TASK_ALWAYS_EAGER: bool = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False").lower() == "true"
     CACHE_TTL_SECONDS: int = 3600  # 1 hour default
     CACHE_TTL_SEARCH: int = 300  # 5 minutes for search results
     CACHE_TTL_ITEM: int = 1800  # 30 minutes for items
