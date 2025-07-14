@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Icon from './Icon.svelte';
   import SkeletonLoader from './SkeletonLoader.svelte';
+  import AIProcessingIndicator from './AIProcessingIndicator.svelte';
   
   export let conversationId;
   export let showFullAnalysis = true;
@@ -11,16 +12,96 @@
   let error = null;
   let activeTab = 'summary';
   
+  // Real-time progress tracking
+  let processingStartTime = null;
+  let currentProgress = 0;
+  let currentStage = 'analyzing';
+  
   const tabs = [
     { id: 'summary', name: 'Summary', icon: 'file-text' },
     { id: 'learning', name: 'Learning Journey', icon: 'trending-up' },
     { id: 'concepts', name: 'Key Concepts', icon: 'cpu' },
-    { id: 'insights', name: 'Insights & Gaps', icon: 'lightbulb' }
+    { id: 'insights', name: 'Insights & Gaps', icon: 'lightbulb' },
+    { id: 'technical', name: 'Technical Content', icon: 'code' },
+    { id: 'actionable', name: 'Actionable Insights', icon: 'target' }
   ];
   
   onMount(async () => {
     await loadIntelligence();
   });
+  
+  // Calculate real progress based on API response data
+  function calculateProgress(intelligenceData) {
+    if (!intelligenceData) return { progress: 0, stage: 'analyzing' };
+    
+    let progress = 0;
+    let stage = 'analyzing';
+    
+    // Stage 1 (0-25%): Basic processing started
+    if (intelligenceData.status === 'processing' || intelligenceData.status === 'completed') {
+      progress = 0.25;
+      stage = 'extracting';
+    }
+    
+    // Stage 2 (25-50%): Summary and basic data available
+    if (intelligenceData.summary && intelligenceData.summary.text) {
+      progress = 0.5;
+      stage = 'synthesizing';
+    }
+    
+    // Stage 3 (50-75%): Key concepts and topics identified
+    if (intelligenceData.concepts && intelligenceData.concepts.topics && intelligenceData.concepts.topics.length > 0) {
+      progress = 0.65;
+    }
+    
+    // Stage 4 (65-85%): Learning journey and insights available
+    if (intelligenceData.learning_journey && intelligenceData.learning_journey.narrative) {
+      progress = 0.75;
+    }
+    
+    // Stage 5 (75-90%): Multi-agent intelligence data present (check for actual content)
+    const hasTechnicalContent = intelligenceData.technical_content && 
+      (intelligenceData.technical_content.technologies?.length > 0 ||
+       intelligenceData.technical_content.code_snippets?.length > 0 ||
+       intelligenceData.technical_content.implementation_patterns?.length > 0);
+       
+    const hasActionableInsights = intelligenceData.actionable_insights &&
+      (intelligenceData.actionable_insights.best_practices?.length > 0 ||
+       intelligenceData.actionable_insights.immediate_actions?.length > 0 ||
+       intelligenceData.actionable_insights.tools_and_resources?.length > 0);
+    
+    if (intelligenceData.technical_content || intelligenceData.actionable_insights) {
+      progress = 0.85;
+      stage = 'finalizing';
+    }
+    
+    // Stage 6 (90-100%): All data complete AND actually contains meaningful content
+    const hasCompleteData = intelligenceData.status === 'completed' && 
+        intelligenceData.summary && 
+        intelligenceData.summary.text && 
+        intelligenceData.concepts && 
+        intelligenceData.concepts.topics && 
+        intelligenceData.concepts.topics.length > 0;
+    
+    // Only reach 100% if we have meaningful data OR if explicitly completed (even with empty data)
+    if (hasCompleteData) {
+      if (hasTechnicalContent || hasActionableInsights) {
+        progress = 1.0; // Complete with meaningful multi-agent data
+      } else if (intelligenceData.status === 'completed') {
+        progress = 0.95; // Complete but with limited multi-agent insights
+      }
+      stage = 'finalizing';
+    }
+    
+    // Special case: Force 100% completion after a delay when status is completed
+    // This ensures users see completion even if multi-agent data is sparse
+    if (intelligenceData.status === 'completed' && progress >= 0.85) {
+      progress = 1.0;
+      stage = 'finalizing';
+    }
+    
+    return { progress, stage };
+  }
   
   async function loadIntelligence() {
     try {
@@ -35,9 +116,31 @@
       
       intelligence = await response.json();
       
-      // If still processing, poll for updates
+      // Track processing start time on first processing status
+      if (intelligence.status === 'processing' && !processingStartTime) {
+        processingStartTime = Date.now();
+      }
+      
+      // Calculate real progress based on available data
+      const progressInfo = calculateProgress(intelligence);
+      currentProgress = progressInfo.progress;
+      currentStage = progressInfo.stage;
+      
+      console.log('Progress update:', {
+        status: intelligence.status,
+        progress: currentProgress,
+        stage: currentStage,
+        hasData: {
+          summary: !!intelligence.summary,
+          concepts: !!intelligence.concepts,
+          technical: !!intelligence.technical_content,
+          actionable: !!intelligence.actionable_insights
+        }
+      });
+      
+      // If still processing, poll for updates more frequently during active processing
       if (intelligence.status === 'processing') {
-        setTimeout(loadIntelligence, 3000); // Poll every 3 seconds
+        setTimeout(loadIntelligence, 2000); // Poll every 2 seconds for better UX
       }
     } catch (err) {
       error = err.message;
@@ -75,11 +178,13 @@
 </script>
 
 <div class="intelligence-container">
-  {#if loading && !intelligence}
-    <div class="loading-state">
-      <SkeletonLoader type="text" />
-      <SkeletonLoader type="paragraph" />
-    </div>
+  {#if (loading && !intelligence) || (intelligence && intelligence.status === 'processing')}
+    <AIProcessingIndicator 
+      progress={currentProgress}
+      currentStage={currentStage}
+      processingStartTime={processingStartTime}
+      estimatedTimeMs={45000}
+    />
   {:else if error}
     <div class="error-state">
       <Icon name="alert-triangle" size={24} />
@@ -90,21 +195,14 @@
       </button>
     </div>
   {:else if intelligence}
-    <!-- Status Header -->
-    <div class="status-header">
-      <div class="status-badge" style="--status-color: {getStatusColor(intelligence.status)}">
-        <Icon name={getStatusIcon(intelligence.status)} size={16} />
-        <span>{intelligence.status}</span>
-      </div>
-      
-      {#if intelligence.status === 'processing'}
-        <p class="processing-message">
-          AI is analyzing your conversation... This may take a moment.
-        </p>
-      {/if}
-    </div>
-    
     {#if intelligence.status === 'completed' && showFullAnalysis}
+      <!-- Status Header for Completed -->
+      <div class="status-header">
+        <div class="status-badge" style="--status-color: {getStatusColor(intelligence.status)}">
+          <Icon name={getStatusIcon(intelligence.status)} size={16} />
+          <span>{intelligence.status}</span>
+        </div>
+      </div>
       <!-- Tab Navigation -->
       <div class="tab-nav">
         {#each tabs as tab}
@@ -230,6 +328,146 @@
                     {/if}
                   </div>
                 {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
+        
+        {#if activeTab === 'technical' && intelligence.technical_content}
+          <div class="technical-section">
+            <h3>Technical Content</h3>
+            
+            {#if intelligence.technical_content.technologies && intelligence.technical_content.technologies.length > 0}
+              <div class="tech-category">
+                <h4>Technologies Mentioned</h4>
+                <div class="tech-tags">
+                  {#each intelligence.technical_content.technologies as tech}
+                    <span class="tech-tag">{tech}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+            
+            {#if intelligence.technical_content.code_snippets && intelligence.technical_content.code_snippets.length > 0}
+              <div class="tech-category">
+                <h4>Code Snippets</h4>
+                <div class="code-snippets">
+                  {#each intelligence.technical_content.code_snippets as snippet}
+                    <div class="code-snippet">
+                      <pre><code>{snippet}</code></pre>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+            
+            {#if intelligence.technical_content.implementation_patterns && intelligence.technical_content.implementation_patterns.length > 0}
+              <div class="tech-category">
+                <h4>Implementation Patterns</h4>
+                <ul class="pattern-list">
+                  {#each intelligence.technical_content.implementation_patterns as pattern}
+                    <li>
+                      <Icon name="cpu" size={16} />
+                      <span>{pattern}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+            
+            {#if intelligence.technical_content.technical_recommendations && intelligence.technical_content.technical_recommendations.length > 0}
+              <div class="tech-category">
+                <h4>Technical Recommendations</h4>
+                <ul class="recommendations-list">
+                  {#each intelligence.technical_content.technical_recommendations as recommendation}
+                    <li>
+                      <Icon name="chevron-right" size={16} />
+                      <span>{recommendation}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+            
+            {#if !intelligence.technical_content.technologies?.length && 
+                 !intelligence.technical_content.code_snippets?.length && 
+                 !intelligence.technical_content.implementation_patterns?.length && 
+                 !intelligence.technical_content.technical_recommendations?.length}
+              <div class="empty-state">
+                <Icon name="code" size={48} />
+                <p>No specific technical content detected in this conversation.</p>
+              </div>
+            {/if}
+          </div>
+        {/if}
+        
+        {#if activeTab === 'actionable' && intelligence.actionable_insights}
+          <div class="actionable-section">
+            <h3>Actionable Insights</h3>
+            
+            {#if intelligence.actionable_insights.best_practices && intelligence.actionable_insights.best_practices.length > 0}
+              <div class="insights-category">
+                <h4>Best Practices</h4>
+                <ul class="practices-list">
+                  {#each intelligence.actionable_insights.best_practices as practice}
+                    <li>
+                      <Icon name="check-circle" size={16} />
+                      <span>{practice}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+            
+            {#if intelligence.actionable_insights.immediate_actions && intelligence.actionable_insights.immediate_actions.length > 0}
+              <div class="insights-category">
+                <h4>Immediate Actions</h4>
+                <ul class="actions-list">
+                  {#each intelligence.actionable_insights.immediate_actions as action}
+                    <li>
+                      <Icon name="zap" size={16} />
+                      <span>{action}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+            
+            {#if intelligence.actionable_insights.tools_and_resources && intelligence.actionable_insights.tools_and_resources.length > 0}
+              <div class="insights-category">
+                <h4>Recommended Tools & Resources</h4>
+                <ul class="resources-list">
+                  {#each intelligence.actionable_insights.tools_and_resources as resource}
+                    <li>
+                      <Icon name="tool" size={16} />
+                      <span>{resource}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+            
+            {#if intelligence.actionable_insights.implementation_steps && intelligence.actionable_insights.implementation_steps.length > 0}
+              <div class="insights-category">
+                <h4>Implementation Steps</h4>
+                <ol class="steps-list">
+                  {#each intelligence.actionable_insights.implementation_steps as step, index}
+                    <li>
+                      <span class="step-number">{index + 1}</span>
+                      <span>{step}</span>
+                    </li>
+                  {/each}
+                </ol>
+              </div>
+            {/if}
+            
+            {#if !intelligence.actionable_insights.best_practices?.length && 
+                 !intelligence.actionable_insights.immediate_actions?.length && 
+                 !intelligence.actionable_insights.tools_and_resources?.length && 
+                 !intelligence.actionable_insights.implementation_steps?.length}
+              <div class="empty-state">
+                <Icon name="target" size={48} />
+                <p>No specific actionable insights identified for this conversation.</p>
               </div>
             {/if}
           </div>
@@ -585,6 +823,190 @@
     gap: 0.375rem;
   }
   
+  /* Technical Section */
+  .technical-section,
+  .actionable-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .technical-section h3,
+  .actionable-section h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+  }
+  
+  .tech-category,
+  .insights-category {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .tech-category h4,
+  .insights-category h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .tech-tag {
+    padding: 0.375rem 0.875rem;
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid rgba(74, 158, 255, 0.2);
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .code-snippets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .code-snippet {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+    overflow: hidden;
+  }
+  
+  .code-snippet pre {
+    margin: 0;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--text-primary);
+    overflow-x: auto;
+  }
+  
+  .pattern-list,
+  .recommendations-list,
+  .practices-list,
+  .actions-list,
+  .resources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .pattern-list li,
+  .recommendations-list li,
+  .practices-list li,
+  .actions-list li,
+  .resources-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.375rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  
+  .pattern-list li :global(svg) {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  .recommendations-list li :global(svg) {
+    color: var(--accent-secondary);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  .practices-list li :global(svg) {
+    color: var(--success);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  .actions-list li :global(svg) {
+    color: var(--warning);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  .resources-list li :global(svg) {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+  
+  .steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .steps-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  .step-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+  }
+  
+  .empty-state :global(svg) {
+    opacity: 0.3;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .intelligence-container {
@@ -599,6 +1021,16 @@
     .summary-meta {
       flex-direction: column;
       gap: 0.5rem;
+    }
+    
+    .tech-category,
+    .insights-category {
+      padding: 0.75rem;
+    }
+    
+    .steps-list li {
+      padding: 0.75rem;
+      gap: 0.75rem;
     }
   }
 </style>

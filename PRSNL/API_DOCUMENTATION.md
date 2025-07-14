@@ -287,6 +287,89 @@ LibreChat bridge health check
 }
 ```
 
+### 🧠 Conversation Intelligence - Multi-Agent Analysis
+
+#### POST /api/conversations/intelligence/{conversation_id}/process
+Process conversation intelligence using specialized AI agents
+
+**Path Parameters:**
+- `conversation_id` (UUID) - The conversation ID to analyze
+
+**Response:**
+```json
+{
+  "message": "Intelligence processing started for conversation {conversation_id}",
+  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "processing"
+}
+```
+
+#### GET /api/conversations/intelligence/{conversation_id}
+Get conversation intelligence results
+
+**Path Parameters:**
+- `conversation_id` (UUID) - The conversation ID to retrieve intelligence for
+
+**Response:**
+```json
+{
+  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "processing_time_ms": 8500,
+  "summary": {
+    "title": "Technical Discussion on AI Implementation",
+    "key_points": ["API integration", "Database optimization", "User experience"],
+    "word_count": 1250
+  },
+  "learning_journey": {
+    "progress_stage": "implementation",
+    "skill_areas": ["FastAPI", "PostgreSQL", "Frontend optimization"],
+    "knowledge_gained": "Understanding of real-time progress tracking"
+  },
+  "concepts": {
+    "technical_concepts": ["async programming", "database migrations", "UI/UX"],
+    "business_concepts": ["user engagement", "performance optimization"]
+  },
+  "insights": {
+    "key_insights": ["Real-time feedback improves user experience"],
+    "recommendations": ["Implement progress tracking for all long-running operations"]
+  },
+  "technical_content": {
+    "code_solutions": ["Progress bar implementation", "Database optimization"],
+    "technical_patterns": ["Multi-agent AI architecture", "Real-time synchronization"]
+  },
+  "learning_analysis": {
+    "progression": "From basic UI to advanced interactive systems",
+    "understanding_evolution": "Deeper grasp of user experience principles"
+  },
+  "actionable_insights": {
+    "immediate_actions": ["Test progress synchronization", "Gather user feedback"],
+    "future_considerations": ["Expand to other processing workflows"]
+  },
+  "knowledge_gap_analysis": {
+    "missing_areas": ["Advanced animation techniques", "Performance monitoring"],
+    "learning_opportunities": ["CSS animations", "Real-time analytics"]
+  }
+}
+```
+
+#### POST /api/conversations/intelligence/batch/process
+Process intelligence for multiple conversations
+
+**Query Parameters:**
+- `platform` (string, optional) - Filter by platform (e.g., "chatgpt", "claude")
+
+**Response:**
+```json
+{
+  "message": "Batch intelligence processing started",
+  "conversations_found": 15,
+  "processing_started": 12,
+  "already_processed": 3,
+  "status": "processing"
+}
+```
+
 ## 🔄 Job Persistence & Processing - Unified Job Management
 
 ### Job Lifecycle Management

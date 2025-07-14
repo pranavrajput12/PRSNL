@@ -3,47 +3,24 @@ console.log('🔄 [CONTENT] Content script loading...');
 console.log('🌐 [CONTENT] Page URL:', window.location.href);
 console.log('📄 [CONTENT] Page title:', document.title);
 
-// External library loader (optional enhancement)
-async function loadExternalLibs() {
-  const libsToLoad = [];
-  
-  if (!window.DOMPurify) {
-    libsToLoad.push({
-      name: 'DOMPurify',
-      url: 'https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js'
-    });
-  }
-  
-  if (!window.TurndownService) {
-    libsToLoad.push({
-      name: 'TurndownService', 
-      url: 'https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js'
-    });
-  }
-  
-  if (libsToLoad.length > 0) {
-    console.log('📚 [CONTENT] Loading external libraries:', libsToLoad.map(lib => lib.name));
-    
-    for (const lib of libsToLoad) {
-      try {
-        await loadScript(lib.url);
-        console.log(`✅ [CONTENT] Loaded ${lib.name}`);
-      } catch (error) {
-        console.warn(`⚠️ [CONTENT] Failed to load ${lib.name}:`, error);
-      }
-    }
-  }
+// Simple DOM sanitization without external libraries
+function sanitizeHTML(html) {
+  // Basic sanitization - remove script tags and dangerous attributes
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/javascript:/gi, '');
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+// Simple markdown to HTML converter (basic functionality)
+function markdownToHTML(markdown) {
+  return markdown
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
 }
+
 
 // Base Platform Adapter class
 class PlatformAdapter {
@@ -588,12 +565,8 @@ document.addEventListener('selectionchange', () => {
 
 console.log('📦 [CONTENT] All modules bundled successfully');
 
-// Initialize external libraries (optional enhancement)
-loadExternalLibs().then(() => {
-  console.log('📚 [CONTENT] External library initialization complete');
-}).catch(error => {
-  console.warn('⚠️ [CONTENT] External library loading failed:', error);
-});
+// Content script ready without external dependencies
+console.log('✅ [CONTENT] Content script ready (no external libraries needed)');
 
 console.log('✅ [CONTENT] Content script initialization complete');
 

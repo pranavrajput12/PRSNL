@@ -98,6 +98,24 @@ curl http://localhost:8000/api/ai/models
 curl http://localhost:8000/api/ai/health
 ```
 
+### Conversation Intelligence - Multi-Agent Analysis
+```bash
+# Process conversation intelligence with specialized AI agents
+curl -X POST http://localhost:8000/api/conversations/intelligence/550e8400-e29b-41d4-a716-446655440000/process \
+  -H "Content-Type: application/json"
+
+# Get conversation intelligence results
+curl http://localhost:8000/api/conversations/intelligence/550e8400-e29b-41d4-a716-446655440000
+
+# Process batch intelligence for multiple conversations
+curl -X POST http://localhost:8000/api/conversations/intelligence/batch/process \
+  -H "Content-Type: application/json"
+
+# Filter batch processing by platform
+curl -X POST "http://localhost:8000/api/conversations/intelligence/batch/process?platform=chatgpt" \
+  -H "Content-Type: application/json"
+```
+
 ### Job Persistence System - NEW (2025-07-13)
 ```bash
 # Check job persistence service health

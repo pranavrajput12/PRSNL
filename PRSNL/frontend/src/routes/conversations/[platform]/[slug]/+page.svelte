@@ -11,6 +11,14 @@
   let loading = true;
   let error = null;
   
+  // Load more functionality for messages
+  let messagesPerLoad = 10;
+  let loadedMessagesCount = 10;
+  let loadingMore = false;
+  $: displayedMessages = conversation ? 
+    conversation.messages.slice(0, loadedMessagesCount) : [];
+  $: hasMoreMessages = conversation && loadedMessagesCount < conversation.messages.length;
+  
   // Platform configuration
   const platformConfig = {
     chatgpt: { icon: 'message-circle', color: '#10a37f', name: 'ChatGPT' },
@@ -116,6 +124,22 @@
   function handleBack() {
     goto('/conversations');
   }
+  
+  async function loadMoreMessages() {
+    if (loadingMore || !hasMoreMessages) return;
+    
+    loadingMore = true;
+    
+    // Simulate loading delay for smooth UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    loadedMessagesCount = Math.min(
+      loadedMessagesCount + messagesPerLoad, 
+      conversation.messages.length
+    );
+    
+    loadingMore = false;
+  }
 </script>
 
 <svelte:head>
@@ -153,10 +177,10 @@
           target="_blank"
           rel="noopener noreferrer"
           class="source-button"
-          title="View original conversation"
+          title="View original ChatGPT conversation"
         >
           <Icon name="external-link" size={16} />
-          <span>View Original</span>
+          <span>View on {platform.name}</span>
         </a>
       </div>
       
@@ -207,7 +231,12 @@
     
     <!-- Messages Thread -->
     <div class="messages-container">
-      {#each conversation.messages as message, index}
+      <!-- Messages Info -->
+      <div class="messages-info">
+        <span>Showing {displayedMessages.length} of {conversation.messages.length} messages</span>
+      </div>
+      
+      {#each displayedMessages as message, index}
         <div class="message {message.role}" style="--role-color: {getRoleColor(message.role)}">
           <div class="message-header">
             <div class="message-role">
@@ -218,20 +247,49 @@
           </div>
           
           <div class="message-content">
-            {#if message.content.markdown}
+            {#if message.content_text}
+              <p>{message.content_text}</p>
+            {:else if message.content?.text}
+              <p>{message.content.text}</p>
+            {:else if message.content?.markdown}
               <SafeHTML html={message.content.markdown} />
-            {:else if message.content.html}
+            {:else if message.content?.html}
               <SafeHTML html={message.content.html} />
             {:else}
-              <p>{message.content.text}</p>
+              <p><em>No content available</em></p>
             {/if}
           </div>
           
-          {#if index < conversation.messages.length - 1}
+          {#if index < displayedMessages.length - 1}
             <div class="message-divider"></div>
           {/if}
         </div>
       {/each}
+      
+      <!-- Load More Button -->
+      {#if hasMoreMessages}
+        <div class="load-more-container">
+          <button 
+            on:click={loadMoreMessages} 
+            class="load-more-btn" 
+            disabled={loadingMore}
+            class:loading={loadingMore}
+          >
+            {#if loadingMore}
+              <div class="spinner"></div>
+              <span>Loading messages...</span>
+            {:else}
+              <Icon name="chevron-down" size={20} />
+              <span>Load {Math.min(messagesPerLoad, conversation.messages.length - loadedMessagesCount)} more messages</span>
+            {/if}
+          </button>
+        </div>
+      {:else if conversation && conversation.messages.length > messagesPerLoad}
+        <div class="all-loaded">
+          <Icon name="check-circle" size={20} />
+          <span>All messages loaded</span>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -405,6 +463,94 @@
     gap: 1.5rem;
   }
   
+  /* Messages Info Styles */
+  .messages-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+  
+  /* Load More Styles */
+  .load-more-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .load-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .load-more-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 158, 255, 0.3);
+  }
+  
+  .load-more-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .load-more-btn.loading {
+    padding-left: 2.5rem;
+  }
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    left: 1rem;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .all-loaded {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .all-loaded :global(svg) {
+    color: var(--success, #10b981);
+  }
+  
   .message {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -529,6 +675,21 @@
     .header-top {
       flex-wrap: wrap;
       gap: 1rem;
+    }
+    
+    .load-more-btn {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .load-more-btn.loading {
+      padding-left: 2rem;
+    }
+    
+    .spinner {
+      left: 0.75rem;
+      width: 16px;
+      height: 16px;
     }
   }
   

@@ -5,6 +5,7 @@ Provides endpoints to trigger intelligence processing and view results.
 """
 
 import logging
+import json
 from uuid import UUID
 from typing import Optional
 
@@ -19,6 +20,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/conversations/intelligence", tags=["conversation-intelligence"])
 
+def safe_json_parse(json_string):
+    """Safely parse JSON string, return None if invalid or empty"""
+    if not json_string:
+        return None
+    try:
+        if isinstance(json_string, str):
+            return json.loads(json_string)
+        return json_string  # Already parsed
+    except (json.JSONDecodeError, TypeError):
+        return None
+
 class IntelligenceResponse(BaseModel):
     """Response from intelligence processing"""
     conversation_id: str
@@ -27,6 +39,11 @@ class IntelligenceResponse(BaseModel):
     learning_journey: Optional[dict] = None
     concepts: Optional[dict] = None
     insights: Optional[dict] = None
+    # Multi-agent specialized outputs
+    technical_content: Optional[dict] = None
+    learning_analysis: Optional[dict] = None
+    actionable_insights: Optional[dict] = None
+    knowledge_gap_analysis: Optional[dict] = None
 
 @router.post("/{conversation_id}/process")
 async def process_conversation_intelligence(
@@ -105,7 +122,9 @@ async def get_conversation_intelligence(
                     summary, key_topics, learning_points,
                     user_journey, knowledge_gaps,
                     neural_category, neural_subcategory,
-                    categorization_confidence
+                    categorization_confidence,
+                    technical_content, learning_analysis,
+                    actionable_insights, knowledge_gap_analysis
                 FROM ai_conversation_imports
                 WHERE id = $1
             """, conversation_id)
@@ -154,7 +173,12 @@ async def get_conversation_intelligence(
                         }
                         for msg in messages_with_insights
                     ]
-                } if conv['processing_status'] == 'completed' else None
+                } if conv['processing_status'] == 'completed' else None,
+                # Multi-agent specialized outputs (parse JSON strings)
+                technical_content=safe_json_parse(conv['technical_content']),
+                learning_analysis=safe_json_parse(conv['learning_analysis']),
+                actionable_insights=safe_json_parse(conv['actionable_insights']),
+                knowledge_gap_analysis=safe_json_parse(conv['knowledge_gap_analysis'])
             )
             
     except HTTPException:
