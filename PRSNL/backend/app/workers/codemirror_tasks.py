@@ -65,10 +65,17 @@ def analyze_repository(
                 run_security_analysis.s(repo_id, user_id)
             )
         
-        # Create workflow
-        workflow = group(*tasks) | aggregate_analysis_results.s(
-            repo_id, job_id, user_id, analysis_depth
-        )
+        # Phase 2: Enhanced workflow with intelligent orchestration
+        if analysis_depth == "quick":
+            # Quick analysis: Simple group for fast results
+            workflow = group(*tasks) | aggregate_analysis_results.s(
+                repo_id, job_id, user_id, analysis_depth
+            )
+        else:
+            # Standard/Deep analysis: Advanced Chord with specialized aggregation
+            workflow = chord(tasks)(
+                intelligent_analysis_synthesis.s(repo_id, job_id, user_id, analysis_depth, options or {})
+            )
         
         # Execute workflow
         result = workflow.apply_async(
@@ -707,6 +714,249 @@ def calculate_analysis_scores(analysis_data: Dict[str, Any]) -> Dict[str, float]
         scores[key] = min(100, max(0, scores[key]))
     
     return scores
+
+
+@celery_app.task(name="app.workers.codemirror_tasks.intelligent_analysis_synthesis", bind=True)
+def intelligent_analysis_synthesis(self, analysis_results: List[Dict[str, Any]], repo_id: str, job_id: str, user_id: str, analysis_depth: str, options: Dict[str, Any]):
+    """
+    Phase 2: Intelligent synthesis of all analysis results using advanced AI coordination.
+    
+    This Chord callback task receives results from all parallel analysis agents and creates
+    a comprehensive, AI-enhanced repository intelligence summary.
+    """
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        result = loop.run_until_complete(
+            _intelligent_synthesis_async(self.request.id, analysis_results, repo_id, job_id, user_id, analysis_depth, options)
+        )
+        
+        return result
+    
+    except Exception as e:
+        logger.error(f"Intelligent synthesis failed: {e}", exc_info=True)
+        return {"error": str(e), "status": "failed"}
+    finally:
+        loop.close()
+
+
+async def _intelligent_synthesis_async(task_id: str, analysis_results: List[Dict[str, Any]], repo_id: str, job_id: str, user_id: str, analysis_depth: str, options: Dict[str, Any]):
+    """Advanced AI-powered synthesis of analysis results"""
+    
+    try:
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 0, 5, "Starting AI-powered synthesis")
+        
+        # Filter and categorize results
+        successful_results = [result for result in analysis_results if result.get("status") == "completed"]
+        failed_tasks = [result.get("task_type", "unknown") for result in analysis_results if result.get("status") == "failed"]
+        
+        logger.info(f"Synthesis: {len(successful_results)} successful, {len(failed_tasks)} failed analyses")
+        
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 1, 5, "Categorizing analysis results")
+        
+        # Categorize results by analysis type
+        categorized_results = {
+            "structure_analysis": None,
+            "pattern_detection": None,
+            "security_analysis": None,
+            "package_intelligence": None
+        }
+        
+        for result in successful_results:
+            analysis_type = result.get("analysis_type", "unknown")
+            if analysis_type in categorized_results:
+                categorized_results[analysis_type] = result.get("analysis_data", {})
+        
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 2, 5, "Generating AI insights")
+        
+        # Generate comprehensive AI insights
+        ai_enhanced_summary = await unified_ai_service.synthesize_repository_intelligence(
+            structure_data=categorized_results["structure_analysis"],
+            pattern_data=categorized_results["pattern_detection"],
+            security_data=categorized_results["security_analysis"],
+            package_data=categorized_results["package_intelligence"],
+            synthesis_options={
+                "analysis_depth": analysis_depth,
+                "generate_recommendations": True,
+                "identify_architectural_patterns": True,
+                "assess_technical_debt": True,
+                "evaluate_maintainability": True,
+                **options.get("synthesis", {})
+            }
+        )
+        
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 3, 5, "Computing enhanced scores")
+        
+        # Compute enhanced scores using AI insights
+        enhanced_scores = await _compute_ai_enhanced_scores(categorized_results, ai_enhanced_summary)
+        
+        # Create comprehensive analysis summary
+        comprehensive_summary = {
+            "analysis_overview": {
+                "repository_id": repo_id,
+                "analysis_depth": analysis_depth,
+                "successful_analyses": len(successful_results),
+                "failed_analyses": len(failed_tasks),
+                "ai_synthesis_applied": True,
+                "synthesis_timestamp": datetime.utcnow().isoformat()
+            },
+            "ai_insights": ai_enhanced_summary,
+            "detailed_results": categorized_results,
+            "enhanced_scores": enhanced_scores,
+            "failed_tasks": failed_tasks,
+            "recommendations": ai_enhanced_summary.get("recommendations", []),
+            "architectural_assessment": ai_enhanced_summary.get("architectural_assessment", {}),
+            "technical_debt_analysis": ai_enhanced_summary.get("technical_debt", {}),
+            "maintainability_score": ai_enhanced_summary.get("maintainability_score", 0)
+        }
+        
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 4, 5, "Storing comprehensive results")
+        
+        # Store comprehensive analysis
+        async with get_db_connection() as db:
+            # Update main analysis record
+            analysis_id = await db.fetchval("""
+                INSERT INTO codemirror_analyses (
+                    repo_id, analysis_type, analysis_depth, job_id,
+                    results, ai_insights, enhanced_scores,
+                    security_score, performance_score, quality_score,
+                    file_count, total_lines, languages_detected, frameworks_detected,
+                    analysis_completed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP)
+                RETURNING id
+            """,
+                UUID(repo_id),
+                "intelligent_synthesis",
+                analysis_depth,
+                job_id,
+                comprehensive_summary,
+                ai_enhanced_summary,
+                enhanced_scores,
+                enhanced_scores.get("security", 0),
+                enhanced_scores.get("performance", 0),
+                enhanced_scores.get("quality", 0),
+                comprehensive_summary.get("file_count", 0),
+                comprehensive_summary.get("total_lines", 0),
+                comprehensive_summary.get("languages", []),
+                comprehensive_summary.get("frameworks", [])
+            )
+            
+            # Store AI recommendations as insights
+            for recommendation in ai_enhanced_summary.get("recommendations", []):
+                await db.execute("""
+                    INSERT INTO codemirror_insights (
+                        analysis_id, insight_type, title, description,
+                        severity, recommendation, confidence_score
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                """,
+                    analysis_id,
+                    recommendation.get("type", "general"),
+                    recommendation.get("title", ""),
+                    recommendation.get("description", ""),
+                    recommendation.get("severity", "medium"),
+                    recommendation.get("action", ""),
+                    recommendation.get("confidence", 0.8)
+                )
+            
+            # Update processing job status
+            await db.execute("""
+                UPDATE processing_jobs 
+                SET 
+                    status = 'completed',
+                    progress_percentage = 100,
+                    result = $2,
+                    completed_at = CURRENT_TIMESTAMP
+                WHERE job_id = $1
+            """, job_id, {"analysis_id": str(analysis_id), "status": "completed"})
+        
+        await _send_progress_update(task_id, repo_id, "intelligent_synthesis", 5, 5, "Synthesis completed successfully")
+        
+        # Send real-time notification
+        await realtime_service.send_sync_event(
+            SyncEvent(
+                event_type="analysis_completed",
+                repository_id=repo_id,
+                data={
+                    "analysis_id": str(analysis_id),
+                    "job_id": job_id,
+                    "analysis_type": "intelligent_synthesis",
+                    "enhanced_scores": enhanced_scores,
+                    "recommendations_count": len(ai_enhanced_summary.get("recommendations", [])),
+                    "ai_insights_available": True
+                }
+            )
+        )
+        
+        return {
+            "status": "completed",
+            "analysis_id": str(analysis_id),
+            "repository_id": repo_id,
+            "job_id": job_id,
+            "ai_synthesis_applied": True,
+            "enhanced_scores": enhanced_scores,
+            "recommendations_count": len(ai_enhanced_summary.get("recommendations", [])),
+            "successful_analyses": len(successful_results),
+            "failed_analyses": len(failed_tasks),
+            "completed_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Intelligent synthesis async failed: {e}", exc_info=True)
+        raise
+
+
+async def _compute_ai_enhanced_scores(categorized_results: Dict[str, Any], ai_insights: Dict[str, Any]) -> Dict[str, int]:
+    """Compute enhanced scores using AI insights and traditional metrics"""
+    
+    base_scores = {
+        "security": 70,
+        "performance": 75,
+        "quality": 80,
+        "maintainability": 75,
+        "innovation": 60
+    }
+    
+    try:
+        # Security score enhancement
+        if categorized_results.get("security_analysis"):
+            security_findings = categorized_results["security_analysis"].get("findings", [])
+            critical_issues = len([f for f in security_findings if f.get("severity") == "critical"])
+            high_issues = len([f for f in security_findings if f.get("severity") == "high"])
+            base_scores["security"] = max(0, base_scores["security"] - (critical_issues * 20) - (high_issues * 10))
+        
+        # Quality score enhancement from patterns
+        if categorized_results.get("pattern_detection"):
+            patterns = categorized_results["pattern_detection"].get("patterns", [])
+            testing_patterns = len([p for p in patterns if "test" in p.get("type", "").lower()])
+            documentation_patterns = len([p for p in patterns if "doc" in p.get("type", "").lower()])
+            base_scores["quality"] += min(20, testing_patterns * 5 + documentation_patterns * 3)
+        
+        # Performance score from package analysis
+        if categorized_results.get("package_intelligence"):
+            package_data = categorized_results["package_intelligence"]
+            performance_issues = package_data.get("performance_concerns", [])
+            base_scores["performance"] -= min(30, len(performance_issues) * 5)
+        
+        # AI-enhanced maintainability score
+        maintainability_assessment = ai_insights.get("maintainability_score", 0)
+        if maintainability_assessment > 0:
+            base_scores["maintainability"] = int(maintainability_assessment * 100)
+        
+        # Innovation score from AI insights
+        architectural_novelty = ai_insights.get("architectural_assessment", {}).get("innovation_score", 0)
+        if architectural_novelty > 0:
+            base_scores["innovation"] = int(architectural_novelty * 100)
+        
+        # Ensure scores are within bounds
+        for key in base_scores:
+            base_scores[key] = min(100, max(0, base_scores[key]))
+        
+        return base_scores
+        
+    except Exception as e:
+        logger.error(f"Error computing enhanced scores: {e}")
+        return base_scores
 
 
 @celery_app.task(name="app.workers.codemirror_tasks.cleanup_old_analyses")

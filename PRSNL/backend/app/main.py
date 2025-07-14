@@ -112,6 +112,7 @@ from app.db.database import (
 from app.services.cache import cache_service
 from app.services.storage_manager import StorageManager
 from app.services.codemirror_realtime_service import realtime_service
+from app.workers.celery_app import celery_app
 
 # Placeholder for worker task
 worker_task = None
@@ -150,6 +151,12 @@ async def startup_event():
     # Start CodeMirror real-time service
     await realtime_service.start()
     logger.info("✅ CodeMirror real-time service started")
+    
+    # Initialize Celery app for task dispatching
+    logger.info(f"✅ Celery app initialized: {celery_app.main}")
+    logger.info(f"✅ Celery broker: {celery_app.conf.broker_url}")
+    logger.info(f"✅ Celery backend: {celery_app.conf.result_backend}")
+    logger.info(f"✅ Celery task modules: {len(celery_app.conf.include)} modules loaded")
     
     global worker_task
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
@@ -226,6 +233,9 @@ from app.api import codemirror  # CodeMirror - AI repository intelligence
 from app.api import codemirror_websocket  # CodeMirror WebSocket for real-time sync
 from app.api import task_monitoring  # Enterprise task monitoring for Celery
 from app.api import package_intelligence  # Package dependency intelligence
+from app.api import background_processing  # Phase 1 Celery background processing
+from app.api import knowledge_graph_api  # Phase 2 Knowledge Graph API
+from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import (
     admin,
@@ -320,6 +330,9 @@ app.include_router(codemirror.router)  # CodeMirror - AI repository intelligence
 app.include_router(codemirror_websocket.router)  # CodeMirror WebSocket endpoints for real-time sync
 app.include_router(task_monitoring.router)  # Enterprise task monitoring for Celery
 app.include_router(package_intelligence.router)  # Package dependency intelligence
+app.include_router(background_processing.router)  # Phase 1 Celery background processing
+app.include_router(knowledge_graph_api.router)  # Phase 2 Knowledge Graph API
+app.include_router(agent_monitoring_api.router)  # Phase 2 Agent Monitoring API
 app.include_router(github.router)  # GitHub OAuth and repository sync
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge

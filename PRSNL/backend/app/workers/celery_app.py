@@ -13,7 +13,7 @@ from celery import Celery, Task
 from celery.signals import worker_ready, task_prerun, task_postrun, task_failure
 from kombu import Exchange, Queue
 
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,13 @@ celery_app = Celery(
         "app.workers.codemirror_tasks",
         "app.workers.analysis_tasks",
         "app.workers.insight_tasks",
-        "app.workers.package_intelligence_tasks"
+        "app.workers.package_intelligence_tasks",
+        "app.workers.ai_processing_tasks",
+        "app.workers.file_processing_tasks",
+        "app.workers.media_processing_tasks",
+        "app.workers.conversation_intelligence_tasks",
+        "app.workers.knowledge_graph_tasks",
+        "app.workers.agent_coordination_tasks"
     ]
 )
 
@@ -39,21 +45,60 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     
-    # Task routing
+    # Task routing (Phase 2: Agent-specific routing)
     task_routes={
         "app.workers.codemirror_tasks.*": {"queue": "codemirror"},
         "app.workers.analysis_tasks.*": {"queue": "analysis"},
         "app.workers.insight_tasks.*": {"queue": "insights"},
         "app.workers.package_intelligence_tasks.*": {"queue": "packages"},
+        "app.workers.ai_processing_tasks.*": {"queue": "ai_processing"},
+        "app.workers.file_processing_tasks.*": {"queue": "file_processing"},
+        "app.workers.media_processing_tasks.*": {"queue": "media_processing"},
+        "app.workers.conversation_intelligence_tasks.*": {"queue": "conversation_intelligence"},
+        "app.workers.knowledge_graph_tasks.*": {"queue": "knowledge_graph"},
+        "app.workers.agent_coordination_tasks.*": {"queue": "agent_coordination"},
+        # Phase 2: Agent-specific routing
+        "conversation.technical_extraction": {"queue": "ai_analysis"},
+        "conversation.learning_analysis": {"queue": "ai_analysis"},
+        "conversation.insights_extraction": {"queue": "ai_analysis"},
+        "conversation.gap_identification": {"queue": "ai_analysis"},
+        "conversation.contextual_analysis": {"queue": "ai_analysis"},
+        "conversation.pattern_recognition": {"queue": "ai_analysis"},
+        "conversation.sentiment_progression": {"queue": "ai_analysis"},
+        "conversation.topic_evolution": {"queue": "ai_analysis"},
+        "conversation.synthesis": {"queue": "ai_synthesis"},
+        # Knowledge graph routing
+        "knowledge_graph.extract_relationships": {"queue": "ai_analysis"},
+        "knowledge_graph.semantic_search": {"queue": "ai_analysis"},
+        "knowledge_graph.entity_linking": {"queue": "ai_analysis"},
+        "knowledge_graph.assemble_graph": {"queue": "ai_synthesis"},
+        # Agent coordination routing
+        "agent_coordination.advanced_content_analysis": {"queue": "ai_analysis"},
+        "agent_coordination.advanced_pattern_detection": {"queue": "ai_analysis"},
+        "agent_coordination.advanced_sentiment_analysis": {"queue": "ai_analysis"},
+        "agent_coordination.advanced_entity_extraction": {"queue": "ai_analysis"},
+        "agent_coordination.intelligent_synthesis": {"queue": "ai_synthesis"},
+        "agent_coordination.decision_aggregation": {"queue": "ai_synthesis"},
+        "agent_coordination.hierarchical_synthesis": {"queue": "ai_synthesis"},
     },
     
-    # Queue configuration
+    # Queue configuration (Phase 2: Enhanced with agent-specific queues)
     task_queues=(
         Queue("default", Exchange("default"), routing_key="default"),
         Queue("codemirror", Exchange("codemirror"), routing_key="codemirror", priority=5),
         Queue("analysis", Exchange("analysis"), routing_key="analysis", priority=3),
         Queue("insights", Exchange("insights"), routing_key="insights", priority=1),
         Queue("packages", Exchange("packages"), routing_key="packages", priority=4),
+        # Phase 1 Critical Performance Queues
+        Queue("ai_processing", Exchange("ai_processing"), routing_key="ai_processing", priority=8),
+        Queue("file_processing", Exchange("file_processing"), routing_key="file_processing", priority=7),
+        Queue("media_processing", Exchange("media_processing"), routing_key="media_processing", priority=6),
+        # Phase 2 Agent-Specific Queues
+        Queue("conversation_intelligence", Exchange("conversation_intelligence"), routing_key="conversation_intelligence", priority=7),
+        Queue("knowledge_graph", Exchange("knowledge_graph"), routing_key="knowledge_graph", priority=6),
+        Queue("agent_coordination", Exchange("agent_coordination"), routing_key="agent_coordination", priority=8),
+        Queue("ai_analysis", Exchange("ai_analysis"), routing_key="ai_analysis", priority=8),
+        Queue("ai_synthesis", Exchange("ai_synthesis"), routing_key="ai_synthesis", priority=9),
     ),
     
     # Worker settings

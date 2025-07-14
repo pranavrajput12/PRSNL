@@ -11,8 +11,11 @@ asyncpg==0.29.0
 sqlalchemy==2.0.25
 pgvector==0.2.0
 
-# Caching
+# Caching & Task Queue
 redis==5.0.1
+celery==5.3.4
+kombu==5.3.4
+flower==2.0.1  # Celery monitoring dashboard
 
 # Web Scraping
 beautifulsoup4==4.12.3

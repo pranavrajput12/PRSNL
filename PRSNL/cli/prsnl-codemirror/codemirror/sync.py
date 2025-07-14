@@ -10,6 +10,8 @@ from typing import Dict, Any, List, Optional
 import aiohttp
 import asyncio
 
+from .progress import ProgressTracker, create_progress_tracker
+
 
 class PRSNLSync:
     """Handles synchronization with PRSNL backend."""
@@ -23,17 +25,35 @@ class PRSNLSync:
             'Content-Type': 'application/json',
             'User-Agent': 'PRSNL-CodeMirror-CLI/1.0.0'
         }
+        self.progress_tracker = None
     
-    async def upload_analysis(self, analysis_result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def upload_analysis(self, analysis_result: Dict[str, Any], task_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Upload analysis results to PRSNL."""
         try:
+            # Set up progress tracking if task_id provided
+            if task_id:
+                self.progress_tracker = create_progress_tracker(task_id, self)
+                self.progress_tracker.update_progress(
+                    "sync_upload", 0, 3, "Starting upload to PRSNL..."
+                )
+            
             async with aiohttp.ClientSession() as session:
                 # First, get or create the repository
+                if self.progress_tracker:
+                    self.progress_tracker.update_progress(
+                        "sync_upload", 1, 3, "Creating repository mapping..."
+                    )
+                
                 repo_data = await self._get_or_create_repository(session, analysis_result)
                 if not repo_data:
                     return None
                 
                 # Upload the analysis - match backend CLISyncRequest model
+                if self.progress_tracker:
+                    self.progress_tracker.update_progress(
+                        "sync_upload", 2, 3, "Uploading analysis results..."
+                    )
+                
                 upload_data = {
                     'cli_analysis_id': analysis_result.get('id', f"cli_{datetime.utcnow().timestamp()}"),
                     'cli_version': '1.0.0',
@@ -50,6 +70,12 @@ class PRSNLSync:
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
+                        
+                        if self.progress_tracker:
+                            self.progress_tracker.update_progress(
+                                "sync_upload", 3, 3, "Upload completed successfully!"
+                            )
+                        
                         return {
                             'success': True,
                             'analysis_id': result.get('analysis_id'),
@@ -210,3 +236,41 @@ class PRSNLSync:
         
         except Exception:
             return False
+    
+    async def send_progress_update(self, progress_data: Dict[str, Any]):
+        """Send progress update to backend for real-time monitoring"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f'{self.base_url}/api/tasks/progress',
+                    headers=self.headers,
+                    json=progress_data,
+                    timeout=aiohttp.ClientTimeout(total=5)
+                ) as response:
+                    if response.status != 200:
+                        # Don't fail the whole operation if progress update fails
+                        if self.config.debug:
+                            error_text = await response.text()
+                            self.console.print(f"[yellow]Progress update failed: {response.status} - {error_text}[/yellow]")
+        
+        except Exception as e:
+            # Don't fail the whole operation if progress update fails
+            if self.config.debug:
+                self.console.print(f"[yellow]Progress update error: {e}[/yellow]")
+    
+    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Get the current status of a task from backend"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f'{self.base_url}/api/tasks/status/{task_id}',
+                    headers=self.headers,
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    else:
+                        return None
+        
+        except Exception:
+            return None

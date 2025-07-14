@@ -1,7 +1,62 @@
-# CodeMirror Enterprise System - Future Roadmap
+# PRSNL Enterprise System - Future Roadmap
 
 ## Overview
-This document outlines the future development roadmap for the CodeMirror enterprise system, focusing on advanced features that will be implemented after the core package manager intelligence.
+This document outlines the future development roadmap for the PRSNL enterprise system, including CodeMirror intelligence and comprehensive background processing optimization. This roadmap includes items moved from active development to ensure focused implementation.
+
+## 🔄 Phase 2: Agentic Workflows Optimization (Evaluation Phase)
+
+### Multi-Agent Systems Enhancement
+- **Conversation Intelligence**: Parallel agent execution with error recovery
+- **Knowledge Graph Operations**: Background relationship discovery  
+- **CodeMirror Intelligence**: Enhanced workflow orchestration
+- **Agent-specific Retry**: Different strategies per agent type
+- **Celery Groups**: Run agents in parallel
+- **Celery Chords**: Aggregate partial results
+
+### Advanced Agent Coordination
+- **Real-time Agent Monitoring**: Track agent performance and bottlenecks
+- **Dynamic Agent Scaling**: Auto-scale agents based on workload
+- **Agent Learning Framework**: Improve agent performance over time
+- **Cross-Agent Context Sharing**: Shared knowledge between agent instances
+
+## 🔍 Phase 3: Search & Discovery Optimization (Future Roadmap)
+
+### Embedding Generation & Management
+- **Current Pain**: Synchronous embedding creation, no batch optimization
+- **Solution**: Batch processing, priority queues, cost optimization
+- **Implementation**: 
+  - Celery task: `generate_embeddings_batch(texts: list, cache_prefix: str)`
+  - Smart batching algorithms for cost efficiency
+  - Priority queues for new vs backfill embeddings
+  - Automatic retry for failed embeddings
+
+### Search Index Updates
+- **Current Pain**: Index updates block content creation
+- **Solution**: Asynchronous indexing, consistency guarantees
+- **Implementation**:
+  - Background index rebuilding
+  - Incremental index updates
+  - Search consistency during updates
+  - Index rebuild scheduling
+
+### Advanced Search Features
+- **Semantic Search Enhancement**: Multi-modal embeddings for code, text, and images
+- **Federated Search**: Search across multiple knowledge sources
+- **Search Analytics**: Track search patterns and optimize results
+- **Personalized Search**: User-specific search ranking and filtering
+
+### Analytics & Insights Enhancement
+- **Dynamic Insights Generation**: Background analytics processing
+- **Smart Categorization**: ML-powered content categorization
+- **Performance Analytics**: System and user behavior analysis
+- **Predictive Analytics**: Trend prediction and recommendations
+- **Real-time Dashboards**: Live analytics updates via WebSocket
+
+### Content Processing & Analysis
+- **Advanced Duplicate Detection**: ML-based similarity detection
+- **Content Intelligence**: Enhanced content understanding and connections
+- **Automated Content Enhancement**: AI-powered content improvement
+- **Cross-Content Analysis**: Relationships and patterns across content types
 
 ## 🚀 Phase 4.1: Agent Evaluation & Learning Framework
 
@@ -155,20 +210,27 @@ This document outlines the future development roadmap for the CodeMirror enterpr
 
 ## 🎯 Implementation Priorities
 
-### High Priority (Next 6 months)
-1. **Agent Evaluation Framework**: Foundation for continuous improvement
-2. **Basic Circuit Breakers**: Essential fault tolerance
-3. **Enhanced Caching**: Performance optimization
+### Immediate Priority (Phase 2 Evaluation)
+1. **Agentic Workflows Assessment**: Evaluate Phase 1 impact before proceeding
+2. **Multi-Agent Performance**: Measure current agent efficiency
+3. **System Load Analysis**: Understand resource usage patterns
+
+### High Priority (Next 6 months - Phase 3)
+1. **Search & Discovery Optimization**: If Phase 1-2 prove successful
+2. **Embedding Generation Enhancement**: Batch processing and optimization
+3. **Advanced Analytics**: Background insights generation
+4. **Enhanced Caching**: Performance optimization
 
 ### Medium Priority (6-12 months)
-1. **Learning Relevance Engine**: Improve recommendation quality
-2. **Pattern Libraries**: Expand pattern recognition capabilities
-3. **Basic Monitoring**: OpenTelemetry and Prometheus integration
+1. **Agent Evaluation Framework**: Foundation for continuous improvement
+2. **Learning Relevance Engine**: Improve recommendation quality
+3. **Pattern Libraries**: Expand pattern recognition capabilities
+4. **Basic Monitoring**: OpenTelemetry and Prometheus integration
 
 ### Lower Priority (12+ months)
 1. **Advanced ML Pipeline**: Full MLOps implementation
 2. **Comprehensive Security Tools**: Complete security ecosystem
-3. **Advanced Analytics**: Trend analysis and predictive insights
+3. **Federated Search**: Multi-source search capabilities
 
 ## 📊 Success Metrics
 
@@ -189,6 +251,23 @@ This document outlines the future development roadmap for the CodeMirror enterpr
 - **Code Quality**: 25%+ reduction in bugs
 - **Security Posture**: 90%+ security issues identified
 - **Cost Savings**: 40%+ reduction in manual code review effort
+
+## 🎯 Deferred Features (Moved from Active Development)
+
+### Package Manager Extensions (Phase 4.2 Deferred Items)
+- **Go Modules**: Go package analysis and dependency tracking
+- **Ruby Gems**: RubyGems package manager integration
+- **PHP Composer**: PHP dependency analysis
+- **Gradle/Kotlin**: Android and Kotlin package support
+- **NuGet**: .NET package manager integration
+- **Swift Package Manager**: iOS/macOS development support
+
+### Advanced Package Intelligence
+- **Cross-Platform Dependency Analysis**: Dependencies across multiple package managers
+- **License Conflict Detection**: Advanced license compatibility checking
+- **Supply Chain Security**: Enhanced security scanning and verification
+- **Package Recommendation Engine**: AI-powered package suggestions
+- **Automated Update Management**: Smart package update recommendations
 
 ## 🔮 Long-term Vision (2+ years)
 
@@ -212,4 +291,19 @@ This document outlines the future development roadmap for the CodeMirror enterpr
 
 ---
 
-This roadmap provides a clear path for evolving the CodeMirror system into the industry's most advanced repository intelligence platform while maintaining focus on practical, measurable improvements that deliver real value to developers and organizations.
+## 📋 Implementation Notes
+
+### Phase Progression Strategy
+- **Phase 1**: Completed - Critical performance bottlenecks resolved with Celery
+- **Phase 2**: Evaluation phase - Proceed based on Phase 1 performance impact
+- **Phase 3**: Future roadmap - Implement if Phases 1-2 show significant benefits
+- **Phase 4+**: Long-term roadmap - Advanced features for enterprise scaling
+
+### Success Criteria for Phase Progression
+- **Phase 1 → 2**: 50%+ reduction in blocking operations, improved user experience
+- **Phase 2 → 3**: Enhanced agent performance, stable agentic workflows
+- **Phase 3+**: Proven scalability needs and clear ROI for advanced features
+
+---
+
+This comprehensive roadmap ensures PRSNL's evolution into the industry's most advanced knowledge management and repository intelligence platform while maintaining focus on proven, measurable improvements that deliver immediate value to users and organizations.

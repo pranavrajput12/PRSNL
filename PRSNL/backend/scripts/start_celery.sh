@@ -25,11 +25,14 @@ start_worker() {
         --pool=prefork &
 }
 
-# Start workers for different queues
-start_worker "default,codemirror" 4 "codemirror"
-start_worker "analysis" 2 "analysis"
-start_worker "insights" 2 "insights"
-start_worker "packages" 2 "packages"
+# Start workers for different queues (Phase 1 Critical + Existing)
+start_worker "ai_processing" 4 "ai_processing"      # High priority: AI operations
+start_worker "file_processing" 3 "file_processing"  # High priority: File operations  
+start_worker "media_processing" 2 "media_processing" # High priority: Media operations
+start_worker "default,codemirror" 3 "codemirror"    # Existing: Repository analysis
+start_worker "analysis" 2 "analysis"                # Existing: General analysis
+start_worker "insights" 2 "insights"                # Existing: Insights generation
+start_worker "packages" 2 "packages"                # Existing: Package intelligence
 
 # Start Celery Beat for periodic tasks
 echo "Starting Celery Beat scheduler..."

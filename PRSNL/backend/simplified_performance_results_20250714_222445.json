@@ -1,0 +1,85 @@
+{
+  "test_timestamp": "2025-07-14T16:54:40.689952",
+  "system_info": {
+    "cpu_count": 8,
+    "cpu_percent": 59.6,
+    "memory_total": 8.0,
+    "memory_available": 1.553985595703125,
+    "disk_usage": 98.1,
+    "python_version": "3.11.3 (v3.11.3:f3909b8bc8, Apr  4 2023, 20:12:10) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "platform": "darwin",
+    "database_latency_ms": -1,
+    "database_status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+  },
+  "database_metrics": {
+    "table_verification": {
+      "task_progress": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      },
+      "agent_performance_metrics": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      },
+      "knowledge_entities": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      },
+      "knowledge_relationships": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      },
+      "conversation_intelligence_results": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      },
+      "agent_coordination_logs": {
+        "query_time_ms": -1,
+        "record_count": 0,
+        "status": "error: 'async_generator' object does not support the asynchronous context manager protocol"
+      }
+    },
+    "crud_operations": {
+      "avg_time_ms": -1,
+      "successful_operations": 0,
+      "total_operations": 3
+    }
+  },
+  "celery_infrastructure": {
+    "celery_module_import": true,
+    "celery_app_creation": true,
+    "worker_tasks_registered": 10,
+    "broker_connection": false,
+    "broker_url": "redis://localhost:6379/0",
+    "backend_url": "redis://localhost:6379/0"
+  },
+  "improvement_analysis": {
+    "infrastructure_readiness": "0/6 Phase tables ready",
+    "celery_status": "Ready",
+    "api_status": "Ready",
+    "database_performance": "0% success rate",
+    "system_resources": "Memory: 1.6GB available",
+    "overall_readiness": "Needs Setup"
+  },
+  "resource_baseline": {
+    "baseline": {
+      "memory_percent": 80.8,
+      "cpu_percent": 38.2
+    },
+    "after_simulation": {
+      "memory_percent": 78.3,
+      "cpu_percent": 36.7
+    },
+    "work_simulation_ms": 2000.709056854248
+  },
+  "api_infrastructure": {
+    "fastapi_import": true,
+    "settings_loaded": true,
+    "port_configured": 8000
+  }
+}

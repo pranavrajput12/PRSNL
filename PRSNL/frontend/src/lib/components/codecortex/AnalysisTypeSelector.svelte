@@ -54,9 +54,9 @@
 					</div>
 					<div class="option-features">
 						<div class="feature">✓ Direct GitHub integration</div>
-						<div class="feature">✓ No local setup required</div>
+						<div class="feature">✓ Package dependency analysis</div>
 						<div class="feature">✓ Real-time progress updates</div>
-						<div class="feature">✓ Automatic pattern detection</div>
+						<div class="feature">✓ AI-powered pattern detection</div>
 					</div>
 					<div class="option-timing">
 						<span class="timing-icon">⏱️</span>

@@ -1,21 +1,25 @@
-# PRSNL - Personal Knowledge Management System v2.3
+# PRSNL - Personal Knowledge Management System v7.0
 
-> **Advanced AI-powered knowledge management with simplified infrastructure and enhanced rate limiting**
+> **Enterprise-grade AI-powered knowledge management with CodeMirror repository intelligence and distributed processing**
 
-PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 2.3 introduces FastAPI-Throttle for endpoint protection, simplified Docker infrastructure, and improved local development experience.
+PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 7.0 introduces CodeMirror - an AI-powered repository intelligence system, enterprise-grade package analysis, and distributed processing with Celery.
 
-## 🚨 **Recent Updates (v2.3 - July 2025)**
+## 🚨 **Major Release v7.0 (July 2025) - CodeMirror Intelligence**
 
-### **Infrastructure Simplification**
-- **Database**: Migrated from Docker to local PostgreSQL for better performance
-- **Docker**: Now only used for Redis (simplified container management)
-- **Backend**: Runs locally with `uvicorn` for easier debugging
-- **Development**: Improved local development experience
+### **🧠 CodeMirror - AI Repository Intelligence (NEW)**
+- **Repository Analysis**: Deep AI-powered code analysis with pattern detection
+- **Package Intelligence**: Comprehensive dependency analysis (npm, PyPI, Cargo, Maven)
+- **Security Scanning**: Vulnerability detection and maintenance scoring
+- **Multi-Agent System**: Specialized AI agents for content relevance and integration analysis
+- **Enterprise Processing**: Celery distributed tasks with real-time WebSocket updates
+- **Dual Analysis Modes**: Web-based analysis and advanced CLI tool integration
 
-### **Security & Performance**
-- **FastAPI-Throttle**: Added rate limiting to protect high-cost endpoints
-- **Endpoint Protection**: Embedding generation, file uploads, and search endpoints
-- **Rate Limits**: Configurable per-endpoint throttling
+### **🏗️ Enterprise Architecture**
+- **Distributed Processing**: Celery task queues with DragonflyDB pub/sub
+- **Real-time Sync**: WebSocket-based progress tracking and updates
+- **Database Intelligence**: Advanced PostgreSQL schema with package metadata
+- **Embeddings Search**: pgvector-powered semantic search for knowledge discovery
+- **Multi-Platform Support**: Package analysis across major package managers
 
 ## 🌟 **Key Features**
 
@@ -35,7 +39,9 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 - **Semantic Search**: Vector-based similarity search with pgvector
 - **Full-Text Search**: PostgreSQL-powered content indexing
 - **AI-Suggested Content**: Intelligent content recommendations
-- **Timeline Views**: Chronological content organization
+- **Knowledge Graph**: Multi-agent system connecting content, conversations, and integrations
+- **Repository Intelligence**: CodeMirror-powered code pattern discovery
+- **Package Discovery**: Intelligent dependency and vulnerability analysis
 
 ### **📊 Enterprise-Grade Observability (NEW in v2.2)**
 - **Comprehensive Monitoring**: OpenTelemetry + Grafana + Loki stack
@@ -127,11 +133,35 @@ npm run dev -- --port 3004
 ```
 
 ### **Key Technologies**
-- **AI**: Azure OpenAI (GPT-4, Whisper, Ada-002), Vosk offline speech
-- **Database**: PostgreSQL + pgvector for semantic search
-- **Cache**: Redis for performance optimization
+- **AI**: Azure OpenAI (GPT-4, Whisper, Ada-002), Multi-agent architecture
+- **Database**: PostgreSQL + pgvector for semantic search + package intelligence
+- **Cache**: DragonflyDB (25x faster than Redis) + Celery distributed processing
+- **Code Analysis**: GitPython, PyDriller, Semgrep, Comby integration
+- **Package Intelligence**: Free APIs for npm, PyPI, Cargo, Maven Central
 - **Monitoring**: OpenTelemetry + Grafana + Loki + Prometheus
-- **Quality**: Pre-commit hooks + automated testing
+- **Quality**: Pre-commit hooks + automated testing + security scanning
+
+## 🧠 **CodeMirror Repository Intelligence**
+
+### **AI-Powered Code Analysis**
+- **Pattern Detection**: Identify architectural patterns, anti-patterns, and optimization opportunities
+- **Framework Recognition**: Automatic detection of technologies, libraries, and frameworks
+- **Code Quality Scoring**: Security, performance, and maintainability metrics
+- **Knowledge Integration**: Connect code analysis with relevant learning resources
+
+### **Package Intelligence System**
+- **Multi-Platform Support**: npm (Node.js), PyPI (Python), Cargo (Rust), Maven (Java)
+- **Security Analysis**: Vulnerability detection, deprecated package identification
+- **License Compliance**: Automatic license risk assessment and compatibility checking
+- **Maintenance Scoring**: Package health metrics and update recommendations
+- **Real-time Updates**: Distributed processing with live progress tracking
+
+### **Enterprise Features**
+- **Dual Analysis Modes**: Web-based instant analysis and CLI tool for advanced features
+- **Distributed Processing**: Celery task queues for scalable background processing
+- **Real-time Sync**: WebSocket updates with DragonflyDB pub/sub
+- **Database Intelligence**: Comprehensive package metadata and vulnerability tracking
+- **Multi-Agent Architecture**: Specialized AI agents for different analysis aspects
 
 ## 📖 **Core Capabilities**
 
@@ -142,14 +172,17 @@ npm run dev -- --port 3004
 | **YouTube Videos** | ✅ Hybrid transcription | Offline/cloud speech-to-text |
 | **Documents** | ✅ OCR + AI analysis | PDF, DOC, images with tesseract |
 | **Images** | ✅ Vision AI + OCR | Text extraction, visual analysis |
-| **Code Repositories** | ✅ GitHub integration | README parsing, rich previews |
+| **Code Repositories** | ✅ CodeMirror Intelligence | Deep analysis, pattern detection, package security |
+| **Package Dependencies** | ✅ Multi-platform analysis | npm, PyPI, Cargo, Maven with vulnerability scanning |
 
 ### **AI-Powered Features**
 - **Content Summarization**: Key insights and takeaways
 - **Automatic Tagging**: Smart categorization and topic extraction
-- **Knowledge Relationships**: Dynamic content connections
-- **Search Enhancement**: Semantic similarity and context understanding
-- **Learning Path Generation**: Intelligent content sequencing
+- **Knowledge Relationships**: Multi-agent system connecting diverse content types
+- **Repository Intelligence**: AI-powered code pattern detection and recommendations
+- **Package Analysis**: Intelligent dependency health and security assessment
+- **Search Enhancement**: Embeddings-based semantic search with context relevance
+- **Real-time Processing**: Distributed analysis with live progress updates
 
 ### **Privacy & Security**
 - **Offline Processing**: Vosk transcription for sensitive content
@@ -240,17 +273,18 @@ tail -f backend/logs/prsnl.log
 
 ## 🔮 **Roadmap**
 
-### **v2.3 (Planned)**
-- **Multi-user Support**: User authentication and workspaces
-- **Advanced Analytics**: Usage patterns and content insights
-- **Custom AI Models**: Domain-specific model training
-- **Mobile App**: React Native companion app
+### **v7.1 (Next Release)**
+- **Enhanced Package Intelligence**: OSV database integration for vulnerability scanning
+- **Advanced Code Patterns**: Machine learning-based pattern recommendation system
+- **Repository Insights**: AI-powered architecture recommendations and technical debt analysis
+- **Extended Language Support**: Go, Rust, Ruby, PHP package manager support
 
-### **v3.0 (Future)**
-- **Distributed Deployment**: Kubernetes orchestration
-- **Advanced Security**: End-to-end encryption
-- **Plugin System**: Extensible integration framework
-- **Enterprise Features**: SSO, audit logs, compliance
+### **v8.0 (Future Roadmap)**
+- **Agent Evaluation System**: Automated agent performance monitoring and improvement
+- **Advanced Security Features**: SAST/DAST integration, compliance reporting
+- **Multi-Repository Analysis**: Cross-project dependency and pattern analysis
+- **Enterprise Deployment**: Kubernetes orchestration, advanced monitoring
+- **Plugin Architecture**: Extensible integration framework for custom analyzers
 
 ## 🛟 **Support & Community**
 
@@ -282,4 +316,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for knowledge workers who want to stay organized and discover insights in their digital content.**
 
-*PRSNL v2.2 - Advanced Integrations • Released 2025-07-11*
+*PRSNL v7.0 - CodeMirror Intelligence • Released 2025-07-14*
