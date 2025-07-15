@@ -1,722 +1,750 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vertical Navigation C - Unique but Functional</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-            color: white;
-            min-height: 100vh;
-            margin: 0;
-        }
+      body {
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          system-ui,
+          sans-serif;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        color: white;
+        min-height: 100vh;
+        margin: 0;
+      }
 
-        /* Accordion Stack Sidebar */
+      /* Accordion Stack Sidebar */
+      .accordion-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 320px;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.6s cubic-bezier(0.68, 0, 0.32, 1);
+        z-index: 1000;
+        overflow: hidden;
+      }
+
+      .accordion-sidebar.compact {
+        width: 90px;
+      }
+
+      /* Ripple Effect Background */
+      .ripple-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 30% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 70% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+        animation: ripple 8s ease-in-out infinite alternate;
+      }
+
+      @keyframes ripple {
+        0% {
+          transform: scale(1) rotate(0deg);
+        }
+        100% {
+          transform: scale(1.1) rotate(2deg);
+        }
+      }
+
+      .sidebar-header {
+        padding: 25px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 2;
+      }
+
+      .logo-stack {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+      }
+
+      .logo-layers {
+        position: relative;
+        width: 55px;
+        height: 55px;
+      }
+
+      .logo-layer {
+        position: absolute;
+        width: 55px;
+        height: 55px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 22px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .logo-layer:nth-child(1) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 3;
+        transform: translateZ(0);
+      }
+
+      .logo-layer:nth-child(2) {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.7), rgba(118, 75, 162, 0.7));
+        z-index: 2;
+        transform: translateX(3px) translateY(3px) scale(0.95);
+      }
+
+      .logo-layer:nth-child(3) {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.4));
+        z-index: 1;
+        transform: translateX(6px) translateY(6px) scale(0.9);
+      }
+
+      .logo-stack:hover .logo-layer:nth-child(1) {
+        transform: translateX(-3px) translateY(-3px) rotate(-5deg);
+      }
+
+      .logo-stack:hover .logo-layer:nth-child(2) {
+        transform: translateX(0) translateY(0) scale(1) rotate(2deg);
+      }
+
+      .logo-stack:hover .logo-layer:nth-child(3) {
+        transform: translateX(3px) translateY(3px) scale(1.05) rotate(-2deg);
+      }
+
+      .logo-title {
+        font-size: 26px;
+        font-weight: 800;
+        opacity: 1;
+        transition: all 0.6s ease;
+        background: linear-gradient(135deg, #667eea, #764ba2, #ff6b6b);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 200% 200%;
+        animation: gradient-shift 4s ease-in-out infinite;
+      }
+
+      @keyframes gradient-shift {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      .accordion-sidebar.compact .logo-title {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+
+      .compact-toggle {
+        position: absolute;
+        top: 50%;
+        right: -20px;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        font-size: 14px;
+      }
+
+      .compact-toggle:hover {
+        transform: translateY(-50%) scale(1.1) rotate(180deg);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+      }
+
+      /* Navigation Accordion */
+      .nav-accordion {
+        padding: 20px 0;
+        height: calc(100% - 120px);
+        overflow-y: auto;
+        position: relative;
+        z-index: 2;
+      }
+
+      .nav-accordion::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .nav-accordion::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      .nav-accordion::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 3px;
+      }
+
+      .nav-stack-item {
+        margin: 8px 15px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.4s ease;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .nav-stack-item:hover {
+        border-color: rgba(102, 126, 234, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateX(5px);
+      }
+
+      .nav-item-main {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-item-main::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        transition: left 0.6s ease;
+      }
+
+      .nav-item-main:hover::before,
+      .nav-stack-item.active .nav-item-main::before {
+        left: 100%;
+      }
+
+      .nav-item-main:hover {
+        color: white;
+      }
+
+      .nav-stack-item.active .nav-item-main {
+        color: white;
+        background: rgba(102, 126, 234, 0.15);
+      }
+
+      .nav-icon-stack {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .nav-icon-layer {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .nav-icon-layer:nth-child(1) {
+        background: rgba(255, 255, 255, 0.2);
+        z-index: 2;
+      }
+
+      .nav-icon-layer:nth-child(2) {
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+        transform: translateX(2px) translateY(2px);
+      }
+
+      .nav-item-main:hover .nav-icon-layer:nth-child(1),
+      .nav-stack-item.active .nav-icon-layer:nth-child(1) {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        transform: translateX(-2px) translateY(-2px) rotate(-10deg);
+      }
+
+      .nav-item-main:hover .nav-icon-layer:nth-child(2),
+      .nav-stack-item.active .nav-icon-layer:nth-child(2) {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
+        transform: translateX(4px) translateY(4px) rotate(5deg);
+      }
+
+      .nav-text-stack {
+        font-size: 15px;
+        font-weight: 500;
+        opacity: 1;
+        transition: all 0.6s ease;
+        white-space: nowrap;
+        position: relative;
+      }
+
+      .accordion-sidebar.compact .nav-text-stack {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      .accordion-sidebar.compact .nav-stack-item {
+        margin: 8px 5px;
+      }
+
+      .accordion-sidebar.compact .nav-item-main {
+        justify-content: center;
+        padding: 16px 10px;
+      }
+
+      .accordion-sidebar.compact .nav-icon-stack {
+        margin-right: 0;
+      }
+
+      /* Tooltip for compact mode */
+      .nav-tooltip-stack {
+        position: absolute;
+        left: 100px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        z-index: 1001;
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .nav-tooltip-stack::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 8px solid transparent;
+        border-right-color: rgba(0, 0, 0, 0.9);
+      }
+
+      .accordion-sidebar.compact .nav-stack-item:hover .nav-tooltip-stack {
+        opacity: 1;
+        transform: translateY(-50%) translateX(10px);
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
         .accordion-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 320px;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.6s cubic-bezier(0.68, 0, 0.32, 1);
-            z-index: 1000;
-            overflow: hidden;
+          width: 300px;
+          transform: translateX(-100%);
+          background: rgba(0, 0, 0, 0.95);
+          border-radius: 0 25px 25px 0;
+        }
+
+        .accordion-sidebar.mobile-open {
+          transform: translateX(0);
         }
 
         .accordion-sidebar.compact {
-            width: 90px;
-        }
-
-        /* Ripple Effect Background */
-        .ripple-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 30% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
-            animation: ripple 8s ease-in-out infinite alternate;
-        }
-
-        @keyframes ripple {
-            0% { transform: scale(1) rotate(0deg); }
-            100% { transform: scale(1.1) rotate(2deg); }
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            z-index: 2;
-        }
-
-        .logo-stack {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-        }
-
-        .logo-layers {
-            position: relative;
-            width: 55px;
-            height: 55px;
-        }
-
-        .logo-layer {
-            position: absolute;
-            width: 55px;
-            height: 55px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 22px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .logo-layer:nth-child(1) {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: 3;
-            transform: translateZ(0);
-        }
-
-        .logo-layer:nth-child(2) {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7), rgba(118, 75, 162, 0.7));
-            z-index: 2;
-            transform: translateX(3px) translateY(3px) scale(0.95);
-        }
-
-        .logo-layer:nth-child(3) {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.4));
-            z-index: 1;
-            transform: translateX(6px) translateY(6px) scale(0.9);
-        }
-
-        .logo-stack:hover .logo-layer:nth-child(1) {
-            transform: translateX(-3px) translateY(-3px) rotate(-5deg);
-        }
-
-        .logo-stack:hover .logo-layer:nth-child(2) {
-            transform: translateX(0) translateY(0) scale(1) rotate(2deg);
-        }
-
-        .logo-stack:hover .logo-layer:nth-child(3) {
-            transform: translateX(3px) translateY(3px) scale(1.05) rotate(-2deg);
-        }
-
-        .logo-title {
-            font-size: 26px;
-            font-weight: 800;
-            opacity: 1;
-            transition: all 0.6s ease;
-            background: linear-gradient(135deg, #667eea, #764ba2, #ff6b6b);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% 200%;
-            animation: gradient-shift 4s ease-in-out infinite;
-        }
-
-        @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .accordion-sidebar.compact .logo-title {
-            opacity: 0;
-            transform: translateX(-30px);
+          transform: translateX(-100%);
+          width: 300px;
         }
 
         .compact-toggle {
-            position: absolute;
-            top: 50%;
-            right: -20px;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.4s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-            font-size: 14px;
+          display: none;
         }
 
-        .compact-toggle:hover {
-            transform: translateY(-50%) scale(1.1) rotate(180deg);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+        .mobile-trigger {
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border: none;
+          border-radius: 50%;
+          color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.4s ease;
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+          font-size: 22px;
         }
 
-        /* Navigation Accordion */
-        .nav-accordion {
-            padding: 20px 0;
-            height: calc(100% - 120px);
-            overflow-y: auto;
-            position: relative;
-            z-index: 2;
+        .mobile-trigger:hover {
+          transform: scale(1.1) rotate(90deg);
+          box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
         }
 
-        .nav-accordion::-webkit-scrollbar {
-            width: 6px;
+        .mobile-trigger.active {
+          transform: scale(1.1) rotate(135deg);
         }
+      }
 
-        .nav-accordion::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
+      @media (min-width: 769px) {
+        .mobile-trigger {
+          display: none;
         }
+      }
 
-        .nav-accordion::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 3px;
-        }
+      .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(8px);
+      }
 
-        .nav-stack-item {
-            margin: 8px 15px;
-            border-radius: 18px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.4s ease;
-            background: rgba(255, 255, 255, 0.02);
-        }
+      .mobile-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
 
-        .nav-stack-item:hover {
-            border-color: rgba(102, 126, 234, 0.3);
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateX(5px);
-        }
+      /* Main Content */
+      .main-content {
+        margin-left: 320px;
+        padding: 40px;
+        transition: margin-left 0.6s cubic-bezier(0.68, 0, 0.32, 1);
+        min-height: 100vh;
+      }
 
-        .nav-item-main {
-            display: flex;
-            align-items: center;
-            padding: 16px 20px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
+      .accordion-sidebar.compact + .main-content {
+        margin-left: 90px;
+      }
 
-        .nav-item-main::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-            transition: left 0.6s ease;
-        }
-
-        .nav-item-main:hover::before,
-        .nav-stack-item.active .nav-item-main::before {
-            left: 100%;
-        }
-
-        .nav-item-main:hover {
-            color: white;
-        }
-
-        .nav-stack-item.active .nav-item-main {
-            color: white;
-            background: rgba(102, 126, 234, 0.15);
-        }
-
-        .nav-icon-stack {
-            position: relative;
-            width: 28px;
-            height: 28px;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-
-        .nav-icon-layer {
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-icon-layer:nth-child(1) {
-            background: rgba(255, 255, 255, 0.2);
-            z-index: 2;
-        }
-
-        .nav-icon-layer:nth-child(2) {
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 1;
-            transform: translateX(2px) translateY(2px);
-        }
-
-        .nav-item-main:hover .nav-icon-layer:nth-child(1),
-        .nav-stack-item.active .nav-icon-layer:nth-child(1) {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            transform: translateX(-2px) translateY(-2px) rotate(-10deg);
-        }
-
-        .nav-item-main:hover .nav-icon-layer:nth-child(2),
-        .nav-stack-item.active .nav-icon-layer:nth-child(2) {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
-            transform: translateX(4px) translateY(4px) rotate(5deg);
-        }
-
-        .nav-text-stack {
-            font-size: 15px;
-            font-weight: 500;
-            opacity: 1;
-            transition: all 0.6s ease;
-            white-space: nowrap;
-            position: relative;
-        }
-
-        .accordion-sidebar.compact .nav-text-stack {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-
-        .accordion-sidebar.compact .nav-stack-item {
-            margin: 8px 5px;
-        }
-
-        .accordion-sidebar.compact .nav-item-main {
-            justify-content: center;
-            padding: 16px 10px;
-        }
-
-        .accordion-sidebar.compact .nav-icon-stack {
-            margin-right: 0;
-        }
-
-        /* Tooltip for compact mode */
-        .nav-tooltip-stack {
-            position: absolute;
-            left: 100px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-            z-index: 1001;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .nav-tooltip-stack::before {
-            content: '';
-            position: absolute;
-            left: -8px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 8px solid transparent;
-            border-right-color: rgba(0, 0, 0, 0.9);
-        }
-
-        .accordion-sidebar.compact .nav-stack-item:hover .nav-tooltip-stack {
-            opacity: 1;
-            transform: translateY(-50%) translateX(10px);
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .accordion-sidebar {
-                width: 300px;
-                transform: translateX(-100%);
-                background: rgba(0, 0, 0, 0.95);
-                border-radius: 0 25px 25px 0;
-            }
-
-            .accordion-sidebar.mobile-open {
-                transform: translateX(0);
-            }
-
-            .accordion-sidebar.compact {
-                transform: translateX(-100%);
-                width: 300px;
-            }
-
-            .compact-toggle {
-                display: none;
-            }
-
-            .mobile-trigger {
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                z-index: 1001;
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                border: none;
-                border-radius: 50%;
-                color: white;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.4s ease;
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-                font-size: 22px;
-            }
-
-            .mobile-trigger:hover {
-                transform: scale(1.1) rotate(90deg);
-                box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
-            }
-
-            .mobile-trigger.active {
-                transform: scale(1.1) rotate(135deg);
-            }
-        }
-
-        @media (min-width: 769px) {
-            .mobile-trigger {
-                display: none;
-            }
-        }
-
-        .mobile-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(8px);
-        }
-
-        .mobile-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Main Content */
+      @media (max-width: 768px) {
         .main-content {
-            margin-left: 320px;
-            padding: 40px;
-            transition: margin-left 0.6s cubic-bezier(0.68, 0, 0.32, 1);
-            min-height: 100vh;
+          margin-left: 0;
+          padding: 90px 20px 20px;
         }
+      }
 
-        .accordion-sidebar.compact + .main-content {
-            margin-left: 90px;
-        }
+      .demo-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        padding: 40px;
+        backdrop-filter: blur(15px);
+        position: relative;
+        overflow: hidden;
+      }
 
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 90px 20px 20px;
-            }
-        }
+      .demo-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
 
-        .demo-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 40px;
-            backdrop-filter: blur(15px);
-            position: relative;
-            overflow: hidden;
-        }
+      .demo-card:hover::before {
+        opacity: 1;
+      }
 
-        .demo-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+      .highlight-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin: 30px 0;
+      }
 
-        .demo-card:hover::before {
-            opacity: 1;
-        }
+      .highlight-card {
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+      }
 
-        .highlight-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-        }
+      .highlight-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        transition: left 0.6s ease;
+      }
 
-        .highlight-card {
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
-        }
+      .highlight-card:hover::before {
+        left: 100%;
+      }
 
-        .highlight-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-            transition: left 0.6s ease;
-        }
-
-        .highlight-card:hover::before {
-            left: 100%;
-        }
-
-        .highlight-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(102, 126, 234, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
+      .highlight-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(102, 126, 234, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Mobile Trigger -->
     <button class="mobile-trigger" id="mobileTrigger">≡</button>
-    
+
     <!-- Mobile Overlay -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <!-- Accordion Stack Sidebar -->
     <aside class="accordion-sidebar" id="accordionSidebar">
-        <div class="ripple-bg"></div>
-        
-        <div class="sidebar-header">
-            <div class="logo-stack">
-                <div class="logo-layers">
-                    <div class="logo-layer">P</div>
-                    <div class="logo-layer">P</div>
-                    <div class="logo-layer">P</div>
-                </div>
-                <div class="logo-title">PRSNL</div>
+      <div class="ripple-bg"></div>
+
+      <div class="sidebar-header">
+        <div class="logo-stack">
+          <div class="logo-layers">
+            <div class="logo-layer">P</div>
+            <div class="logo-layer">P</div>
+            <div class="logo-layer">P</div>
+          </div>
+          <div class="logo-title">PRSNL</div>
+        </div>
+        <button class="compact-toggle" id="compactToggle">◀</button>
+      </div>
+
+      <nav class="nav-accordion">
+        <div class="nav-stack-item active">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            <button class="compact-toggle" id="compactToggle">◀</button>
+            <span class="nav-text-stack">Dashboard</span>
+            <div class="nav-tooltip-stack">Dashboard</div>
+          </a>
         </div>
 
-        <nav class="nav-accordion">
-            <div class="nav-stack-item active">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Dashboard</span>
-                    <div class="nav-tooltip-stack">Dashboard</div>
-                </a>
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Capture</span>
-                    <div class="nav-tooltip-stack">Capture</div>
-                </a>
+            <span class="nav-text-stack">Capture</span>
+            <div class="nav-tooltip-stack">Capture</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Timeline</span>
-                    <div class="nav-tooltip-stack">Timeline</div>
-                </a>
+            <span class="nav-text-stack">Timeline</span>
+            <div class="nav-tooltip-stack">Timeline</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Insights</span>
-                    <div class="nav-tooltip-stack">Insights</div>
-                </a>
+            <span class="nav-text-stack">Insights</span>
+            <div class="nav-tooltip-stack">Insights</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Assistant</span>
-                    <div class="nav-tooltip-stack">Assistant</div>
-                </a>
+            <span class="nav-text-stack">Assistant</span>
+            <div class="nav-tooltip-stack">Assistant</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Visual Cortex</span>
-                    <div class="nav-tooltip-stack">Visual Cortex</div>
-                </a>
+            <span class="nav-text-stack">Visual Cortex</span>
+            <div class="nav-tooltip-stack">Visual Cortex</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Conversations</span>
-                    <div class="nav-tooltip-stack">Conversations</div>
-                </a>
+            <span class="nav-text-stack">Conversations</span>
+            <div class="nav-tooltip-stack">Conversations</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Code Cortex</span>
-                    <div class="nav-tooltip-stack">Code Cortex</div>
-                </a>
+            <span class="nav-text-stack">Code Cortex</span>
+            <div class="nav-tooltip-stack">Code Cortex</div>
+          </a>
+        </div>
+
+        <div class="nav-stack-item">
+          <a href="#" class="nav-item-main">
+            <div class="nav-icon-stack">
+              <div class="nav-icon-layer"></div>
+              <div class="nav-icon-layer"></div>
             </div>
-            
-            <div class="nav-stack-item">
-                <a href="#" class="nav-item-main">
-                    <div class="nav-icon-stack">
-                        <div class="nav-icon-layer"></div>
-                        <div class="nav-icon-layer"></div>
-                    </div>
-                    <span class="nav-text-stack">Knowledge Sync</span>
-                    <div class="nav-tooltip-stack">Knowledge Sync</div>
-                </a>
-            </div>
-        </nav>
+            <span class="nav-text-stack">Knowledge Sync</span>
+            <div class="nav-tooltip-stack">Knowledge Sync</div>
+          </a>
+        </div>
+      </nav>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="demo-card">
-            <h1>Vertical Navigation C - Unique but Functional</h1>
-            <p>Revolutionary layered stack design with depth-based visual effects. Every element uses stacked layers to create a unique 3D appearance while maintaining perfect functionality and mobile responsiveness.</p>
-            
-            <div class="highlight-grid">
-                <div class="highlight-card">
-                    <h4>🏗️ Layered Architecture</h4>
-                    <p>Every element uses multiple stacked layers for depth and dimension effects</p>
-                </div>
-                <div class="highlight-card">
-                    <h4>🌊 Ripple Backgrounds</h4>
-                    <p>Animated gradient ripples create living, breathing background effects</p>
-                </div>
-                <div class="highlight-card">
-                    <h4>📱 Mobile Slide-in</h4>
-                    <p>Curved edge slide-in animation with backdrop blur for mobile experience</p>
-                </div>
-                <div class="highlight-card">
-                    <h4>🎯 Smart Compacting</h4>
-                    <p>Intelligent space-saving mode with contextual tooltips and animations</p>
-                </div>
-                <div class="highlight-card">
-                    <h4>✨ Hover Choreography</h4>
-                    <p>Coordinated layer animations that respond to user interactions</p>
-                </div>
-                <div class="highlight-card">
-                    <h4>🎨 Gradient Shifting</h4>
-                    <p>Dynamic color-shifting gradients that flow through the entire interface</p>
-                </div>
-            </div>
+      <div class="demo-card">
+        <h1>Vertical Navigation C - Unique but Functional</h1>
+        <p>
+          Revolutionary layered stack design with depth-based visual effects. Every element uses
+          stacked layers to create a unique 3D appearance while maintaining perfect functionality
+          and mobile responsiveness.
+        </p>
 
-            <p><strong>Desktop:</strong> Click the side button to compact the sidebar. Hover over logo and nav items to see layer animations.</p>
-            <p><strong>Mobile:</strong> Tap the floating gradient button to slide the menu in from left with curved edges.</p>
+        <div class="highlight-grid">
+          <div class="highlight-card">
+            <h4>🏗️ Layered Architecture</h4>
+            <p>Every element uses multiple stacked layers for depth and dimension effects</p>
+          </div>
+          <div class="highlight-card">
+            <h4>🌊 Ripple Backgrounds</h4>
+            <p>Animated gradient ripples create living, breathing background effects</p>
+          </div>
+          <div class="highlight-card">
+            <h4>📱 Mobile Slide-in</h4>
+            <p>Curved edge slide-in animation with backdrop blur for mobile experience</p>
+          </div>
+          <div class="highlight-card">
+            <h4>🎯 Smart Compacting</h4>
+            <p>Intelligent space-saving mode with contextual tooltips and animations</p>
+          </div>
+          <div class="highlight-card">
+            <h4>✨ Hover Choreography</h4>
+            <p>Coordinated layer animations that respond to user interactions</p>
+          </div>
+          <div class="highlight-card">
+            <h4>🎨 Gradient Shifting</h4>
+            <p>Dynamic color-shifting gradients that flow through the entire interface</p>
+          </div>
         </div>
+
+        <p>
+          <strong>Desktop:</strong> Click the side button to compact the sidebar. Hover over logo
+          and nav items to see layer animations.
+        </p>
+        <p>
+          <strong>Mobile:</strong> Tap the floating gradient button to slide the menu in from left
+          with curved edges.
+        </p>
+      </div>
     </main>
 
     <script>
-        const sidebar = document.getElementById('accordionSidebar');
-        const compactToggle = document.getElementById('compactToggle');
-        const mobileTrigger = document.getElementById('mobileTrigger');
-        const mobileOverlay = document.getElementById('mobileOverlay');
+      const sidebar = document.getElementById('accordionSidebar');
+      const compactToggle = document.getElementById('compactToggle');
+      const mobileTrigger = document.getElementById('mobileTrigger');
+      const mobileOverlay = document.getElementById('mobileOverlay');
 
-        // Desktop compact functionality
-        compactToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('compact');
-            compactToggle.textContent = sidebar.classList.contains('compact') ? '▶' : '◀';
-        });
+      // Desktop compact functionality
+      compactToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('compact');
+        compactToggle.textContent = sidebar.classList.contains('compact') ? '▶' : '◀';
+      });
 
-        // Mobile toggle functionality
-        mobileTrigger.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-            mobileOverlay.classList.toggle('show');
-            mobileTrigger.classList.toggle('active');
-        });
+      // Mobile toggle functionality
+      mobileTrigger.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+        mobileOverlay.classList.toggle('show');
+        mobileTrigger.classList.toggle('active');
+      });
 
-        // Close mobile menu when clicking overlay
-        mobileOverlay.addEventListener('click', () => {
+      // Close mobile menu when clicking overlay
+      mobileOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        mobileOverlay.classList.remove('show');
+        mobileTrigger.classList.remove('active');
+      });
+
+      // Active state management
+      document.querySelectorAll('.nav-stack-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          document
+            .querySelectorAll('.nav-stack-item')
+            .forEach((nav) => nav.classList.remove('active'));
+          item.classList.add('active');
+
+          // Close mobile menu if open
+          if (window.innerWidth <= 768) {
             sidebar.classList.remove('mobile-open');
             mobileOverlay.classList.remove('show');
             mobileTrigger.classList.remove('active');
+          }
         });
+      });
 
-        // Active state management
-        document.querySelectorAll('.nav-stack-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.nav-stack-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Close mobile menu if open
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('mobile-open');
-                    mobileOverlay.classList.remove('show');
-                    mobileTrigger.classList.remove('active');
-                }
-            });
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('mobile-open');
-                mobileOverlay.classList.remove('show');
-                mobileTrigger.classList.remove('active');
-            }
-        });
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('mobile-open');
+          mobileOverlay.classList.remove('show');
+          mobileTrigger.classList.remove('active');
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

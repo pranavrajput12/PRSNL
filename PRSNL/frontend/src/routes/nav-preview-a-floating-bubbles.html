@@ -1,335 +1,355 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Navigation Preview A - Floating Bubbles</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+      body {
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          system-ui,
+          sans-serif;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
 
-        /* Floating Bubble Navigation */
-        .floating-nav {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            z-index: 1000;
-            backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 10px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
+      /* Floating Bubble Navigation */
+      .floating-nav {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        padding: 10px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
 
-        .nav-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
+      .nav-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
 
-        .logo-bubble {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            font-size: 18px;
-            position: relative;
-            overflow: hidden;
-        }
+      .logo-bubble {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 18px;
+        position: relative;
+        overflow: hidden;
+      }
 
-        .logo-bubble::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
+      .logo-bubble::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
+      }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%) rotate(45deg);
         }
+        100% {
+          transform: translateX(100%) rotate(45deg);
+        }
+      }
 
+      .nav-bubbles {
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-bubble {
+        position: relative;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 50px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      .nav-bubble::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+      }
+
+      .nav-bubble:hover::before {
+        left: 100%;
+      }
+
+      .nav-bubble:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-bubble.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .menu-toggle {
+        display: none;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .menu-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .hamburger {
+        width: 20px;
+        height: 2px;
+        background: white;
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .hamburger::before,
+      .hamburger::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 2px;
+        background: white;
+        transition: all 0.3s ease;
+      }
+
+      .hamburger::before {
+        top: -6px;
+      }
+
+      .hamburger::after {
+        top: 6px;
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
         .nav-bubbles {
-            display: flex;
-            gap: 8px;
-            flex: 1;
-            justify-content: center;
-            flex-wrap: wrap;
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: rgba(0, 0, 0, 0.95);
+          backdrop-filter: blur(20px);
+          border-radius: 20px;
+          margin-top: 10px;
+          padding: 20px;
+          flex-direction: column;
+          gap: 15px;
         }
 
-        .nav-bubble {
-            position: relative;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 50px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .nav-bubble::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .nav-bubble:hover::before {
-            left: 100%;
-        }
-
-        .nav-bubble:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .nav-bubble.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.2);
+        .nav-bubbles.open {
+          display: flex;
         }
 
         .menu-toggle {
-            display: none;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
+          display: flex;
         }
 
-        .menu-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .nav-bubble {
+          width: 100%;
+          text-align: center;
+          padding: 15px 20px;
+          font-size: 16px;
         }
 
-        .hamburger {
-            width: 20px;
-            height: 2px;
-            background: white;
-            position: relative;
-            transition: all 0.3s ease;
+        .floating-nav {
+          top: 10px;
+          left: 10px;
+          right: 10px;
         }
+      }
 
-        .hamburger::before,
-        .hamburger::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 2px;
-            background: white;
-            transition: all 0.3s ease;
+      /* Demo Content */
+      .demo-content {
+        padding: 120px 20px 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        color: white;
+      }
+
+      .demo-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        margin: 20px 0;
+        backdrop-filter: blur(10px);
+      }
+
+      .floating-elements {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .floating-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        animation: float 20s infinite linear;
+      }
+
+      .floating-circle:nth-child(1) {
+        width: 100px;
+        height: 100px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .floating-circle:nth-child(2) {
+        width: 150px;
+        height: 150px;
+        top: 60%;
+        right: 10%;
+        animation-delay: -5s;
+      }
+
+      .floating-circle:nth-child(3) {
+        width: 80px;
+        height: 80px;
+        bottom: 20%;
+        left: 20%;
+        animation-delay: -10s;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px) rotate(0deg);
         }
-
-        .hamburger::before {
-            top: -6px;
+        50% {
+          transform: translateY(-20px) rotate(180deg);
         }
-
-        .hamburger::after {
-            top: 6px;
+        100% {
+          transform: translateY(0px) rotate(360deg);
         }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .nav-bubbles {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(20px);
-                border-radius: 20px;
-                margin-top: 10px;
-                padding: 20px;
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .nav-bubbles.open {
-                display: flex;
-            }
-
-            .menu-toggle {
-                display: flex;
-            }
-
-            .nav-bubble {
-                width: 100%;
-                text-align: center;
-                padding: 15px 20px;
-                font-size: 16px;
-            }
-
-            .floating-nav {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-            }
-        }
-
-        /* Demo Content */
-        .demo-content {
-            padding: 120px 20px 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-            color: white;
-        }
-
-        .demo-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            margin: 20px 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .floating-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            animation: float 20s infinite linear;
-        }
-
-        .floating-circle:nth-child(1) {
-            width: 100px;
-            height: 100px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .floating-circle:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            top: 60%;
-            right: 10%;
-            animation-delay: -5s;
-        }
-
-        .floating-circle:nth-child(3) {
-            width: 80px;
-            height: 80px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-            100% { transform: translateY(0px) rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="floating-elements">
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
+      <div class="floating-circle"></div>
+      <div class="floating-circle"></div>
+      <div class="floating-circle"></div>
     </div>
 
     <nav class="floating-nav">
-        <div class="nav-container">
-            <div class="logo-bubble">P</div>
-            
-            <div class="nav-bubbles" id="navBubbles">
-                <a href="#" class="nav-bubble active">Dashboard</a>
-                <a href="#" class="nav-bubble">Capture</a>
-                <a href="#" class="nav-bubble">Timeline</a>
-                <a href="#" class="nav-bubble">Insights</a>
-                <a href="#" class="nav-bubble">Assistant</a>
-                <a href="#" class="nav-bubble">Visual Cortex</a>
-                <a href="#" class="nav-bubble">Conversations</a>
-                <a href="#" class="nav-bubble">Code Cortex</a>
-                <a href="#" class="nav-bubble">Knowledge Sync</a>
-            </div>
+      <div class="nav-container">
+        <div class="logo-bubble">P</div>
 
-            <div class="menu-toggle" id="menuToggle">
-                <div class="hamburger"></div>
-            </div>
+        <div class="nav-bubbles" id="navBubbles">
+          <a href="#" class="nav-bubble active">Dashboard</a>
+          <a href="#" class="nav-bubble">Capture</a>
+          <a href="#" class="nav-bubble">Timeline</a>
+          <a href="#" class="nav-bubble">Insights</a>
+          <a href="#" class="nav-bubble">Assistant</a>
+          <a href="#" class="nav-bubble">Visual Cortex</a>
+          <a href="#" class="nav-bubble">Conversations</a>
+          <a href="#" class="nav-bubble">Code Cortex</a>
+          <a href="#" class="nav-bubble">Knowledge Sync</a>
         </div>
+
+        <div class="menu-toggle" id="menuToggle">
+          <div class="hamburger"></div>
+        </div>
+      </div>
     </nav>
 
     <div class="demo-content">
-        <div class="demo-card">
-            <h1>Navigation Preview A: Floating Bubbles</h1>
-            <p>Ultra-modern floating bubble navigation with glassmorphism effects. Features smooth animations, perfect mobile responsiveness, and a unique bubble-based design that adapts beautifully to all screen sizes.</p>
-            
-            <h3>Key Features:</h3>
-            <ul style="margin: 20px 0; line-height: 1.8;">
-                <li>🫧 Floating bubble design with glassmorphism</li>
-                <li>📱 Perfect mobile hamburger menu</li>
-                <li>✨ Shimmer effects and smooth animations</li>
-                <li>🎨 Gradient backgrounds and blur effects</li>
-                <li>📏 Responsive design that works on all devices</li>
-            </ul>
-        </div>
+      <div class="demo-card">
+        <h1>Navigation Preview A: Floating Bubbles</h1>
+        <p>
+          Ultra-modern floating bubble navigation with glassmorphism effects. Features smooth
+          animations, perfect mobile responsiveness, and a unique bubble-based design that adapts
+          beautifully to all screen sizes.
+        </p>
+
+        <h3>Key Features:</h3>
+        <ul style="margin: 20px 0; line-height: 1.8">
+          <li>🫧 Floating bubble design with glassmorphism</li>
+          <li>📱 Perfect mobile hamburger menu</li>
+          <li>✨ Shimmer effects and smooth animations</li>
+          <li>🎨 Gradient backgrounds and blur effects</li>
+          <li>📏 Responsive design that works on all devices</li>
+        </ul>
+      </div>
     </div>
 
     <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const navBubbles = document.getElementById('navBubbles');
+      const menuToggle = document.getElementById('menuToggle');
+      const navBubbles = document.getElementById('navBubbles');
 
-        menuToggle.addEventListener('click', () => {
-            navBubbles.classList.toggle('open');
-        });
+      menuToggle.addEventListener('click', () => {
+        navBubbles.classList.toggle('open');
+      });
 
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !navBubbles.contains(e.target)) {
-                navBubbles.classList.remove('open');
-            }
-        });
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!menuToggle.contains(e.target) && !navBubbles.contains(e.target)) {
+          navBubbles.classList.remove('open');
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

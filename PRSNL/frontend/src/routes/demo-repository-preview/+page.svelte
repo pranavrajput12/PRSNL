@@ -10,33 +10,33 @@
     {
       icon: 'layout',
       title: 'Clean & Modern Design',
-      description: 'Minimalist interface with focus on content and readability'
+      description: 'Minimalist interface with focus on content and readability',
     },
     {
       icon: 'folder-tree',
       title: 'File Tree Navigation',
-      description: 'Hierarchical file structure with collapsible directories'
+      description: 'Hierarchical file structure with collapsible directories',
     },
     {
       icon: 'search',
       title: 'Fast File Search',
-      description: 'Quick file search with keyboard shortcut (⌘P)'
+      description: 'Quick file search with keyboard shortcut (⌘P)',
     },
     {
       icon: 'code',
       title: 'Syntax Highlighting',
-      description: 'Powered by Monaco Editor with language detection'
+      description: 'Powered by Monaco Editor with language detection',
     },
     {
       icon: 'eye',
       title: 'Markdown Preview',
-      description: 'Live preview for markdown files with split view'
+      description: 'Live preview for markdown files with split view',
     },
     {
       icon: 'sun',
       title: 'Theme Support',
-      description: 'Beautiful dark and light themes'
-    }
+      description: 'Beautiful dark and light themes',
+    },
   ];
 </script>
 
@@ -53,18 +53,15 @@
     </div>
 
     <div class="header-actions">
-      <button 
+      <button
         class="theme-toggle"
-        on:click={() => theme = theme === 'dark' ? 'light' : 'dark'}
+        on:click={() => (theme = theme === 'dark' ? 'light' : 'dark')}
         title="Toggle theme"
       >
         <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
       </button>
-      
-      <button
-        class="feature-toggle"
-        on:click={() => showFeatures = !showFeatures}
-      >
+
+      <button class="feature-toggle" on:click={() => (showFeatures = !showFeatures)}>
         <Icon name="sparkles" size={16} />
         {showFeatures ? 'Hide' : 'Show'} Features
       </button>
@@ -95,12 +92,9 @@
           <span class="repo-name">awesome-project</span>
           <span class="repo-badge">Public</span>
         </div>
-        
+
         <div class="demo-controls">
-          <select 
-            class="height-select"
-            bind:value={height}
-          >
+          <select class="height-select" bind:value={height}>
             <option value="500px">Small (500px)</option>
             <option value="700px">Medium (700px)</option>
             <option value="900px">Large (900px)</option>
@@ -109,17 +103,15 @@
       </div>
 
       <div class="preview-container">
-        <RepositoryPreview 
-          repositoryUrl="https://github.com/owner/repo"
-          {height}
-          {theme}
-        />
+        <RepositoryPreview repositoryUrl="https://github.com/owner/repo" {height} {theme} />
       </div>
 
       <div class="demo-footer">
         <div class="usage-hint">
           <Icon name="info" size={16} />
-          <span>Try clicking on files, searching with ⌘P, or switching between code and preview modes</span>
+          <span
+            >Try clicking on files, searching with ⌘P, or switching between code and preview modes</span
+          >
         </div>
       </div>
     </div>
@@ -136,7 +128,9 @@
     background: var(--bg-page);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    transition: background-color 0.3s, color 0.3s;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
   }
 
   /* Theme Variables */

@@ -21,7 +21,7 @@
     { id: 'chatgpt', name: 'ChatGPT', icon: 'message-circle', color: '#10a37f' },
     { id: 'claude', name: 'Claude', icon: 'brain', color: '#AA7CFF' },
     { id: 'perplexity', name: 'Perplexity', icon: 'search', color: '#20808D' },
-    { id: 'bard', name: 'Bard', icon: 'sparkles', color: '#4285F4' }
+    { id: 'bard', name: 'Bard', icon: 'sparkles', color: '#4285F4' },
   ];
 
   // Neural categories
@@ -30,7 +30,7 @@
     { id: 'development', name: 'Development', icon: 'code' },
     { id: 'thoughts', name: 'Thoughts', icon: 'message-square' },
     { id: 'reference', name: 'Reference', icon: 'bookmark' },
-    { id: 'creative', name: 'Creative', icon: 'palette' }
+    { id: 'creative', name: 'Creative', icon: 'palette' },
   ];
 
   onMount(async () => {
@@ -114,7 +114,7 @@
         </h1>
         <p class="echo-subtitle">Your AI conversations, echoing through the neural network</p>
       </div>
-      
+
       {#if stats}
         <div class="stats-badges">
           <div class="stat-badge">
@@ -206,10 +206,7 @@
       </div>
     {:else}
       {#each conversations as conversation}
-        <ConversationCard
-          {conversation}
-          on:click={() => navigateToConversation(conversation)}
-        />
+        <ConversationCard {conversation} on:click={() => navigateToConversation(conversation)} />
       {/each}
     {/if}
   </div>

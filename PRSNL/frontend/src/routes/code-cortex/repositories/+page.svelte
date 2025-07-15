@@ -15,7 +15,7 @@
     CortexLoadingState,
     type CortexTab,
     type CortexStat,
-    type CortexAction
+    type CortexAction,
   } from '$lib/components/cortex';
   import Icon from '$lib/components/Icon.svelte';
 
@@ -38,13 +38,13 @@
 
   // Repository status tracking
   const repoStatuses = ['starred', 'analyzed', 'watching', 'forked', 'contributed'];
-  
+
   // Computed stats for header
   $: headerStats = [
     { label: 'Repositories', value: repositories.length },
     { label: 'Languages', value: Object.keys(stats.by_language || {}).length },
     { label: 'Analyzed', value: Math.floor(repositories.length * 0.8) },
-    { label: 'Starred', value: Math.floor(repositories.length * 0.4) }
+    { label: 'Starred', value: Math.floor(repositories.length * 0.4) },
   ] as CortexStat[];
 
   // Header actions
@@ -52,8 +52,8 @@
     {
       label: 'Add Integration',
       icon: 'plus',
-      onClick: () => window.location.href = '/capture',
-      variant: 'primary'
+      onClick: () => (window.location.href = '/capture'),
+      variant: 'primary',
     },
     {
       label: viewMode === 'grid' ? 'List View' : viewMode === 'list' ? 'Kanban View' : 'Grid View',
@@ -63,61 +63,88 @@
         else if (viewMode === 'list') viewMode = 'kanban';
         else viewMode = 'grid';
       },
-      variant: 'secondary'
-    }
+      variant: 'secondary',
+    },
   ] as CortexAction[];
 
   // Tab configuration
   $: tabs = [
-    { id: 'overview', label: 'Overview', icon: 'pie-chart', count: Object.keys(stats.by_category || {}).length },
+    {
+      id: 'overview',
+      label: 'Overview',
+      icon: 'pie-chart',
+      count: Object.keys(stats.by_category || {}).length,
+    },
     { id: 'all', label: 'All Integrations', icon: 'package', count: repositories.length },
-    { id: 'libraries', label: 'Libraries', icon: 'book', count: Math.floor(repositories.length * 0.6) },
-    { id: 'frameworks', label: 'Frameworks', icon: 'layers', count: Math.floor(repositories.length * 0.3) },
-    { id: 'tools', label: 'Dev Tools', icon: 'tool', count: Math.floor(repositories.length * 0.1) }
+    {
+      id: 'libraries',
+      label: 'Libraries',
+      icon: 'book',
+      count: Math.floor(repositories.length * 0.6),
+    },
+    {
+      id: 'frameworks',
+      label: 'Frameworks',
+      icon: 'layers',
+      count: Math.floor(repositories.length * 0.3),
+    },
+    { id: 'tools', label: 'Dev Tools', icon: 'tool', count: Math.floor(repositories.length * 0.1) },
   ] as CortexTab[];
 
   // Filtered repositories based on active tab
   $: filteredRepositories = (() => {
     // Only show open source integration repositories
-    let repos = repositories.filter(r => 
-      r.url && (r.url.includes('github.com') || r.url.includes('gitlab.com') || r.url.includes('bitbucket.')) &&
-      r.project_category && 
-      // Focus on integrations, libraries, frameworks, and dev tools
-      (r.tags.some(tag => tag.toLowerCase().includes('library') || 
-                          tag.toLowerCase().includes('framework') || 
-                          tag.toLowerCase().includes('integration') ||
-                          tag.toLowerCase().includes('tool') ||
-                          tag.toLowerCase().includes('sdk') ||
-                          tag.toLowerCase().includes('api')) ||
-       r.project_category.toLowerCase().includes('library') ||
-       r.project_category.toLowerCase().includes('framework') ||
-       r.project_category.toLowerCase().includes('tool'))
+    let repos = repositories.filter(
+      (r) =>
+        r.url &&
+        (r.url.includes('github.com') ||
+          r.url.includes('gitlab.com') ||
+          r.url.includes('bitbucket.')) &&
+        r.project_category &&
+        // Focus on integrations, libraries, frameworks, and dev tools
+        (r.tags.some(
+          (tag) =>
+            tag.toLowerCase().includes('library') ||
+            tag.toLowerCase().includes('framework') ||
+            tag.toLowerCase().includes('integration') ||
+            tag.toLowerCase().includes('tool') ||
+            tag.toLowerCase().includes('sdk') ||
+            tag.toLowerCase().includes('api')
+        ) ||
+          r.project_category.toLowerCase().includes('library') ||
+          r.project_category.toLowerCase().includes('framework') ||
+          r.project_category.toLowerCase().includes('tool'))
     );
-    
+
     // Filter by category
     if (selectedCategory) {
-      repos = repos.filter(r => r.project_category === selectedCategory);
+      repos = repos.filter((r) => r.project_category === selectedCategory);
     }
-    
+
     // Filter by tab
     switch (activeTab) {
       case 'libraries':
-        return repos.filter(r => 
-          r.tags.some(tag => tag.toLowerCase().includes('library')) ||
-          r.project_category.toLowerCase().includes('library') ||
-          r.title.toLowerCase().includes('library')
+        return repos.filter(
+          (r) =>
+            r.tags.some((tag) => tag.toLowerCase().includes('library')) ||
+            r.project_category.toLowerCase().includes('library') ||
+            r.title.toLowerCase().includes('library')
         );
       case 'frameworks':
-        return repos.filter(r => 
-          r.tags.some(tag => tag.toLowerCase().includes('framework')) ||
-          r.project_category.toLowerCase().includes('framework') ||
-          r.title.toLowerCase().includes('framework')
+        return repos.filter(
+          (r) =>
+            r.tags.some((tag) => tag.toLowerCase().includes('framework')) ||
+            r.project_category.toLowerCase().includes('framework') ||
+            r.title.toLowerCase().includes('framework')
         );
       case 'tools':
-        return repos.filter(r => 
-          r.tags.some(tag => tag.toLowerCase().includes('tool') || tag.toLowerCase().includes('cli')) ||
-          r.project_category.toLowerCase().includes('tool') ||
-          r.title.toLowerCase().includes('tool')
+        return repos.filter(
+          (r) =>
+            r.tags.some(
+              (tag) => tag.toLowerCase().includes('tool') || tag.toLowerCase().includes('cli')
+            ) ||
+            r.project_category.toLowerCase().includes('tool') ||
+            r.title.toLowerCase().includes('tool')
         );
       case 'all':
         return repos;
@@ -162,9 +189,9 @@
 
   async function loadAllRepositories() {
     try {
-      const repos = await getDevelopmentDocs({ 
+      const repos = await getDevelopmentDocs({
         limit: 100,
-        content_type: 'repositories'
+        content_type: 'repositories',
       });
       repositories = repos;
     } catch (error) {
@@ -178,7 +205,7 @@
         const repos = await getDevelopmentDocs({
           category: category.name,
           limit: 10,
-          content_type: 'repositories'
+          content_type: 'repositories',
         });
         repositoriesByCategory[category.name] = repos;
       }
@@ -255,7 +282,7 @@
       analyzed: '#3b82f6',
       watching: '#10b981',
       forked: '#8b5cf6',
-      contributed: '#ef4444'
+      contributed: '#ef4444',
     };
     return colors[status] || '#6b7280';
   }
@@ -266,7 +293,7 @@
       analyzed: 'brain',
       watching: 'eye',
       forked: 'git-branch',
-      contributed: 'git-commit'
+      contributed: 'git-commit',
     };
     return icons[status] || 'github';
   }
@@ -274,22 +301,39 @@
   function createRepositoryCard(repo: DevelopmentItem) {
     const status = getRepoStatus(repo);
     const stars = getRepoStars(repo);
-    
+
     const tags = [
-      { label: `${getCategoryIcon(repo.project_category)} ${repo.project_category}`, color: getCategoryColor(repo.project_category) + '40' },
-      ...(repo.programming_language ? [{ label: `${getLanguageIcon(repo.programming_language)} ${repo.programming_language}`, color: 'rgba(0, 255, 136, 0.2)' }] : []),
-      { label: status.charAt(0).toUpperCase() + status.slice(1), color: getStatusColor(status) + '40' }
+      {
+        label: `${getCategoryIcon(repo.project_category)} ${repo.project_category}`,
+        color: getCategoryColor(repo.project_category) + '40',
+      },
+      ...(repo.programming_language
+        ? [
+            {
+              label: `${getLanguageIcon(repo.programming_language)} ${repo.programming_language}`,
+              color: 'rgba(0, 255, 136, 0.2)',
+            },
+          ]
+        : []),
+      {
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        color: getStatusColor(status) + '40',
+      },
     ];
 
     const stats = [
       { label: 'Stars', value: `${stars}` },
       { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
-      { label: 'Added', value: new Date(repo.created_at).toLocaleDateString() }
+      { label: 'Added', value: new Date(repo.created_at).toLocaleDateString() },
     ];
 
     const actions = [
       { label: 'View Repository', icon: 'github', onClick: () => window.open(repo.url, '_blank') },
-      { label: 'Analysis', icon: 'brain', onClick: () => window.location.href = `/code-cortex/open-source/${repo.id}` }
+      {
+        label: 'Analysis',
+        icon: 'brain',
+        onClick: () => (window.location.href = `/code-cortex/open-source/${repo.id}`),
+      },
     ];
 
     return {
@@ -300,13 +344,13 @@
       tags,
       stats,
       actions,
-      onClick: () => window.location.href = `/code-cortex/open-source/${repo.id}`,
-      variant: status === 'starred' ? 'highlight' : 'default'
+      onClick: () => (window.location.href = `/code-cortex/open-source/${repo.id}`),
+      variant: status === 'starred' ? 'highlight' : 'default',
     };
   }
 
   function createCategoryCard(categoryName: string, count: number) {
-    const category = categories.find(c => c.name === categoryName);
+    const category = categories.find((c) => c.name === categoryName);
     return {
       title: categoryName,
       description: category?.description || `${count} repositories in this category`,
@@ -314,9 +358,21 @@
       iconColor: getCategoryColor(categoryName),
       tags: [{ label: `${count} repos`, color: getCategoryColor(categoryName) + '40' }],
       stats: [{ label: 'Repositories', value: count }],
-      actions: [{ label: 'View Repos', icon: 'arrow-right', onClick: () => { activeTab = 'all'; selectedCategory = categoryName; } }],
-      onClick: () => { activeTab = 'all'; selectedCategory = categoryName; },
-      variant: 'default'
+      actions: [
+        {
+          label: 'View Repos',
+          icon: 'arrow-right',
+          onClick: () => {
+            activeTab = 'all';
+            selectedCategory = categoryName;
+          },
+        },
+      ],
+      onClick: () => {
+        activeTab = 'all';
+        selectedCategory = categoryName;
+      },
+      variant: 'default',
     };
   }
 </script>
@@ -337,7 +393,7 @@
   <CortexTabNavigation
     {tabs}
     {activeTab}
-    onTabChange={(tabId) => activeTab = tabId}
+    onTabChange={(tabId) => (activeTab = tabId)}
     variant="default"
   />
 
@@ -351,7 +407,7 @@
       <!-- Repository Filters -->
       <div class="filter-section">
         <h4>Filters</h4>
-        
+
         <div class="filter-group">
           <label>Category</label>
           <select bind:value={selectedCategory} class="filter-select">
@@ -397,7 +453,13 @@
         <h4>Categories</h4>
         <div class="category-breakdown">
           {#each Object.entries(stats.by_category).slice(0, 6) as [categoryName, count]}
-            <div class="category-item" on:click={() => { selectedCategory = categoryName; activeTab = 'all'; }}>
+            <div
+              class="category-item"
+              on:click={() => {
+                selectedCategory = categoryName;
+                activeTab = 'all';
+              }}
+            >
               <span class="category-icon" style="color: {getCategoryColor(categoryName)}">
                 {getCategoryIcon(categoryName)}
               </span>
@@ -413,10 +475,14 @@
         <h4>Status Distribution</h4>
         <div class="status-breakdown">
           {#each repoStatuses as status}
-            {@const count = filteredRepositories.filter(r => getRepoStatus(r) === status).length}
+            {@const count = filteredRepositories.filter((r) => getRepoStatus(r) === status).length}
             {#if count > 0}
               <div class="status-item">
-                <Icon name={getStatusIcon(status)} size="16" style="color: {getStatusColor(status)}" />
+                <Icon
+                  name={getStatusIcon(status)}
+                  size="16"
+                  style="color: {getStatusColor(status)}"
+                />
                 <span class="status-name">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
                 <span class="status-count">{count}</span>
               </div>
@@ -428,11 +494,7 @@
 
     <div slot="content" class="main-content">
       {#if loading}
-        <CortexLoadingState 
-          message="Loading repositories..." 
-          variant="pulse"
-          size="md"
-        />
+        <CortexLoadingState message="Loading repositories..." variant="pulse" size="md" />
       {:else if activeTab === 'overview'}
         <!-- Category Overview -->
         <div class="overview-section">
@@ -440,7 +502,7 @@
             <h2>Repository Overview</h2>
             <p>Explore your GitHub repositories organized by technology and language</p>
           </div>
-          
+
           {#if Object.keys(stats.by_category).length === 0}
             <CortexEmptyState
               icon="github"
@@ -470,76 +532,95 @@
               actionHref="/capture"
               size="md"
             />
-          {:else}
-            {#if viewMode === 'kanban'}
-              <!-- Kanban View -->
-              <div class="kanban-board">
-                {#each repoStatuses as status}
-                  {@const statusRepos = sortedRepositories.filter(r => getRepoStatus(r) === status)}
-                  {#if statusRepos.length > 0}
-                    <div class="kanban-column">
-                      <div class="kanban-header" style="border-color: {getStatusColor(status)}">
-                        <Icon name={getStatusIcon(status)} size="16" style="color: {getStatusColor(status)}" />
-                        <h3>{status.charAt(0).toUpperCase() + status.slice(1)}</h3>
-                        <span class="kanban-count">{statusRepos.length}</span>
-                      </div>
-                      <div class="kanban-items">
-                        {#each statusRepos as repo}
-                          <div class="kanban-card" on:click={() => window.open(repo.url, '_blank')}>
-                            <h4>{repo.title}</h4>
-                            <div class="kanban-meta">
-                              {#if repo.programming_language}
-                                <span class="meta-tag">{getLanguageIcon(repo.programming_language)} {repo.programming_language}</span>
-                              {/if}
-                              <span class="meta-tag">{repo.project_category}</span>
-                            </div>
-                            <div class="repo-stats">
-                              <span class="stars">⭐ {getRepoStars(repo)}</span>
-                            </div>
+          {:else if viewMode === 'kanban'}
+            <!-- Kanban View -->
+            <div class="kanban-board">
+              {#each repoStatuses as status}
+                {@const statusRepos = sortedRepositories.filter((r) => getRepoStatus(r) === status)}
+                {#if statusRepos.length > 0}
+                  <div class="kanban-column">
+                    <div class="kanban-header" style="border-color: {getStatusColor(status)}">
+                      <Icon
+                        name={getStatusIcon(status)}
+                        size="16"
+                        style="color: {getStatusColor(status)}"
+                      />
+                      <h3>{status.charAt(0).toUpperCase() + status.slice(1)}</h3>
+                      <span class="kanban-count">{statusRepos.length}</span>
+                    </div>
+                    <div class="kanban-items">
+                      {#each statusRepos as repo}
+                        <div class="kanban-card" on:click={() => window.open(repo.url, '_blank')}>
+                          <h4>{repo.title}</h4>
+                          <div class="kanban-meta">
+                            {#if repo.programming_language}
+                              <span class="meta-tag"
+                                >{getLanguageIcon(repo.programming_language)}
+                                {repo.programming_language}</span
+                              >
+                            {/if}
+                            <span class="meta-tag">{repo.project_category}</span>
                           </div>
-                        {/each}
+                          <div class="repo-stats">
+                            <span class="stars">⭐ {getRepoStars(repo)}</span>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          {:else}
+            <div class="repositories-container {viewMode}">
+              {#each sortedRepositories as repo}
+                {#if viewMode === 'grid'}
+                  <CortexCard {...createRepositoryCard(repo)} size="md" />
+                {:else}
+                  <!-- List view for repositories -->
+                  <div class="repository-list-item">
+                    <div class="repository-list-header">
+                      <div class="repository-list-title">
+                        <Icon
+                          name={getStatusIcon(getRepoStatus(repo))}
+                          size="20"
+                          style="color: {getStatusColor(getRepoStatus(repo))}"
+                        />
+                        <a href={repo.url} target="_blank" rel="noopener noreferrer">
+                          {repo.title}
+                        </a>
+                      </div>
+                      <div class="repository-list-meta">
+                        <span class="meta-tag">{repo.project_category}</span>
+                        {#if repo.programming_language}
+                          <span class="meta-tag"
+                            >{getLanguageIcon(repo.programming_language)}
+                            {repo.programming_language}</span
+                          >
+                        {/if}
+                        <span class="stars-badge">⭐ {getRepoStars(repo)}</span>
+                        <span class="meta-date"
+                          >{new Date(repo.created_at).toLocaleDateString()}</span
+                        >
                       </div>
                     </div>
-                  {/if}
-                {/each}
-              </div>
-            {:else}
-              <div class="repositories-container {viewMode}">
-                {#each sortedRepositories as repo}
-                  {#if viewMode === 'grid'}
-                    <CortexCard {...createRepositoryCard(repo)} size="md" />
-                  {:else}
-                    <!-- List view for repositories -->
-                    <div class="repository-list-item">
-                      <div class="repository-list-header">
-                        <div class="repository-list-title">
-                          <Icon name={getStatusIcon(getRepoStatus(repo))} size="20" style="color: {getStatusColor(getRepoStatus(repo))}" />
-                          <a href={repo.url} target="_blank" rel="noopener noreferrer">
-                            {repo.title}
-                          </a>
-                        </div>
-                        <div class="repository-list-meta">
-                          <span class="meta-tag">{repo.project_category}</span>
-                          {#if repo.programming_language}
-                            <span class="meta-tag">{getLanguageIcon(repo.programming_language)} {repo.programming_language}</span>
-                          {/if}
-                          <span class="stars-badge">⭐ {getRepoStars(repo)}</span>
-                          <span class="meta-date">{new Date(repo.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      {#if repo.summary}
-                        <p class="repository-list-summary">{repo.summary}</p>
-                      {/if}
-                      <div class="repository-list-footer">
-                        <span class="status-badge" style="background-color: {getStatusColor(getRepoStatus(repo))}40; color: {getStatusColor(getRepoStatus(repo))}">
-                          {getRepoStatus(repo)}
-                        </span>
-                      </div>
+                    {#if repo.summary}
+                      <p class="repository-list-summary">{repo.summary}</p>
+                    {/if}
+                    <div class="repository-list-footer">
+                      <span
+                        class="status-badge"
+                        style="background-color: {getStatusColor(
+                          getRepoStatus(repo)
+                        )}40; color: {getStatusColor(getRepoStatus(repo))}"
+                      >
+                        {getRepoStatus(repo)}
+                      </span>
                     </div>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
+                  </div>
+                {/if}
+              {/each}
+            </div>
           {/if}
         </div>
       {/if}

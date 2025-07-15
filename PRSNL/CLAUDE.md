@@ -311,6 +311,7 @@ cd frontend && npm run dev -- --port 3004
 - **Node.js**: 20+ with npm latest (cached in CI/CD)
 - **Package Management**: All dependencies pinned in requirements.txt and package-lock.json
 - **CI/CD**: Version consistency enforced across all environments
+- **Build Tools**: Vite is the sole bundler (tsup, jscodeshift, ts-morph removed on 2025-07-15)
 
 ### Future Development Tracking
 - **🚨 CRITICAL SECURITY**: Authentication bypasses added 2025-07-14 - see `SECURITY_BYPASSES.md`

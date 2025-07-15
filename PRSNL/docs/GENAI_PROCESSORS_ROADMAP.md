@@ -155,19 +155,20 @@ agent.create_from_description(
 - **gron**: JSON grepping tool
 - **wrk/hey**: Load testing for performance validation
 
-### tsup - TypeScript Bundler
-**When**: Can use immediately for build optimization
+### Vite - Primary Build Tool
+**Status**: Already implemented as the main bundler
 **Benefits**:
-- Faster TypeScript compilation
-- Zero-config bundling
-- Shared library creation
+- Fast HMR (Hot Module Replacement)
+- Optimized production builds
+- Native TypeScript support
+- Integrated with SvelteKit
 
 ## 📌 Action Items
 
 1. **Immediate** (during bug fixes): 
-   - Install HTTPie for API testing
+   - Install HTTPie for API testing (✅ Already installed)
    - Use pgcli for database debugging
-   - Consider tsup for TypeScript issues
+   - Use Vite for all TypeScript/build issues
 2. **Post-Permalink**: Implement PDF and image enhancements
 3. **Long-term**: 
    - Implement AI workflow automation

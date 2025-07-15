@@ -12,169 +12,177 @@
       url: 'https://github.com/vercel/next.js',
       owner: {
         login: 'vercel',
-        avatar_url: 'https://avatars.githubusercontent.com/u/14985020?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/14985020?v=4',
       },
       repo: {
         name: 'next.js',
         description: 'The React Framework – created and maintained by Vercel.',
         private: false,
-        language: 'JavaScript'
+        language: 'JavaScript',
       },
       stats: {
         stars: 115234,
         forks: 24892,
         watchers: 115234,
-        open_issues: 1432
+        open_issues: 1432,
       },
       languages: {
         JavaScript: 5234567,
         TypeScript: 3456789,
         CSS: 234567,
-        MDX: 123456
+        MDX: 123456,
       },
       topics: ['react', 'nextjs', 'javascript', 'vercel', 'framework', 'frontend', 'ssr', 'ssg'],
       last_updated: '2024-01-15T10:30:00Z',
       recent_commits: [
-        { message: 'fix: improve build performance', date: '2024-01-15T10:30:00Z', author: 'timneutkens' },
-        { message: 'feat: add app router improvements', date: '2024-01-14T15:45:00Z', author: 'shuding' }
-      ]
+        {
+          message: 'fix: improve build performance',
+          date: '2024-01-15T10:30:00Z',
+          author: 'timneutkens',
+        },
+        {
+          message: 'feat: add app router improvements',
+          date: '2024-01-14T15:45:00Z',
+          author: 'shuding',
+        },
+      ],
     },
     {
       id: '2',
       url: 'https://github.com/microsoft/vscode',
       owner: {
         login: 'microsoft',
-        avatar_url: 'https://avatars.githubusercontent.com/u/6154722?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/6154722?v=4',
       },
       repo: {
         name: 'vscode',
         description: 'Visual Studio Code - Open Source ("Code - OSS")',
         private: false,
-        language: 'TypeScript'
+        language: 'TypeScript',
       },
       stats: {
         stars: 152453,
         forks: 26784,
         watchers: 152453,
-        open_issues: 5234
+        open_issues: 5234,
       },
       languages: {
         TypeScript: 8234567,
         JavaScript: 1234567,
         CSS: 456789,
-        HTML: 234567
+        HTML: 234567,
       },
       topics: ['editor', 'typescript', 'electron', 'microsoft', 'vscode'],
-      last_updated: '2024-01-14T08:15:00Z'
+      last_updated: '2024-01-14T08:15:00Z',
     },
     {
       id: '3',
       url: 'https://github.com/tailwindlabs/tailwindcss',
       owner: {
         login: 'tailwindlabs',
-        avatar_url: 'https://avatars.githubusercontent.com/u/67109815?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/67109815?v=4',
       },
       repo: {
         name: 'tailwindcss',
         description: 'A utility-first CSS framework for rapid UI development.',
         private: false,
-        language: 'JavaScript'
+        language: 'JavaScript',
       },
       stats: {
         stars: 73456,
         forks: 3892,
         watchers: 73456,
-        open_issues: 123
+        open_issues: 123,
       },
       languages: {
         JavaScript: 4567890,
         CSS: 2345678,
-        TypeScript: 123456
+        TypeScript: 123456,
       },
       topics: ['css', 'css-framework', 'tailwind', 'utility-classes'],
-      last_updated: '2024-01-13T14:20:00Z'
+      last_updated: '2024-01-13T14:20:00Z',
     },
     {
       id: '4',
       url: 'https://github.com/facebook/react',
       owner: {
         login: 'facebook',
-        avatar_url: 'https://avatars.githubusercontent.com/u/69631?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/69631?v=4',
       },
       repo: {
         name: 'react',
         description: 'The library for web and native user interfaces.',
         private: false,
-        language: 'JavaScript'
+        language: 'JavaScript',
       },
       stats: {
         stars: 215678,
         forks: 45234,
         watchers: 215678,
-        open_issues: 1123
+        open_issues: 1123,
       },
       languages: {
         JavaScript: 7890123,
         TypeScript: 456789,
-        'C++': 234567
+        'C++': 234567,
       },
       topics: ['react', 'javascript', 'library', 'frontend', 'ui'],
-      last_updated: '2024-01-15T12:00:00Z'
+      last_updated: '2024-01-15T12:00:00Z',
     },
     {
       id: '5',
       url: 'https://github.com/rust-lang/rust',
       owner: {
         login: 'rust-lang',
-        avatar_url: 'https://avatars.githubusercontent.com/u/5430905?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/5430905?v=4',
       },
       repo: {
         name: 'rust',
         description: 'Empowering everyone to build reliable and efficient software.',
         private: false,
-        language: 'Rust'
+        language: 'Rust',
       },
       stats: {
         stars: 87654,
         forks: 11234,
         watchers: 87654,
-        open_issues: 8765
+        open_issues: 8765,
       },
       languages: {
         Rust: 12345678,
         Python: 234567,
-        Shell: 123456
+        Shell: 123456,
       },
       topics: ['rust', 'programming-language', 'compiler', 'systems-programming'],
-      last_updated: '2024-01-15T09:30:00Z'
+      last_updated: '2024-01-15T09:30:00Z',
     },
     {
       id: '6',
       url: 'https://github.com/privaterepo/internal-tools',
       owner: {
         login: 'mycompany',
-        avatar_url: 'https://avatars.githubusercontent.com/u/1234567?v=4'
+        avatar_url: 'https://avatars.githubusercontent.com/u/1234567?v=4',
       },
       repo: {
         name: 'internal-tools',
         description: 'Internal development tools and utilities for our engineering team.',
         private: true,
-        language: 'Python'
+        language: 'Python',
       },
       stats: {
         stars: 42,
         forks: 8,
         watchers: 42,
-        open_issues: 3
+        open_issues: 3,
       },
       languages: {
         Python: 345678,
         JavaScript: 123456,
-        Shell: 23456
+        Shell: 23456,
       },
       topics: ['internal', 'tools', 'automation', 'devops'],
-      last_updated: '2024-01-12T16:45:00Z'
-    }
+      last_updated: '2024-01-12T16:45:00Z',
+    },
   ];
 
   $: displayRepos = variant === 'compact' ? sampleRepos : sampleRepos.slice(0, 4);
@@ -197,29 +205,29 @@
         <button
           class="variant-btn"
           class:active={variant === 'default'}
-          on:click={() => variant = 'default'}
+          on:click={() => (variant = 'default')}
         >
           Default
         </button>
         <button
           class="variant-btn"
           class:active={variant === 'compact'}
-          on:click={() => variant = 'compact'}
+          on:click={() => (variant = 'compact')}
         >
           Compact
         </button>
         <button
           class="variant-btn"
           class:active={variant === 'featured'}
-          on:click={() => variant = 'featured'}
+          on:click={() => (variant = 'featured')}
         >
           Featured
         </button>
       </div>
 
-      <button 
+      <button
         class="theme-toggle"
-        on:click={() => theme = theme === 'dark' ? 'light' : 'dark'}
+        on:click={() => (theme = theme === 'dark' ? 'light' : 'dark')}
         title="Toggle theme"
       >
         <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
@@ -231,11 +239,7 @@
     <section class="cards-section">
       <div class="cards-grid" class:compact={variant === 'compact'}>
         {#each displayRepos as repo}
-          <GitHubRepoCardV2 
-            repository={repo}
-            {variant}
-            {theme}
-          />
+          <GitHubRepoCardV2 repository={repo} {variant} {theme} />
         {/each}
       </div>
     </section>
@@ -274,7 +278,9 @@
     background: var(--bg-page);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    transition: background-color 0.3s, color 0.3s;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
   }
 
   /* Theme Variables */
