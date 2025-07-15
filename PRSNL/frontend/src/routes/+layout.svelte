@@ -140,12 +140,16 @@
     <button class="mobile-toggle {mobileMenuOpen ? 'active' : ''}" on:click={toggleMobileMenu}>
       <span class="toggle-icon">≡</span>
     </button>
-    
+
     <!-- Mobile Backdrop -->
     <div class="mobile-backdrop {mobileMenuOpen ? 'show' : ''}" on:click={toggleMobileMenu}></div>
 
     <!-- Innovative Morphing Sidebar -->
-    <aside class="innovative-sidebar {sidebarMorphed ? 'morphed' : ''} {mobileMenuOpen ? 'mobile-open' : ''}">
+    <aside
+      class="innovative-sidebar {sidebarMorphed ? 'morphed' : ''} {mobileMenuOpen
+        ? 'mobile-open'
+        : ''}"
+    >
       <div class="sidebar-glow"></div>
 
       <div class="sidebar-header">
@@ -155,7 +159,7 @@
           <div class="logo-text">PRSNL</div>
         </div>
       </div>
-      
+
       <div class="morph-button-container">
         <button class="morph-toggle" on:click={toggleMorph}>
           {sidebarMorphed ? '▶' : '◀'}
@@ -163,7 +167,6 @@
       </div>
 
       <nav class="nav-container">
-
         <!-- Navigation Items -->
         <a href="/" class="nav-item {$page.url.pathname === '/' ? 'active' : ''}">
           <div class="nav-icon"></div>
@@ -203,13 +206,19 @@
           <div class="nav-tooltip">Visual Cortex</div>
         </a>
 
-        <a href="/conversations" class="nav-item {$page.url.pathname.startsWith('/conversations') ? 'active' : ''}">
+        <a
+          href="/conversations"
+          class="nav-item {$page.url.pathname.startsWith('/conversations') ? 'active' : ''}"
+        >
           <div class="nav-icon"></div>
           <span class="nav-text">Conversations</span>
           <div class="nav-tooltip">Conversations</div>
         </a>
 
-        <a href="/code-cortex" class="nav-item {$page.url.pathname.startsWith('/code-cortex') ? 'active' : ''}">
+        <a
+          href="/code-cortex"
+          class="nav-item {$page.url.pathname.startsWith('/code-cortex') ? 'active' : ''}"
+        >
           <div class="nav-icon"></div>
           <span class="nav-text">Code Cortex</span>
           <div class="nav-tooltip">Code Cortex</div>
@@ -221,7 +230,6 @@
           <div class="nav-tooltip">Knowledge Sync</div>
         </a>
       </nav>
-
     </aside>
 
     <ErrorBoundary fallback="full">
@@ -247,39 +255,39 @@
   /* Design Language Bible CSS Variables */
   :root {
     /* Core Brand Colors */
-    --man-united-red: #DC143C;
-    --accent-red: #DC143C;
-    --accent-red-hover: #B91C3C;
-    --accent-red-dim: #991B1B;
-    
+    --man-united-red: #dc143c;
+    --accent-red: #dc143c;
+    --accent-red-hover: #b91c3c;
+    --accent-red-dim: #991b1b;
+
     /* Background Colors */
     --bg-primary: #0a0a0a;
     --bg-secondary: #1a1a1a;
     --bg-tertiary: #2a2a2a;
-    
+
     /* Text Colors */
     --text-primary: #e0e0e0;
     --text-secondary: #a0a0a0;
     --text-muted: #666;
-    
+
     /* Glass/Transparency Effects */
     --glass-light: rgba(255, 255, 255, 0.1);
     --glass-medium: rgba(255, 255, 255, 0.05);
     --glass-dark: rgba(0, 0, 0, 0.3);
-    
+
     /* Neural Circuit Colors */
     --neural-green: #00ff64;
-    
+
     /* Typography */
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-    
+
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-    
+
     /* Border Radius */
     --radius-sm: 8px;
     --radius: 12px;
@@ -1450,7 +1458,7 @@
   }
 
   /* ========== VERSION B INNOVATIVE NAVIGATION ========== */
-  
+
   /* Mobile Toggle */
   .mobile-toggle {
     position: fixed;
@@ -1609,8 +1617,12 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .morph-toggle {
@@ -1824,8 +1836,13 @@
   }
 
   @keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 
   .innovative-sidebar.morphed .logo-text {

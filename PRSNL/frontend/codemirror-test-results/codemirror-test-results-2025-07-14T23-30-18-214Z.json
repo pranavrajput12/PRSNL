@@ -20,9 +20,7 @@
       "[log] 🟡 API Response: JSHandle@object",
       "[log] 🟢 API Success: JSHandle@object"
     ],
-    "networkErrors": [
-      "404 Not Found - http://localhost:3004/favicon.png"
-    ]
+    "networkErrors": ["404 Not Found - http://localhost:3004/favicon.png"]
   },
   {
     "feature": "Onboarding Wizard",

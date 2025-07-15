@@ -9,9 +9,9 @@
   export let href: string = '';
   export let variant: 'default' | 'highlight' | 'minimal' | 'stats' = 'default';
   export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let tags: Array<{label: string, color?: string}> = [];
-  export let stats: Array<{label: string, value: string | number}> = [];
-  export let actions: Array<{label: string, icon?: string, onClick: () => void}> = [];
+  export let tags: Array<{ label: string; color?: string }> = [];
+  export let stats: Array<{ label: string; value: string | number }> = [];
+  export let actions: Array<{ label: string; icon?: string; onClick: () => void }> = [];
   export let loading: boolean = false;
   export let disabled: boolean = false;
 
@@ -27,7 +27,7 @@
   $: isClickable = (onClick || href) && !disabled && !loading;
 </script>
 
-<div 
+<div
   class="cortex-card {variant} {size}"
   class:clickable={isClickable}
   class:loading
@@ -57,11 +57,11 @@
             <h3 class="card-title">{title}</h3>
           {/if}
         </div>
-        
+
         {#if actions.length > 0}
           <div class="card-actions">
             {#each actions as action}
-              <button 
+              <button
                 class="action-btn"
                 on:click|stopPropagation={action.onClick}
                 title={action.label}
@@ -296,8 +296,12 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* Responsive */

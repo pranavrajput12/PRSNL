@@ -2,11 +2,11 @@
   import Icon from '../Icon.svelte';
 
   export let tabs: Array<{
-    id: string,
-    label: string,
-    icon?: string,
-    count?: number,
-    disabled?: boolean
+    id: string;
+    label: string;
+    icon?: string;
+    count?: number;
+    disabled?: boolean;
   }> = [];
   export let activeTab: string = '';
   export let onTabChange: (tabId: string) => void = () => {};

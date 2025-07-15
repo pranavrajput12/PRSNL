@@ -118,9 +118,7 @@
         <div class="nav-content">
           <h3>Knowledge Base</h3>
           <p>All docs, guides, and learning materials</p>
-          <span class="nav-count"
-            >{Math.floor(stats.total_items * 0.4)}</span
-          >
+          <span class="nav-count">{Math.floor(stats.total_items * 0.4)}</span>
         </div>
       </button>
 
@@ -129,9 +127,7 @@
         <div class="nav-content">
           <h3>Tools & Links</h3>
           <p>External resources and utilities</p>
-          <span class="nav-count"
-            >{Math.floor(stats.total_items * 0.3)}</span
-          >
+          <span class="nav-count">{Math.floor(stats.total_items * 0.3)}</span>
         </div>
       </button>
 
@@ -140,7 +136,9 @@
         <div class="nav-content">
           <h3>Repositories</h3>
           <p>Code libraries and integrations</p>
-          <span class="nav-count">{stats.repository_count || Math.floor(stats.total_items * 0.2)}</span>
+          <span class="nav-count"
+            >{stats.repository_count || Math.floor(stats.total_items * 0.2)}</span
+          >
         </div>
       </button>
 

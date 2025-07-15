@@ -6,16 +6,21 @@
   export let icon: string = '⚡';
   export let backUrl: string = '/code-cortex';
   export let backText: string = 'Code Cortex';
-  export let stats: Array<{label: string, value: string | number}> = [];
-  export let actions: Array<{label: string, icon?: string, onClick: () => void, variant?: 'primary' | 'secondary'}> = [];
+  export let stats: Array<{ label: string; value: string | number }> = [];
+  export let actions: Array<{
+    label: string;
+    icon?: string;
+    onClick: () => void;
+    variant?: 'primary' | 'secondary';
+  }> = [];
 </script>
 
 <div class="cortex-page-header">
-  <button class="back-button" on:click={() => window.location.href = backUrl}>
+  <button class="back-button" on:click={() => (window.location.href = backUrl)}>
     <Icon name="arrow-left" size="20" />
     {backText}
   </button>
-  
+
   <div class="header-content">
     <div class="header-left">
       <div class="header-info">
@@ -42,10 +47,7 @@
       {#if actions.length > 0}
         <div class="header-actions">
           {#each actions as action}
-            <button 
-              class="action-btn {action.variant || 'secondary'}" 
-              on:click={action.onClick}
-            >
+            <button class="action-btn {action.variant || 'secondary'}" on:click={action.onClick}>
               {#if action.icon}
                 <Icon name={action.icon} size="16" />
               {/if}

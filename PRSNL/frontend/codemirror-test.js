@@ -16,53 +16,56 @@ const features = [
   { name: 'Repository Listing', selector: '.repos-grid' },
   { name: 'Repository Search', selector: 'input.repo-search' },
   { name: 'Timeline Sections', selector: '.intelligence-sections' },
-  { name: 'Tab Navigation', selector: '.tab-btn' }
+  { name: 'Tab Navigation', selector: '.tab-btn' },
 ];
 
 async function runTests() {
   console.log('Launching browser...');
-  const browser = await puppeteer.launch({ 
+  const browser = await puppeteer.launch({
     headless: false,
-    defaultViewport: { width: 1280, height: 800 }
+    defaultViewport: { width: 1280, height: 800 },
   });
-  
+
   try {
     const page = await browser.newPage();
     console.log('Browser launched successfully');
-    
+
     // Capture console logs
-    page.on('console', msg => console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`));
-    
+    page.on('console', (msg) => console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`));
+
     // Navigate to Code Mirror page
     console.log('Navigating to CodeMirror page...');
     await page.goto('http://localhost:3004/code-cortex/codemirror', {
       waitUntil: 'networkidle2',
-      timeout: 30000
+      timeout: 30000,
     });
     console.log('✅ Page loaded successfully');
-    
+
     // Take full page screenshot
     await page.screenshot({
       path: path.join(screenshotsDir, 'codemirror-page.png'),
-      fullPage: true
+      fullPage: true,
     });
     console.log('📸 Full page screenshot captured');
-    
+
     // Test each feature
     const results = [];
     for (const feature of features) {
       console.log(`\nTesting feature: ${feature.name}`);
-      
+
       try {
         const element = await page.$(feature.selector);
         if (element) {
           console.log(`✅ Found ${feature.name}`);
-          
+
           // Take screenshot of the element
           await element.screenshot({
-            path: path.join(screenshotsDir, `${feature.name.toLowerCase().replace(/\\s+/g, '-')}.png`)
+            path: path.join(
+              screenshotsDir,
+              `${feature.name.toLowerCase().replace(/\\s+/g, '-')}.png`
+            ),
           });
-          
+
           // Perform feature-specific tests
           switch (feature.name) {
             case 'Repository Search':
@@ -71,11 +74,11 @@ async function runTests() {
               await page.waitForTimeout(1000);
               await page.screenshot({
                 path: path.join(screenshotsDir, 'search-results.png'),
-                fullPage: true
+                fullPage: true,
               });
               console.log('✅ Search test completed');
               break;
-              
+
             case 'Tab Navigation':
               console.log('Testing tab navigation...');
               const tabs = await page.$$('.tab-btn');
@@ -84,7 +87,7 @@ async function runTests() {
                 await page.waitForTimeout(500);
                 await page.screenshot({
                   path: path.join(screenshotsDir, 'tab-navigation.png'),
-                  fullPage: true
+                  fullPage: true,
                 });
                 console.log('✅ Tab navigation test completed');
               } else {
@@ -92,18 +95,20 @@ async function runTests() {
               }
               break;
           }
-          
+
           results.push({
             feature: feature.name,
             status: 'pass',
-            screenshot: `${feature.name.toLowerCase().replace(/\\s+/g, '-')}.png`
+            screenshot: `${feature.name.toLowerCase().replace(/\\s+/g, '-')}.png`,
           });
         } else {
-          console.log(`❌ Could not find element for ${feature.name} with selector ${feature.selector}`);
+          console.log(
+            `❌ Could not find element for ${feature.name} with selector ${feature.selector}`
+          );
           results.push({
             feature: feature.name,
             status: 'fail',
-            error: 'Element not found'
+            error: 'Element not found',
           });
         }
       } catch (error) {
@@ -111,21 +116,21 @@ async function runTests() {
         results.push({
           feature: feature.name,
           status: 'error',
-          error: error.message
+          error: error.message,
         });
       }
     }
-    
+
     // Save test results
     fs.writeFileSync(
       path.join(resultsDir, `results-${new Date().toISOString().replace(/:/g, '-')}.json`),
       JSON.stringify(results, null, 2)
     );
-    
+
     // Print summary
-    const passed = results.filter(r => r.status === 'pass').length;
+    const passed = results.filter((r) => r.status === 'pass').length;
     console.log(`\n📊 Test Summary: ${passed}/${results.length} features passed`);
-    
+
     return results;
   } catch (mainError) {
     console.error('❌ Main test error:', mainError);
@@ -138,4 +143,4 @@ async function runTests() {
 // Execute the tests
 runTests()
   .then(() => console.log('🎉 Testing completed'))
-  .catch(err => console.error('💥 Fatal error:', err));
+  .catch((err) => console.error('💥 Fatal error:', err));

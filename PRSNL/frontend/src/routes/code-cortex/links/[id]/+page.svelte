@@ -9,12 +9,12 @@
   let relatedLinks: DevelopmentItem[] = [];
   let loading = true;
   let error: string | null = null;
-  
+
   // UI State
   let activeTab = 'overview'; // overview, preview, related, ai-analysis
   let sidebarCollapsed = false;
   let previewMode = 'rendered'; // rendered, raw, split
-  
+
   // AI Analysis
   let aiInsights: string[] = [];
   let isAIAnalyzing = false;
@@ -35,18 +35,17 @@
       // Fetch link details
       const response = await fetch(`/api/development/docs?content_type=tools`);
       if (!response.ok) throw new Error('Failed to fetch link');
-      
+
       const links = await response.json();
       link = links.find((l: DevelopmentItem) => l.id === linkId);
-      
+
       if (!link) throw new Error('Link not found');
 
       // Load related links
       await loadRelatedLinks();
-      
+
       // Generate AI insights
       await generateAIInsights();
-      
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unknown error';
     } finally {
@@ -56,18 +55,19 @@
 
   async function loadRelatedLinks() {
     if (!link) return;
-    
+
     try {
       const response = await fetch(`/api/development/docs?content_type=tools&limit=6`);
       if (response.ok) {
         const links = await response.json();
         relatedLinks = links
-          .filter((l: DevelopmentItem) => 
-            l.id !== link?.id && 
-            (l.project_category === link?.project_category ||
-             l.programming_language === link?.programming_language ||
-             l.tags.some(tag => link?.tags.includes(tag)) ||
-             getDomain(l.url) === getDomain(link?.url))
+          .filter(
+            (l: DevelopmentItem) =>
+              l.id !== link?.id &&
+              (l.project_category === link?.project_category ||
+                l.programming_language === link?.programming_language ||
+                l.tags.some((tag) => link?.tags.includes(tag)) ||
+                getDomain(l.url) === getDomain(link?.url))
           )
           .slice(0, 5);
       }
@@ -78,21 +78,21 @@
 
   async function generateAIInsights() {
     if (!link) return;
-    
+
     try {
       isAIAnalyzing = true;
       // Simulate AI analysis - replace with actual AI service call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const domain = getDomain(link.url);
       const toolType = getToolType(link);
-      
+
       aiInsights = [
         `This ${toolType} from ${domain} is ${link.is_career_related ? 'highly relevant' : 'useful'} for professional development.`,
         `Domain analysis: ${domain} is ${getDomainPopularity(domain)} in the developer community.`,
         `Tool category: ${link.project_category || 'General utility'} with ${link.tags.length} relevant tags.`,
         `Usage recommendation: ${getUsageRecommendation(link)}`,
-        `Integration potential: ${getIntegrationPotential(link)}`
+        `Integration potential: ${getIntegrationPotential(link)}`,
       ];
     } catch (err) {
       console.error('AI analysis failed:', err);
@@ -153,18 +153,18 @@
   }
 
   function getToolType(link: DevelopmentItem): string {
-    if (link.tags.some(tag => tag.toLowerCase().includes('design'))) return 'design tool';
-    if (link.tags.some(tag => tag.toLowerCase().includes('deploy'))) return 'deployment platform';
-    if (link.tags.some(tag => tag.toLowerCase().includes('api'))) return 'API service';
-    if (link.tags.some(tag => tag.toLowerCase().includes('database'))) return 'database service';
-    if (link.tags.some(tag => tag.toLowerCase().includes('monitor'))) return 'monitoring tool';
+    if (link.tags.some((tag) => tag.toLowerCase().includes('design'))) return 'design tool';
+    if (link.tags.some((tag) => tag.toLowerCase().includes('deploy'))) return 'deployment platform';
+    if (link.tags.some((tag) => tag.toLowerCase().includes('api'))) return 'API service';
+    if (link.tags.some((tag) => tag.toLowerCase().includes('database'))) return 'database service';
+    if (link.tags.some((tag) => tag.toLowerCase().includes('monitor'))) return 'monitoring tool';
     return 'development tool';
   }
 
   function getDomainPopularity(domain: string): string {
     const popular = ['github.com', 'stackoverflow.com', 'npm.js', 'docker.com', 'vercel.com'];
     const moderate = ['gitlab.com', 'dev.to', 'medium.com', 'figma.com', 'notion.so'];
-    
+
     if (popular.includes(domain)) return 'extremely popular';
     if (moderate.includes(domain)) return 'well-known';
     return 'specialized';
@@ -172,20 +172,21 @@
 
   function getUsageRecommendation(link: DevelopmentItem): string {
     if (link.is_career_related) return 'Essential for professional development';
-    if (link.difficulty_level && link.difficulty_level >= 4) return 'Best for experienced developers';
+    if (link.difficulty_level && link.difficulty_level >= 4)
+      return 'Best for experienced developers';
     if (link.difficulty_level && link.difficulty_level <= 2) return 'Great for beginners and teams';
     return 'Suitable for all skill levels';
   }
 
   function getIntegrationPotential(link: DevelopmentItem): string {
     const domain = getDomain(link.url);
-    if (domain.includes('api') || link.tags.some(tag => tag.toLowerCase().includes('api'))) {
+    if (domain.includes('api') || link.tags.some((tag) => tag.toLowerCase().includes('api'))) {
       return 'High - offers API integration';
     }
-    if (link.tags.some(tag => tag.toLowerCase().includes('webhook'))) {
+    if (link.tags.some((tag) => tag.toLowerCase().includes('webhook'))) {
       return 'High - supports webhooks';
     }
-    if (link.tags.some(tag => tag.toLowerCase().includes('cli'))) {
+    if (link.tags.some((tag) => tag.toLowerCase().includes('cli'))) {
       return 'Medium - CLI available';
     }
     return 'Low - primarily web-based';
@@ -207,8 +208,8 @@
   function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
+      month: 'long',
+      day: 'numeric',
     });
   }
 
@@ -224,18 +225,18 @@
 
   function getToolCategoryIcon(category: string): string {
     const icons = {
-      'design': '🎨',
-      'deployment': '🚀',
-      'database': '🗄️',
-      'api': '🔌',
-      'monitoring': '📊',
-      'security': '🔒',
-      'testing': '🧪',
-      'documentation': '📚',
-      'collaboration': '👥',
-      'productivity': '⚡',
+      design: '🎨',
+      deployment: '🚀',
+      database: '🗄️',
+      api: '🔌',
+      monitoring: '📊',
+      security: '🔒',
+      testing: '🧪',
+      documentation: '📚',
+      collaboration: '👥',
+      productivity: '⚡',
     };
-    
+
     for (const [key, icon] of Object.entries(icons)) {
       if (category.toLowerCase().includes(key)) return icon;
     }
@@ -274,17 +275,25 @@
           <div class="link-title-section">
             <h1>{link.title}</h1>
             <div class="link-meta">
-              <span class="meta-badge domain" style="background-color: {getDomainColor(getDomain(link.url))}40; color: {getDomainColor(getDomain(link.url))}">
-                {getDomainIcon(getDomain(link.url))} {getDomain(link.url)}
+              <span
+                class="meta-badge domain"
+                style="background-color: {getDomainColor(
+                  getDomain(link.url)
+                )}40; color: {getDomainColor(getDomain(link.url))}"
+              >
+                {getDomainIcon(getDomain(link.url))}
+                {getDomain(link.url)}
               </span>
               {#if link.project_category}
                 <span class="meta-badge category">
-                  {getToolCategoryIcon(link.project_category)} {link.project_category}
+                  {getToolCategoryIcon(link.project_category)}
+                  {link.project_category}
                 </span>
               {/if}
               {#if link.programming_language}
                 <span class="meta-badge language">
-                  {getLanguageIcon(link.programming_language)} {link.programming_language}
+                  {getLanguageIcon(link.programming_language)}
+                  {link.programming_language}
                 </span>
               {/if}
               {#if link.is_career_related}
@@ -294,7 +303,10 @@
           </div>
         </div>
         <div class="header-actions">
-          <button class="action-button secondary" on:click={() => sidebarCollapsed = !sidebarCollapsed}>
+          <button
+            class="action-button secondary"
+            on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
+          >
             <Icon name={sidebarCollapsed ? 'sidebar' : 'x'} size="16" />
             {sidebarCollapsed ? 'Show' : 'Hide'} Details
           </button>
@@ -365,15 +377,15 @@
           <div class="sidebar-section">
             <h3>⚡ Quick Actions</h3>
             <div class="quick-actions">
-              <button class="quick-action" on:click={() => activeTab = 'overview'}>
+              <button class="quick-action" on:click={() => (activeTab = 'overview')}>
                 <Icon name="info" size="16" />
                 Overview
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'preview'}>
+              <button class="quick-action" on:click={() => (activeTab = 'preview')}>
                 <Icon name="eye" size="16" />
                 Preview
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'ai-analysis'}>
+              <button class="quick-action" on:click={() => (activeTab = 'ai-analysis')}>
                 <Icon name="brain" size="16" />
                 AI Analysis
               </button>
@@ -390,30 +402,30 @@
       <div class="link-main">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-          <button 
+          <button
             class="tab {activeTab === 'overview' ? 'active' : ''}"
-            on:click={() => activeTab = 'overview'}
+            on:click={() => (activeTab = 'overview')}
           >
             <Icon name="info" size="16" />
             Overview
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'preview' ? 'active' : ''}"
-            on:click={() => activeTab = 'preview'}
+            on:click={() => (activeTab = 'preview')}
           >
             <Icon name="eye" size="16" />
             Preview
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'related' ? 'active' : ''}"
-            on:click={() => activeTab = 'related'}
+            on:click={() => (activeTab = 'related')}
           >
             <Icon name="link" size="16" />
             Related ({relatedLinks.length})
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'ai-analysis' ? 'active' : ''}"
-            on:click={() => activeTab = 'ai-analysis'}
+            on:click={() => (activeTab = 'ai-analysis')}
           >
             <Icon name="brain" size="16" />
             AI Analysis
@@ -428,7 +440,7 @@
                 <h2>Tool Overview</h2>
                 <p>Comprehensive details about this development tool or service</p>
               </div>
-              
+
               {#if link.summary}
                 <div class="content-section">
                   <h3>Description</h3>
@@ -472,7 +484,6 @@
                 </div>
               </div>
             </div>
-
           {:else if activeTab === 'preview'}
             <div class="preview-tab">
               <div class="content-header">
@@ -484,11 +495,13 @@
                   </button>
                 </div>
               </div>
-              
+
               <div class="preview-container">
                 <div class="preview-info">
                   <div class="preview-meta">
-                    <span class="preview-domain">{getDomainIcon(getDomain(link.url))} {getDomain(link.url)}</span>
+                    <span class="preview-domain"
+                      >{getDomainIcon(getDomain(link.url))} {getDomain(link.url)}</span
+                    >
                     <span class="preview-type">{getToolType(link)}</span>
                   </div>
                   <h3>{link.title}</h3>
@@ -496,10 +509,10 @@
                     <p>{link.summary}</p>
                   {/if}
                 </div>
-                
+
                 <div class="preview-frame">
-                  <iframe 
-                    src={link.url} 
+                  <iframe
+                    src={link.url}
                     title="Tool Preview"
                     sandbox="allow-same-origin allow-scripts allow-forms"
                     loading="lazy"
@@ -513,14 +526,13 @@
                 </div>
               </div>
             </div>
-
           {:else if activeTab === 'related'}
             <div class="related-tab">
               <div class="content-header">
                 <h2>Related Tools</h2>
                 <p>Similar tools and services based on category and domain</p>
               </div>
-              
+
               {#if relatedLinks.length > 0}
                 <div class="related-grid">
                   {#each relatedLinks as relatedLink}
@@ -540,7 +552,10 @@
                           <span class="meta-tag">{relatedLink.project_category}</span>
                         {/if}
                         {#if relatedLink.programming_language}
-                          <span class="meta-tag">{getLanguageIcon(relatedLink.programming_language)} {relatedLink.programming_language}</span>
+                          <span class="meta-tag"
+                            >{getLanguageIcon(relatedLink.programming_language)}
+                            {relatedLink.programming_language}</span
+                          >
                         {/if}
                       </div>
                     </a>
@@ -554,14 +569,13 @@
                 </div>
               {/if}
             </div>
-
           {:else if activeTab === 'ai-analysis'}
             <div class="ai-analysis-tab">
               <div class="content-header">
                 <h2>AI Analysis</h2>
                 <p>AI-powered insights about this tool and its potential</p>
-                <button 
-                  class="refresh-analysis" 
+                <button
+                  class="refresh-analysis"
                   on:click={generateAIInsights}
                   disabled={isAIAnalyzing}
                 >
@@ -569,7 +583,7 @@
                   {isAIAnalyzing ? 'Analyzing...' : 'Refresh Analysis'}
                 </button>
               </div>
-              
+
               {#if isAIAnalyzing}
                 <div class="ai-loading">
                   <div class="neural-pulse"></div>
@@ -639,7 +653,8 @@
   }
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       border-top-color: #00ff88;
       transform: scale(1);
     }

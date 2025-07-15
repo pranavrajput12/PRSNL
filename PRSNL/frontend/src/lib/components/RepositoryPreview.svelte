@@ -1,3 +1,31 @@
+<!-- File Tree Node Component -->
+<script context="module">
+  export function FileTreeNode({ file, depth, expandedPaths, onToggle, onSelect, getFileIcon }) {
+    const isExpanded = expandedPaths.has(file.path);
+    const indent = depth * 20;
+
+    function handleClick() {
+      if (file.type === 'directory') {
+        onToggle(file.path);
+      } else {
+        onSelect(file);
+      }
+    }
+
+    return {
+      file,
+      isExpanded,
+      indent,
+      handleClick,
+      depth,
+      expandedPaths,
+      onToggle,
+      onSelect,
+      getFileIcon,
+    };
+  }
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fade, slide } from 'svelte/transition';
@@ -43,7 +71,7 @@
 
   // Computed
   $: filteredFiles = searchQuery ? filterFiles(files, searchQuery) : files;
-  $: activeTab = openTabs.find(tab => tab.id === activeTabId);
+  $: activeTab = openTabs.find((tab) => tab.id === activeTabId);
   $: isMarkdownFile = activeTab?.name.endsWith('.md') || activeTab?.name.endsWith('.markdown');
   $: showPreview = isMarkdownFile && (viewMode === 'preview' || viewMode === 'split');
   $: showCode = viewMode === 'code' || viewMode === 'split';
@@ -88,7 +116,7 @@ export const Button: React.FC<ButtonProps> = ({
       {children}
     </button>
   );
-};`
+};`,
             },
             {
               name: 'Card.tsx',
@@ -100,9 +128,9 @@ export const Button: React.FC<ButtonProps> = ({
     <h3>{title}</h3>
     <div>{children}</div>
   </div>
-);`
-            }
-          ]
+);`,
+            },
+          ],
         },
         {
           name: 'utils',
@@ -114,9 +142,9 @@ export const Button: React.FC<ButtonProps> = ({
               path: 'src/utils/helpers.ts',
               type: 'file',
               language: 'typescript',
-              content: 'export const formatDate = (date: Date) => date.toLocaleDateString();'
-            }
-          ]
+              content: 'export const formatDate = (date: Date) => date.toLocaleDateString();',
+            },
+          ],
         },
         {
           name: 'App.tsx',
@@ -136,9 +164,9 @@ function App() {
   );
 }
 
-export default App;`
-        }
-      ]
+export default App;`,
+        },
+      ],
     },
     {
       name: 'README.md',
@@ -185,7 +213,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## License
 
-MIT © 2024 Awesome Team`
+MIT © 2024 Awesome Team`,
     },
     {
       name: 'package.json',
@@ -210,14 +238,14 @@ MIT © 2024 Awesome Team`
     "vite": "^4.0.0",
     "@types/react": "^18.2.0"
   }
-}`
-    }
+}`,
+    },
   ];
 
   onMount(() => {
     // Load mock files for demonstration
     files = mockFiles;
-    
+
     // Auto-open README if it exists
     const readme = findFile(files, 'README.md');
     if (readme && readme.type === 'file') {
@@ -266,7 +294,7 @@ MIT © 2024 Awesome Team`
     if (file.type !== 'file') return;
 
     const tabId = file.path;
-    const existingTab = openTabs.find(tab => tab.id === tabId);
+    const existingTab = openTabs.find((tab) => tab.id === tabId);
 
     if (existingTab) {
       activeTabId = tabId;
@@ -276,7 +304,7 @@ MIT © 2024 Awesome Team`
         name: file.name,
         path: file.path,
         content: file.content || '',
-        language: file.language || detectLanguage(file.name)
+        language: file.language || detectLanguage(file.name),
       };
       openTabs = [...openTabs, newTab];
       activeTabId = tabId;
@@ -285,9 +313,9 @@ MIT © 2024 Awesome Team`
 
   function closeTab(tabId: string, event?: Event) {
     event?.stopPropagation();
-    
-    const tabIndex = openTabs.findIndex(tab => tab.id === tabId);
-    openTabs = openTabs.filter(tab => tab.id !== tabId);
+
+    const tabIndex = openTabs.findIndex((tab) => tab.id === tabId);
+    openTabs = openTabs.filter((tab) => tab.id !== tabId);
 
     if (activeTabId === tabId && openTabs.length > 0) {
       // Switch to adjacent tab
@@ -311,7 +339,7 @@ MIT © 2024 Awesome Team`
       css: 'css',
       html: 'html',
       yml: 'yaml',
-      yaml: 'yaml'
+      yaml: 'yaml',
     };
     return languageMap[ext] || 'plaintext';
   }
@@ -332,7 +360,7 @@ MIT © 2024 Awesome Team`
       css: 'palette',
       html: 'globe',
       yml: 'settings',
-      yaml: 'settings'
+      yaml: 'settings',
     };
 
     return iconMap[ext] || 'file';
@@ -379,9 +407,9 @@ MIT © 2024 Awesome Team`
         <Icon name="folder" size={16} />
         Explorer
       </h3>
-      <button 
+      <button
         class="icon-btn"
-        on:click={() => showSearch = !showSearch}
+        on:click={() => (showSearch = !showSearch)}
         title="Search files (⌘P)"
       >
         <Icon name="search" size={16} />
@@ -402,8 +430,8 @@ MIT © 2024 Awesome Team`
 
     <div class="file-tree">
       {#each filteredFiles as file}
-        <FileTreeNode 
-          {file} 
+        <FileTreeNode
+          {file}
           depth={0}
           {expandedPaths}
           onToggle={toggleDirectory}
@@ -413,11 +441,7 @@ MIT © 2024 Awesome Team`
       {/each}
     </div>
 
-    <div 
-      class="resize-handle"
-      on:mousedown={startResize}
-      class:resizing={isResizing}
-    />
+    <div class="resize-handle" on:mousedown={startResize} class:resizing={isResizing} />
   </aside>
 
   <!-- Main Content Area -->
@@ -432,15 +456,15 @@ MIT © 2024 Awesome Team`
               class:active={activeTabId === tab.id}
               role="button"
               tabindex="0"
-              on:click={() => activeTabId = tab.id}
+              on:click={() => (activeTabId = tab.id)}
               on:keydown={(e) => e.key === 'Enter' && (activeTabId = tab.id)}
             >
-              <Icon name={getFileIcon({ name: tab.name, type: 'file', path: tab.path })} size={14} />
+              <Icon
+                name={getFileIcon({ name: tab.name, type: 'file', path: tab.path })}
+                size={14}
+              />
               <span class="tab-name">{tab.name}</span>
-              <button
-                class="tab-close"
-                on:click={(e) => closeTab(tab.id, e)}
-              >
+              <button class="tab-close" on:click={(e) => closeTab(tab.id, e)}>
                 <Icon name="x" size={14} />
               </button>
             </div>
@@ -452,7 +476,7 @@ MIT © 2024 Awesome Team`
             <button
               class="view-btn"
               class:active={viewMode === 'code'}
-              on:click={() => viewMode = 'code'}
+              on:click={() => (viewMode = 'code')}
               title="Code view"
             >
               <Icon name="code" size={14} />
@@ -460,7 +484,7 @@ MIT © 2024 Awesome Team`
             <button
               class="view-btn"
               class:active={viewMode === 'split'}
-              on:click={() => viewMode = 'split'}
+              on:click={() => (viewMode = 'split')}
               title="Split view"
             >
               <Icon name="columns" size={14} />
@@ -468,7 +492,7 @@ MIT © 2024 Awesome Team`
             <button
               class="view-btn"
               class:active={viewMode === 'preview'}
-              on:click={() => viewMode = 'preview'}
+              on:click={() => (viewMode = 'preview')}
               title="Preview"
             >
               <Icon name="eye" size={14} />
@@ -500,7 +524,7 @@ MIT © 2024 Awesome Team`
                 Preview
               </div>
               <div class="preview-content">
-                <MarkdownViewer 
+                <MarkdownViewer
                   content={activeTab.content}
                   theme={theme === 'dark' ? 'neural' : 'dark'}
                 />
@@ -520,49 +544,14 @@ MIT © 2024 Awesome Team`
   </main>
 </div>
 
-<!-- File Tree Node Component -->
-<script context="module">
-  export function FileTreeNode({ 
-    file, 
-    depth, 
-    expandedPaths, 
-    onToggle, 
-    onSelect,
-    getFileIcon 
-  }) {
-    const isExpanded = expandedPaths.has(file.path);
-    const indent = depth * 20;
-
-    function handleClick() {
-      if (file.type === 'directory') {
-        onToggle(file.path);
-      } else {
-        onSelect(file);
-      }
-    }
-
-    return {
-      file,
-      isExpanded,
-      indent,
-      handleClick,
-      depth,
-      expandedPaths,
-      onToggle,
-      onSelect,
-      getFileIcon
-    };
-  }
-</script>
-
 {#if true}
-  {@const { isExpanded, indent, handleClick } = FileTreeNode({ 
-    file, 
-    depth, 
-    expandedPaths, 
-    onToggle, 
+  {@const { isExpanded, indent, handleClick } = FileTreeNode({
+    file,
+    depth,
+    expandedPaths,
+    onToggle,
     onSelect,
-    getFileIcon 
+    getFileIcon,
   })}
   <div class="file-node">
     <button
@@ -571,11 +560,7 @@ MIT © 2024 Awesome Team`
       style="padding-left: {indent + 8}px"
       on:click={handleClick}
     >
-      <Icon 
-        name={getFileIcon(file)} 
-        size={14} 
-        class="file-icon {file.type}"
-      />
+      <Icon name={getFileIcon(file)} size={14} class="file-icon {file.type}" />
       <span class="file-name">{file.name}</span>
     </button>
 

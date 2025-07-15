@@ -211,60 +211,42 @@
       </h1>
       <p class="hero-tagline">Never lose a brilliant idea again</p>
     </div>
-    
+
     <!-- Side-by-Side Layout: Mac3D Left, Icons Right -->
     <div class="hero-layout">
       <!-- Mac3D Monitor on Left -->
       <div class="hero-mac-left">
         <Mac3D />
       </div>
-      
+
       <!-- Navigation Icons Grid on Right -->
       <div class="navigation-section-right">
         <div class="navigation-icons-right">
           <div class="icon-item">
-            <MacMini3D 
-              onClick={() => goto('/dashboard')}
-              tooltip="Dashboard"
-            />
+            <MacMini3D onClick={() => goto('/dashboard')} tooltip="Dashboard" />
           </div>
-          
+
           <div class="icon-item">
-            <Webcam3D 
-              onClick={() => goto('/capture')}
-              tooltip="Capture"
-            />
+            <Webcam3D onClick={() => goto('/capture')} tooltip="Capture" />
           </div>
-          
+
           <div class="icon-item">
-            <SSD3D 
-              onClick={() => goto('/timeline')}
-              tooltip="Timeline"
-            />
+            <SSD3D onClick={() => goto('/timeline')} tooltip="Timeline" />
           </div>
-          
+
           <div class="icon-item">
-            <GraphicsCard3D 
-              onClick={() => goto('/assistant')}
-              tooltip="Assistant"
-            />
+            <GraphicsCard3D onClick={() => goto('/assistant')} tooltip="Assistant" />
           </div>
-          
+
           <div class="icon-item">
-            <Typewriter3D 
-              onClick={() => goto('/conversations')}
-              tooltip="Conversations"
-            />
+            <Typewriter3D onClick={() => goto('/conversations')} tooltip="Conversations" />
           </div>
-          
+
           <div class="icon-item">
-            <Terminal3D 
-              onClick={() => goto('/code-cortex')}
-              tooltip="Code Cortex"
-            />
+            <Terminal3D onClick={() => goto('/code-cortex')} tooltip="Code Cortex" />
           </div>
         </div>
-        
+
         <!-- System Status Below Icons -->
         <div class="ecosystem-status">
           <div class="status-text">System Status: All Components Online</div>
@@ -505,7 +487,7 @@
           <span class="confidence-text">49% confidence</span>
         </div>
       </div>
-      
+
       <div class="fingerprint-content">
         <div class="traits-metrics">
           <div class="traits-list">
@@ -657,14 +639,14 @@
     background: transparent;
     overflow: hidden;
   }
-  
+
   .hero-header {
     text-align: center;
     margin-bottom: 4rem;
     position: relative;
     z-index: 2;
   }
-  
+
   .hero-title {
     display: flex;
     flex-direction: column;
@@ -673,7 +655,7 @@
     margin-bottom: 1.5rem;
     line-height: 1.1;
   }
-  
+
   .title-main {
     font-size: 4rem;
     font-weight: 800;
@@ -681,12 +663,14 @@
     background-size: 300% 300%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gradient-flow 4s ease-in-out infinite, title-glow 3s ease-in-out infinite;
+    animation:
+      gradient-flow 4s ease-in-out infinite,
+      title-glow 3s ease-in-out infinite;
     text-shadow: 0 0 40px rgba(0, 255, 100, 0.4);
     letter-spacing: 0.05em;
     position: relative;
   }
-  
+
   .title-sub {
     font-size: 1.8rem;
     font-weight: 400;
@@ -698,7 +682,7 @@
     animation: subtitle-shimmer 6s ease-in-out infinite;
     letter-spacing: 0.02em;
   }
-  
+
   .hero-tagline {
     color: var(--text-secondary);
     font-size: 1.3rem;
@@ -709,7 +693,7 @@
     position: relative;
     padding: 0 2rem;
   }
-  
+
   .hero-tagline::before {
     content: '"';
     position: absolute;
@@ -719,7 +703,7 @@
     color: var(--synapse-teal);
     opacity: 0.6;
   }
-  
+
   .hero-tagline::after {
     content: '"';
     position: absolute;
@@ -729,29 +713,41 @@
     color: var(--synapse-teal);
     opacity: 0.6;
   }
-  
+
   @keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
-  
+
   @keyframes title-glow {
-    0%, 100% { 
+    0%,
+    100% {
       filter: brightness(1) drop-shadow(0 0 15px rgba(0, 255, 100, 0.3));
       transform: scale(1);
     }
-    50% { 
+    50% {
       filter: brightness(1.3) drop-shadow(0 0 30px rgba(0, 255, 100, 0.6));
       transform: scale(1.02);
     }
   }
-  
+
   @keyframes subtitle-shimmer {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
   }
-  
+
   /* SIDE-BY-SIDE HERO LAYOUT */
   .hero-layout {
     display: flex;
@@ -762,7 +758,7 @@
     margin: 0 auto;
     padding: 2rem;
   }
-  
+
   .hero-mac-left {
     flex: 1;
     display: flex;
@@ -770,7 +766,7 @@
     transform: scale(1.3);
     padding: 2rem 1rem;
   }
-  
+
   .navigation-section-right {
     flex: 1;
     display: flex;
@@ -779,7 +775,7 @@
     gap: 2rem;
     padding: 1rem;
   }
-  
+
   .navigation-icons-right {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -789,7 +785,7 @@
     width: 100%;
     max-width: 500px;
   }
-  
+
   .icon-item {
     display: flex;
     flex-direction: column;
@@ -798,12 +794,11 @@
     transform: scale(1.8);
     transition: all 0.3s ease;
   }
-  
+
   .icon-item:hover {
-    transform: scale(2.0) translateY(-5px);
+    transform: scale(2) translateY(-5px);
   }
-  
-  
+
   .icon-label {
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -812,7 +807,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
+
   .ecosystem-status {
     display: flex;
     align-items: center;
@@ -825,7 +820,7 @@
     max-width: 400px;
     margin: 0 auto;
   }
-  
+
   .status-text {
     color: var(--synapse-teal);
     font-size: 0.9rem;
@@ -833,7 +828,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
+
   .status-indicator {
     width: 12px;
     height: 12px;
@@ -842,58 +837,65 @@
     box-shadow: 0 0 12px var(--synapse-teal);
     animation: status-heartbeat 2s ease-in-out infinite;
   }
-  
+
   @keyframes status-heartbeat {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.3); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.3);
+    }
   }
-  
+
   /* Responsive Design */
   @media (max-width: 768px) {
     .title-main {
       font-size: 2.5rem;
     }
-    
+
     .title-sub {
       font-size: 1.3rem;
     }
-    
+
     .hero-tagline {
       font-size: 1.1rem;
       padding: 0 1rem;
     }
-    
+
     .hero-header {
       margin-bottom: 3rem;
     }
-    
+
     .hero-layout {
       flex-direction: column;
       gap: 3rem;
     }
-    
+
     .hero-mac-left {
       transform: scale(1.1);
     }
-    
+
     .navigation-section-right {
       padding: 0;
     }
-    
+
     .navigation-icons-right {
       grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
       max-width: 400px;
     }
-    
+
     .icon-item {
       transform: scale(1.4);
     }
-    
+
     .icon-item:hover {
       transform: scale(1.6) translateY(-3px);
     }
-    
+
     .ecosystem-status {
       max-width: 300px;
       padding: 0.8rem 1.5rem;
@@ -4183,9 +4185,15 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
+    background:
       linear-gradient(45deg, transparent 30%, rgba(0, 255, 100, 0.03) 50%, transparent 70%),
-      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 255, 100, 0.1) 2px, rgba(0, 255, 100, 0.1) 4px);
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 100, 0.1) 2px,
+        rgba(0, 255, 100, 0.1) 4px
+      );
     animation: circuit-flow 8s linear infinite;
     pointer-events: none;
   }
@@ -4201,13 +4209,23 @@
   }
 
   @keyframes circuit-flow {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
   }
 
   @keyframes terminal-cursor {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+    0%,
+    50% {
+      opacity: 1;
+    }
+    51%,
+    100% {
+      opacity: 0;
+    }
   }
 
   .fingerprint-container {
@@ -4275,8 +4293,13 @@
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 
   .fingerprint-content {

@@ -9,17 +9,17 @@
   let relatedProjects: DevelopmentItem[] = [];
   let loading = true;
   let error: string | null = null;
-  
+
   // UI State
   let activeTab = 'overview'; // overview, progress, milestones, ai-analysis
   let sidebarCollapsed = false;
   let progressMode = 'visual'; // visual, detailed, timeline
-  
+
   // AI Analysis & Learning Path
   let aiInsights: string[] = [];
   let learningPath: string[] = [];
   let isAIAnalyzing = false;
-  
+
   // Progress tracking (simulated - would come from API)
   let projectProgress = 0;
   let milestones: any[] = [];
@@ -42,19 +42,18 @@
       // Fetch project details
       const response = await fetch(`/api/development/docs?content_type=progress`);
       if (!response.ok) throw new Error('Failed to fetch project');
-      
+
       const projects = await response.json();
       project = projects.find((p: DevelopmentItem) => p.id === projectId);
-      
+
       if (!project) throw new Error('Project not found');
 
       // Load related projects
       await loadRelatedProjects();
-      
+
       // Generate progress data and AI insights
       await generateProgressData();
       await generateAIInsights();
-      
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unknown error';
     } finally {
@@ -64,18 +63,19 @@
 
   async function loadRelatedProjects() {
     if (!project) return;
-    
+
     try {
       const response = await fetch(`/api/development/docs?content_type=progress&limit=6`);
       if (response.ok) {
         const projects = await response.json();
         relatedProjects = projects
-          .filter((p: DevelopmentItem) => 
-            p.id !== project?.id && 
-            (p.project_category === project?.project_category ||
-             p.programming_language === project?.programming_language ||
-             p.learning_path === project?.learning_path ||
-             p.tags.some(tag => project?.tags.includes(tag)))
+          .filter(
+            (p: DevelopmentItem) =>
+              p.id !== project?.id &&
+              (p.project_category === project?.project_category ||
+                p.programming_language === project?.programming_language ||
+                p.learning_path === project?.learning_path ||
+                p.tags.some((tag) => project?.tags.includes(tag)))
           )
           .slice(0, 5);
       }
@@ -86,63 +86,66 @@
 
   async function generateProgressData() {
     if (!project) return;
-    
+
     // Simulate progress calculation based on project data
     const hash = project.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    projectProgress = (hash % 100);
-    
+    projectProgress = hash % 100;
+
     // Generate milestones based on difficulty and category
     const difficultyMilestones = {
       1: ['Setup Environment', 'Complete Tutorial', 'Build First Project'],
       2: ['Advanced Concepts', 'Real-world Application', 'Best Practices'],
       3: ['Complex Implementation', 'Performance Optimization', 'Expert Techniques'],
       4: ['Advanced Architecture', 'Scalability', 'Industry Standards'],
-      5: ['Innovation', 'Teaching Others', 'Contribution to Community']
+      5: ['Innovation', 'Teaching Others', 'Contribution to Community'],
     };
-    
+
     const level = project.difficulty_level || 2;
-    milestones = (difficultyMilestones[level] || difficultyMilestones[2]).map((milestone, index) => ({
-      id: index + 1,
-      title: milestone,
-      completed: index < Math.floor(projectProgress / 33),
-      description: `${milestone} for ${project.project_category || 'development'}`
-    }));
-    
+    milestones = (difficultyMilestones[level] || difficultyMilestones[2]).map(
+      (milestone, index) => ({
+        id: index + 1,
+        title: milestone,
+        completed: index < Math.floor(projectProgress / 33),
+        description: `${milestone} for ${project.project_category || 'development'}`,
+      })
+    );
+
     // Generate current and next skills
-    const allSkills = project.tags.concat(project.programming_language ? [project.programming_language] : []);
+    const allSkills = project.tags.concat(
+      project.programming_language ? [project.programming_language] : []
+    );
     currentSkills = allSkills.slice(0, Math.max(1, Math.floor(allSkills.length * 0.6)));
     nextSkills = allSkills.slice(currentSkills.length);
   }
 
   async function generateAIInsights() {
     if (!project) return;
-    
+
     try {
       isAIAnalyzing = true;
       // Simulate AI analysis - replace with actual AI service call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const category = project.project_category || 'development';
       const difficulty = getDifficultyLabel(project.difficulty_level || 2);
       const isCareerFocused = project.is_career_related;
-      
+
       aiInsights = [
         `This ${difficulty.toLowerCase()} ${category.toLowerCase()} project is ${isCareerFocused ? 'highly valuable' : 'beneficial'} for your professional growth.`,
         `Current progress: ${projectProgress}% complete. You're ${projectProgress > 50 ? 'well on your way' : 'getting started'} with this learning journey.`,
         `Learning path focus: ${project.learning_path || 'General skill development'} with emphasis on practical application.`,
         `Skill development: Building expertise in ${currentSkills.join(', ')} and progressing toward ${nextSkills.slice(0, 2).join(', ')}.`,
-        `Time investment: Based on difficulty level, expect ${getEstimatedTimeCommitment(project.difficulty_level || 2)} to complete.`
+        `Time investment: Based on difficulty level, expect ${getEstimatedTimeCommitment(project.difficulty_level || 2)} to complete.`,
       ];
-      
+
       // Generate learning path recommendations
       learningPath = [
         `Foundation: ${currentSkills[0] || project.programming_language || 'Core concepts'}`,
         `Practice: Build ${Math.floor(Math.random() * 3) + 2}-${Math.floor(Math.random() * 3) + 5} projects`,
         `Advanced: ${nextSkills[0] || 'Advanced techniques'}`,
         `Mastery: ${nextSkills[1] || 'Expert-level implementation'}`,
-        `Contribution: Share knowledge and mentor others`
+        `Contribution: Share knowledge and mentor others`,
       ];
-      
     } catch (err) {
       console.error('AI analysis failed:', err);
     } finally {
@@ -191,7 +194,7 @@
       2: '1-3 months',
       3: '3-6 months',
       4: '6-12 months',
-      5: '1+ years'
+      5: '1+ years',
     };
     return times[level] || '2-6 months';
   }
@@ -212,17 +215,17 @@
 
   function getCategoryIcon(category: string): string {
     const icons = {
-      'Frontend': '🎨',
-      'Backend': '⚙️',
-      'DevOps': '🚀',
-      'Mobile': '📱',
+      Frontend: '🎨',
+      Backend: '⚙️',
+      DevOps: '🚀',
+      Mobile: '📱',
       'AI/ML': '🤖',
       'Data Science': '📊',
       'Game Development': '🎮',
-      'Desktop': '💻',
+      Desktop: '💻',
       'Web Development': '🌐',
       'API Development': '🔌',
-      'Documentation': '📚',
+      Documentation: '📚',
     };
     return icons[category] || '📁';
   }
@@ -230,8 +233,8 @@
   function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
+      month: 'long',
+      day: 'numeric',
     });
   }
 
@@ -285,16 +288,23 @@
             <div class="project-meta">
               {#if project.project_category}
                 <span class="meta-badge category">
-                  {getCategoryIcon(project.project_category)} {project.project_category}
+                  {getCategoryIcon(project.project_category)}
+                  {project.project_category}
                 </span>
               {/if}
               {#if project.programming_language}
                 <span class="meta-badge language">
-                  {getLanguageIcon(project.programming_language)} {project.programming_language}
+                  {getLanguageIcon(project.programming_language)}
+                  {project.programming_language}
                 </span>
               {/if}
               {#if project.difficulty_level}
-                <span class="meta-badge difficulty" style="background-color: {getDifficultyColor(project.difficulty_level)}40; color: {getDifficultyColor(project.difficulty_level)}">
+                <span
+                  class="meta-badge difficulty"
+                  style="background-color: {getDifficultyColor(
+                    project.difficulty_level
+                  )}40; color: {getDifficultyColor(project.difficulty_level)}"
+                >
                   {getDifficultyLabel(project.difficulty_level)}
                 </span>
               {/if}
@@ -308,18 +318,25 @@
             <div class="progress-summary">
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
-                    style="width: {projectProgress}%; background-color: {getProgressColor(projectProgress)}"
+                  <div
+                    class="progress-fill"
+                    style="width: {projectProgress}%; background-color: {getProgressColor(
+                      projectProgress
+                    )}"
                   ></div>
                 </div>
-                <span class="progress-text">{projectProgress}% • {getProgressLabel(projectProgress)}</span>
+                <span class="progress-text"
+                  >{projectProgress}% • {getProgressLabel(projectProgress)}</span
+                >
               </div>
             </div>
           </div>
         </div>
         <div class="header-actions">
-          <button class="action-button secondary" on:click={() => sidebarCollapsed = !sidebarCollapsed}>
+          <button
+            class="action-button secondary"
+            on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
+          >
             <Icon name={sidebarCollapsed ? 'sidebar' : 'x'} size="16" />
             {sidebarCollapsed ? 'Show' : 'Hide'} Details
           </button>
@@ -342,11 +359,15 @@
             <div class="progress-details">
               <div class="progress-circle">
                 <svg viewBox="0 0 120 120" class="circular-progress">
-                  <circle cx="60" cy="60" r="50" class="progress-bg"/>
-                  <circle 
-                    cx="60" cy="60" r="50" 
+                  <circle cx="60" cy="60" r="50" class="progress-bg" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
                     class="progress-bar-circle"
-                    style="stroke: {getProgressColor(projectProgress)}; stroke-dasharray: {314.16 * projectProgress / 100} 314.16"
+                    style="stroke: {getProgressColor(projectProgress)}; stroke-dasharray: {(314.16 *
+                      projectProgress) /
+                      100} 314.16"
                   />
                   <text x="60" y="60" class="progress-percentage">{projectProgress}%</text>
                 </svg>
@@ -362,7 +383,9 @@
                 </div>
                 <div class="stat-item">
                   <span class="stat-label">Milestones</span>
-                  <span class="stat-value">{milestones.filter(m => m.completed).length}/{milestones.length}</span>
+                  <span class="stat-value"
+                    >{milestones.filter((m) => m.completed).length}/{milestones.length}</span
+                  >
                 </div>
               </div>
             </div>
@@ -403,7 +426,9 @@
               <div class="related-list">
                 {#each relatedProjects as relatedProject}
                   <a href="/code-cortex/projects/{relatedProject.id}" class="related-item">
-                    <div class="related-icon">{getCategoryIcon(relatedProject.project_category)}</div>
+                    <div class="related-icon">
+                      {getCategoryIcon(relatedProject.project_category)}
+                    </div>
                     <div class="related-content">
                       <div class="related-title">{relatedProject.title}</div>
                       <div class="related-category">{relatedProject.project_category}</div>
@@ -417,19 +442,19 @@
           <div class="sidebar-section">
             <h3>⚡ Quick Actions</h3>
             <div class="quick-actions">
-              <button class="quick-action" on:click={() => activeTab = 'overview'}>
+              <button class="quick-action" on:click={() => (activeTab = 'overview')}>
                 <Icon name="info" size="16" />
                 Overview
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'progress'}>
+              <button class="quick-action" on:click={() => (activeTab = 'progress')}>
                 <Icon name="trending-up" size="16" />
                 Progress
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'milestones'}>
+              <button class="quick-action" on:click={() => (activeTab = 'milestones')}>
                 <Icon name="flag" size="16" />
                 Milestones
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'ai-analysis'}>
+              <button class="quick-action" on:click={() => (activeTab = 'ai-analysis')}>
                 <Icon name="brain" size="16" />
                 AI Insights
               </button>
@@ -442,30 +467,30 @@
       <div class="project-main">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-          <button 
+          <button
             class="tab {activeTab === 'overview' ? 'active' : ''}"
-            on:click={() => activeTab = 'overview'}
+            on:click={() => (activeTab = 'overview')}
           >
             <Icon name="info" size="16" />
             Overview
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'progress' ? 'active' : ''}"
-            on:click={() => activeTab = 'progress'}
+            on:click={() => (activeTab = 'progress')}
           >
             <Icon name="trending-up" size="16" />
             Progress Tracking
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'milestones' ? 'active' : ''}"
-            on:click={() => activeTab = 'milestones'}
+            on:click={() => (activeTab = 'milestones')}
           >
             <Icon name="flag" size="16" />
-            Milestones ({milestones.filter(m => m.completed).length}/{milestones.length})
+            Milestones ({milestones.filter((m) => m.completed).length}/{milestones.length})
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'ai-analysis' ? 'active' : ''}"
-            on:click={() => activeTab = 'ai-analysis'}
+            on:click={() => (activeTab = 'ai-analysis')}
           >
             <Icon name="brain" size="16" />
             AI Learning Path
@@ -480,7 +505,7 @@
                 <h2>Learning Project Overview</h2>
                 <p>Comprehensive details about your learning journey and progress</p>
               </div>
-              
+
               {#if project.summary}
                 <div class="content-section">
                   <h3>Project Description</h3>
@@ -499,7 +524,9 @@
                   </div>
                   <div class="tech-item">
                     <span class="tech-label">Difficulty</span>
-                    <span class="tech-value">{getDifficultyLabel(project.difficulty_level || 2)}</span>
+                    <span class="tech-value"
+                      >{getDifficultyLabel(project.difficulty_level || 2)}</span
+                    >
                   </div>
                   {#if project.programming_language}
                     <div class="tech-item">
@@ -515,7 +542,9 @@
                   {/if}
                   <div class="tech-item">
                     <span class="tech-label">Time Commitment</span>
-                    <span class="tech-value">{getEstimatedTimeCommitment(project.difficulty_level || 2)}</span>
+                    <span class="tech-value"
+                      >{getEstimatedTimeCommitment(project.difficulty_level || 2)}</span
+                    >
                   </div>
                   <div class="tech-item">
                     <span class="tech-label">Career Impact</span>
@@ -544,13 +573,14 @@
                     </div>
                     <div class="breakdown-item">
                       <span class="breakdown-label">Milestones Complete</span>
-                      <span class="breakdown-value">{milestones.filter(m => m.completed).length}/{milestones.length}</span>
+                      <span class="breakdown-value"
+                        >{milestones.filter((m) => m.completed).length}/{milestones.length}</span
+                      >
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
           {:else if activeTab === 'progress'}
             <div class="progress-tab">
               <div class="content-header">
@@ -563,7 +593,7 @@
                   </select>
                 </div>
               </div>
-              
+
               {#if progressMode === 'visual'}
                 <div class="visual-progress">
                   <div class="progress-chart">
@@ -573,21 +603,41 @@
                         <div class="progress-item">
                           <span class="progress-item-label">Skills Mastered</span>
                           <div class="progress-item-bar">
-                            <div class="progress-item-fill" style="width: {(currentSkills.length / (currentSkills.length + nextSkills.length)) * 100}%"></div>
+                            <div
+                              class="progress-item-fill"
+                              style="width: {(currentSkills.length /
+                                (currentSkills.length + nextSkills.length)) *
+                                100}%"
+                            ></div>
                           </div>
-                          <span class="progress-item-value">{currentSkills.length}/{currentSkills.length + nextSkills.length}</span>
+                          <span class="progress-item-value"
+                            >{currentSkills.length}/{currentSkills.length + nextSkills.length}</span
+                          >
                         </div>
                         <div class="progress-item">
                           <span class="progress-item-label">Milestones Completed</span>
                           <div class="progress-item-bar">
-                            <div class="progress-item-fill" style="width: {(milestones.filter(m => m.completed).length / milestones.length) * 100}%"></div>
+                            <div
+                              class="progress-item-fill"
+                              style="width: {(milestones.filter((m) => m.completed).length /
+                                milestones.length) *
+                                100}%"
+                            ></div>
                           </div>
-                          <span class="progress-item-value">{milestones.filter(m => m.completed).length}/{milestones.length}</span>
+                          <span class="progress-item-value"
+                            >{milestones.filter((m) => m.completed)
+                              .length}/{milestones.length}</span
+                          >
                         </div>
                         <div class="progress-item">
                           <span class="progress-item-label">Overall Progress</span>
                           <div class="progress-item-bar">
-                            <div class="progress-item-fill" style="width: {projectProgress}%; background-color: {getProgressColor(projectProgress)}"></div>
+                            <div
+                              class="progress-item-fill"
+                              style="width: {projectProgress}%; background-color: {getProgressColor(
+                                projectProgress
+                              )}"
+                            ></div>
                           </div>
                           <span class="progress-item-value">{projectProgress}%</span>
                         </div>
@@ -646,14 +696,13 @@
                 </div>
               {/if}
             </div>
-
           {:else if activeTab === 'milestones'}
             <div class="milestones-tab">
               <div class="content-header">
                 <h2>Learning Milestones</h2>
                 <p>Track your progress through key learning objectives</p>
               </div>
-              
+
               <div class="milestones-grid">
                 {#each milestones as milestone}
                   <div class="milestone-card {milestone.completed ? 'completed' : 'pending'}">
@@ -672,11 +721,14 @@
                     </div>
                     <div class="milestone-actions">
                       {#if !milestone.completed}
-                        <button class="milestone-btn" on:click={() => {
-                          milestone.completed = true;
-                          milestones = [...milestones];
-                          handleUpdateProgress(Math.min(100, projectProgress + 15));
-                        }}>
+                        <button
+                          class="milestone-btn"
+                          on:click={() => {
+                            milestone.completed = true;
+                            milestones = [...milestones];
+                            handleUpdateProgress(Math.min(100, projectProgress + 15));
+                          }}
+                        >
                           Mark Complete
                         </button>
                       {:else}
@@ -687,14 +739,13 @@
                 {/each}
               </div>
             </div>
-
           {:else if activeTab === 'ai-analysis'}
             <div class="ai-analysis-tab">
               <div class="content-header">
                 <h2>AI Learning Path & Insights</h2>
                 <p>AI-powered recommendations for your learning journey</p>
-                <button 
-                  class="refresh-analysis" 
+                <button
+                  class="refresh-analysis"
                   on:click={generateAIInsights}
                   disabled={isAIAnalyzing}
                 >
@@ -702,7 +753,7 @@
                   {isAIAnalyzing ? 'Analyzing...' : 'Refresh Analysis'}
                 </button>
               </div>
-              
+
               {#if isAIAnalyzing}
                 <div class="ai-loading">
                   <div class="neural-pulse"></div>
@@ -787,7 +838,8 @@
   }
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       border-top-color: #00ff88;
       transform: scale(1);
     }

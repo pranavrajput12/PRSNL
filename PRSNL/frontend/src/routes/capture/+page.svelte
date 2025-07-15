@@ -819,10 +819,7 @@
       <!-- Repository Code Preview -->
       {#if isRepositoryDetected && url}
         <div class="repository-preview-section">
-          <RepositoryCodePreview 
-            repositoryUrl={url}
-            height="500px"
-          />
+          <RepositoryCodePreview repositoryUrl={url} height="500px" />
         </div>
       {/if}
     </div>

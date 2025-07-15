@@ -35,16 +35,16 @@
   let readmeContent = '';
   let loading = true;
   let error: string | null = null;
-  
+
   // UI State
   let activeTab = 'overview'; // overview, files, readme, ai-analysis
   let sidebarCollapsed = false;
   let previewMode = 'split'; // split, code-only, preview-only
-  
+
   // File tree state
   let expandedDirectories = new Set<string>();
   let searchQuery = '';
-  
+
   // AI Agent Integration
   let aiSuggestions: string[] = [];
   let isAIAnalyzing = false;
@@ -65,25 +65,24 @@
       // Fetch repository details using the GitHub API
       const response = await fetch(`/api/github/repos/by-slug/${repositoryId}`, {
         headers: {
-          'X-PRSNL-Integration': 'frontend'
-        }
+          'X-PRSNL-Integration': 'frontend',
+        },
       });
-      
+
       if (!response.ok) {
         throw new Error('Repository not found');
       }
-      
+
       repository = await response.json();
 
       // Load repository files
       await loadRepositoryFiles();
-      
+
       // Load README content
       await loadReadmeContent();
-      
+
       // Generate AI insights
       await generateAIInsights();
-
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load repository';
       console.error('Repository loading error:', err);
@@ -100,32 +99,51 @@
 
       // Common files to fetch
       const commonFiles = [
-        'README.md', 'README.rst', 'README.txt',
-        'package.json', 'requirements.txt', 'Cargo.toml', 'composer.json', 'pom.xml', 'go.mod',
-        'Dockerfile', 'docker-compose.yml',
-        'LICENSE', 'LICENSE.md', 'LICENSE.txt',
-        '.gitignore', '.env.example', 'tsconfig.json', 'webpack.config.js',
-        'src/index.js', 'src/main.py', 'src/app.py', 'main.go', 'index.html'
+        'README.md',
+        'README.rst',
+        'README.txt',
+        'package.json',
+        'requirements.txt',
+        'Cargo.toml',
+        'composer.json',
+        'pom.xml',
+        'go.mod',
+        'Dockerfile',
+        'docker-compose.yml',
+        'LICENSE',
+        'LICENSE.md',
+        'LICENSE.txt',
+        '.gitignore',
+        '.env.example',
+        'tsconfig.json',
+        'webpack.config.js',
+        'src/index.js',
+        'src/main.py',
+        'src/app.py',
+        'main.go',
+        'index.html',
       ];
 
       const fetchedFiles: RepositoryFile[] = [];
 
       for (const fileName of commonFiles) {
         try {
-          const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`);
+          const response = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`
+          );
           if (response.ok) {
             const data = await response.json();
             if (data.type === 'file' && data.content) {
               const content = atob(data.content);
               const language = detectLanguage(fileName);
-              
+
               fetchedFiles.push({
                 name: fileName,
                 content: content.slice(0, 50000), // Limit for performance
                 language,
                 size: data.size,
                 path: fileName,
-                type: 'file'
+                type: 'file',
               });
             }
           }
@@ -135,18 +153,17 @@
       }
 
       files = fetchedFiles;
-      
-      // Auto-select README or first file
-      const readmeFile = files.find(f => f.name.toLowerCase().startsWith('readme'));
-      selectedFile = readmeFile || files[0] || null;
 
+      // Auto-select README or first file
+      const readmeFile = files.find((f) => f.name.toLowerCase().startsWith('readme'));
+      selectedFile = readmeFile || files[0] || null;
     } catch (error) {
       console.error('Error loading repository files:', error);
     }
   }
 
   async function loadReadmeContent() {
-    const readmeFile = files.find(f => f.name.toLowerCase().startsWith('readme'));
+    const readmeFile = files.find((f) => f.name.toLowerCase().startsWith('readme'));
     if (readmeFile) {
       readmeContent = readmeFile.content;
     }
@@ -157,7 +174,7 @@
 
     try {
       isAIAnalyzing = true;
-      
+
       // Use AI suggest API to analyze repository
       const response = await fetch('/api/ai-suggest', {
         method: 'POST',
@@ -167,9 +184,9 @@
           context: {
             language: repository.language,
             stars: repository.stars,
-            forks: repository.forks
-          }
-        })
+            forks: repository.forks,
+          },
+        }),
       });
 
       if (response.ok) {
@@ -178,7 +195,7 @@
           ...(data.suggestions || []),
           'Consider this for your current projects',
           'Check compatibility with your tech stack',
-          'Review documentation for implementation details'
+          'Review documentation for implementation details',
         ];
       }
     } catch (error) {
@@ -191,17 +208,34 @@
   function detectLanguage(filename: string): string {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
     const languageMap: Record<string, string> = {
-      js: 'javascript', ts: 'typescript', py: 'python', rb: 'ruby',
-      php: 'php', java: 'java', go: 'go', rs: 'rust', cpp: 'cpp',
-      c: 'c', cs: 'csharp', html: 'html', css: 'css', scss: 'scss',
-      json: 'json', yml: 'yaml', yaml: 'yaml', xml: 'xml',
-      md: 'markdown', txt: 'plaintext', sh: 'shell', sql: 'sql',
-      dockerfile: 'dockerfile'
+      js: 'javascript',
+      ts: 'typescript',
+      py: 'python',
+      rb: 'ruby',
+      php: 'php',
+      java: 'java',
+      go: 'go',
+      rs: 'rust',
+      cpp: 'cpp',
+      c: 'c',
+      cs: 'csharp',
+      html: 'html',
+      css: 'css',
+      scss: 'scss',
+      json: 'json',
+      yml: 'yaml',
+      yaml: 'yaml',
+      xml: 'xml',
+      md: 'markdown',
+      txt: 'plaintext',
+      sh: 'shell',
+      sql: 'sql',
+      dockerfile: 'dockerfile',
     };
-    
+
     if (filename.toLowerCase() === 'dockerfile') return 'dockerfile';
     if (filename.toLowerCase() === 'makefile') return 'makefile';
-    
+
     return languageMap[ext] || 'plaintext';
   }
 
@@ -212,9 +246,16 @@
 
   function getLanguageColor(language: string): string {
     const colors: Record<string, string> = {
-      javascript: '#f7df1e', typescript: '#3178c6', python: '#3776ab',
-      java: '#ed8b00', go: '#00add8', rust: '#000000', cpp: '#00599c',
-      csharp: '#239120', php: '#777bb4', ruby: '#cc342d'
+      javascript: '#f7df1e',
+      typescript: '#3178c6',
+      python: '#3776ab',
+      java: '#ed8b00',
+      go: '#00add8',
+      rust: '#000000',
+      cpp: '#00599c',
+      csharp: '#239120',
+      php: '#777bb4',
+      ruby: '#cc342d',
     };
     return colors[language?.toLowerCase()] || '#64748b';
   }
@@ -282,7 +323,7 @@
           <Icon name="arrow-left" size="16" />
           CodeMirror
         </button>
-        
+
         <div class="breadcrumb">
           <Icon name="github" size="16" />
           <span>{repository.full_name.split('/')[0]}</span>
@@ -304,7 +345,10 @@
               <span>{formatNumber(repository.forks)}</span>
             </div>
             <div class="stat language-stat" style="color: {getLanguageColor(repository.language)}">
-              <div class="language-dot" style="background: {getLanguageColor(repository.language)}"></div>
+              <div
+                class="language-dot"
+                style="background: {getLanguageColor(repository.language)}"
+              ></div>
               <span>{repository.language}</span>
             </div>
           </div>
@@ -319,7 +363,7 @@
             <Icon name="copy" size="16" />
             Copy URL
           </button>
-          <button class="action-button" on:click={() => activeTab = 'ai-analysis'}>
+          <button class="action-button" on:click={() => (activeTab = 'ai-analysis')}>
             <Icon name="zap" size="16" />
             AI Analysis
           </button>
@@ -341,37 +385,37 @@
 
     <!-- Navigation Tabs -->
     <div class="tab-navigation">
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         class:active={activeTab === 'overview'}
-        on:click={() => activeTab = 'overview'}
+        on:click={() => (activeTab = 'overview')}
       >
         <Icon name="home" size="16" />
         Overview
       </button>
-      
-      <button 
-        class="tab-button" 
+
+      <button
+        class="tab-button"
         class:active={activeTab === 'readme'}
-        on:click={() => activeTab = 'readme'}
+        on:click={() => (activeTab = 'readme')}
       >
         <Icon name="book-open" size="16" />
         README
       </button>
-      
-      <button 
-        class="tab-button" 
+
+      <button
+        class="tab-button"
         class:active={activeTab === 'files'}
-        on:click={() => activeTab = 'files'}
+        on:click={() => (activeTab = 'files')}
       >
         <Icon name="folder" size="16" />
         Files ({files.length})
       </button>
-      
-      <button 
-        class="tab-button" 
+
+      <button
+        class="tab-button"
         class:active={activeTab === 'ai-analysis'}
-        on:click={() => activeTab = 'ai-analysis'}
+        on:click={() => (activeTab = 'ai-analysis')}
       >
         <Icon name="brain" size="16" />
         AI Analysis
@@ -381,10 +425,10 @@
       </button>
 
       <div class="tab-controls">
-        <button 
+        <button
           class="control-button"
           class:active={!sidebarCollapsed}
-          on:click={() => sidebarCollapsed = !sidebarCollapsed}
+          on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
           title="Toggle Sidebar"
         >
           <Icon name="sidebar" size="16" />
@@ -425,16 +469,14 @@
             <div class="files-sidebar">
               <div class="file-search">
                 <Icon name="search" size="16" />
-                <input 
-                  type="text" 
-                  placeholder="Search files..." 
-                  bind:value={searchQuery}
-                />
+                <input type="text" placeholder="Search files..." bind:value={searchQuery} />
               </div>
-              
+
               <div class="file-tree">
-                {#each files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())) as file}
-                  <button 
+                {#each files.filter((f) => f.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())) as file}
+                  <button
                     class="file-item"
                     class:selected={selectedFile?.name === file.name}
                     on:click={() => selectFile(file)}
@@ -473,16 +515,20 @@
                 <p>{repository.description}</p>
                 <div class="repo-details">
                   <div class="detail-item">
-                    <strong>Language:</strong> {repository.language}
+                    <strong>Language:</strong>
+                    {repository.language}
                   </div>
                   <div class="detail-item">
-                    <strong>Stars:</strong> {formatNumber(repository.stars)}
+                    <strong>Stars:</strong>
+                    {formatNumber(repository.stars)}
                   </div>
                   <div class="detail-item">
-                    <strong>Forks:</strong> {formatNumber(repository.forks)}
+                    <strong>Forks:</strong>
+                    {formatNumber(repository.forks)}
                   </div>
                   <div class="detail-item">
-                    <strong>Default Branch:</strong> {repository.default_branch}
+                    <strong>Default Branch:</strong>
+                    {repository.default_branch}
                   </div>
                 </div>
               </div>
@@ -490,11 +536,11 @@
               <div class="overview-card">
                 <h3>Quick Actions</h3>
                 <div class="quick-actions">
-                  <button class="quick-action" on:click={() => activeTab = 'readme'}>
+                  <button class="quick-action" on:click={() => (activeTab = 'readme')}>
                     <Icon name="book-open" size="20" />
                     Read Documentation
                   </button>
-                  <button class="quick-action" on:click={() => activeTab = 'files'}>
+                  <button class="quick-action" on:click={() => (activeTab = 'files')}>
                     <Icon name="code" size="20" />
                     Browse Code
                   </button>
@@ -506,7 +552,6 @@
               </div>
             </div>
           </div>
-
         {:else if activeTab === 'readme'}
           <div class="readme-content">
             {#if readmeContent}
@@ -528,7 +573,6 @@
               </div>
             {/if}
           </div>
-
         {:else if activeTab === 'files'}
           <div class="code-editor-section">
             {#if selectedFile}
@@ -539,7 +583,10 @@
                   <span class="language-badge">{selectedFile.language}</span>
                 </div>
                 <div class="editor-actions">
-                  <button class="action-btn" on:click={() => copyToClipboard(selectedFile?.content || '')}>
+                  <button
+                    class="action-btn"
+                    on:click={() => copyToClipboard(selectedFile?.content || '')}
+                  >
                     <Icon name="copy" size="14" />
                     Copy
                   </button>
@@ -549,7 +596,7 @@
                   </button>
                 </div>
               </div>
-              
+
               <MonacoEditor
                 value={selectedFile.content}
                 language={selectedFile.language}
@@ -566,7 +613,6 @@
               </div>
             {/if}
           </div>
-
         {:else if activeTab === 'ai-analysis'}
           <div class="ai-analysis-content">
             <div class="analysis-grid">
@@ -620,7 +666,8 @@
   }
 
   /* Loading & Error States */
-  .loading-screen, .error-screen {
+  .loading-screen,
+  .error-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -630,12 +677,14 @@
     gap: 1rem;
   }
 
-  .loading-screen h2, .error-screen h2 {
+  .loading-screen h2,
+  .error-screen h2 {
     color: #00ff88;
     margin: 0;
   }
 
-  .loading-screen p, .error-screen p {
+  .loading-screen p,
+  .error-screen p {
     color: #888;
     margin: 0;
   }
@@ -768,7 +817,8 @@
     gap: 0.5rem;
   }
 
-  .tech-tag, .difficulty-tag {
+  .tech-tag,
+  .difficulty-tag {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -785,8 +835,16 @@
     border: 1px solid;
   }
 
-  .difficulty-public { background: rgba(34, 197, 94, 0.2); color: #22c55e; border-color: rgba(34, 197, 94, 0.3); }
-  .difficulty-private { background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+  .difficulty-public {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  .difficulty-private {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
 
   /* Tab Navigation */
   .tab-navigation {
@@ -838,7 +896,8 @@
     transition: all 0.2s ease;
   }
 
-  .control-button:hover, .control-button.active {
+  .control-button:hover,
+  .control-button.active {
     color: #00ff88;
     border-color: #00ff88;
   }
@@ -1097,18 +1156,28 @@
     color: #e0e0e0;
   }
 
-  .markdown-content :global(h1) { color: #00ff88; margin-top: 0; }
-  .markdown-content :global(h2) { color: #00ff88; margin-top: 2rem; }
-  .markdown-content :global(h3) { color: #00ff88; margin-top: 1.5rem; }
-  .markdown-content :global(code) { 
-    background: rgba(0, 255, 136, 0.1); 
-    color: #00ff88; 
-    padding: 0.125rem 0.25rem; 
-    border-radius: 4px; 
+  .markdown-content :global(h1) {
+    color: #00ff88;
+    margin-top: 0;
+  }
+  .markdown-content :global(h2) {
+    color: #00ff88;
+    margin-top: 2rem;
+  }
+  .markdown-content :global(h3) {
+    color: #00ff88;
+    margin-top: 1.5rem;
+  }
+  .markdown-content :global(code) {
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
     font-family: 'Monaco', monospace;
   }
 
-  .no-readme, .no-file-selected {
+  .no-readme,
+  .no-file-selected {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1118,7 +1187,8 @@
     color: #666;
   }
 
-  .no-readme h3, .no-file-selected h3 {
+  .no-readme h3,
+  .no-file-selected h3 {
     color: #888;
     margin: 1rem 0 0.5rem 0;
   }
@@ -1261,7 +1331,11 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

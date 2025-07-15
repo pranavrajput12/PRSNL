@@ -44,15 +44,15 @@ const getWebSocketURL = () => {
   if (import.meta.env.PUBLIC_WS_URL) {
     return import.meta.env.PUBLIC_WS_URL;
   }
-  
+
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = window.location.host;
-  
+
   // In production, use the same host but with /api/ws path
   if (host.includes('prsnl.fyi')) {
     return `${protocol}//${host}/api/ws`;
   }
-  
+
   // In development, use localhost:8000
   return 'ws://localhost:8000/api/ws';
 };

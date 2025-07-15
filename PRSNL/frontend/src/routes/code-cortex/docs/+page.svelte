@@ -16,7 +16,7 @@
     CortexLoadingState,
     type CortexTab,
     type CortexStat,
-    type CortexAction
+    type CortexAction,
   } from '$lib/components/cortex';
   import Icon from '$lib/components/Icon.svelte';
   import GitHubRepoCard from '$lib/components/development/GitHubRepoCard.svelte';
@@ -50,7 +50,7 @@
   $: headerStats = [
     { label: 'Documents', value: docs.length },
     { label: 'Categories', value: categories.length },
-    { label: searchQuery ? 'Search Results' : 'Total', value: docs.length }
+    { label: searchQuery ? 'Search Results' : 'Total', value: docs.length },
   ] as CortexStat[];
 
   // Header actions
@@ -58,62 +58,105 @@
     {
       label: 'Add Knowledge',
       icon: 'plus',
-      onClick: () => window.location.href = '/capture',
-      variant: 'primary'
+      onClick: () => (window.location.href = '/capture'),
+      variant: 'primary',
     },
     {
       label: viewMode === 'grid' ? 'List View' : 'Grid View',
       icon: viewMode === 'grid' ? 'list' : 'grid',
-      onClick: () => viewMode = viewMode === 'grid' ? 'list' : 'grid',
-      variant: 'secondary'
-    }
+      onClick: () => (viewMode = viewMode === 'grid' ? 'list' : 'grid'),
+      variant: 'secondary',
+    },
   ] as CortexAction[];
 
   // Tab configuration
   $: tabs = [
     { id: 'all', label: 'All Knowledge', icon: 'file-text', count: docs.length },
-    { id: 'tutorials', label: 'Tutorials', icon: 'book-open', count: docs.filter(d => d.tags.some(tag => tag.toLowerCase().includes('tutorial'))).length },
-    { id: 'guides', label: 'Guides', icon: 'map', count: docs.filter(d => d.tags.some(tag => tag.toLowerCase().includes('guide'))).length },
-    { id: 'documentation', label: 'Documentation', icon: 'file-text', count: docs.filter(d => d.tags.some(tag => tag.toLowerCase().includes('documentation') || tag.toLowerCase().includes('docs'))).length },
-    { id: 'learning', label: 'Learning Materials', icon: 'graduation-cap', count: docs.filter(d => d.tags.some(tag => tag.toLowerCase().includes('learning') || tag.toLowerCase().includes('course'))).length }
+    {
+      id: 'tutorials',
+      label: 'Tutorials',
+      icon: 'book-open',
+      count: docs.filter((d) => d.tags.some((tag) => tag.toLowerCase().includes('tutorial')))
+        .length,
+    },
+    {
+      id: 'guides',
+      label: 'Guides',
+      icon: 'map',
+      count: docs.filter((d) => d.tags.some((tag) => tag.toLowerCase().includes('guide'))).length,
+    },
+    {
+      id: 'documentation',
+      label: 'Documentation',
+      icon: 'file-text',
+      count: docs.filter((d) =>
+        d.tags.some(
+          (tag) => tag.toLowerCase().includes('documentation') || tag.toLowerCase().includes('docs')
+        )
+      ).length,
+    },
+    {
+      id: 'learning',
+      label: 'Learning Materials',
+      icon: 'graduation-cap',
+      count: docs.filter((d) =>
+        d.tags.some(
+          (tag) => tag.toLowerCase().includes('learning') || tag.toLowerCase().includes('course')
+        )
+      ).length,
+    },
   ] as CortexTab[];
 
   // Filtered docs based on active tab
-  $: filteredDocs = docs.filter(doc => {
+  $: filteredDocs = docs.filter((doc) => {
     // Only show internal knowledge content (no external URLs, only docs with summaries or no URLs)
-    const isInternalKnowledge = !doc.url || 
-                               !doc.url.startsWith('http') || 
-                               (doc.summary && doc.summary.length > 50); // Rich internal content
-    
+    const isInternalKnowledge =
+      !doc.url || !doc.url.startsWith('http') || (doc.summary && doc.summary.length > 50); // Rich internal content
+
     if (!isInternalKnowledge) return false;
-    
+
     // Additional filter: exclude anything that looks like a repository or tool
-    const isNotRepository = !doc.url || 
-                           (!doc.url.includes('github.com') && 
-                            !doc.url.includes('gitlab.com') && 
-                            !doc.url.includes('bitbucket.'));
-    
+    const isNotRepository =
+      !doc.url ||
+      (!doc.url.includes('github.com') &&
+        !doc.url.includes('gitlab.com') &&
+        !doc.url.includes('bitbucket.'));
+
     if (!isNotRepository) return false;
-    
+
     switch (activeTab) {
       case 'tutorials':
-        return doc.tags.some(tag => tag.toLowerCase().includes('tutorial')) ||
-               doc.title.toLowerCase().includes('tutorial');
+        return (
+          doc.tags.some((tag) => tag.toLowerCase().includes('tutorial')) ||
+          doc.title.toLowerCase().includes('tutorial')
+        );
       case 'guides':
-        return doc.tags.some(tag => tag.toLowerCase().includes('guide')) ||
-               doc.title.toLowerCase().includes('guide');
+        return (
+          doc.tags.some((tag) => tag.toLowerCase().includes('guide')) ||
+          doc.title.toLowerCase().includes('guide')
+        );
       case 'documentation':
-        return doc.tags.some(tag => tag.toLowerCase().includes('documentation') || 
-                                   tag.toLowerCase().includes('docs') ||
-                                   tag.toLowerCase().includes('reference')) ||
-               doc.title.toLowerCase().includes('docs') ||
-               doc.title.toLowerCase().includes('documentation');
+        return (
+          doc.tags.some(
+            (tag) =>
+              tag.toLowerCase().includes('documentation') ||
+              tag.toLowerCase().includes('docs') ||
+              tag.toLowerCase().includes('reference')
+          ) ||
+          doc.title.toLowerCase().includes('docs') ||
+          doc.title.toLowerCase().includes('documentation')
+        );
       case 'learning':
-        return doc.tags.some(tag => tag.toLowerCase().includes('learning') || 
-                                   tag.toLowerCase().includes('course') ||
-                                   tag.toLowerCase().includes('education')) ||
-               doc.title.toLowerCase().includes('learn') ||
-               doc.title.toLowerCase().includes('course');
+        return (
+          doc.tags.some(
+            (tag) =>
+              tag.toLowerCase().includes('learning') ||
+              tag.toLowerCase().includes('course') ||
+              tag.toLowerCase().includes('education')
+          ) ||
+          doc.title.toLowerCase().includes('learn') ||
+          doc.title.toLowerCase().includes('course')
+        );
       default:
         return true;
     }
@@ -267,19 +310,43 @@
 
   function createDocCard(doc: DevelopmentItem) {
     const tags = [
-      ...(doc.programming_language ? [{ label: `${getLanguageIcon(doc.programming_language)} ${doc.programming_language}`, color: 'rgba(0, 255, 136, 0.2)' }] : []),
-      ...(doc.difficulty_level ? [{ label: getDifficultyLabel(doc.difficulty_level), color: getDifficultyColor(doc.difficulty_level) + '40' }] : []),
+      ...(doc.programming_language
+        ? [
+            {
+              label: `${getLanguageIcon(doc.programming_language)} ${doc.programming_language}`,
+              color: 'rgba(0, 255, 136, 0.2)',
+            },
+          ]
+        : []),
+      ...(doc.difficulty_level
+        ? [
+            {
+              label: getDifficultyLabel(doc.difficulty_level),
+              color: getDifficultyColor(doc.difficulty_level) + '40',
+            },
+          ]
+        : []),
       ...(doc.is_career_related ? [{ label: '💼 Career', color: 'rgba(220, 20, 60, 0.2)' }] : []),
-      ...doc.tags.slice(0, 3).map(tag => ({ label: `#${tag}`, color: 'rgba(0, 255, 136, 0.1)' }))
+      ...doc.tags.slice(0, 3).map((tag) => ({ label: `#${tag}`, color: 'rgba(0, 255, 136, 0.1)' })),
     ];
 
     const stats = [
-      ...(isUsingEnhancedSearch && doc.similarity_score ? [{ label: 'Match', value: `${Math.round(doc.similarity_score * 100)}%` }] : []),
-      { label: 'Created', value: new Date(doc.created_at).toLocaleDateString() }
+      ...(isUsingEnhancedSearch && doc.similarity_score
+        ? [{ label: 'Match', value: `${Math.round(doc.similarity_score * 100)}%` }]
+        : []),
+      { label: 'Created', value: new Date(doc.created_at).toLocaleDateString() },
     ];
 
     const actions = [
-      ...(doc.url ? [{ label: 'Open Source', icon: 'external-link', onClick: () => window.open(doc.url, '_blank') }] : [])
+      ...(doc.url
+        ? [
+            {
+              label: 'Open Source',
+              icon: 'external-link',
+              onClick: () => window.open(doc.url, '_blank'),
+            },
+          ]
+        : []),
     ];
 
     return {
@@ -289,8 +356,8 @@
       tags,
       stats,
       actions,
-      onClick: () => window.location.href = `/code-cortex/docs/${doc.id}`,
-      variant: doc.is_career_related ? 'highlight' : 'default'
+      onClick: () => (window.location.href = `/code-cortex/docs/${doc.id}`),
+      variant: doc.is_career_related ? 'highlight' : 'default',
     };
   }
 </script>
@@ -311,7 +378,7 @@
   <CortexTabNavigation
     {tabs}
     {activeTab}
-    onTabChange={(tabId) => activeTab = tabId}
+    onTabChange={(tabId) => (activeTab = tabId)}
     variant="default"
   />
 
@@ -346,7 +413,10 @@
             <div class="mode-buttons">
               <button
                 class="mode-btn {searchMode === 'semantic' ? 'active' : ''}"
-                on:click={() => { searchMode = 'semantic'; loadDocs(true); }}
+                on:click={() => {
+                  searchMode = 'semantic';
+                  loadDocs(true);
+                }}
                 title="AI Semantic Search"
               >
                 <Icon name="brain" size="14" />
@@ -354,7 +424,10 @@
               </button>
               <button
                 class="mode-btn {searchMode === 'keyword' ? 'active' : ''}"
-                on:click={() => { searchMode = 'keyword'; loadDocs(true); }}
+                on:click={() => {
+                  searchMode = 'keyword';
+                  loadDocs(true);
+                }}
                 title="Keyword Search"
               >
                 <Icon name="search" size="14" />
@@ -362,7 +435,10 @@
               </button>
               <button
                 class="mode-btn {searchMode === 'hybrid' ? 'active' : ''}"
-                on:click={() => { searchMode = 'hybrid'; loadDocs(true); }}
+                on:click={() => {
+                  searchMode = 'hybrid';
+                  loadDocs(true);
+                }}
                 title="Hybrid Search"
               >
                 <Icon name="zap" size="14" />
@@ -391,10 +467,14 @@
       <!-- Filters Section -->
       <div class="filter-section">
         <h4>Filters</h4>
-        
+
         <div class="filter-group">
           <label>Category</label>
-          <select bind:value={selectedCategory} on:change={handleFilterChange} class="filter-select">
+          <select
+            bind:value={selectedCategory}
+            on:change={handleFilterChange}
+            class="filter-select"
+          >
             <option value="">All Categories</option>
             {#each categories as category}
               <option value={category.name}>{category.name}</option>
@@ -404,7 +484,11 @@
 
         <div class="filter-group">
           <label>Language</label>
-          <select bind:value={selectedLanguage} on:change={handleFilterChange} class="filter-select">
+          <select
+            bind:value={selectedLanguage}
+            on:change={handleFilterChange}
+            class="filter-select"
+          >
             <option value="">All Languages</option>
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
@@ -418,7 +502,11 @@
 
         <div class="filter-group">
           <label>Difficulty</label>
-          <select bind:value={selectedDifficulty} on:change={handleFilterChange} class="filter-select">
+          <select
+            bind:value={selectedDifficulty}
+            on:change={handleFilterChange}
+            class="filter-select"
+          >
             <option value="">All Levels</option>
             <option value={1}>Beginner</option>
             <option value={2}>Intermediate</option>
@@ -438,7 +526,7 @@
             <span class="stat-label">Showing</span>
           </div>
           <div class="stat">
-            <span class="stat-number">{docs.filter(d => d.is_career_related).length}</span>
+            <span class="stat-number">{docs.filter((d) => d.is_career_related).length}</span>
             <span class="stat-label">Career Related</span>
           </div>
         </div>
@@ -447,11 +535,7 @@
 
     <div slot="content" class="main-content">
       {#if loading}
-        <CortexLoadingState 
-          message="Loading documentation..." 
-          variant="pulse"
-          size="md"
-        />
+        <CortexLoadingState message="Loading documentation..." variant="pulse" size="md" />
       {:else if filteredDocs.length === 0}
         <CortexEmptyState
           icon="file-x"
@@ -486,11 +570,10 @@
                       />
                     </div>
                     {#if doc.metadata.preview_data.readme.full_length > doc.metadata.preview_data.readme.snippet.length}
-                      <a
-                        href={`/code-cortex/docs/${doc.id}`}
-                        class="read-more-link"
-                      >
-                        Read full README ({Math.round(doc.metadata.preview_data.readme.full_length / 1000)}k chars)
+                      <a href={`/code-cortex/docs/${doc.id}`} class="read-more-link">
+                        Read full README ({Math.round(
+                          doc.metadata.preview_data.readme.full_length / 1000
+                        )}k chars)
                       </a>
                     {/if}
                   </div>
@@ -508,10 +591,16 @@
                   </div>
                   <div class="doc-list-meta">
                     {#if doc.programming_language}
-                      <span class="meta-tag">{getLanguageIcon(doc.programming_language)} {doc.programming_language}</span>
+                      <span class="meta-tag"
+                        >{getLanguageIcon(doc.programming_language)}
+                        {doc.programming_language}</span
+                      >
                     {/if}
                     {#if doc.difficulty_level}
-                      <span class="meta-tag difficulty" style="color: {getDifficultyColor(doc.difficulty_level)}">
+                      <span
+                        class="meta-tag difficulty"
+                        style="color: {getDifficultyColor(doc.difficulty_level)}"
+                      >
                         {getDifficultyLabel(doc.difficulty_level)}
                       </span>
                     {/if}

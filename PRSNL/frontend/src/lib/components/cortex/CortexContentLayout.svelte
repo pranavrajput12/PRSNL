@@ -10,8 +10,8 @@
 
 <div class="cortex-content-layout">
   {#if showSidebar}
-    <aside 
-      class="sidebar" 
+    <aside
+      class="sidebar"
       class:collapsed={sidebarCollapsed}
       style="width: {sidebarCollapsed ? '0' : sidebarWidth}"
     >
@@ -20,17 +20,17 @@
           <div class="sidebar-header">
             <h3>{sidebarTitle}</h3>
             {#if collapsible}
-              <button 
+              <button
                 class="collapse-btn"
-                on:click={() => sidebarCollapsed = !sidebarCollapsed}
+                on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
                 aria-label="Toggle sidebar"
               >
-                <Icon name={sidebarCollapsed ? "chevron-right" : "chevron-left"} size="16" />
+                <Icon name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'} size="16" />
               </button>
             {/if}
           </div>
         {/if}
-        
+
         <div class="sidebar-body">
           <slot name="sidebar" />
         </div>
@@ -40,9 +40,9 @@
 
   <main class="main-content">
     {#if collapsible && showSidebar}
-      <button 
+      <button
         class="mobile-sidebar-toggle"
-        on:click={() => sidebarCollapsed = !sidebarCollapsed}
+        on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
         aria-label="Toggle sidebar"
       >
         <Icon name="menu" size="20" />

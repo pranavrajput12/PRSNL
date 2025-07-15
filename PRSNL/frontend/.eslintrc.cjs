@@ -5,10 +5,13 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:svelte/recommended',
+    'plugin:import/errors',
+    'plugin:import/warnings',
+    'plugin:import/typescript',
     'prettier',
   ],
-  plugins: ['@typescript-eslint'],
-  ignorePatterns: ['*.cjs', 'dist', 'node_modules'],
+  plugins: ['@typescript-eslint', 'import'],
+  ignorePatterns: ['*.cjs', 'dist', 'node_modules', '.svelte-kit', 'build'],
   overrides: [
     {
       files: ['*.svelte'],
@@ -31,5 +34,24 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-explicit-any': 'warn',
+    'import/no-duplicates': 'error',
+    'import/order': [
+      'error',
+      {
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+        'newlines-between': 'never',
+        alphabetize: {
+          order: 'asc',
+        },
+      },
+    ],
+  },
+  settings: {
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+        project: './tsconfig.json',
+      },
+    },
   },
 };

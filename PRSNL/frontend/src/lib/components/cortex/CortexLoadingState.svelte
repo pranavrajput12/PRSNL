@@ -10,7 +10,11 @@
 {#if variant === 'spinner'}
   <div class="cortex-loading-state spinner {size}">
     <div class="loading-spinner">
-      <Icon name="loader" size={size === 'sm' ? '24' : size === 'lg' ? '48' : '32'} class="animate-spin" />
+      <Icon
+        name="loader"
+        size={size === 'sm' ? '24' : size === 'lg' ? '48' : '32'}
+        class="animate-spin"
+      />
     </div>
     {#if showMessage}
       <span class="loading-message">{message}</span>
@@ -92,7 +96,8 @@
   }
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       border-top-color: #00ff88;
       transform: scale(1);
     }
@@ -113,9 +118,10 @@
 
   .skeleton-line {
     height: 1rem;
-    background: linear-gradient(90deg, 
-      rgba(0, 255, 136, 0.1) 25%, 
-      rgba(0, 255, 136, 0.3) 50%, 
+    background: linear-gradient(
+      90deg,
+      rgba(0, 255, 136, 0.1) 25%,
+      rgba(0, 255, 136, 0.3) 50%,
       rgba(0, 255, 136, 0.1) 75%
     );
     background-size: 200% 100%;
@@ -164,8 +170,13 @@
   }
 
   @keyframes fadeInOut {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 0.4; }
+    0%,
+    100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 
   /* Spin Animation */
@@ -174,8 +185,12 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* Container Animation */

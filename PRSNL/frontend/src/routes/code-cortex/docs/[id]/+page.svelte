@@ -10,12 +10,12 @@
   let relatedDocs: DevelopmentItem[] = [];
   let loading = true;
   let error: string | null = null;
-  
+
   // UI State
   let activeTab = 'overview'; // overview, content, related, ai-analysis
   let sidebarCollapsed = false;
   let previewMode = 'rendered'; // rendered, raw, split
-  
+
   // AI Analysis
   let aiInsights: string[] = [];
   let isAIAnalyzing = false;
@@ -36,18 +36,17 @@
       // Fetch document details
       const response = await fetch(`/api/development/docs?content_type=knowledge`);
       if (!response.ok) throw new Error('Failed to fetch documentation');
-      
+
       const docs = await response.json();
       doc = docs.find((d: DevelopmentItem) => d.id === docId);
-      
+
       if (!doc) throw new Error('Documentation not found');
 
       // Load related documentation
       await loadRelatedDocs();
-      
+
       // Generate AI insights
       await generateAIInsights();
-      
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unknown error';
     } finally {
@@ -57,17 +56,18 @@
 
   async function loadRelatedDocs() {
     if (!doc) return;
-    
+
     try {
       const response = await fetch(`/api/development/docs?content_type=knowledge&limit=6`);
       if (response.ok) {
         const docs = await response.json();
         relatedDocs = docs
-          .filter((d: DevelopmentItem) => 
-            d.id !== doc?.id && 
-            (d.project_category === doc?.project_category ||
-             d.programming_language === doc?.programming_language ||
-             d.tags.some(tag => doc?.tags.includes(tag)))
+          .filter(
+            (d: DevelopmentItem) =>
+              d.id !== doc?.id &&
+              (d.project_category === doc?.project_category ||
+                d.programming_language === doc?.programming_language ||
+                d.tags.some((tag) => doc?.tags.includes(tag)))
           )
           .slice(0, 5);
       }
@@ -78,17 +78,17 @@
 
   async function generateAIInsights() {
     if (!doc) return;
-    
+
     try {
       isAIAnalyzing = true;
       // Simulate AI analysis - replace with actual AI service call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       aiInsights = [
         `This ${doc.project_category?.toLowerCase() || 'documentation'} covers key concepts with ${doc.difficulty_level ? 'difficulty level ' + doc.difficulty_level : 'intermediate complexity'}.`,
         `The content is ${doc.is_career_related ? 'career-relevant' : 'educational'} and includes practical examples.`,
         `Related topics: ${doc.tags.slice(0, 3).join(', ')}`,
-        `Estimated reading time: ${Math.ceil((doc.summary?.length || 500) / 200)} minutes`
+        `Estimated reading time: ${Math.ceil((doc.summary?.length || 500) / 200)} minutes`,
       ];
     } catch (err) {
       console.error('AI analysis failed:', err);
@@ -100,7 +100,7 @@
   function getDifficultyColor(level: number): string {
     const colors = {
       1: '#10b981', // Green
-      2: '#3b82f6', // Blue  
+      2: '#3b82f6', // Blue
       3: '#f59e0b', // Amber
       4: '#ef4444', // Red
       5: '#8b5cf6', // Purple
@@ -111,7 +111,7 @@
   function getDifficultyLabel(level: number): string {
     const labels = {
       1: 'Beginner',
-      2: 'Intermediate', 
+      2: 'Intermediate',
       3: 'Advanced',
       4: 'Expert',
       5: 'Master',
@@ -135,8 +135,8 @@
   function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long', 
-      day: 'numeric'
+      month: 'long',
+      day: 'numeric',
     });
   }
 
@@ -187,11 +187,17 @@
               {/if}
               {#if doc.programming_language}
                 <span class="meta-badge language">
-                  {getLanguageIcon(doc.programming_language)} {doc.programming_language}
+                  {getLanguageIcon(doc.programming_language)}
+                  {doc.programming_language}
                 </span>
               {/if}
               {#if doc.difficulty_level}
-                <span class="meta-badge difficulty" style="background-color: {getDifficultyColor(doc.difficulty_level)}40; color: {getDifficultyColor(doc.difficulty_level)}">
+                <span
+                  class="meta-badge difficulty"
+                  style="background-color: {getDifficultyColor(
+                    doc.difficulty_level
+                  )}40; color: {getDifficultyColor(doc.difficulty_level)}"
+                >
                   {getDifficultyLabel(doc.difficulty_level)}
                 </span>
               {/if}
@@ -202,7 +208,10 @@
           </div>
         </div>
         <div class="header-actions">
-          <button class="action-button secondary" on:click={() => sidebarCollapsed = !sidebarCollapsed}>
+          <button
+            class="action-button secondary"
+            on:click={() => (sidebarCollapsed = !sidebarCollapsed)}
+          >
             <Icon name={sidebarCollapsed ? 'sidebar' : 'x'} size="16" />
             {sidebarCollapsed ? 'Show' : 'Hide'} Details
           </button>
@@ -272,15 +281,15 @@
           <div class="sidebar-section">
             <h3>⚡ Quick Actions</h3>
             <div class="quick-actions">
-              <button class="quick-action" on:click={() => activeTab = 'overview'}>
+              <button class="quick-action" on:click={() => (activeTab = 'overview')}>
                 <Icon name="info" size="16" />
                 Overview
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'content'}>
+              <button class="quick-action" on:click={() => (activeTab = 'content')}>
                 <Icon name="file-text" size="16" />
                 Content
               </button>
-              <button class="quick-action" on:click={() => activeTab = 'ai-analysis'}>
+              <button class="quick-action" on:click={() => (activeTab = 'ai-analysis')}>
                 <Icon name="brain" size="16" />
                 AI Analysis
               </button>
@@ -293,30 +302,30 @@
       <div class="doc-main">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
-          <button 
+          <button
             class="tab {activeTab === 'overview' ? 'active' : ''}"
-            on:click={() => activeTab = 'overview'}
+            on:click={() => (activeTab = 'overview')}
           >
             <Icon name="info" size="16" />
             Overview
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'content' ? 'active' : ''}"
-            on:click={() => activeTab = 'content'}
+            on:click={() => (activeTab = 'content')}
           >
             <Icon name="file-text" size="16" />
             Content
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'related' ? 'active' : ''}"
-            on:click={() => activeTab = 'related'}
+            on:click={() => (activeTab = 'related')}
           >
             <Icon name="link" size="16" />
             Related ({relatedDocs.length})
           </button>
-          <button 
+          <button
             class="tab {activeTab === 'ai-analysis' ? 'active' : ''}"
-            on:click={() => activeTab = 'ai-analysis'}
+            on:click={() => (activeTab = 'ai-analysis')}
           >
             <Icon name="brain" size="16" />
             AI Analysis
@@ -331,7 +340,7 @@
                 <h2>Documentation Overview</h2>
                 <p>Comprehensive details about this documentation</p>
               </div>
-              
+
               {#if doc.summary}
                 <div class="content-section">
                   <h3>Summary</h3>
@@ -369,7 +378,6 @@
                 </div>
               </div>
             </div>
-
           {:else if activeTab === 'content'}
             <div class="content-tab">
               <div class="content-header">
@@ -382,12 +390,12 @@
                   </select>
                 </div>
               </div>
-              
+
               <div class="content-viewer {previewMode}">
                 {#if previewMode === 'rendered' || previewMode === 'split'}
                   <div class="rendered-content">
                     {#if doc.summary}
-                      <MarkdownViewer 
+                      <MarkdownViewer
                         content={doc.summary}
                         enableSyntaxHighlight={true}
                         theme="neural"
@@ -397,7 +405,7 @@
                     {/if}
                   </div>
                 {/if}
-                
+
                 {#if previewMode === 'raw' || previewMode === 'split'}
                   <div class="raw-content">
                     <pre><code>{doc.summary || 'No content available'}</code></pre>
@@ -405,14 +413,13 @@
                 {/if}
               </div>
             </div>
-
           {:else if activeTab === 'related'}
             <div class="related-tab">
               <div class="content-header">
                 <h2>Related Documentation</h2>
                 <p>Similar documentation based on category and tags</p>
               </div>
-              
+
               {#if relatedDocs.length > 0}
                 <div class="related-grid">
                   {#each relatedDocs as relatedDoc}
@@ -428,10 +435,16 @@
                       {/if}
                       <div class="card-meta">
                         {#if relatedDoc.programming_language}
-                          <span class="meta-tag">{getLanguageIcon(relatedDoc.programming_language)} {relatedDoc.programming_language}</span>
+                          <span class="meta-tag"
+                            >{getLanguageIcon(relatedDoc.programming_language)}
+                            {relatedDoc.programming_language}</span
+                          >
                         {/if}
                         {#if relatedDoc.difficulty_level}
-                          <span class="meta-tag difficulty" style="color: {getDifficultyColor(relatedDoc.difficulty_level)}">
+                          <span
+                            class="meta-tag difficulty"
+                            style="color: {getDifficultyColor(relatedDoc.difficulty_level)}"
+                          >
                             {getDifficultyLabel(relatedDoc.difficulty_level)}
                           </span>
                         {/if}
@@ -447,14 +460,13 @@
                 </div>
               {/if}
             </div>
-
           {:else if activeTab === 'ai-analysis'}
             <div class="ai-analysis-tab">
               <div class="content-header">
                 <h2>AI Analysis</h2>
                 <p>AI-powered insights about this documentation</p>
-                <button 
-                  class="refresh-analysis" 
+                <button
+                  class="refresh-analysis"
                   on:click={generateAIInsights}
                   disabled={isAIAnalyzing}
                 >
@@ -462,7 +474,7 @@
                   {isAIAnalyzing ? 'Analyzing...' : 'Refresh Analysis'}
                 </button>
               </div>
-              
+
               {#if isAIAnalyzing}
                 <div class="ai-loading">
                   <div class="neural-pulse"></div>
@@ -532,7 +544,8 @@
   }
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       border-top-color: #00ff88;
       transform: scale(1);
     }

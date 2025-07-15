@@ -35,7 +35,7 @@
   let selectedLanguage = '';
   let selectedCategory = '';
   let sortBy = 'recent';
-  
+
   let availableLanguages: string[] = [];
   let availableCategories: string[] = [];
 
@@ -46,30 +46,28 @@
   async function loadRepositories() {
     try {
       loading = true;
-      
+
       // Fetch repositories from development API
       const response = await fetch('/api/development/repositories?limit=50');
       if (!response.ok) throw new Error('Failed to fetch repositories');
-      
+
       const data = await response.json();
-      repositories = (data.items || []).map(item => ({
+      repositories = (data.items || []).map((item) => ({
         ...item,
-        repository_metadata: typeof item.repository_metadata === 'string' 
-          ? JSON.parse(item.repository_metadata) 
-          : item.repository_metadata
+        repository_metadata:
+          typeof item.repository_metadata === 'string'
+            ? JSON.parse(item.repository_metadata)
+            : item.repository_metadata,
       }));
-      
+
       // Extract unique languages and categories for filters
-      availableLanguages = [...new Set(repositories
-        .map(r => r.repository_metadata?.language)
-        .filter(Boolean)
-      )].sort();
-      
-      availableCategories = [...new Set(repositories
-        .map(r => r.repository_metadata?.category)
-        .filter(Boolean)
-      )].sort();
-      
+      availableLanguages = [
+        ...new Set(repositories.map((r) => r.repository_metadata?.language).filter(Boolean)),
+      ].sort();
+
+      availableCategories = [
+        ...new Set(repositories.map((r) => r.repository_metadata?.category).filter(Boolean)),
+      ].sort();
     } catch (error) {
       console.error('Error loading repositories:', error);
     } finally {
@@ -78,9 +76,12 @@
   }
 
   $: filteredRepositories = repositories
-    .filter(repo => {
-      if (searchQuery && !repo.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !repo.repository_metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
+    .filter((repo) => {
+      if (
+        searchQuery &&
+        !repo.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !repo.repository_metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
         return false;
       }
       if (selectedLanguage && repo.repository_metadata?.language !== selectedLanguage) {
@@ -96,7 +97,11 @@
         case 'stars':
           return (b.repository_metadata?.stars || 0) - (a.repository_metadata?.stars || 0);
         case 'name':
-          return a.repository_metadata?.repo_name?.localeCompare(b.repository_metadata?.repo_name || '') || 0;
+          return (
+            a.repository_metadata?.repo_name?.localeCompare(
+              b.repository_metadata?.repo_name || ''
+            ) || 0
+          );
         case 'recent':
         default:
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -161,7 +166,7 @@
     return {
       owner: {
         login: repo.repository_metadata?.owner || 'Unknown',
-        avatar_url: `https://github.com/${repo.repository_metadata?.owner}.png`
+        avatar_url: `https://github.com/${repo.repository_metadata?.owner}.png`,
       },
       repo: {
         name: repo.repository_metadata?.repo_name || 'Unknown',
@@ -170,19 +175,21 @@
         language: repo.repository_metadata?.language || 'Unknown',
         private: false,
         stargazers_count: repo.repository_metadata?.stars || 0,
-        forks_count: 0
+        forks_count: 0,
       },
       stats: {
         stars: repo.repository_metadata?.stars || 0,
         forks: 0,
-        watchers: 0
+        watchers: 0,
       },
-      languages: repo.repository_metadata?.language ? {
-        [repo.repository_metadata.language]: 100
-      } : {},
+      languages: repo.repository_metadata?.language
+        ? {
+            [repo.repository_metadata.language]: 100,
+          }
+        : {},
       topics: repo.repository_metadata?.tech_stack || [],
       last_updated: repo.created_at,
-      url: repo.repository_metadata?.repo_url || repo.url
+      url: repo.repository_metadata?.repo_url || repo.url,
     };
   }
 </script>
@@ -193,7 +200,7 @@
       <Icon name="arrow-left" size="20" />
       Code Cortex
     </button>
-    
+
     <div class="header-content">
       <h1>
         <Icon name="star" size="28" />
@@ -206,11 +213,7 @@
   <div class="controls-section">
     <div class="search-bar">
       <Icon name="search" size="20" />
-      <input
-        type="text"
-        placeholder="Search repositories..."
-        bind:value={searchQuery}
-      />
+      <input type="text" placeholder="Search repositories..." bind:value={searchQuery} />
     </div>
 
     <div class="filters">
@@ -257,12 +260,12 @@
     <div class="repositories-grid">
       {#each filteredRepositories as repo}
         <div class="repo-card-wrapper" on:click={() => goto(`/code-cortex/open-source/${repo.id}`)}>
-          <GitHubRepoCardV2 
+          <GitHubRepoCardV2
             repository={transformRepositoryData(repo)}
             variant="featured"
             theme="dark"
           />
-          
+
           <!-- Add custom metadata overlay -->
           <div class="repo-metadata-overlay">
             {#if repo.repository_metadata?.category}
@@ -277,7 +280,7 @@
                 {repo.repository_metadata.difficulty}
               </span>
             {/if}
-            
+
             <span class="ai-confidence">
               AI: {Math.round((repo.repository_metadata?.ai_analysis?.confidence || 0) * 100)}%
             </span>
@@ -302,8 +305,9 @@
         </div>
 
         <div class="modal-body">
-          <RepositoryCodePreview 
-            repositoryUrl={selectedRepository.repository_metadata?.repo_url || selectedRepository.url}
+          <RepositoryCodePreview
+            repositoryUrl={selectedRepository.repository_metadata?.repo_url ||
+              selectedRepository.url}
             height="600px"
           />
         </div>
@@ -411,7 +415,8 @@
     outline: none;
   }
 
-  .loading, .empty-state {
+  .loading,
+  .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -613,7 +618,11 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

@@ -41,14 +41,14 @@
       name,
       bytes,
       percentage: 0,
-      color: languageColors[name] || '#8b949e'
+      color: languageColors[name] || '#8b949e',
     }))
     .sort((a, b) => b.bytes - a.bytes)
     .slice(0, 5);
 
   $: {
     const total = languageData.reduce((sum, lang) => sum + lang.bytes, 0);
-    languageData.forEach(lang => {
+    languageData.forEach((lang) => {
       lang.percentage = total > 0 ? (lang.bytes / total) * 100 : 0;
     });
   }
@@ -81,7 +81,7 @@
 </script>
 
 {#if repository}
-  <article 
+  <article
     class="repo-card {variant} {theme}"
     on:click={handleRepoClick}
     transition:fade={{ duration: 200 }}
@@ -89,13 +89,9 @@
     <!-- Header -->
     <header class="card-header">
       <div class="repo-identity">
-        <img 
-          src={owner.avatar_url} 
-          alt={owner.login}
-          class="owner-avatar"
-        />
+        <img src={owner.avatar_url} alt={owner.login} class="owner-avatar" />
         <div class="repo-names">
-          <a 
+          <a
             href="https://github.com/{owner.login}"
             target="_blank"
             rel="noopener noreferrer"
@@ -116,7 +112,7 @@
         </div>
       </div>
 
-      <button 
+      <button
         class="github-btn"
         on:click|stopPropagation={() => window.open(repository.url, '_blank')}
         title="View on GitHub"
@@ -135,7 +131,7 @@
       <div class="language-section">
         <div class="language-bar">
           {#each languageData as lang}
-            <div 
+            <div
               class="language-segment"
               style="width: {lang.percentage}%; background-color: {lang.color}"
               title="{lang.name}: {lang.percentage.toFixed(1)}%"
@@ -146,10 +142,7 @@
           <div class="language-legend">
             {#each languageData.slice(0, 3) as lang}
               <div class="language-item">
-                <span 
-                  class="language-dot" 
-                  style="background-color: {lang.color}"
-                />
+                <span class="language-dot" style="background-color: {lang.color}" />
                 <span class="language-name">{lang.name}</span>
                 <span class="language-percent">{lang.percentage.toFixed(1)}%</span>
               </div>
@@ -199,7 +192,7 @@
       <div class="meta-info">
         {#if primaryLanguage !== 'Unknown'}
           <div class="primary-language">
-            <span 
+            <span
               class="language-indicator"
               style="background-color: {languageColors[primaryLanguage] || '#8b949e'}"
             />

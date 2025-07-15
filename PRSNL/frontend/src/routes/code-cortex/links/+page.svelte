@@ -16,7 +16,7 @@
     CortexLoadingState,
     type CortexTab,
     type CortexStat,
-    type CortexAction
+    type CortexAction,
   } from '$lib/components/cortex';
   import Icon from '$lib/components/Icon.svelte';
 
@@ -49,8 +49,8 @@
   // Computed stats for header
   $: headerStats = [
     { label: 'Links', value: links.length },
-    { label: 'Domains', value: [...new Set(links.map(l => getDomain(l.url)))].length },
-    { label: 'GitHub', value: links.filter(l => l.url?.includes('github.com')).length }
+    { label: 'Domains', value: [...new Set(links.map((l) => getDomain(l.url)))].length },
+    { label: 'GitHub', value: links.filter((l) => l.url?.includes('github.com')).length },
   ] as CortexStat[];
 
   // Header actions
@@ -58,8 +58,8 @@
     {
       label: 'Add Tools & Links',
       icon: 'plus',
-      onClick: () => window.location.href = '/capture',
-      variant: 'primary'
+      onClick: () => (window.location.href = '/capture'),
+      variant: 'primary',
     },
     {
       label: viewMode === 'grid' ? 'List View' : viewMode === 'list' ? 'Compact View' : 'Grid View',
@@ -69,72 +69,110 @@
         else if (viewMode === 'list') viewMode = 'compact';
         else viewMode = 'grid';
       },
-      variant: 'secondary'
-    }
+      variant: 'secondary',
+    },
   ] as CortexAction[];
 
   // Tab configuration based on domain analysis
-  $: domainCounts = links.reduce((acc, link) => {
-    const domain = getDomain(link.url);
-    acc[domain] = (acc[domain] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  $: domainCounts = links.reduce(
+    (acc, link) => {
+      const domain = getDomain(link.url);
+      acc[domain] = (acc[domain] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   $: tabs = [
     { id: 'all', label: 'All Tools & Links', icon: 'link', count: links.length },
-    { id: 'tools', label: 'Development Tools', icon: 'tool', count: links.filter(l => isDomainType(l.url, 'tools')).length },
-    { id: 'utilities', label: 'Utilities', icon: 'settings', count: links.filter(l => isDomainType(l.url, 'utilities')).length },
-    { id: 'services', label: 'Online Services', icon: 'cloud', count: links.filter(l => isDomainType(l.url, 'services')).length },
-    { id: 'resources', label: 'Resource Sites', icon: 'bookmark', count: links.filter(l => isDomainType(l.url, 'resources')).length }
+    {
+      id: 'tools',
+      label: 'Development Tools',
+      icon: 'tool',
+      count: links.filter((l) => isDomainType(l.url, 'tools')).length,
+    },
+    {
+      id: 'utilities',
+      label: 'Utilities',
+      icon: 'settings',
+      count: links.filter((l) => isDomainType(l.url, 'utilities')).length,
+    },
+    {
+      id: 'services',
+      label: 'Online Services',
+      icon: 'cloud',
+      count: links.filter((l) => isDomainType(l.url, 'services')).length,
+    },
+    {
+      id: 'resources',
+      label: 'Resource Sites',
+      icon: 'bookmark',
+      count: links.filter((l) => isDomainType(l.url, 'resources')).length,
+    },
   ] as CortexTab[];
 
   // Filtered links based on active tab
-  $: filteredLinks = links.filter(link => {
+  $: filteredLinks = links.filter((link) => {
     // Only show external URLs (tools and utilities, not repositories or internal docs)
-    const isExternalTool = link.url && 
-                          link.url.startsWith('http') && 
-                          !link.url.includes('github.com') && 
-                          !link.url.includes('gitlab.com') && 
-                          !link.url.includes('bitbucket.');
-    
+    const isExternalTool =
+      link.url &&
+      link.url.startsWith('http') &&
+      !link.url.includes('github.com') &&
+      !link.url.includes('gitlab.com') &&
+      !link.url.includes('bitbucket.');
+
     if (!isExternalTool) return false;
     if (selectedDomain && getDomain(link.url) !== selectedDomain) return false;
-    
+
     // Additional filter: focus on tools, services, and utilities
-    const isToolOrService = !link.summary || 
-                           link.summary.length < 200 || // Not long-form content
-                           link.tags.some(tag => 
-                             tag.toLowerCase().includes('tool') ||
-                             tag.toLowerCase().includes('service') ||
-                             tag.toLowerCase().includes('utility') ||
-                             tag.toLowerCase().includes('app') ||
-                             tag.toLowerCase().includes('platform')
-                           ) ||
-                           link.title.toLowerCase().includes('tool') ||
-                           link.title.toLowerCase().includes('service') ||
-                           isDomainType(link.url, 'tools') ||
-                           isDomainType(link.url, 'utilities') ||
-                           isDomainType(link.url, 'services');
-    
+    const isToolOrService =
+      !link.summary ||
+      link.summary.length < 200 || // Not long-form content
+      link.tags.some(
+        (tag) =>
+          tag.toLowerCase().includes('tool') ||
+          tag.toLowerCase().includes('service') ||
+          tag.toLowerCase().includes('utility') ||
+          tag.toLowerCase().includes('app') ||
+          tag.toLowerCase().includes('platform')
+      ) ||
+      link.title.toLowerCase().includes('tool') ||
+      link.title.toLowerCase().includes('service') ||
+      isDomainType(link.url, 'tools') ||
+      isDomainType(link.url, 'utilities') ||
+      isDomainType(link.url, 'services');
+
     if (!isToolOrService) return false;
-    
+
     switch (activeTab) {
       case 'tools':
-        return isDomainType(link.url, 'tools') ||
-               link.tags.some(tag => tag.toLowerCase().includes('tool')) ||
-               link.title.toLowerCase().includes('tool');
+        return (
+          isDomainType(link.url, 'tools') ||
+          link.tags.some((tag) => tag.toLowerCase().includes('tool')) ||
+          link.title.toLowerCase().includes('tool')
+        );
       case 'utilities':
-        return isDomainType(link.url, 'utilities') ||
-               link.tags.some(tag => tag.toLowerCase().includes('utility') || tag.toLowerCase().includes('util')) ||
-               link.title.toLowerCase().includes('utility');
+        return (
+          isDomainType(link.url, 'utilities') ||
+          link.tags.some(
+            (tag) => tag.toLowerCase().includes('utility') || tag.toLowerCase().includes('util')
+          ) ||
+          link.title.toLowerCase().includes('utility')
+        );
       case 'services':
-        return isDomainType(link.url, 'services') ||
-               link.tags.some(tag => tag.toLowerCase().includes('service') || tag.toLowerCase().includes('platform')) ||
-               link.title.toLowerCase().includes('service');
+        return (
+          isDomainType(link.url, 'services') ||
+          link.tags.some(
+            (tag) => tag.toLowerCase().includes('service') || tag.toLowerCase().includes('platform')
+          ) ||
+          link.title.toLowerCase().includes('service')
+        );
       case 'resources':
-        return isDomainType(link.url, 'resources') ||
-               link.tags.some(tag => tag.toLowerCase().includes('resource')) ||
-               link.title.toLowerCase().includes('resource');
+        return (
+          isDomainType(link.url, 'resources') ||
+          link.tags.some((tag) => tag.toLowerCase().includes('resource')) ||
+          link.title.toLowerCase().includes('resource')
+        );
       default:
         return true;
     }
@@ -293,15 +331,50 @@
   function isDomainType(url: string, type: string): boolean {
     if (!url) return false;
     const domain = getDomain(url);
-    
+
     const domainTypes = {
-      tools: ['app.', 'tool', 'build', 'deploy', 'ci', 'cd', 'test', 'lint', 'format', 'bundler', 'compiler'],
+      tools: [
+        'app.',
+        'tool',
+        'build',
+        'deploy',
+        'ci',
+        'cd',
+        'test',
+        'lint',
+        'format',
+        'bundler',
+        'compiler',
+      ],
       utilities: ['util', 'helper', 'converter', 'generator', 'validator', 'formatter', 'parser'],
-      services: ['service', 'api.', 'console', 'dashboard', 'platform', 'saas', 'cloud', 'aws', 'azure', 'gcp'],
-      resources: ['resource', 'library', 'framework', 'template', 'boilerplate', 'example', 'sample']
+      services: [
+        'service',
+        'api.',
+        'console',
+        'dashboard',
+        'platform',
+        'saas',
+        'cloud',
+        'aws',
+        'azure',
+        'gcp',
+      ],
+      resources: [
+        'resource',
+        'library',
+        'framework',
+        'template',
+        'boilerplate',
+        'example',
+        'sample',
+      ],
     };
 
-    return domainTypes[type]?.some(keyword => domain.includes(keyword) || url.toLowerCase().includes(keyword)) || false;
+    return (
+      domainTypes[type]?.some(
+        (keyword) => domain.includes(keyword) || url.toLowerCase().includes(keyword)
+      ) || false
+    );
   }
 
   function getDomainColor(domain: string): string {
@@ -322,19 +395,34 @@
     const domain = getDomain(link.url);
     const tags = [
       { label: `${getDomainIcon(domain)} ${domain}`, color: getDomainColor(domain) + '40' },
-      ...(link.programming_language ? [{ label: `${getLanguageIcon(link.programming_language)} ${link.programming_language}`, color: 'rgba(0, 255, 136, 0.2)' }] : []),
+      ...(link.programming_language
+        ? [
+            {
+              label: `${getLanguageIcon(link.programming_language)} ${link.programming_language}`,
+              color: 'rgba(0, 255, 136, 0.2)',
+            },
+          ]
+        : []),
       ...(link.is_career_related ? [{ label: '💼 Career', color: 'rgba(220, 20, 60, 0.2)' }] : []),
-      ...link.tags.slice(0, 2).map(tag => ({ label: `#${tag}`, color: 'rgba(0, 255, 136, 0.1)' }))
+      ...link.tags
+        .slice(0, 2)
+        .map((tag) => ({ label: `#${tag}`, color: 'rgba(0, 255, 136, 0.1)' })),
     ];
 
     const stats = [
-      ...(isUsingEnhancedSearch && link.similarity_score ? [{ label: 'Match', value: `${Math.round(link.similarity_score * 100)}%` }] : []),
-      { label: 'Added', value: new Date(link.created_at).toLocaleDateString() }
+      ...(isUsingEnhancedSearch && link.similarity_score
+        ? [{ label: 'Match', value: `${Math.round(link.similarity_score * 100)}%` }]
+        : []),
+      { label: 'Added', value: new Date(link.created_at).toLocaleDateString() },
     ];
 
     const actions = [
       { label: 'Visit', icon: 'external-link', onClick: () => window.open(link.url, '_blank') },
-      { label: 'Details', icon: 'info', onClick: () => window.location.href = `/code-cortex/links/${link.id}` }
+      {
+        label: 'Details',
+        icon: 'info',
+        onClick: () => (window.location.href = `/code-cortex/links/${link.id}`),
+      },
     ];
 
     return {
@@ -346,13 +434,13 @@
       stats,
       actions,
       onClick: () => window.open(link.url, '_blank'),
-      variant: domain === 'github.com' ? 'highlight' : 'default'
+      variant: domain === 'github.com' ? 'highlight' : 'default',
     };
   }
 
   // Top domains for quick filters
   $: topDomains = Object.entries(domainCounts)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([, a], [, b]) => b - a)
     .slice(0, 8)
     .map(([domain, count]) => ({ domain, count }));
 </script>
@@ -373,7 +461,7 @@
   <CortexTabNavigation
     {tabs}
     {activeTab}
-    onTabChange={(tabId) => activeTab = tabId}
+    onTabChange={(tabId) => (activeTab = tabId)}
     variant="default"
   />
 
@@ -408,7 +496,10 @@
             <div class="mode-buttons">
               <button
                 class="mode-btn {searchMode === 'semantic' ? 'active' : ''}"
-                on:click={() => { searchMode = 'semantic'; loadLinks(true); }}
+                on:click={() => {
+                  searchMode = 'semantic';
+                  loadLinks(true);
+                }}
                 title="AI Semantic Search"
               >
                 <Icon name="brain" size="14" />
@@ -416,7 +507,10 @@
               </button>
               <button
                 class="mode-btn {searchMode === 'keyword' ? 'active' : ''}"
-                on:click={() => { searchMode = 'keyword'; loadLinks(true); }}
+                on:click={() => {
+                  searchMode = 'keyword';
+                  loadLinks(true);
+                }}
                 title="Keyword Search"
               >
                 <Icon name="search" size="14" />
@@ -424,7 +518,10 @@
               </button>
               <button
                 class="mode-btn {searchMode === 'hybrid' ? 'active' : ''}"
-                on:click={() => { searchMode = 'hybrid'; loadLinks(true); }}
+                on:click={() => {
+                  searchMode = 'hybrid';
+                  loadLinks(true);
+                }}
                 title="Hybrid Search"
               >
                 <Icon name="zap" size="14" />
@@ -454,18 +551,23 @@
       <div class="filter-section">
         <h4>Top Domains</h4>
         <div class="domain-filters">
-          <button 
+          <button
             class="domain-filter {selectedDomain === '' ? 'active' : ''}"
-            on:click={() => { selectedDomain = ''; }}
+            on:click={() => {
+              selectedDomain = '';
+            }}
           >
             All Domains
           </button>
-          {#each topDomains as {domain, count}}
-            <button 
+          {#each topDomains as { domain, count }}
+            <button
               class="domain-filter {selectedDomain === domain ? 'active' : ''}"
-              on:click={() => { selectedDomain = selectedDomain === domain ? '' : domain; }}
+              on:click={() => {
+                selectedDomain = selectedDomain === domain ? '' : domain;
+              }}
             >
-              {getDomainIcon(domain)} {domain}
+              {getDomainIcon(domain)}
+              {domain}
               <span class="domain-count">{count}</span>
             </button>
           {/each}
@@ -475,10 +577,14 @@
       <!-- Regular Filters -->
       <div class="filter-section">
         <h4>Filters</h4>
-        
+
         <div class="filter-group">
           <label>Category</label>
-          <select bind:value={selectedCategory} on:change={handleFilterChange} class="filter-select">
+          <select
+            bind:value={selectedCategory}
+            on:change={handleFilterChange}
+            class="filter-select"
+          >
             <option value="">All Categories</option>
             {#each categories as category}
               <option value={category.name}>{category.name}</option>
@@ -488,7 +594,11 @@
 
         <div class="filter-group">
           <label>Language</label>
-          <select bind:value={selectedLanguage} on:change={handleFilterChange} class="filter-select">
+          <select
+            bind:value={selectedLanguage}
+            on:change={handleFilterChange}
+            class="filter-select"
+          >
             <option value="">All Languages</option>
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
@@ -505,21 +615,27 @@
       <div class="filter-section">
         <h4>Quick Filters</h4>
         <div class="quick-actions">
-          <button 
+          <button
             class="quick-action"
-            on:click={() => { activeTab = 'tools'; }}
+            on:click={() => {
+              activeTab = 'tools';
+            }}
           >
             🔧 Development Tools
           </button>
-          <button 
+          <button
             class="quick-action"
-            on:click={() => { activeTab = 'utilities'; }}
+            on:click={() => {
+              activeTab = 'utilities';
+            }}
           >
             ⚙️ Utilities
           </button>
-          <button 
+          <button
             class="quick-action"
-            on:click={() => { activeTab = 'services'; }}
+            on:click={() => {
+              activeTab = 'services';
+            }}
           >
             ☁️ Online Services
           </button>
@@ -530,7 +646,7 @@
       <div class="filter-section">
         <h4>Domain Stats</h4>
         <div class="domain-stats">
-          {#each topDomains.slice(0, 5) as {domain, count}}
+          {#each topDomains.slice(0, 5) as { domain, count }}
             <div class="domain-stat">
               <span class="domain-icon">{getDomainIcon(domain)}</span>
               <span class="domain-name">{domain}</span>
@@ -543,11 +659,7 @@
 
     <div slot="content" class="main-content">
       {#if loading}
-        <CortexLoadingState 
-          message="Loading useful links..." 
-          variant="spinner"
-          size="md"
-        />
+        <CortexLoadingState message="Loading useful links..." variant="spinner" size="md" />
       {:else if filteredLinks.length === 0}
         <CortexEmptyState
           icon="link-2"
@@ -575,7 +687,10 @@
                   <div class="link-list-meta">
                     <span class="domain-tag">{getDomain(link.url)}</span>
                     {#if link.programming_language}
-                      <span class="meta-tag">{getLanguageIcon(link.programming_language)} {link.programming_language}</span>
+                      <span class="meta-tag"
+                        >{getLanguageIcon(link.programming_language)}
+                        {link.programming_language}</span
+                      >
                     {/if}
                     <span class="meta-date">{new Date(link.created_at).toLocaleDateString()}</span>
                   </div>
@@ -589,15 +704,20 @@
               <div class="link-compact-item">
                 <span class="compact-icon">{getDomainIcon(getDomain(link.url))}</span>
                 <div class="compact-content">
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" class="compact-title">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="compact-title"
+                  >
                     {link.title}
                   </a>
                   <span class="compact-domain">{getDomain(link.url)}</span>
                 </div>
                 <div class="compact-actions">
-                  <button 
+                  <button
                     class="compact-action"
-                    on:click={() => window.location.href = `/code-cortex/links/${link.id}`}
+                    on:click={() => (window.location.href = `/code-cortex/links/${link.id}`)}
                     title="View details"
                   >
                     <Icon name="info" size="16" />

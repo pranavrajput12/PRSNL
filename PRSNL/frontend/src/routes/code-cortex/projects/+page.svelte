@@ -15,7 +15,7 @@
     CortexLoadingState,
     type CortexTab,
     type CortexStat,
-    type CortexAction
+    type CortexAction,
   } from '$lib/components/cortex';
   import Icon from '$lib/components/Icon.svelte';
 
@@ -38,13 +38,13 @@
 
   // Project status tracking (simulated - would come from API in real implementation)
   const projectStatuses = ['planning', 'in-progress', 'review', 'completed', 'on-hold'];
-  
+
   // Computed stats for header
   $: headerStats = [
     { label: 'Projects', value: allProjects.length },
     { label: 'Categories', value: Object.keys(stats.by_category).length },
     { label: 'In Progress', value: Math.floor(allProjects.length * 0.6) }, // Simulated
-    { label: 'Completed', value: Math.floor(allProjects.length * 0.3) } // Simulated
+    { label: 'Completed', value: Math.floor(allProjects.length * 0.3) }, // Simulated
   ] as CortexStat[];
 
   // Header actions
@@ -52,8 +52,8 @@
     {
       label: 'New Project',
       icon: 'plus',
-      onClick: () => window.location.href = '/capture',
-      variant: 'primary'
+      onClick: () => (window.location.href = '/capture'),
+      variant: 'primary',
     },
     {
       label: viewMode === 'grid' ? 'List View' : viewMode === 'list' ? 'Kanban View' : 'Grid View',
@@ -63,55 +63,79 @@
         else if (viewMode === 'list') viewMode = 'kanban';
         else viewMode = 'grid';
       },
-      variant: 'secondary'
-    }
+      variant: 'secondary',
+    },
   ] as CortexAction[];
 
   // Tab configuration
   $: tabs = [
-    { id: 'overview', label: 'Overview', icon: 'pie-chart', count: Object.keys(stats.by_category).length },
+    {
+      id: 'overview',
+      label: 'Overview',
+      icon: 'pie-chart',
+      count: Object.keys(stats.by_category).length,
+    },
     { id: 'all', label: 'All Progress', icon: 'list', count: allProjects.length },
-    { id: 'in-progress', label: 'In Progress', icon: 'play', count: Math.floor(allProjects.length * 0.6) },
-    { id: 'completed', label: 'Completed', icon: 'check', count: Math.floor(allProjects.length * 0.3) },
-    { id: 'goals', label: 'Learning Goals', icon: 'target', count: Math.floor(allProjects.length * 0.1) }
+    {
+      id: 'in-progress',
+      label: 'In Progress',
+      icon: 'play',
+      count: Math.floor(allProjects.length * 0.6),
+    },
+    {
+      id: 'completed',
+      label: 'Completed',
+      icon: 'check',
+      count: Math.floor(allProjects.length * 0.3),
+    },
+    {
+      id: 'goals',
+      label: 'Learning Goals',
+      icon: 'target',
+      count: Math.floor(allProjects.length * 0.1),
+    },
   ] as CortexTab[];
 
   // Filtered projects based on active tab
   $: filteredProjects = (() => {
     // Only show items with learning progress tracking (learning paths, difficulty levels, or progress indicators)
-    let projects = allProjects.filter(p => 
-      p.learning_path || 
-      p.difficulty_level || 
-      p.is_career_related ||
-      (p.tags && p.tags.some(tag => 
-        tag.toLowerCase().includes('progress') ||
-        tag.toLowerCase().includes('learning') ||
-        tag.toLowerCase().includes('skill') ||
-        tag.toLowerCase().includes('course') ||
-        tag.toLowerCase().includes('certification') ||
-        tag.toLowerCase().includes('goal')
-      )) ||
-      p.title.toLowerCase().includes('learn') ||
-      p.title.toLowerCase().includes('skill') ||
-      p.title.toLowerCase().includes('course')
+    let projects = allProjects.filter(
+      (p) =>
+        p.learning_path ||
+        p.difficulty_level ||
+        p.is_career_related ||
+        (p.tags &&
+          p.tags.some(
+            (tag) =>
+              tag.toLowerCase().includes('progress') ||
+              tag.toLowerCase().includes('learning') ||
+              tag.toLowerCase().includes('skill') ||
+              tag.toLowerCase().includes('course') ||
+              tag.toLowerCase().includes('certification') ||
+              tag.toLowerCase().includes('goal')
+          )) ||
+        p.title.toLowerCase().includes('learn') ||
+        p.title.toLowerCase().includes('skill') ||
+        p.title.toLowerCase().includes('course')
     );
-    
+
     // Filter by category
     if (selectedCategory) {
-      projects = projects.filter(p => p.project_category === selectedCategory);
+      projects = projects.filter((p) => p.project_category === selectedCategory);
     }
-    
+
     // Filter by tab
     switch (activeTab) {
       case 'in-progress':
-        return projects.filter(p => getProjectStatus(p) === 'in-progress');
+        return projects.filter((p) => getProjectStatus(p) === 'in-progress');
       case 'completed':
-        return projects.filter(p => getProjectStatus(p) === 'completed');
+        return projects.filter((p) => getProjectStatus(p) === 'completed');
       case 'goals':
-        return projects.filter(p => 
-          getProjectStatus(p) === 'planning' ||
-          p.tags.some(tag => tag.toLowerCase().includes('goal')) ||
-          p.title.toLowerCase().includes('goal')
+        return projects.filter(
+          (p) =>
+            getProjectStatus(p) === 'planning' ||
+            p.tags.some((tag) => tag.toLowerCase().includes('goal')) ||
+            p.title.toLowerCase().includes('goal')
         );
       case 'all':
         return projects;
@@ -156,9 +180,9 @@
 
   async function loadAllProjects() {
     try {
-      const projects = await getDevelopmentDocs({ 
+      const projects = await getDevelopmentDocs({
         limit: 100,
-        content_type: 'progress'
+        content_type: 'progress',
       });
       allProjects = projects;
     } catch (error) {
@@ -172,7 +196,7 @@
         const projects = await getDevelopmentDocs({
           category: category.name,
           limit: 10,
-          content_type: 'progress'
+          content_type: 'progress',
         });
         projectsByCategory[category.name] = projects;
       }
@@ -262,7 +286,7 @@
   // Simulated project progress (would come from API)
   function getProjectProgress(project: DevelopmentItem): number {
     const hash = project.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    return (hash % 100);
+    return hash % 100;
   }
 
   function getStatusColor(status: string): string {
@@ -271,7 +295,7 @@
       'in-progress': '#3b82f6',
       review: '#f59e0b',
       completed: '#10b981',
-      'on-hold': '#ef4444'
+      'on-hold': '#ef4444',
     };
     return colors[status] || '#6b7280';
   }
@@ -282,7 +306,7 @@
       'in-progress': 'play',
       review: 'eye',
       completed: 'check',
-      'on-hold': 'pause'
+      'on-hold': 'pause',
     };
     return icons[status] || 'circle';
   }
@@ -290,23 +314,55 @@
   function createProjectCard(project: DevelopmentItem) {
     const status = getProjectStatus(project);
     const progress = getProjectProgress(project);
-    
+
     const tags = [
-      { label: `${getCategoryIcon(project.project_category)} ${project.project_category}`, color: getCategoryColor(project.project_category) + '40' },
-      ...(project.programming_language ? [{ label: `${getLanguageIcon(project.programming_language)} ${project.programming_language}`, color: 'rgba(0, 255, 136, 0.2)' }] : []),
-      ...(project.difficulty_level ? [{ label: getDifficultyLabel(project.difficulty_level), color: getDifficultyColor(project.difficulty_level) + '40' }] : []),
-      { label: status.charAt(0).toUpperCase() + status.slice(1), color: getStatusColor(status) + '40' }
+      {
+        label: `${getCategoryIcon(project.project_category)} ${project.project_category}`,
+        color: getCategoryColor(project.project_category) + '40',
+      },
+      ...(project.programming_language
+        ? [
+            {
+              label: `${getLanguageIcon(project.programming_language)} ${project.programming_language}`,
+              color: 'rgba(0, 255, 136, 0.2)',
+            },
+          ]
+        : []),
+      ...(project.difficulty_level
+        ? [
+            {
+              label: getDifficultyLabel(project.difficulty_level),
+              color: getDifficultyColor(project.difficulty_level) + '40',
+            },
+          ]
+        : []),
+      {
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        color: getStatusColor(status) + '40',
+      },
     ];
 
     const stats = [
       { label: 'Progress', value: `${progress}%` },
       { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
-      { label: 'Created', value: new Date(project.created_at).toLocaleDateString() }
+      { label: 'Created', value: new Date(project.created_at).toLocaleDateString() },
     ];
 
     const actions = [
-      { label: 'View Details', icon: 'eye', onClick: () => window.location.href = `/code-cortex/projects/${project.id}` },
-      ...(project.url ? [{ label: 'Source', icon: 'external-link', onClick: () => window.open(project.url, '_blank') }] : [])
+      {
+        label: 'View Details',
+        icon: 'eye',
+        onClick: () => (window.location.href = `/code-cortex/projects/${project.id}`),
+      },
+      ...(project.url
+        ? [
+            {
+              label: 'Source',
+              icon: 'external-link',
+              onClick: () => window.open(project.url, '_blank'),
+            },
+          ]
+        : []),
     ];
 
     return {
@@ -317,13 +373,13 @@
       tags,
       stats,
       actions,
-      onClick: () => window.location.href = `/code-cortex/projects/${project.id}`,
-      variant: status === 'completed' ? 'highlight' : 'default'
+      onClick: () => (window.location.href = `/code-cortex/projects/${project.id}`),
+      variant: status === 'completed' ? 'highlight' : 'default',
     };
   }
 
   function createCategoryCard(categoryName: string, count: number) {
-    const category = categories.find(c => c.name === categoryName);
+    const category = categories.find((c) => c.name === categoryName);
     return {
       title: categoryName,
       description: category?.description || `${count} projects in this category`,
@@ -331,9 +387,21 @@
       iconColor: getCategoryColor(categoryName),
       tags: [{ label: `${count} projects`, color: getCategoryColor(categoryName) + '40' }],
       stats: [{ label: 'Projects', value: count }],
-      actions: [{ label: 'View Projects', icon: 'arrow-right', onClick: () => { activeTab = 'all'; selectedCategory = categoryName; } }],
-      onClick: () => { activeTab = 'all'; selectedCategory = categoryName; },
-      variant: 'default'
+      actions: [
+        {
+          label: 'View Projects',
+          icon: 'arrow-right',
+          onClick: () => {
+            activeTab = 'all';
+            selectedCategory = categoryName;
+          },
+        },
+      ],
+      onClick: () => {
+        activeTab = 'all';
+        selectedCategory = categoryName;
+      },
+      variant: 'default',
     };
   }
 </script>
@@ -354,7 +422,7 @@
   <CortexTabNavigation
     {tabs}
     {activeTab}
-    onTabChange={(tabId) => activeTab = tabId}
+    onTabChange={(tabId) => (activeTab = tabId)}
     variant="default"
   />
 
@@ -368,7 +436,7 @@
       <!-- Project Filters -->
       <div class="filter-section">
         <h4>Filters</h4>
-        
+
         <div class="filter-group">
           <label>Category</label>
           <select bind:value={selectedCategory} class="filter-select">
@@ -414,7 +482,13 @@
         <h4>Categories</h4>
         <div class="category-breakdown">
           {#each Object.entries(stats.by_category).slice(0, 6) as [categoryName, count]}
-            <div class="category-item" on:click={() => { selectedCategory = categoryName; activeTab = 'all'; }}>
+            <div
+              class="category-item"
+              on:click={() => {
+                selectedCategory = categoryName;
+                activeTab = 'all';
+              }}
+            >
               <span class="category-icon" style="color: {getCategoryColor(categoryName)}">
                 {getCategoryIcon(categoryName)}
               </span>
@@ -430,10 +504,14 @@
         <h4>Status Distribution</h4>
         <div class="status-breakdown">
           {#each projectStatuses as status}
-            {@const count = filteredProjects.filter(p => getProjectStatus(p) === status).length}
+            {@const count = filteredProjects.filter((p) => getProjectStatus(p) === status).length}
             {#if count > 0}
               <div class="status-item">
-                <Icon name={getStatusIcon(status)} size="16" style="color: {getStatusColor(status)}" />
+                <Icon
+                  name={getStatusIcon(status)}
+                  size="16"
+                  style="color: {getStatusColor(status)}"
+                />
                 <span class="status-name">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
                 <span class="status-count">{count}</span>
               </div>
@@ -445,11 +523,7 @@
 
     <div slot="content" class="main-content">
       {#if loading}
-        <CortexLoadingState 
-          message="Loading project categories..." 
-          variant="pulse"
-          size="md"
-        />
+        <CortexLoadingState message="Loading project categories..." variant="pulse" size="md" />
       {:else if activeTab === 'overview'}
         <!-- Category Overview -->
         <div class="overview-section">
@@ -457,7 +531,7 @@
             <h2>Category Overview</h2>
             <p>Explore your projects organized by technology and domain</p>
           </div>
-          
+
           {#if Object.keys(stats.by_category).length === 0}
             <CortexEmptyState
               icon="folder-plus"
@@ -487,81 +561,116 @@
               actionHref="/capture"
               size="md"
             />
-          {:else}
-            {#if viewMode === 'kanban'}
-              <!-- Kanban View -->
-              <div class="kanban-board">
-                {#each projectStatuses as status}
-                  {@const statusProjects = sortedProjects.filter(p => getProjectStatus(p) === status)}
-                  {#if statusProjects.length > 0}
-                    <div class="kanban-column">
-                      <div class="kanban-header" style="border-color: {getStatusColor(status)}">
-                        <Icon name={getStatusIcon(status)} size="16" style="color: {getStatusColor(status)}" />
-                        <h3>{status.charAt(0).toUpperCase() + status.slice(1)}</h3>
-                        <span class="kanban-count">{statusProjects.length}</span>
-                      </div>
-                      <div class="kanban-items">
-                        {#each statusProjects as project}
-                          <div class="kanban-card" on:click={() => window.location.href = `/code-cortex/projects/${project.id}`}>
-                            <h4>{project.title}</h4>
-                            <div class="kanban-meta">
-                              {#if project.programming_language}
-                                <span class="meta-tag">{getLanguageIcon(project.programming_language)} {project.programming_language}</span>
-                              {/if}
-                              <span class="meta-tag">{project.project_category}</span>
-                            </div>
-                            <div class="progress-bar">
-                              <div class="progress-fill" style="width: {getProjectProgress(project)}%; background-color: {getStatusColor(status)}"></div>
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
+          {:else if viewMode === 'kanban'}
+            <!-- Kanban View -->
+            <div class="kanban-board">
+              {#each projectStatuses as status}
+                {@const statusProjects = sortedProjects.filter(
+                  (p) => getProjectStatus(p) === status
+                )}
+                {#if statusProjects.length > 0}
+                  <div class="kanban-column">
+                    <div class="kanban-header" style="border-color: {getStatusColor(status)}">
+                      <Icon
+                        name={getStatusIcon(status)}
+                        size="16"
+                        style="color: {getStatusColor(status)}"
+                      />
+                      <h3>{status.charAt(0).toUpperCase() + status.slice(1)}</h3>
+                      <span class="kanban-count">{statusProjects.length}</span>
                     </div>
-                  {/if}
-                {/each}
-              </div>
-            {:else}
-              <div class="projects-container {viewMode}">
-                {#each sortedProjects as project}
-                  {#if viewMode === 'grid'}
-                    <CortexCard {...createProjectCard(project)} size="md" />
-                  {:else}
-                    <!-- List view for projects -->
-                    <div class="project-list-item">
-                      <div class="project-list-header">
-                        <div class="project-list-title">
-                          <Icon name={getStatusIcon(getProjectStatus(project))} size="20" style="color: {getStatusColor(getProjectStatus(project))}" />
-                          <a href={`/code-cortex/projects/${project.id}`}>
-                            {project.title}
-                          </a>
-                        </div>
-                        <div class="project-list-meta">
-                          <span class="meta-tag">{project.project_category}</span>
-                          {#if project.programming_language}
-                            <span class="meta-tag">{getLanguageIcon(project.programming_language)} {project.programming_language}</span>
-                          {/if}
-                          <span class="meta-date">{new Date(project.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      {#if project.summary}
-                        <p class="project-list-summary">{project.summary}</p>
-                      {/if}
-                      <div class="project-list-footer">
-                        <div class="progress-indicator">
-                          <span class="progress-label">{getProjectProgress(project)}% complete</span>
+                    <div class="kanban-items">
+                      {#each statusProjects as project}
+                        <div
+                          class="kanban-card"
+                          on:click={() =>
+                            (window.location.href = `/code-cortex/projects/${project.id}`)}
+                        >
+                          <h4>{project.title}</h4>
+                          <div class="kanban-meta">
+                            {#if project.programming_language}
+                              <span class="meta-tag"
+                                >{getLanguageIcon(project.programming_language)}
+                                {project.programming_language}</span
+                              >
+                            {/if}
+                            <span class="meta-tag">{project.project_category}</span>
+                          </div>
                           <div class="progress-bar">
-                            <div class="progress-fill" style="width: {getProjectProgress(project)}%; background-color: {getStatusColor(getProjectStatus(project))}"></div>
+                            <div
+                              class="progress-fill"
+                              style="width: {getProjectProgress(
+                                project
+                              )}%; background-color: {getStatusColor(status)}"
+                            ></div>
                           </div>
                         </div>
-                        <span class="status-badge" style="background-color: {getStatusColor(getProjectStatus(project))}40; color: {getStatusColor(getProjectStatus(project))}">
-                          {getProjectStatus(project)}
-                        </span>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          {:else}
+            <div class="projects-container {viewMode}">
+              {#each sortedProjects as project}
+                {#if viewMode === 'grid'}
+                  <CortexCard {...createProjectCard(project)} size="md" />
+                {:else}
+                  <!-- List view for projects -->
+                  <div class="project-list-item">
+                    <div class="project-list-header">
+                      <div class="project-list-title">
+                        <Icon
+                          name={getStatusIcon(getProjectStatus(project))}
+                          size="20"
+                          style="color: {getStatusColor(getProjectStatus(project))}"
+                        />
+                        <a href={`/code-cortex/projects/${project.id}`}>
+                          {project.title}
+                        </a>
+                      </div>
+                      <div class="project-list-meta">
+                        <span class="meta-tag">{project.project_category}</span>
+                        {#if project.programming_language}
+                          <span class="meta-tag"
+                            >{getLanguageIcon(project.programming_language)}
+                            {project.programming_language}</span
+                          >
+                        {/if}
+                        <span class="meta-date"
+                          >{new Date(project.created_at).toLocaleDateString()}</span
+                        >
                       </div>
                     </div>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
+                    {#if project.summary}
+                      <p class="project-list-summary">{project.summary}</p>
+                    {/if}
+                    <div class="project-list-footer">
+                      <div class="progress-indicator">
+                        <span class="progress-label">{getProjectProgress(project)}% complete</span>
+                        <div class="progress-bar">
+                          <div
+                            class="progress-fill"
+                            style="width: {getProjectProgress(
+                              project
+                            )}%; background-color: {getStatusColor(getProjectStatus(project))}"
+                          ></div>
+                        </div>
+                      </div>
+                      <span
+                        class="status-badge"
+                        style="background-color: {getStatusColor(
+                          getProjectStatus(project)
+                        )}40; color: {getStatusColor(getProjectStatus(project))}"
+                      >
+                        {getProjectStatus(project)}
+                      </span>
+                    </div>
+                  </div>
+                {/if}
+              {/each}
+            </div>
           {/if}
         </div>
       {/if}

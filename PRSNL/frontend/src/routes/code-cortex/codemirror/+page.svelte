@@ -23,12 +23,15 @@
   let criticalIssues = $state([]);
   let analysisHistory = $state([]);
   let activeAnalyses = $state([]); // Track all active analyses
-  
+
   // Derived State - Smart Filtering
-  let filteredRepositories = $derived(repositories.filter(repo => 
-    repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  ));
+  let filteredRepositories = $derived(
+    repositories.filter(
+      (repo) =>
+        repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  );
 
   onMount(async () => {
     // Check onboarding need
@@ -36,13 +39,13 @@
     if (!hasSeenOnboarding) {
       showOnboarding = true;
     }
-    
+
     // Load essential data only
     await Promise.all([
       checkGitHubConnection(),
       loadRepositories(),
       loadTimeline(),
-      loadActiveAnalyses()
+      loadActiveAnalyses(),
     ]);
   });
 
@@ -70,19 +73,21 @@
       loading = true;
       const timelineData = await api.get('/codemirror/timeline');
       const allItems = timelineData.timeline || [];
-      
+
       // Separate data into the 3 sections you asked for
-      insights = allItems.filter(item => 
-        item.type === 'insight' && item.severity !== 'critical' && item.severity !== 'high'
+      insights = allItems.filter(
+        (item) =>
+          item.type === 'insight' && item.severity !== 'critical' && item.severity !== 'high'
       );
-      
+
       // Include medium severity in critical issues since we don't have high/critical yet
-      criticalIssues = allItems.filter(item => 
-        item.type === 'insight' && (item.severity === 'critical' || item.severity === 'high' || item.severity === 'medium')
+      criticalIssues = allItems.filter(
+        (item) =>
+          item.type === 'insight' &&
+          (item.severity === 'critical' || item.severity === 'high' || item.severity === 'medium')
       );
-      
-      analysisHistory = allItems.filter(item => item.type === 'analysis');
-      
+
+      analysisHistory = allItems.filter((item) => item.type === 'analysis');
     } catch (error) {
       console.error('Failed to load timeline:', error);
       insights = [];
@@ -111,10 +116,12 @@
   }
 
   async function disconnectGitHub() {
-    if (!confirm('Are you sure you want to disconnect GitHub? This will remove all repository data.')) {
+    if (
+      !confirm('Are you sure you want to disconnect GitHub? This will remove all repository data.')
+    ) {
       return;
     }
-    
+
     try {
       const accounts = await api.get('/github/accounts');
       if (accounts && accounts.length > 0) {
@@ -136,7 +143,7 @@
     showOnboarding = false;
     localStorage.setItem('codemirror-onboarding-seen', 'true');
   }
-  
+
   function startAnalysis() {
     if (!selectedRepo) {
       alert('Please select a repository first');
@@ -144,28 +151,28 @@
     }
     showAnalysisSelector = true;
   }
-  
+
   async function handleAnalysisStart(data) {
     const { type, depth } = data;
-    
+
     if (type === 'cli') {
       // Show CLI instructions in modal or guide
       alert('CLI instructions: Use prsnl-codemirror audit /path/to/repo --upload');
       return;
     }
-    
+
     // Start web analysis
     showAnalysisSelector = false;
-    
+
     const analysisOptions = {
       analysis_depth: depth,
       include_patterns: depth !== 'quick',
-      include_insights: true
+      include_insights: true,
     };
-    
+
     try {
       const response = await api.post(`/codemirror/analyze/${selectedRepo.id}`, analysisOptions);
-      
+
       if (response.job_id) {
         activeAnalysis = {
           id: response.job_id,
@@ -173,17 +180,17 @@
           progress_percentage: 0,
           stage: 'initializing',
           depth: depth,
-          repository: selectedRepo
+          repository: selectedRepo,
         };
-        
+
         console.log('✅ Analysis started, activeAnalysis set:', activeAnalysis);
-        
+
         // Switch to active analyses tab
         activeIntelligenceTab = 'active';
-        
+
         // Connect to realtime service for live updates
         realtimeService.connect();
-        
+
         // Start polling as backup
         pollAnalysisStatus(response.job_id);
       }
@@ -192,12 +199,12 @@
       alert('Failed to start analysis. Please try again.');
     }
   }
-  
+
   async function pollAnalysisStatus(jobId: string) {
     const pollInterval = setInterval(async () => {
       try {
         const status = await api.get(`/persistence/status/${jobId}`);
-        
+
         if (status.status === 'completed') {
           clearInterval(pollInterval);
           activeAnalysis = null;
@@ -215,7 +222,7 @@
             ...activeAnalysis,
             status: status.status,
             progress_percentage: status.progress_percentage || 0,
-            stage: status.current_stage || 'processing'
+            stage: status.current_stage || 'processing',
           };
         }
       } catch (error) {
@@ -252,7 +259,7 @@
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
+
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -261,20 +268,29 @@
 
   function getSeverityColor(severity) {
     switch (severity) {
-      case 'critical': return 'text-red-400 bg-red-900/30 border-red-600/30';
-      case 'high': return 'text-orange-400 bg-orange-900/30 border-orange-600/30';
-      case 'medium': return 'text-yellow-400 bg-yellow-900/30 border-yellow-600/30';
-      case 'low': return 'text-green-400 bg-green-900/30 border-green-600/30';
-      default: return 'text-gray-400 bg-gray-900/30 border-gray-600/30';
+      case 'critical':
+        return 'text-red-400 bg-red-900/30 border-red-600/30';
+      case 'high':
+        return 'text-orange-400 bg-orange-900/30 border-orange-600/30';
+      case 'medium':
+        return 'text-yellow-400 bg-yellow-900/30 border-yellow-600/30';
+      case 'low':
+        return 'text-green-400 bg-green-900/30 border-green-600/30';
+      default:
+        return 'text-gray-400 bg-gray-900/30 border-gray-600/30';
     }
   }
 
   function getStatusColor(status) {
     switch (status) {
-      case 'completed': return 'text-green-400 bg-green-900/30 border-green-600/30';
-      case 'processing': return 'text-blue-400 bg-blue-900/30 border-blue-600/30';
-      case 'failed': return 'text-red-400 bg-red-900/30 border-red-600/30';
-      default: return 'text-gray-400 bg-gray-900/30 border-gray-600/30';
+      case 'completed':
+        return 'text-green-400 bg-green-900/30 border-green-600/30';
+      case 'processing':
+        return 'text-blue-400 bg-blue-900/30 border-blue-600/30';
+      case 'failed':
+        return 'text-red-400 bg-red-900/30 border-red-600/30';
+      default:
+        return 'text-gray-400 bg-gray-900/30 border-gray-600/30';
     }
   }
 </script>
@@ -295,9 +311,7 @@
           <p class="subtitle">AI repository intelligence</p>
         </div>
       </div>
-      <button onclick={startOnboarding} class="help-btn">
-        How it works
-      </button>
+      <button onclick={startOnboarding} class="help-btn"> How it works </button>
     </div>
   </header>
 
@@ -308,9 +322,7 @@
         <div class="connect-icon">🔗</div>
         <h2>Connect your GitHub repositories</h2>
         <p>Analyze your code with AI-powered insights, pattern detection, and security analysis.</p>
-        <a href="/api/github/auth/login" class="connect-btn">
-          Connect GitHub
-        </a>
+        <a href="/api/github/auth/login" class="connect-btn"> Connect GitHub </a>
       </div>
     </section>
   {:else}
@@ -320,31 +332,24 @@
         <div class="repo-header">
           <h2>Your Repositories</h2>
           <div class="repo-actions">
-            <button 
-              class="action-btn secondary"
-              onclick={syncRepositories}
-              disabled={loading}
-            >
+            <button class="action-btn secondary" onclick={syncRepositories} disabled={loading}>
               {loading ? '⏳ Syncing...' : '🔄 Sync Repos'}
             </button>
-            <button 
+            <button
               class="action-btn secondary"
-              onclick={() => window.location.href = '/code-cortex/open-source'}
+              onclick={() => (window.location.href = '/code-cortex/open-source')}
             >
               📂 Manage All Repos
             </button>
-            <button 
-              class="action-btn danger"
-              onclick={disconnectGitHub}
-            >
+            <button class="action-btn danger" onclick={disconnectGitHub}>
               🔗 Disconnect GitHub
             </button>
           </div>
         </div>
-        
+
         <div class="repo-selector-container">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search repositories..."
             bind:value={searchQuery}
             class="repo-search"
@@ -366,12 +371,15 @@
               </div>
             {:else}
               {#each filteredRepositories.slice(0, 8) as repo}
-                <div class="repo-card {selectedRepo?.id === repo.id ? 'selected' : ''}" onclick={() => selectedRepo = repo}>
-                  <GitHubRepoCardV2 
+                <div
+                  class="repo-card {selectedRepo?.id === repo.id ? 'selected' : ''}"
+                  onclick={() => (selectedRepo = repo)}
+                >
+                  <GitHubRepoCardV2
                     repository={{
-                      owner: { 
+                      owner: {
                         login: repo.owner_login || repo.full_name?.split('/')[0] || 'user',
-                        avatar_url: repo.owner_avatar_url || 'https://github.com/github.png'
+                        avatar_url: repo.owner_avatar_url || 'https://github.com/github.png',
                       },
                       repo: {
                         name: repo.name,
@@ -380,29 +388,35 @@
                         language: repo.language,
                         private: repo.is_private,
                         stargazers_count: repo.stars,
-                        forks_count: repo.forks
+                        forks_count: repo.forks,
                       },
                       stats: {
                         stars: repo.stars,
-                        forks: repo.forks
+                        forks: repo.forks,
                       },
                       languages: { [repo.language || 'Unknown']: 100 },
                       last_updated: repo.last_synced,
-                      url: repo.html_url || `https://github.com/${repo.full_name}`
+                      url: repo.html_url || `https://github.com/${repo.full_name}`,
                     }}
                     variant="compact"
                     theme="dark"
                   />
                   <div class="repo-actions">
-                    <button 
+                    <button
                       class="action-btn primary small"
-                      onclick={(e) => { e.stopPropagation(); handleAnalyzeRepository(repo); }}
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        handleAnalyzeRepository(repo);
+                      }}
                     >
                       🚀 Analyze
                     </button>
-                    <button 
+                    <button
                       class="action-btn secondary small"
-                      onclick={(e) => { e.stopPropagation(); handleViewRepository(repo); }}
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        handleViewRepository(repo);
+                      }}
                     >
                       👁️ View
                     </button>
@@ -411,12 +425,12 @@
               {/each}
             {/if}
           </div>
-          
+
           {#if filteredRepositories.length > 8}
             <div class="show-more">
-              <button 
+              <button
                 class="action-btn secondary"
-                onclick={() => window.location.href = '/code-cortex/repositories'}
+                onclick={() => (window.location.href = '/code-cortex/repositories')}
               >
                 View all {repositories.length} repositories
               </button>
@@ -432,7 +446,7 @@
             <h2>🚀 Analysis in Progress</h2>
             <p>Repository: {activeAnalysis.repository?.name || 'Unknown'}</p>
           </div>
-          
+
           <!-- Fallback progress display -->
           <div class="fallback-progress">
             <div class="progress-info">
@@ -440,11 +454,14 @@
               <span class="percentage">{activeAnalysis.progress_percentage || 0}%</span>
             </div>
             <div class="progress-bar">
-              <div class="progress-fill" style="width: {activeAnalysis.progress_percentage || 0}%"></div>
+              <div
+                class="progress-fill"
+                style="width: {activeAnalysis.progress_percentage || 0}%"
+              ></div>
             </div>
             <p class="job-id">Job ID: {activeAnalysis.id}</p>
           </div>
-          
+
           <!-- Realtime component -->
           <RealtimeAnalysisProgress analysisId={activeAnalysis.id} />
         </section>
@@ -453,138 +470,158 @@
       <!-- Intelligence Sections - What You Actually Asked For -->
       <section class="intelligence-sections" data-testid="intelligence-sections">
         <div class="section-tabs">
-          <button class="tab-btn {activeIntelligenceTab === 'active' ? 'active' : ''}" onclick={() => activeIntelligenceTab = 'active'}>
+          <button
+            class="tab-btn {activeIntelligenceTab === 'active' ? 'active' : ''}"
+            onclick={() => (activeIntelligenceTab = 'active')}
+          >
             🚀 Active Analysis {#if activeAnalysis}(1){/if}
           </button>
-          <button class="tab-btn {activeIntelligenceTab === 'insights' ? 'active' : ''}" onclick={() => activeIntelligenceTab = 'insights'}>
+          <button
+            class="tab-btn {activeIntelligenceTab === 'insights' ? 'active' : ''}"
+            onclick={() => (activeIntelligenceTab = 'insights')}
+          >
             💡 Insights
           </button>
-          <button class="tab-btn {activeIntelligenceTab === 'issues' ? 'active' : ''}" onclick={() => activeIntelligenceTab = 'issues'}>
+          <button
+            class="tab-btn {activeIntelligenceTab === 'issues' ? 'active' : ''}"
+            onclick={() => (activeIntelligenceTab = 'issues')}
+          >
             🚨 Critical Issues
           </button>
-          <button class="tab-btn {activeIntelligenceTab === 'history' ? 'active' : ''}" onclick={() => activeIntelligenceTab = 'history'}>
+          <button
+            class="tab-btn {activeIntelligenceTab === 'history' ? 'active' : ''}"
+            onclick={() => (activeIntelligenceTab = 'history')}
+          >
             📊 Run History
           </button>
         </div>
 
         {#if activeIntelligenceTab === 'active'}
-        <div data-testid="active-analyses-section">
-          <div class="active-analyses-section">
-            {#if !activeAnalysis}
-              <div class="empty-state">
-                <div class="empty-icon">🚀</div>
-                <h3>No active analysis</h3>
-                <p>Start analyzing a repository to see live progress.</p>
-              </div>
-            {:else}
-              <div class="analyses-grid">
-                <div class="analysis-card active-card">
-                  <div class="analysis-header">
-                    <h4>{activeAnalysis.repository?.name || 'Repository Analysis'}</h4>
-                    <span class="status-badge {activeAnalysis.status}">{activeAnalysis.status}</span>
-                  </div>
-                  <div class="analysis-progress">
-                    <div class="progress-details">
-                      <span class="stage">{activeAnalysis.stage}</span>
-                      <span class="percentage">{activeAnalysis.progress_percentage}%</span>
+          <div data-testid="active-analyses-section">
+            <div class="active-analyses-section">
+              {#if !activeAnalysis}
+                <div class="empty-state">
+                  <div class="empty-icon">🚀</div>
+                  <h3>No active analysis</h3>
+                  <p>Start analyzing a repository to see live progress.</p>
+                </div>
+              {:else}
+                <div class="analyses-grid">
+                  <div class="analysis-card active-card">
+                    <div class="analysis-header">
+                      <h4>{activeAnalysis.repository?.name || 'Repository Analysis'}</h4>
+                      <span class="status-badge {activeAnalysis.status}"
+                        >{activeAnalysis.status}</span
+                      >
                     </div>
-                    <div class="progress-bar">
-                      <div class="progress-fill" style="width: {activeAnalysis.progress_percentage}%"></div>
+                    <div class="analysis-progress">
+                      <div class="progress-details">
+                        <span class="stage">{activeAnalysis.stage}</span>
+                        <span class="percentage">{activeAnalysis.progress_percentage}%</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div
+                          class="progress-fill"
+                          style="width: {activeAnalysis.progress_percentage}%"
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="analysis-meta">
-                    <span>Depth: {activeAnalysis.depth}</span>
-                    <span>Job: {activeAnalysis.id?.slice(0, 8)}...</span>
+                    <div class="analysis-meta">
+                      <span>Depth: {activeAnalysis.depth}</span>
+                      <span>Job: {activeAnalysis.id?.slice(0, 8)}...</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            {/if}
+              {/if}
+            </div>
           </div>
-        </div>
         {/if}
-        
+
         {#if activeIntelligenceTab === 'insights'}
-        <div data-testid="insights-section">
-          <div class="insights-section">
-            {#if insights.length === 0}
-              <div class="empty-state">
-                <div class="empty-icon">💡</div>
-                <h3>No insights yet</h3>
-                <p>Run repository analyses to get AI-powered insights and tips.</p>
-              </div>
-            {:else}
-              <div class="insights-grid">
-                {#each insights as insight}
-                  <div class="insight-card" onclick={() => handleTimelineItemClick(insight)}>
-                    <div class="insight-header">
-                      <h4>{insight.title}</h4>
-                      <span class="repo-tag">{insight.repository.name}</span>
+          <div data-testid="insights-section">
+            <div class="insights-section">
+              {#if insights.length === 0}
+                <div class="empty-state">
+                  <div class="empty-icon">💡</div>
+                  <h3>No insights yet</h3>
+                  <p>Run repository analyses to get AI-powered insights and tips.</p>
+                </div>
+              {:else}
+                <div class="insights-grid">
+                  {#each insights as insight}
+                    <div class="insight-card" onclick={() => handleTimelineItemClick(insight)}>
+                      <div class="insight-header">
+                        <h4>{insight.title}</h4>
+                        <span class="repo-tag">{insight.repository.name}</span>
+                      </div>
+                      <p class="insight-description">{insight.recommendation}</p>
                     </div>
-                    <p class="insight-description">{insight.recommendation}</p>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+                  {/each}
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
         {/if}
 
         {#if activeIntelligenceTab === 'issues'}
-        <div data-testid="issues-section">
-          <div class="issues-section">
-            {#if criticalIssues.length === 0}
-              <div class="empty-state">
-                <div class="empty-icon">🚨</div>
-                <h3>No critical issues</h3>
-                <p>All repositories are looking good!</p>
-              </div>
-            {:else}
-              <div class="issues-grid">
-                {#each criticalIssues as issue}
-                  <div class="issue-card severity-{issue.severity}" onclick={() => handleTimelineItemClick(issue)}>
-                    <div class="issue-header">
-                      <h4>{issue.title}</h4>
-                      <span class="severity-badge">{issue.severity.toUpperCase()}</span>
+          <div data-testid="issues-section">
+            <div class="issues-section">
+              {#if criticalIssues.length === 0}
+                <div class="empty-state">
+                  <div class="empty-icon">🚨</div>
+                  <h3>No critical issues</h3>
+                  <p>All repositories are looking good!</p>
+                </div>
+              {:else}
+                <div class="issues-grid">
+                  {#each criticalIssues as issue}
+                    <div
+                      class="issue-card severity-{issue.severity}"
+                      onclick={() => handleTimelineItemClick(issue)}
+                    >
+                      <div class="issue-header">
+                        <h4>{issue.title}</h4>
+                        <span class="severity-badge">{issue.severity.toUpperCase()}</span>
+                      </div>
+                      <p class="issue-description">{issue.description}</p>
+                      <div class="issue-repo">{issue.repository.name}</div>
                     </div>
-                    <p class="issue-description">{issue.description}</p>
-                    <div class="issue-repo">{issue.repository.name}</div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+                  {/each}
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
         {/if}
 
         {#if activeIntelligenceTab === 'history'}
-        <div data-testid="history-section">
-          <div class="history-section">
-            {#if analysisHistory.length === 0}
-              <div class="empty-state">
-                <div class="empty-icon">📊</div>
-                <h3>No analysis history</h3>
-                <p>Start analyzing repositories to see run history.</p>
-              </div>
-            {:else}
-              <div class="history-list">
-                {#each analysisHistory as analysis}
-                  <div class="history-item" onclick={() => handleTimelineItemClick(analysis)}>
-                    <div class="history-icon">
-                      {#if analysis.status === 'completed'}🟢
-                      {:else if analysis.status === 'failed'}🔴
-                      {:else}🟡{/if}
+          <div data-testid="history-section">
+            <div class="history-section">
+              {#if analysisHistory.length === 0}
+                <div class="empty-state">
+                  <div class="empty-icon">📊</div>
+                  <h3>No analysis history</h3>
+                  <p>Start analyzing repositories to see run history.</p>
+                </div>
+              {:else}
+                <div class="history-list">
+                  {#each analysisHistory as analysis}
+                    <div class="history-item" onclick={() => handleTimelineItemClick(analysis)}>
+                      <div class="history-icon">
+                        {#if analysis.status === 'completed'}🟢
+                        {:else if analysis.status === 'failed'}🔴
+                        {:else}🟡{/if}
+                      </div>
+                      <div class="history-content">
+                        <h4>{analysis.title}</h4>
+                        <p>{analysis.repository.name} • {formatTimeAgo(analysis.created_at)}</p>
+                      </div>
+                      <div class="history-arrow">→</div>
                     </div>
-                    <div class="history-content">
-                      <h4>{analysis.title}</h4>
-                      <p>{analysis.repository.name} • {formatTimeAgo(analysis.created_at)}</p>
-                    </div>
-                    <div class="history-arrow">→</div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+                  {/each}
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
         {/if}
       </section>
     </main>
@@ -596,14 +633,14 @@
       <OnboardingWizard onComplete={completeOnboarding} />
     </div>
   {/if}
-  
+
   <!-- Analysis Selector - Only When Triggered -->
   <div data-testid="analysis-type-selector">
     <AnalysisTypeSelector
-    {selectedRepo}
-    bind:show={showAnalysisSelector}
-    onStart={handleAnalysisStart}
-    onShowCLI={() => showAnalysisSelector = false}
+      {selectedRepo}
+      bind:show={showAnalysisSelector}
+      onStart={handleAnalysisStart}
+      onShowCLI={() => (showAnalysisSelector = false)}
     />
   </div>
 </div>
@@ -1392,7 +1429,8 @@
   }
 
   @keyframes pulse-glow {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
     }
     50% {

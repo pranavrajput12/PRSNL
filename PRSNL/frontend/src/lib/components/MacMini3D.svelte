@@ -1,7 +1,7 @@
 <script lang="ts">
   export let onClick = () => {};
-  export let tooltip = "Control Center - System Dashboard";
-  
+  export let tooltip = 'Control Center - System Dashboard';
+
   let isHovered = false;
   let showTooltip = false;
   let tooltipTimeout: ReturnType<typeof setTimeout>;
@@ -32,7 +32,7 @@
   }
 </script>
 
-<div 
+<div
   class="mac-mini-container {isHovered ? 'hovered' : ''}"
   on:mouseenter={handleMouseEnter}
   on:mouseleave={handleMouseLeave}
@@ -48,7 +48,7 @@
       <div class="apple-logo"></div>
       <div class="status-indicator"></div>
     </div>
-    
+
     <!-- Front Face -->
     <div class="mac-mini-front">
       <!-- Ports -->
@@ -58,7 +58,7 @@
         <div class="port audio-port"></div>
       </div>
     </div>
-    
+
     <!-- Side Faces -->
     <div class="mac-mini-side left"></div>
     <div class="mac-mini-side right">
@@ -71,7 +71,7 @@
         <div class="port power"></div>
       </div>
     </div>
-    
+
     <!-- Back Face -->
     <div class="mac-mini-back">
       <div class="vent-pattern">
@@ -80,7 +80,7 @@
         {/each}
       </div>
     </div>
-    
+
     <!-- Bottom -->
     <div class="mac-mini-bottom">
       <div class="rubber-foot"></div>
@@ -89,14 +89,14 @@
       <div class="rubber-foot"></div>
     </div>
   </div>
-  
+
   <!-- Electrical Effects -->
   <div class="electrical-field {isHovered ? 'active' : ''}">
     <div class="electrical-ring ring-1"></div>
     <div class="electrical-ring ring-2"></div>
     <div class="electrical-ring ring-3"></div>
   </div>
-  
+
   <!-- Tooltip -->
   {#if showTooltip}
     <div class="tooltip-bubble">
@@ -115,16 +115,16 @@
     transform-style: preserve-3d;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .mac-mini-container:hover {
     transform: rotateY(15deg) rotateX(10deg) translateY(-5px);
   }
-  
+
   .mac-mini-container.clicked {
     transform: scale(0.95) rotateY(15deg) rotateX(10deg);
     transition: all 0.2s ease;
   }
-  
+
   .mac-mini-body {
     position: relative;
     width: 60px;
@@ -133,12 +133,17 @@
     transform-style: preserve-3d;
     animation: gentle-float 4s ease-in-out infinite;
   }
-  
+
   @keyframes gentle-float {
-    0%, 100% { transform: translateY(0px) rotateY(0deg); }
-    50% { transform: translateY(-3px) rotateY(5deg); }
+    0%,
+    100% {
+      transform: translateY(0px) rotateY(0deg);
+    }
+    50% {
+      transform: translateY(-3px) rotateY(5deg);
+    }
   }
-  
+
   .mac-mini-top {
     position: absolute;
     width: 60px;
@@ -150,11 +155,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px;
-    box-shadow: 
-      inset 2px 2px 4px rgba(255,255,255,0.7),
-      inset -2px -2px 4px rgba(0,0,0,0.1);
+    box-shadow:
+      inset 2px 2px 4px rgba(255, 255, 255, 0.7),
+      inset -2px -2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   .apple-logo {
     width: 12px;
     height: 12px;
@@ -162,7 +167,7 @@
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     position: relative;
   }
-  
+
   .apple-logo::before {
     content: '';
     position: absolute;
@@ -174,7 +179,7 @@
     border-radius: 0 2px 0 0;
     transform: rotate(20deg);
   }
-  
+
   .status-indicator {
     width: 4px;
     height: 4px;
@@ -183,12 +188,19 @@
     box-shadow: 0 0 8px #00ff64;
     animation: status-pulse 2s ease-in-out infinite;
   }
-  
+
   @keyframes status-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.2);
+    }
   }
-  
+
   .mac-mini-front {
     position: absolute;
     width: 60px;
@@ -199,47 +211,47 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 
-      0 2px 8px rgba(0,0,0,0.2),
-      inset 0 1px 2px rgba(255,255,255,0.8);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 2px rgba(255, 255, 255, 0.8);
   }
-  
+
   .port-section {
     display: flex;
     gap: 4px;
     align-items: center;
   }
-  
+
   .port {
     border-radius: 1px;
     border: 1px solid #999;
     background: #333;
   }
-  
+
   .usb-port {
     width: 6px;
     height: 3px;
   }
-  
+
   .audio-port {
     width: 4px;
     height: 4px;
     border-radius: 50%;
     background: #222;
   }
-  
+
   .mac-mini-side {
     position: absolute;
     width: 60px;
     height: 20px;
     background: linear-gradient(90deg, #d8d8d8, #c8c8c8, #b8b8b8);
   }
-  
+
   .mac-mini-side.left {
     transform: rotateY(-90deg) translateZ(30px);
     border-radius: 8px 0 0 8px;
   }
-  
+
   .mac-mini-side.right {
     transform: rotateY(90deg) translateZ(30px);
     border-radius: 0 8px 8px 0;
@@ -247,42 +259,42 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .side-ports {
     display: flex;
     flex-direction: column;
     gap: 1px;
     align-items: center;
   }
-  
+
   .thunderbolt {
     width: 8px;
     height: 2px;
     background: #333;
     border-radius: 1px;
   }
-  
+
   .hdmi {
     width: 6px;
     height: 2px;
     background: #333;
     border-radius: 0;
   }
-  
+
   .ethernet {
     width: 6px;
     height: 3px;
     background: #333;
     border-radius: 1px;
   }
-  
+
   .power {
     width: 4px;
     height: 4px;
     background: #333;
     border-radius: 50%;
   }
-  
+
   .mac-mini-back {
     position: absolute;
     width: 60px;
@@ -295,25 +307,32 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .vent-pattern {
     display: flex;
     gap: 1px;
     align-items: center;
   }
-  
+
   .vent-line {
     width: 1px;
     height: 12px;
     background: linear-gradient(to bottom, #999, #777, #999);
     animation: vent-flow 3s ease-in-out infinite;
   }
-  
+
   @keyframes vent-flow {
-    0%, 100% { opacity: 0.4; transform: scaleY(1); }
-    50% { opacity: 0.8; transform: scaleY(1.2); }
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scaleY(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scaleY(1.2);
+    }
   }
-  
+
   .mac-mini-bottom {
     position: absolute;
     width: 60px;
@@ -327,7 +346,7 @@
     gap: 20px;
     padding: 10px;
   }
-  
+
   .rubber-foot {
     width: 8px;
     height: 8px;
@@ -335,9 +354,9 @@
     border-radius: 50%;
     justify-self: center;
     align-self: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
-  
+
   .electrical-field {
     position: absolute;
     top: 50%;
@@ -349,18 +368,18 @@
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   .electrical-field.active {
     opacity: 1;
   }
-  
+
   .electrical-ring {
     position: absolute;
     border-radius: 50%;
     border: 1px solid #00ff64;
     animation: electrical-pulse 2s ease-in-out infinite;
   }
-  
+
   .ring-1 {
     top: 10%;
     left: 10%;
@@ -368,7 +387,7 @@
     height: 80%;
     animation-delay: 0s;
   }
-  
+
   .ring-2 {
     top: 5%;
     left: 5%;
@@ -376,7 +395,7 @@
     height: 90%;
     animation-delay: 0.3s;
   }
-  
+
   .ring-3 {
     top: 0%;
     left: 0%;
@@ -384,7 +403,7 @@
     height: 100%;
     animation-delay: 0.6s;
   }
-  
+
   @keyframes electrical-pulse {
     0% {
       opacity: 0;
@@ -399,7 +418,7 @@
       transform: scale(1.3);
     }
   }
-  
+
   .tooltip-bubble {
     position: absolute;
     bottom: 110%;
@@ -417,7 +436,7 @@
     animation: tooltip-appear 0.3s ease-out;
     z-index: 1000;
   }
-  
+
   .tooltip-arrow {
     position: absolute;
     top: 100%;
@@ -429,7 +448,7 @@
     border-right: 6px solid transparent;
     border-top: 6px solid rgba(0, 0, 0, 0.9);
   }
-  
+
   @keyframes tooltip-appear {
     0% {
       opacity: 0;
@@ -440,13 +459,16 @@
       transform: translateX(-50%) translateY(0);
     }
   }
-  
+
   .mac-mini-container.hovered .mac-mini-body {
-    animation: gentle-float 2s ease-in-out infinite, hover-glow 2s ease-in-out infinite;
+    animation:
+      gentle-float 2s ease-in-out infinite,
+      hover-glow 2s ease-in-out infinite;
   }
-  
+
   @keyframes hover-glow {
-    0%, 100% {
+    0%,
+    100% {
       filter: drop-shadow(0 0 10px rgba(0, 255, 100, 0.3));
     }
     50% {

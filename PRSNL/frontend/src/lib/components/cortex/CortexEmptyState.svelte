@@ -14,11 +14,11 @@
   <div class="empty-icon">
     <Icon name={icon} size={size === 'sm' ? '32' : size === 'lg' ? '64' : '48'} />
   </div>
-  
+
   <h3 class="empty-title">{title}</h3>
-  
+
   <p class="empty-description">{description}</p>
-  
+
   {#if actionLabel && (actionHref || onAction)}
     <div class="empty-action">
       {#if actionHref}
