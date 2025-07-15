@@ -114,7 +114,7 @@ langchain-openai>=0.2.0  # OpenAI/Azure OpenAI integration
 # Document Processing
 markitdown==0.1.2
 python-docx==0.8.11
-openpyxl==3.1.2
+openpyxl>=3.1.5  # Updated for CrewAI 0.141.0 compatibility
 odfpy==1.4.1
 python-magic==0.4.27
 
