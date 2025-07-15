@@ -38,3 +38,29 @@ async def get_current_user_optional(token: Optional[str] = None) -> Optional[dic
     Optional auth function - same as get_current_user but explicitly optional
     """
     return None
+
+
+async def get_current_user_ws(websocket, token: Optional[str] = None) -> Optional[User]:
+    """
+    WebSocket auth function - returns test user for development
+    In production, this would validate the token and return user info
+    """
+    # Return a test user object with required id field
+    return User(
+        id="temp-user-for-oauth",  # Actual user_id from database
+        email="test@example.com",
+        name="Test User"
+    )
+
+
+async def verify_token(token: str) -> Optional[dict]:
+    """
+    Verify token and return user info
+    In production, this would validate the token against a secure token store
+    """
+    # For development, return a test user
+    return {
+        "user_id": "temp-user-for-oauth",
+        "email": "test@example.com",
+        "name": "Test User"
+    }

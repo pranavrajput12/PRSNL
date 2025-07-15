@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 
-from app.auth.dependencies import get_current_user
+from app.core.auth import get_current_user
 from app.services.agent_monitoring_service import agent_monitoring_service
 from app.db.database import get_db_connection
 

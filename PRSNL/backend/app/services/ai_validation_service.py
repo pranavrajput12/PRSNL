@@ -84,6 +84,55 @@ class AIValidationService:
         sanitized = ' '.join(content.split())
         
         return sanitized
+    
+    async def validate_content_analysis(self, response: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Validate content analysis response from AI service
+        
+        Args:
+            response: AI response to validate (can be None for fallback)
+            
+        Returns:
+            Validated content analysis response or fallback response
+        """
+        if response is None:
+            # Return default fallback response
+            return {
+                "title": "Content Analysis Unavailable",
+                "summary": "Unable to analyze content at this time.",
+                "key_points": [],
+                "tags": [],
+                "entities": [],
+                "insights": [],
+                "error": "Analysis service temporarily unavailable"
+            }
+        
+        # Validate the response using existing validation
+        if not self.validate_response(response):
+            # Return fallback if validation fails
+            return {
+                "title": "Content Analysis Error",
+                "summary": "Content analysis failed validation.",
+                "key_points": [],
+                "tags": [],
+                "entities": [],
+                "insights": [],
+                "error": "Analysis response failed validation"
+            }
+        
+        # Ensure required fields are present
+        validated_response = {
+            "title": response.get("title", "Untitled Content"),
+            "summary": response.get("summary", ""),
+            "key_points": response.get("key_points", []),
+            "tags": response.get("tags", []),
+            "entities": response.get("entities", []),
+            "insights": response.get("insights", []),
+            "content_type": response.get("content_type", "unknown"),
+            "workflow_used": response.get("workflow_used", False)
+        }
+        
+        return validated_response
 
 
 # Singleton instance

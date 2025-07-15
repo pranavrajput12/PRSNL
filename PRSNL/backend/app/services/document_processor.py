@@ -16,9 +16,11 @@ import aiofiles.os
 import docx
 
 # For text extraction
-import PyPDF2
+from markitdown import MarkItDown
 import pytesseract
 from PIL import Image
+import tempfile
+import os
 
 # For file type detection
 try:
@@ -35,6 +37,7 @@ class DocumentProcessor:
     
     def __init__(self, storage_root: str = "storage"):
         self.storage_root = Path(storage_root)
+        self.markitdown = MarkItDown()  # Initialize MarkItDown processor
         self.supported_types = {
             'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv'],
             'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff'],
@@ -212,61 +215,121 @@ class DocumentProcessor:
             }
     
     async def _extract_pdf_content(self, file_content: bytes) -> Dict[str, Any]:
-        """Extract text from PDF file"""
-        pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_content))
-        
-        text_content = []
-        for page_num, page in enumerate(pdf_reader.pages):
+        """Extract text from PDF file using MarkItDown"""
+        try:
+            # Create temporary file for MarkItDown processing
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
+            
             try:
-                page_text = page.extract_text()
-                if page_text.strip():
-                    text_content.append(page_text)
-            except Exception as e:
-                logger.warning(f"Failed to extract text from page {page_num}: {e}")
-        
-        full_text = '\n'.join(text_content)
-        
-        return {
-            'text': full_text,
-            'pages': len(pdf_reader.pages),
-            'word_count': len(full_text.split()) if full_text else 0,
-            'extraction_method': 'pypdf2',
-            'metadata': {
-                'pages_with_text': len(text_content),
-                'total_pages': len(pdf_reader.pages)
+                # Process with MarkItDown
+                result = self.markitdown.convert(temp_file_path)
+                
+                # Extract text content
+                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
+                
+                # Estimate page count from content length (rough approximation)
+                estimated_pages = max(1, len(text_content) // 2000)  # ~2000 chars per page
+                
+                return {
+                    'text': text_content,
+                    'pages': estimated_pages,
+                    'word_count': len(text_content.split()) if text_content else 0,
+                    'extraction_method': 'markitdown',
+                    'metadata': {
+                        'source_type': 'pdf',
+                        'content_type': getattr(result, 'content_type', 'application/pdf'),
+                        'title': getattr(result, 'title', ''),
+                        'preserves_formatting': True
+                    }
+                }
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file_path)
+                except OSError:
+                    pass
+                    
+        except Exception as e:
+            logger.error(f"MarkItDown PDF extraction failed: {e}")
+            # Fallback to basic text extraction if MarkItDown fails
+            return {
+                'text': f"Failed to extract PDF content: {str(e)}",
+                'pages': 0,
+                'word_count': 0,
+                'extraction_method': 'markitdown_failed',
+                'error': str(e)
             }
-        }
     
     async def _extract_office_content(self, file_content: bytes, extension: str) -> Dict[str, Any]:
-        """Extract text from Office documents"""
-        if extension == '.docx':
-            doc = docx.Document(io.BytesIO(file_content))
-            text_content = []
+        """Extract text from Office documents using MarkItDown"""
+        try:
+            # Create temporary file for MarkItDown processing
+            with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
             
-            for paragraph in doc.paragraphs:
-                if paragraph.text.strip():
-                    text_content.append(paragraph.text)
-            
-            full_text = '\n'.join(text_content)
-            
-            return {
-                'text': full_text,
-                'pages': len(doc.paragraphs),
-                'word_count': len(full_text.split()) if full_text else 0,
-                'extraction_method': 'python-docx',
-                'metadata': {
-                    'paragraphs': len(doc.paragraphs),
-                    'tables': len(doc.tables)
+            try:
+                # Process with MarkItDown
+                result = self.markitdown.convert(temp_file_path)
+                
+                # Extract text content
+                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
+                
+                return {
+                    'text': text_content,
+                    'pages': 1,  # Office documents are typically single "page" from text perspective
+                    'word_count': len(text_content.split()) if text_content else 0,
+                    'extraction_method': 'markitdown',
+                    'metadata': {
+                        'source_type': 'office',
+                        'format': extension,
+                        'content_type': getattr(result, 'content_type', 'application/octet-stream'),
+                        'title': getattr(result, 'title', ''),
+                        'preserves_formatting': True
+                    }
                 }
-            }
-        else:
-            # For other office formats, return basic info
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file_path)
+                except OSError:
+                    pass
+                    
+        except Exception as e:
+            logger.error(f"MarkItDown office extraction failed: {e}")
+            # Fallback for .docx files
+            if extension == '.docx':
+                try:
+                    doc = docx.Document(io.BytesIO(file_content))
+                    text_content = []
+                    
+                    for paragraph in doc.paragraphs:
+                        if paragraph.text.strip():
+                            text_content.append(paragraph.text)
+                    
+                    full_text = '\n'.join(text_content)
+                    
+                    return {
+                        'text': full_text,
+                        'pages': len(doc.paragraphs),
+                        'word_count': len(full_text.split()) if full_text else 0,
+                        'extraction_method': 'python-docx_fallback',
+                        'metadata': {
+                            'paragraphs': len(doc.paragraphs),
+                            'tables': len(doc.tables)
+                        }
+                    }
+                except Exception as docx_error:
+                    logger.error(f"Both MarkItDown and docx extraction failed: {docx_error}")
+            
             return {
-                'text': f"Office document content (format: {extension})",
+                'text': f"Failed to extract office content: {str(e)}",
                 'pages': 1,
                 'word_count': 0,
-                'extraction_method': 'unsupported_office',
-                'metadata': {'format': extension}
+                'extraction_method': 'markitdown_failed',
+                'error': str(e)
             }
     
     async def _extract_text_content(self, file_content: bytes) -> Dict[str, Any]:
@@ -333,38 +396,99 @@ class DocumentProcessor:
             return await self._extract_text_content(file_content)
     
     async def _extract_image_content(self, file_content: bytes) -> Dict[str, Any]:
-        """Extract text from images using OCR"""
+        """Extract text from images using MarkItDown with Tesseract fallback"""
+        # Try MarkItDown first for better image handling
         try:
-            # Open image
-            image = Image.open(io.BytesIO(file_content))
+            # Detect image format
+            image_format = self._detect_image_format(file_content)
             
-            # Convert to RGB if necessary
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
+            # Create temporary file for MarkItDown processing
+            with tempfile.NamedTemporaryFile(suffix=image_format, delete=False) as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
             
-            # Perform OCR
-            extracted_text = pytesseract.image_to_string(image)
-            
-            return {
-                'text': extracted_text,
-                'pages': 1,
-                'word_count': len(extracted_text.split()) if extracted_text else 0,
-                'extraction_method': 'tesseract_ocr',
-                'metadata': {
-                    'image_size': image.size,
-                    'image_mode': image.mode,
-                    'has_text': bool(extracted_text.strip())
+            try:
+                # Process with MarkItDown
+                result = self.markitdown.convert(temp_file_path)
+                
+                # Extract text content
+                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
+                
+                # Get image metadata
+                image = Image.open(io.BytesIO(file_content))
+                
+                return {
+                    'text': text_content,
+                    'pages': 1,
+                    'word_count': len(text_content.split()) if text_content else 0,
+                    'extraction_method': 'markitdown_ocr',
+                    'metadata': {
+                        'image_size': image.size,
+                        'image_mode': image.mode,
+                        'has_text': bool(text_content.strip()),
+                        'source_type': 'image',
+                        'format': image_format
+                    }
                 }
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file_path)
+                except OSError:
+                    pass
+                    
+        except Exception as markitdown_error:
+            logger.warning(f"MarkItDown image extraction failed, falling back to Tesseract: {markitdown_error}")
+            
+            # Fallback to Tesseract OCR
+            try:
+                # Open image
+                image = Image.open(io.BytesIO(file_content))
+                
+                # Convert to RGB if necessary
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                # Perform OCR
+                extracted_text = pytesseract.image_to_string(image)
+                
+                return {
+                    'text': extracted_text,
+                    'pages': 1,
+                    'word_count': len(extracted_text.split()) if extracted_text else 0,
+                    'extraction_method': 'tesseract_ocr_fallback',
+                    'metadata': {
+                        'image_size': image.size,
+                        'image_mode': image.mode,
+                        'has_text': bool(extracted_text.strip()),
+                        'markitdown_error': str(markitdown_error)
+                    }
+                }
+            except Exception as e:
+                logger.error(f"Both MarkItDown and Tesseract OCR failed: {e}")
+                return {
+                    'text': "Image content (OCR not available)",
+                    'pages': 1,
+                    'word_count': 0,
+                    'extraction_method': 'ocr_failed',
+                    'error': str(e)
+                }
+    
+    def _detect_image_format(self, file_content: bytes) -> str:
+        """Detect image format from file content"""
+        try:
+            image = Image.open(io.BytesIO(file_content))
+            format_map = {
+                'JPEG': '.jpg',
+                'PNG': '.png',
+                'GIF': '.gif',
+                'BMP': '.bmp',
+                'TIFF': '.tiff',
+                'WEBP': '.webp'
             }
-        except Exception as e:
-            logger.error(f"OCR extraction failed: {e}")
-            return {
-                'text': "Image content (OCR not available)",
-                'pages': 1,
-                'word_count': 0,
-                'extraction_method': 'ocr_failed',
-                'error': str(e)
-            }
+            return format_map.get(image.format, '.jpg')
+        except Exception:
+            return '.jpg'  # Default fallback
     
     async def _generate_thumbnail(self, file_content: bytes, item_id: UUID, file_hash: str) -> Optional[Path]:
         """Generate thumbnail for image files"""

@@ -536,7 +536,7 @@ async def import_bulk_urls(
         capture_engine = CaptureEngine()
         
         # Process URLs concurrently in batches
-        batch_size = 5  # Process 5 URLs at a time
+        batch_size = 20  # Process 20 URLs at a time
         
         async def process_url(url: str, tags: List[str]):
             try:

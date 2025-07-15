@@ -46,12 +46,8 @@ try:
     HAYSTACK_AVAILABLE = True
     logger.info("Haystack v2 successfully imported")
     
-except ImportError as e:
+except (ImportError, ValueError) as e:
     logger.error(f"Haystack import failed: {e}")
-    HAYSTACK_AVAILABLE = False
-except ValueError as e:
-    # Handle numpy/sklearn incompatibility
-    logger.error(f"Haystack initialization failed due to numpy/sklearn incompatibility: {e}")
     HAYSTACK_AVAILABLE = False
     
     # Create dummy classes to prevent runtime errors

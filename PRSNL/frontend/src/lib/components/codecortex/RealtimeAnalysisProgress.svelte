@@ -3,10 +3,9 @@
   import { realtimeService, type AnalysisProgress } from '$lib/services/codemirror-realtime';
   import { fade, slide } from 'svelte/transition';
   
-  export let analysisId: string | null = null;
-  export let showAllActive = false;
+  let { analysisId = null, showAllActive = false }: { analysisId?: string | null; showAllActive?: boolean } = $props();
   
-  let connectionState = $state({});
+  let connectionState = $state({ connected: false, reconnectAttempts: 0 });
   let activeAnalyses = $state(new Map());
   let unsubscribers: (() => void)[] = [];
   
@@ -56,7 +55,7 @@
   }
   
   function getStageIcon(stage: string): string {
-    const icons = {
+    const icons: Record<string, string> = {
       'initializing': '🔄',
       'scanning_files': '📂',
       'analyzing_structure': '🏗️',
@@ -70,11 +69,13 @@
   }
   
   // Get analyses to display
-  $: displayAnalyses = showAllActive 
-    ? Array.from(activeAnalyses.values())
-    : analysisId && activeAnalyses.has(analysisId) 
-      ? [activeAnalyses.get(analysisId)]
-      : [];
+  let displayAnalyses = $derived(
+    showAllActive 
+      ? Array.from(activeAnalyses.values())
+      : analysisId && activeAnalyses.has(analysisId) 
+        ? [activeAnalyses.get(analysisId)]
+        : []
+  );
 </script>
 
 <div class="realtime-progress">

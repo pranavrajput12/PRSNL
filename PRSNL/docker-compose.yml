@@ -25,6 +25,39 @@ services:
   #     timeout: 5s
   #     retries: 5
 
+  # ===== NEO4J GRAPH DATABASE =====
+  # Neo4j Community Edition for relationship analysis
+  neo4j:
+    image: neo4j:5.15-community
+    container_name: prsnl_neo4j
+    restart: unless-stopped
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"   # HTTP interface
+      - "${NEO4J_BOLT_PORT:-7687}:7687"   # Bolt protocol
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-prsnl_graph_2024}
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*,gds.*
+      NEO4J_dbms_security_procedures_allowlist: apoc.*,gds.*
+      NEO4J_dbms_memory_heap_initial__size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
+      NEO4J_dbms_memory_pagecache_size: 256m
+      NEO4J_dbms_logs_gc_enabled: false
+      NEO4J_dbms_logs_gc_options: -XX:+UseG1GC
+      NEO4J_dbms_logs_gc_rotation_keep__number: 5
+      NEO4J_dbms_logs_gc_rotation_size: 20m
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
   # ===== LIBRECHAT SERVICES =====
   # LibreChat - Advanced Chat Interface
   librechat:
@@ -109,6 +142,28 @@ services:
       timeout: 5s
       retries: 5
 
+  # Browserless - Browser automation for testing
+  browserless:
+    image: browserless/chrome:latest
+    container_name: prsnl_browserless
+    restart: unless-stopped
+    ports:
+      - "${BROWSERLESS_PORT:-3001}:3000"
+    environment:
+      CONCURRENT: 10
+      TOKEN: ${BROWSERLESS_TOKEN:-}
+      EXIT_ON_HEALTH_FAILURE: true
+      PREBOOT_CHROME: true
+      KEEP_ALIVE: true
+      CHROME_REFRESH_TIME: 2000000
+      DEFAULT_BLOCK_ADS: true
+      DEFAULT_STEALTH: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   backend:
     build: ./backend
     container_name: prsnl_backend
@@ -157,6 +212,11 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  # Neo4j volumes
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
   # LibreChat volumes
   librechat_uploads:
   librechat_logs:

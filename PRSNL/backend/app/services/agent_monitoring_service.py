@@ -16,7 +16,7 @@ from collections import defaultdict
 
 from app.db.database import get_db_connection
 from app.services.websocket_manager import websocket_manager
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

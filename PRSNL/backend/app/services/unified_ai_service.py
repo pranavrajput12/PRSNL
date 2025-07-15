@@ -1,6 +1,7 @@
 """
 Unified AI Service Layer for all AI-powered features
 Uses Azure OpenAI for all LLM operations
+Integrates with LangGraph for workflow orchestration
 """
 import asyncio
 import hashlib
@@ -15,6 +16,36 @@ from openai import AsyncAzureOpenAI
 from app.config import settings
 from app.services.ai_validation_service import ai_validation_service
 from app.services.cache import cache_service, CacheKeys
+
+# Import LangGraph workflows if available
+try:
+    from app.services.langgraph_workflows import (
+        langgraph_workflow_service,
+        ContentType as WorkflowContentType
+    )
+    LANGGRAPH_AVAILABLE = True
+except ImportError:
+    LANGGRAPH_AVAILABLE = False
+    langgraph_workflow_service = None
+    # Define fallback ContentType for when LangGraph is not available
+    from enum import Enum
+    class WorkflowContentType(str, Enum):
+        DOCUMENT = "document"
+        VIDEO = "video"
+        AUDIO = "audio"
+        CODE = "code"
+        IMAGE = "image"
+        URL = "url"
+        TEXT = "text"
+        UNKNOWN = "unknown"
+
+# Import LangChain prompt templates if available
+try:
+    from app.services.langchain_prompts import prompt_template_manager
+    PROMPTS_AVAILABLE = True
+except ImportError:
+    PROMPTS_AVAILABLE = False
+    prompt_template_manager = None
 
 logger = logging.getLogger(__name__)
 
@@ -119,11 +150,73 @@ class UnifiedAIService:
             logger.error(f"Azure OpenAI completion error: {e}")
             raise
     
-    async def analyze_content(self, content: str, url: Optional[str] = None, enable_key_points: bool = True, enable_entities: bool = True) -> Dict[str, Any]:
+    async def analyze_content(
+        self,
+        content: str,
+        url: Optional[str] = None,
+        enable_key_points: bool = True,
+        enable_entities: bool = True,
+        use_workflow: bool = True,
+        content_type: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Comprehensive content analysis workflow
+        Can use LangGraph workflows for enhanced processing
         Returns: title, summary, category, tags, key_points, entities
         """
+        # Try LangGraph workflow first if available and requested
+        if use_workflow and LANGGRAPH_AVAILABLE and langgraph_workflow_service.enabled:
+            try:
+                logger.info("Using LangGraph workflow for content analysis")
+                
+                # Determine workflow content type
+                workflow_content_type = None
+                if content_type:
+                    type_mapping = {
+                        'document': WorkflowContentType.DOCUMENT,
+                        'video': WorkflowContentType.VIDEO,
+                        'audio': WorkflowContentType.AUDIO,
+                        'code': WorkflowContentType.CODE,
+                        'image': WorkflowContentType.IMAGE,
+                        'url': WorkflowContentType.URL,
+                        'text': WorkflowContentType.TEXT
+                    }
+                    workflow_content_type = type_mapping.get(content_type)
+                
+                # Process through workflow
+                workflow_result = await langgraph_workflow_service.process_content(
+                    content=content,
+                    content_type=workflow_content_type,
+                    source_url=url,
+                    metadata={'enable_key_points': enable_key_points, 'enable_entities': enable_entities}
+                )
+                
+                # If workflow succeeded, return its results
+                if not workflow_result.get('error'):
+                    return {
+                        'title': workflow_result.get('title', 'Untitled'),
+                        'summary': workflow_result.get('summary', ''),
+                        'detailed_summary': workflow_result.get('summary', ''),
+                        'category': workflow_result.get('category', 'other'),
+                        'tags': workflow_result.get('tags', []),
+                        'key_points': workflow_result.get('key_points', []),
+                        'entities': workflow_result.get('entities', {}),
+                        'sentiment': workflow_result.get('sentiment', 'neutral'),
+                        'difficulty_level': workflow_result.get('difficulty_level', 'intermediate'),
+                        'estimated_reading_time': 5,
+                        'quality_score': workflow_result.get('quality_score', 0.0),
+                        'workflow_used': True,
+                        'processing_path': workflow_result.get('processing_path', [])
+                    }
+                else:
+                    logger.warning(f"Workflow failed: {workflow_result.get('error')}")
+                    # Fall through to standard processing
+                    
+            except Exception as e:
+                logger.error(f"LangGraph workflow error: {e}")
+                # Fall through to standard processing
+        
+        # Standard processing (fallback or when workflow not available)
         system_prompt = """You are an expert content analyst. Analyze the given content and provide a comprehensive analysis in JSON format."""
         
         prompt = f"""Analyze this content and provide a detailed analysis:
@@ -207,13 +300,32 @@ Provide analysis in this exact JSON format:
         limit: int = 10,
         existing_tags: Optional[List[str]] = None
     ) -> List[str]:
-        """Generate validated tags for content"""
-        system_prompt = """You are an expert at generating relevant, searchable tags for content. 
-        Generate specific, lowercase tags that capture the essence of the content."""
-        
-        existing_tags_str = f"\nExisting tags in system: {', '.join(existing_tags)}" if existing_tags else ""
-        
-        prompt = f"""Generate {limit} relevant tags for this content:{existing_tags_str}
+        """Generate validated tags for content using prompt templates"""
+        try:
+            # Use prompt template if available
+            if PROMPTS_AVAILABLE and prompt_template_manager.enabled:
+                prompt = prompt_template_manager.get_prompt(
+                    'generate_tags',
+                    variables={
+                        'content': content[:2000],
+                        'content_type': 'general',
+                        'existing_tags': ', '.join(existing_tags) if existing_tags else 'none',
+                        'num_tags': str(limit)
+                    }
+                )
+                
+                # Extract system and user prompts
+                lines = prompt.split('\n')
+                system_prompt = "You are an expert at generating relevant, searchable tags for content."
+                user_prompt = '\n'.join(lines)
+            else:
+                # Fallback to hardcoded prompt
+                system_prompt = """You are an expert at generating relevant, searchable tags for content. 
+                Generate specific, lowercase tags that capture the essence of the content."""
+                
+                existing_tags_str = f"\nExisting tags in system: {', '.join(existing_tags)}" if existing_tags else ""
+                
+                user_prompt = f"""Generate {limit} relevant tags for this content:{existing_tags_str}
 
 Content: {content[:2000]}
 
@@ -228,10 +340,9 @@ Respond in JSON format:
     "tags": ["tag1", "tag2", "tag3", ...],
     "confidence_scores": {{"tag1": 0.9, "tag2": 0.8, ...}}
 }}"""
-        
-        try:
+            
             response = await self.complete(
-                prompt=prompt,
+                prompt=user_prompt,
                 system_prompt=system_prompt,
                 temperature=0.3,
                 max_tokens=200,
@@ -252,37 +363,79 @@ Respond in JSON format:
         summary_type: str = "brief",
         context: Optional[Dict] = None
     ) -> str:
-        """Generate different types of summaries"""
-        system_prompts = {
-            "brief": "You are a concise summarizer. Provide brief, clear summaries.",
-            "detailed": "You are a comprehensive summarizer. Provide detailed summaries with context.",
-            "key_points": "You are an analyst. Extract and list the key points clearly.",
-            "technical": "You are a technical writer. Focus on technical details and implications.",
-            "eli5": "You are a teacher. Explain complex topics in simple terms."
-        }
-        
-        prompts = {
-            "brief": f"Summarize this in 2-3 sentences:\n\n{content[:2000]}",
-            "detailed": f"Provide a comprehensive summary with main themes:\n\n{content[:3000]}",
-            "key_points": f"Extract 5-7 key points as a bulleted list:\n\n{content[:2000]}",
-            "technical": f"Summarize the technical aspects and implications:\n\n{content[:2000]}",
-            "eli5": f"Explain this in simple terms a beginner would understand:\n\n{content[:2000]}"
-        }
-        
-        # Add context if provided
-        if context:
-            context_str = f"\n\nContext: {json.dumps(context)}\n"
-            prompts[summary_type] = prompts[summary_type].replace("\n\n", context_str + "\n\n", 1)
-        
+        """Generate different types of summaries using prompt templates"""
         try:
+            # Use prompt template if available
+            if PROMPTS_AVAILABLE and prompt_template_manager.enabled:
+                template_name = f'summary_{summary_type}'
+                
+                # Prepare variables
+                variables = {
+                    'content': content[:3000 if summary_type == "detailed" else 2000]
+                }
+                
+                # Add type-specific variables
+                if summary_type == "brief":
+                    variables['max_sentences'] = '2-3'
+                elif summary_type == "detailed":
+                    variables['focus_areas'] = 'main ideas, key insights, and practical applications'
+                elif summary_type == "key_points":
+                    variables['num_points'] = '5-7'
+                elif summary_type == "technical":
+                    variables['technical_level'] = 'intermediate'
+                elif summary_type == "eli5":
+                    variables['target_audience'] = 'beginner'
+                
+                # Add context if provided
+                if context:
+                    variables['context'] = json.dumps(context)
+                
+                prompt = prompt_template_manager.get_prompt(template_name, variables)
+                
+                # Use appropriate system prompt
+                system_prompts = {
+                    "brief": "You are a concise summarizer. Provide brief, clear summaries.",
+                    "detailed": "You are a comprehensive summarizer. Provide detailed summaries with context.",
+                    "key_points": "You are an analyst. Extract and list the key points clearly.",
+                    "technical": "You are a technical writer. Focus on technical details and implications.",
+                    "eli5": "You are a teacher. Explain complex topics in simple terms."
+                }
+                system_prompt = system_prompts.get(summary_type, system_prompts["brief"])
+                
+            else:
+                # Fallback to hardcoded prompts
+                system_prompts = {
+                    "brief": "You are a concise summarizer. Provide brief, clear summaries.",
+                    "detailed": "You are a comprehensive summarizer. Provide detailed summaries with context.",
+                    "key_points": "You are an analyst. Extract and list the key points clearly.",
+                    "technical": "You are a technical writer. Focus on technical details and implications.",
+                    "eli5": "You are a teacher. Explain complex topics in simple terms."
+                }
+                
+                prompts = {
+                    "brief": f"Summarize this in 2-3 sentences:\n\n{content[:2000]}",
+                    "detailed": f"Provide a comprehensive summary with main themes:\n\n{content[:3000]}",
+                    "key_points": f"Extract 5-7 key points as a bulleted list:\n\n{content[:2000]}",
+                    "technical": f"Summarize the technical aspects and implications:\n\n{content[:2000]}",
+                    "eli5": f"Explain this in simple terms a beginner would understand:\n\n{content[:2000]}"
+                }
+                
+                prompt = prompts.get(summary_type, prompts["brief"])
+                system_prompt = system_prompts.get(summary_type, system_prompts["brief"])
+                
+                # Add context if provided
+                if context:
+                    context_str = f"\n\nContext: {json.dumps(context)}\n"
+                    prompt = prompt.replace("\n\n", context_str + "\n\n", 1)
+            
             # For structured summary types, request JSON format
             if summary_type in ["key_points", "technical"]:
-                prompt_with_format = prompts.get(summary_type, prompts["brief"]) + \
+                prompt_with_format = prompt + \
                     '\n\nProvide response in JSON format: {"brief": "2-3 sentence summary", "detailed": "detailed summary", "key_takeaways": ["point1", "point2", "point3"]}'
                 
                 response = await self.complete(
                     prompt=prompt_with_format,
-                    system_prompt=system_prompts.get(summary_type, system_prompts["brief"]),
+                    system_prompt=system_prompt,
                     temperature=0.3,
                     max_tokens=500,
                     response_format={"type": "json_object"}
@@ -294,8 +447,8 @@ Respond in JSON format:
             else:
                 # For simple summaries, return plain text
                 response = await self.complete(
-                    prompt=prompts.get(summary_type, prompts["brief"]),
-                    system_prompt=system_prompts.get(summary_type, system_prompts["brief"]),
+                    prompt=prompt,
+                    system_prompt=system_prompt,
                     temperature=0.3,
                     max_tokens=500
                 )
@@ -505,6 +658,99 @@ Create a structured learning path in JSON format:
         )
         
         return json.loads(response)
+    
+    async def process_content_batch(
+        self,
+        items: List[Dict[str, Any]],
+        use_workflow: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Process multiple content items using LangGraph workflows
+        
+        Args:
+            items: List of content items with 'content', 'url', 'content_type'
+            use_workflow: Whether to use LangGraph workflows
+            
+        Returns:
+            List of analysis results
+        """
+        if use_workflow and LANGGRAPH_AVAILABLE and langgraph_workflow_service.enabled:
+            try:
+                logger.info(f"Processing batch of {len(items)} items with LangGraph")
+                
+                # Prepare items for workflow
+                workflow_items = []
+                for item in items:
+                    workflow_items.append({
+                        'content': item.get('content', ''),
+                        'content_type': self._map_content_type(item.get('content_type')),
+                        'source_url': item.get('url'),
+                        'metadata': item.get('metadata', {})
+                    })
+                
+                # Process batch through workflow
+                results = await langgraph_workflow_service.process_batch(
+                    workflow_items,
+                    max_concurrent=5
+                )
+                
+                # Format results
+                formatted_results = []
+                for result in results:
+                    if not result.get('error'):
+                        formatted_results.append({
+                            'title': result.get('title', 'Untitled'),
+                            'summary': result.get('summary', ''),
+                            'category': result.get('category', 'other'),
+                            'tags': result.get('tags', []),
+                            'workflow_used': True,
+                            'quality_score': result.get('quality_score', 0.0)
+                        })
+                    else:
+                        # Fallback for failed items
+                        formatted_results.append({
+                            'title': 'Processing Failed',
+                            'summary': result.get('error', 'Unknown error'),
+                            'category': 'error',
+                            'tags': [],
+                            'workflow_used': True,
+                            'error': True
+                        })
+                
+                return formatted_results
+                
+            except Exception as e:
+                logger.error(f"Batch workflow processing failed: {e}")
+                # Fall through to standard processing
+        
+        # Standard batch processing
+        results = []
+        for item in items:
+            result = await self.analyze_content(
+                content=item.get('content', ''),
+                url=item.get('url'),
+                use_workflow=False,  # Already tried workflow
+                content_type=item.get('content_type')
+            )
+            results.append(result)
+        
+        return results
+    
+    def _map_content_type(self, content_type: Optional[str]) -> Optional[WorkflowContentType]:
+        """Map string content type to workflow enum"""
+        if not content_type or not LANGGRAPH_AVAILABLE:
+            return None
+            
+        type_mapping = {
+            'document': WorkflowContentType.DOCUMENT,
+            'video': WorkflowContentType.VIDEO,
+            'audio': WorkflowContentType.AUDIO,
+            'code': WorkflowContentType.CODE,
+            'image': WorkflowContentType.IMAGE,
+            'url': WorkflowContentType.URL,
+            'text': WorkflowContentType.TEXT
+        }
+        return type_mapping.get(content_type.lower()) if content_type else None
     
     async def stream_chat_response(
         self,

@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from app.config import settings
 from app.db.database import get_db_pool
+from app.services.http_client_factory import http_client_factory, ClientType
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +29,8 @@ class GitHubService:
     SCOPES = ["read:user", "repo", "metadata"]
     
     def __init__(self):
-        self.client = httpx.AsyncClient(
-            headers={
-                "Accept": "application/vnd.github.v3+json",
-                "User-Agent": "PRSNL-CodeMirror/1.0"
-            }
-        )
+        # Use centralized HTTP client factory
+        self.http_client_factory = http_client_factory
         # Use environment variable for encryption key
         self.encryption_key = settings.ENCRYPTION_KEY.encode()[:32]  # AES-256 requires 32 bytes
         
@@ -70,16 +67,17 @@ class GitHubService:
         user_id = state.split(":")[0] if ":" in state else "temp-user-for-oauth"
         
         # Exchange code for token
-        token_response = await self.client.post(
-            f"{self.OAUTH_BASE}/access_token",
-            headers={"Accept": "application/json"},
-            data={
-                "client_id": settings.GITHUB_CLIENT_ID,
-                "client_secret": settings.GITHUB_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": f"{settings.FRONTEND_URL}/code-cortex/github-callback"
-            }
-        )
+        async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+            token_response = await client.post(
+                f"{self.OAUTH_BASE}/access_token",
+                headers={"Accept": "application/json"},
+                data={
+                    "client_id": settings.GITHUB_CLIENT_ID,
+                    "client_secret": settings.GITHUB_CLIENT_SECRET,
+                    "code": code,
+                    "redirect_uri": f"{settings.FRONTEND_URL}/code-cortex/github-callback"
+                }
+            )
         
         token_data = token_response.json()
         if "access_token" not in token_data:
@@ -132,12 +130,13 @@ class GitHubService:
     async def get_user_info(self, access_token: str) -> Dict[str, Any]:
         """Get GitHub user information"""
         
-        response = await self.client.get(
-            f"{self.GITHUB_API_BASE}/user",
-            headers={"Authorization": f"token {access_token}"}
-        )
-        response.raise_for_status()
-        return response.json()
+        async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+            response = await client.get(
+                f"{self.GITHUB_API_BASE}/user",
+                headers={"Authorization": f"token {access_token}"}
+            )
+            response.raise_for_status()
+            return response.json()
     
     async def get_user_repos(self, user_id: str, page: int = 1, per_page: int = 30) -> List[Dict[str, Any]]:
         """Get user's GitHub repositories"""
@@ -145,10 +144,11 @@ class GitHubService:
         # Get access token
         access_token = await self._get_user_token(user_id)
         
-        response = await self.client.get(
-            f"{self.GITHUB_API_BASE}/user/repos",
-            headers={"Authorization": f"token {access_token}"},
-            params={
+        async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+            response = await client.get(
+                f"{self.GITHUB_API_BASE}/user/repos",
+                headers={"Authorization": f"token {access_token}"},
+                params={
                 "page": page,
                 "per_page": per_page,
                 "sort": "updated",
@@ -204,11 +204,12 @@ class GitHubService:
         access_token = await self._get_token_for_repo(repo_full_name)
         
         try:
-            response = await self.client.get(
-                f"{self.GITHUB_API_BASE}/repos/{repo_full_name}/contents/{file_path}",
-                headers={"Authorization": f"token {access_token}"}
-            )
-            response.raise_for_status()
+            async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+                response = await client.get(
+                    f"{self.GITHUB_API_BASE}/repos/{repo_full_name}/contents/{file_path}",
+                    headers={"Authorization": f"token {access_token}"}
+                )
+                response.raise_for_status()
             
             data = response.json()
             if data.get("type") == "file" and "content" in data:
@@ -229,20 +230,21 @@ class GitHubService:
         access_token = await self._get_token_for_repo(repo_full_name)
         
         # Get default branch
-        repo_response = await self.client.get(
-            f"{self.GITHUB_API_BASE}/repos/{repo_full_name}",
-            headers={"Authorization": f"token {access_token}"}
-        )
-        repo_data = repo_response.json()
-        default_branch = repo_data.get("default_branch", "main")
-        
-        # Get tree
-        tree_response = await self.client.get(
-            f"{self.GITHUB_API_BASE}/repos/{repo_full_name}/git/trees/{default_branch}",
-            headers={"Authorization": f"token {access_token}"},
-            params={"recursive": "1"}
-        )
-        tree_data = tree_response.json()
+        async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+            repo_response = await client.get(
+                f"{self.GITHUB_API_BASE}/repos/{repo_full_name}",
+                headers={"Authorization": f"token {access_token}"}
+            )
+            repo_data = repo_response.json()
+            default_branch = repo_data.get("default_branch", "main")
+            
+            # Get tree
+            tree_response = await client.get(
+                f"{self.GITHUB_API_BASE}/repos/{repo_full_name}/git/trees/{default_branch}",
+                headers={"Authorization": f"token {access_token}"},
+                params={"recursive": "1"}
+            )
+            tree_data = tree_response.json()
         
         # Extract file paths
         files = []
@@ -396,35 +398,36 @@ class GitHubService:
         page = 1
         per_page = 100
         
-        while True:
-            response = await self.client.get(
-                f"{self.GITHUB_API_BASE}/user/repos",
-                headers={"Authorization": f"token {access_token}"},
-                params={
-                    "page": page,
-                    "per_page": per_page,
-                    "sort": "updated",
-                    "direction": "desc",
-                    "type": "all"
-                }
-            )
-            response.raise_for_status()
-            
-            repos = response.json()
-            if not repos:
-                break
+        async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
+            while True:
+                response = await client.get(
+                    f"{self.GITHUB_API_BASE}/user/repos",
+                    headers={"Authorization": f"token {access_token}"},
+                    params={
+                        "page": page,
+                        "per_page": per_page,
+                        "sort": "updated",
+                        "direction": "desc",
+                        "type": "all"
+                    }
+                )
+                response.raise_for_status()
                 
-            all_repos.extend(repos)
-            
-            # Check if there are more pages
-            if len(repos) < per_page:
-                break
-            
-            page += 1
-            
-            # Safety limit
-            if page > 10:
-                break
+                repos = response.json()
+                if not repos:
+                    break
+                    
+                all_repos.extend(repos)
+                
+                # Check if there are more pages
+                if len(repos) < per_page:
+                    break
+                
+                page += 1
+                
+                # Safety limit
+                if page > 10:
+                    break
         
         return all_repos
     
@@ -432,4 +435,5 @@ class GitHubService:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.client.aclose()
+        # HTTP client cleanup is handled by the factory
+        pass

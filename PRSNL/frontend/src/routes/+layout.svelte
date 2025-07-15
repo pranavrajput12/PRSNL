@@ -25,6 +25,8 @@
   let toasts = [];
   let toastId = 0;
   let sidebarCollapsed = false;
+  let sidebarMorphed = false;
+  let mobileMenuOpen = false;
 
   function showToast(type, message) {
     const id = toastId++;
@@ -43,13 +45,29 @@
     }
   }
 
+  function toggleMorph() {
+    sidebarMorphed = !sidebarMorphed;
+    // Save preference to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarMorphed', sidebarMorphed.toString());
+    }
+  }
+
+  function toggleMobileMenu() {
+    mobileMenuOpen = !mobileMenuOpen;
+  }
+
   // Global keyboard navigation
   onMount(() => {
-    // Load sidebar preference
+    // Load sidebar preferences
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarCollapsed');
-      if (saved !== null) {
-        sidebarCollapsed = saved === 'true';
+      const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+      const savedMorphed = localStorage.getItem('sidebarMorphed');
+      if (savedCollapsed !== null) {
+        sidebarCollapsed = savedCollapsed === 'true';
+      }
+      if (savedMorphed !== null) {
+        sidebarMorphed = savedMorphed === 'true';
       }
     }
     const handleKeydown = (e) => {
@@ -118,545 +136,92 @@
       </div>
     </div>
 
-    <aside class="sidebar glass {sidebarCollapsed ? 'collapsed' : ''}">
-      <div class="electrical-animations">
-        <div class="electrical-spark spark-1"></div>
-        <div class="electrical-spark spark-2"></div>
-        <div class="electrical-spark spark-3"></div>
-        <div class="electrical-spark spark-4"></div>
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle {mobileMenuOpen ? 'active' : ''}" on:click={toggleMobileMenu}>
+      <span class="toggle-icon">≡</span>
+    </button>
+    
+    <!-- Mobile Backdrop -->
+    <div class="mobile-backdrop {mobileMenuOpen ? 'show' : ''}" on:click={toggleMobileMenu}></div>
 
-        <div class="electrical-circuit circuit-1"></div>
-        <div class="electrical-circuit circuit-2"></div>
-        <div class="electrical-circuit circuit-3"></div>
+    <!-- Innovative Morphing Sidebar -->
+    <aside class="innovative-sidebar {sidebarMorphed ? 'morphed' : ''} {mobileMenuOpen ? 'mobile-open' : ''}">
+      <div class="sidebar-glow"></div>
 
-        <div class="data-pulse pulse-1"></div>
-        <div class="data-pulse pulse-2"></div>
-        <div class="data-pulse pulse-3"></div>
+      <div class="sidebar-header">
+        <div class="header-bg"></div>
+        <div class="logo-container">
+          <div class="logo-orb">P</div>
+          <div class="logo-text">PRSNL</div>
+        </div>
       </div>
-
-      <div class="sidebar-header terminal-header">
-        {#if !sidebarCollapsed}
-          <div class="brain-logo-center">
-            <div class="brain-circuit-container">
-              <img src="/thug-brain-logo.png" alt="PRSNL Brain" class="brain-logo-main" />
-              <div class="brain-circuits">
-                <div class="brain-circuit brain-circuit-1"></div>
-                <div class="brain-circuit brain-circuit-2"></div>
-                <div class="brain-circuit brain-circuit-3"></div>
-                <div class="brain-circuit brain-circuit-4"></div>
-                <div class="brain-circuit brain-circuit-5"></div>
-                <div class="brain-circuit brain-circuit-6"></div>
-              </div>
-            </div>
-            <div class="dot-matrix-text">
-              <div class="dot-matrix-letter letter-p">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-              </div>
-              <div class="dot-matrix-letter letter-r">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-              </div>
-              <div class="dot-matrix-letter letter-s">
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-              </div>
-              <div class="dot-matrix-letter letter-n">
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-              </div>
-              <div class="dot-matrix-letter letter-l">
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div>
-          <div class="system-info">NEURAL OS v3.0 - BRAIN COMPUTER INTERFACE</div>
-          <div class="boot-sequence">
-            <div class="boot-line">[ OK ] Neural pathways initialized</div>
-            <div class="boot-line">[ OK ] Cognitive processes loaded</div>
-            <div class="boot-line">[ OK ] Memory banks online</div>
-            <div class="boot-line">[ OK ] Ready for neural interface</div>
-          </div>
-        {:else}
-          <div class="brain-logo-center">
-            <div class="brain-circuit-container">
-              <img src="/thug-brain-logo.png" alt="PRSNL Brain" class="brain-logo-collapsed" />
-              <div class="brain-circuits collapsed">
-                <div class="brain-circuit brain-circuit-1"></div>
-                <div class="brain-circuit brain-circuit-2"></div>
-                <div class="brain-circuit brain-circuit-3"></div>
-                <div class="brain-circuit brain-circuit-4"></div>
-              </div>
-            </div>
-            <div class="dot-matrix-text collapsed">
-              <div class="dot-matrix-letter letter-p">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-              </div>
-              <div class="dot-matrix-letter letter-r">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-              </div>
-              <div class="dot-matrix-letter letter-s">
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-              </div>
-              <div class="dot-matrix-letter letter-n">
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-              </div>
-              <div class="dot-matrix-letter letter-l">
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot empty"></div>
-                <div class="dot empty"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div>
-        {/if}
-
-        <button class="sidebar-toggle" on:click={toggleSidebar} aria-label="Toggle sidebar">
-          <Icon name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'} size="small" />
+      
+      <div class="morph-button-container">
+        <button class="morph-toggle" on:click={toggleMorph}>
+          {sidebarMorphed ? '▶' : '◀'}
         </button>
       </div>
 
-      <nav class="sidebar-nav terminal-nav">
-        <a
-          href="/"
-          class="nav-link terminal-process {$page.url.pathname === '/' ? 'active' : ''}"
-          title="Neural Nest"
-        >
-          <div class="process-header">
-            <div class="process-name">Neural Nest</div>
-            <div class="process-status">
-              <div class="status-indicator {$page.url.pathname === '/' ? 'active' : ''}"></div>
-              <span>{$page.url.pathname === '/' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 256MB | CPU: 12%</div>
-          {/if}
+      <nav class="nav-container">
+
+        <!-- Navigation Items -->
+        <a href="/" class="nav-item {$page.url.pathname === '/' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Dashboard</span>
+          <div class="nav-tooltip">Dashboard</div>
         </a>
 
-        <a
-          href="/capture"
-          class="nav-link terminal-process {$page.url.pathname === '/capture' ? 'active' : ''}"
-          title="Ingest"
-        >
-          <div class="process-header">
-            <div class="process-name">Ingest</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/capture' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/capture' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 128MB | CPU: 5%</div>
-          {/if}
+        <a href="/capture" class="nav-item {$page.url.pathname === '/capture' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Capture</span>
+          <div class="nav-tooltip">Capture</div>
         </a>
 
-        <a
-          href="/timeline"
-          class="nav-link terminal-process {$page.url.pathname === '/timeline' ? 'active' : ''}"
-          title="Thought Stream"
-        >
-          <div class="process-header">
-            <div class="process-name">Thought Stream</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/timeline' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/timeline' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 192MB | CPU: 8%</div>
-          {/if}
+        <a href="/timeline" class="nav-item {$page.url.pathname === '/timeline' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Timeline</span>
+          <div class="nav-tooltip">Timeline</div>
         </a>
 
-        <a
-          href="/insights"
-          class="nav-link terminal-process {$page.url.pathname === '/insights' ? 'active' : ''}"
-          title="Cognitive Map"
-        >
-          <div class="process-header">
-            <div class="process-name">Cognitive Map</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/insights' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/insights' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 384MB | CPU: 15%</div>
-          {/if}
+        <!-- TEMPORARILY DISABLED: AI Insights page
+        <a href="/insights" class="nav-item {$page.url.pathname === '/insights' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Insights</span>
+          <div class="nav-tooltip">Insights</div>
+        </a>
+        -->
+
+        <a href="/chat" class="nav-item {$page.url.pathname === '/chat' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Assistant</span>
+          <div class="nav-tooltip">Assistant</div>
         </a>
 
-        <a
-          href="/chat"
-          class="nav-link terminal-process {$page.url.pathname === '/chat' ? 'active' : ''}"
-          title="Mind Palace"
-        >
-          <div class="process-header">
-            <div class="process-name">Mind Palace</div>
-            <div class="process-status">
-              <div class="status-indicator {$page.url.pathname === '/chat' ? 'active' : ''}"></div>
-              <span>{$page.url.pathname === '/chat' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 512MB | CPU: 20%</div>
-          {/if}
+        <a href="/videos" class="nav-item {$page.url.pathname === '/videos' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Visual Cortex</span>
+          <div class="nav-tooltip">Visual Cortex</div>
         </a>
 
-        <a
-          href="/videos"
-          class="nav-link terminal-process {$page.url.pathname === '/videos' ? 'active' : ''}"
-          title="Visual Cortex"
-        >
-          <div class="process-header">
-            <div class="process-name">Visual Cortex</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/videos' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/videos' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 256MB | CPU: 10%</div>
-          {/if}
+        <a href="/conversations" class="nav-item {$page.url.pathname.startsWith('/conversations') ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Conversations</span>
+          <div class="nav-tooltip">Conversations</div>
         </a>
 
-        <a
-          href="/conversations"
-          class="nav-link terminal-process {$page.url.pathname.startsWith('/conversations')
-            ? 'active'
-            : ''}"
-          title="Neural Echo"
-        >
-          <div class="process-header">
-            <div class="process-name">Neural Echo</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname.startsWith('/conversations')
-                  ? 'active'
-                  : ''}"
-              ></div>
-              <span>{$page.url.pathname.startsWith('/conversations') ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 224MB | CPU: 7%</div>
-          {/if}
+        <a href="/code-cortex" class="nav-item {$page.url.pathname.startsWith('/code-cortex') ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Code Cortex</span>
+          <div class="nav-tooltip">Code Cortex</div>
         </a>
 
-        <a
-          href="/code-cortex"
-          class="nav-link terminal-process {$page.url.pathname.startsWith('/code-cortex')
-            ? 'active'
-            : ''}"
-          title="Code Cortex"
-        >
-          <div class="process-header">
-            <div class="process-name">Code Cortex</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname.startsWith('/code-cortex')
-                  ? 'active'
-                  : ''}"
-              ></div>
-              <span>{$page.url.pathname.startsWith('/code-cortex') ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 320MB | CPU: 18%</div>
-          {/if}
-        </a>
-
-        <a
-          href="/import"
-          class="nav-link terminal-process {$page.url.pathname === '/import' ? 'active' : ''}"
-          title="Knowledge Sync"
-        >
-          <div class="process-header">
-            <div class="process-name">Knowledge Sync</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/import' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/import' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-          {#if !sidebarCollapsed}
-            <div class="process-info">MEM: 164MB | CPU: 6%</div>
-          {/if}
+        <a href="/import" class="nav-item {$page.url.pathname === '/import' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Knowledge Sync</span>
+          <div class="nav-tooltip">Knowledge Sync</div>
         </a>
       </nav>
 
-      <div class="sidebar-footer terminal-footer">
-        <a
-          href="/docs"
-          class="nav-link terminal-process {$page.url.pathname === '/docs' ? 'active' : ''}"
-          title="Documentation"
-        >
-          <div class="process-header">
-            <div class="process-name">Documentation</div>
-            <div class="process-status">
-              <div class="status-indicator {$page.url.pathname === '/docs' ? 'active' : ''}"></div>
-              <span>{$page.url.pathname === '/docs' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-        </a>
-
-        <a
-          href="/settings"
-          class="nav-link terminal-process {$page.url.pathname === '/settings' ? 'active' : ''}"
-          title="Settings"
-        >
-          <div class="process-header">
-            <div class="process-name">Settings</div>
-            <div class="process-status">
-              <div
-                class="status-indicator {$page.url.pathname === '/settings' ? 'active' : ''}"
-              ></div>
-              <span>{$page.url.pathname === '/settings' ? 'ACTIVE' : 'READY'}</span>
-            </div>
-          </div>
-        </a>
-      </div>
     </aside>
 
     <ErrorBoundary fallback="full">
@@ -679,6 +244,48 @@
 </QueryClientProvider>
 
 <style>
+  /* Design Language Bible CSS Variables */
+  :root {
+    /* Core Brand Colors */
+    --man-united-red: #DC143C;
+    --accent-red: #DC143C;
+    --accent-red-hover: #B91C3C;
+    --accent-red-dim: #991B1B;
+    
+    /* Background Colors */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #2a2a2a;
+    
+    /* Text Colors */
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --text-muted: #666;
+    
+    /* Glass/Transparency Effects */
+    --glass-light: rgba(255, 255, 255, 0.1);
+    --glass-medium: rgba(255, 255, 255, 0.05);
+    --glass-dark: rgba(0, 0, 0, 0.3);
+    
+    /* Neural Circuit Colors */
+    --neural-green: #00ff64;
+    
+    /* Typography */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+
   .app-layout {
     display: flex;
     height: 100vh;
@@ -1839,6 +1446,405 @@
     50% {
       transform: scale(1.3);
       opacity: 0.9;
+    }
+  }
+
+  /* ========== VERSION B INNOVATIVE NAVIGATION ========== */
+  
+  /* Mobile Toggle */
+  .mobile-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  }
+
+  .mobile-toggle:hover {
+    transform: scale(1.1) rotate(90deg);
+  }
+
+  @media (max-width: 768px) {
+    .mobile-toggle {
+      display: flex;
+    }
+  }
+
+  .toggle-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  .mobile-toggle.active .toggle-icon {
+    transform: rotate(45deg);
+  }
+
+  /* Mobile Backdrop */
+  .mobile-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+  }
+
+  .mobile-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Innovative Morphing Sidebar */
+  .innovative-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 300px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(16, 16, 32, 0.9) 100%);
+    backdrop-filter: blur(25px);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.5s cubic-bezier(0.68, 0, 0.32, 1);
+    z-index: 1000;
+    overflow: hidden;
+    transform-origin: left center;
+  }
+
+  .innovative-sidebar.morphed {
+    width: 80px;
+    border-radius: 0 25px 25px 0;
+  }
+
+  /* Floating sidebar on mobile */
+  @media (max-width: 768px) {
+    .innovative-sidebar {
+      width: 280px;
+      border-radius: 0 25px 25px 0;
+      transform: translateX(-100%) scale(0.9);
+      opacity: 0;
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    .innovative-sidebar.mobile-open {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+
+    .innovative-sidebar.morphed {
+      transform: translateX(-100%) scale(0.9);
+      opacity: 0;
+    }
+  }
+
+  .sidebar-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .innovative-sidebar:hover .sidebar-glow {
+    opacity: 1;
+  }
+
+  .header-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .innovative-sidebar:hover .header-bg {
+    transform: translateX(0);
+  }
+
+  .logo-orb {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  }
+
+  .logo-orb::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: spin 4s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .morph-toggle {
+    position: absolute;
+    top: 80%;
+    right: -15px;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 60px;
+    background: rgba(102, 126, 234, 0.8);
+    border: none;
+    border-radius: 0 15px 15px 0;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-size: 12px;
+  }
+
+  .morph-toggle:hover {
+    background: rgba(102, 126, 234, 1);
+    transform: translateY(-50%) translateX(5px);
+  }
+
+  @media (max-width: 768px) {
+    .morph-toggle {
+      display: none;
+    }
+  }
+
+  /* Navigation Items with Rotating Icons */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    position: relative;
+    margin: 3px 10px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid transparent;
+    font-family: var(--font-display);
+  }
+
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transform: scaleY(0);
+    transition: transform var(--transition-base);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .nav-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+
+  .nav-item:hover::before,
+  .nav-item.active::before {
+    transform: scaleY(1);
+  }
+
+  .nav-item:hover::after {
+    transform: translateX(0);
+  }
+
+  .nav-item:hover {
+    background: var(--glass-light);
+    color: var(--text-primary);
+    transform: translateX(10px);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+
+  .nav-item.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--text-primary);
+    border-color: #667eea;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    margin-right: 15px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-icon::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item:hover .nav-icon,
+  .nav-item.active .nav-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transform: rotate(180deg);
+  }
+
+  .nav-item:hover .nav-icon::before,
+  .nav-item.active .nav-icon::before {
+    background: white;
+    transform: scale(1.2);
+  }
+
+  .nav-text {
+    font-size: 15px;
+    font-weight: 500;
+    opacity: 1;
+    transition: all 0.5s ease;
+    white-space: nowrap;
+  }
+
+  .innovative-sidebar.morphed .nav-text {
+    display: none;
+  }
+
+  .innovative-sidebar.morphed .nav-item {
+    justify-content: center;
+    padding: 15px 10px;
+    margin: 5px 8px;
+  }
+
+  .innovative-sidebar.morphed .nav-icon {
+    margin-right: 0;
+  }
+
+  /* Tooltip for morphed state */
+  .nav-tooltip {
+    position: absolute;
+    left: 90px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    transform: translateY(-50%) translateX(-10px);
+  }
+
+  .nav-tooltip::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: rgba(0, 0, 0, 0.9);
+  }
+
+  .innovative-sidebar.morphed .nav-item:hover .nav-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  /* Logo Container Styling */
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo-text {
+    font-size: 24px;
+    font-weight: 800;
+    opacity: 1;
+    transition: all 0.6s ease;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease-in-out infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .innovative-sidebar.morphed .logo-text {
+    display: none;
+  }
+
+  /* Update main content margin */
+  .main-content {
+    margin-left: 300px;
+    transition: margin-left 0.5s cubic-bezier(0.68, 0, 0.32, 1);
+  }
+
+  .innovative-sidebar.morphed + .main-content {
+    margin-left: 80px;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0;
     }
   }
 </style>

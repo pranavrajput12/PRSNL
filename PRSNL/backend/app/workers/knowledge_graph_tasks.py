@@ -467,7 +467,7 @@ async def _entity_linking_async(task_id: str, content_id: str, user_id: str, lin
                 SELECT * FROM knowledge_entities 
                 WHERE user_id = $1
                 ORDER BY created_at DESC
-                LIMIT 50
+                LIMIT 200
             """, UUID(user_id))
         
         # Use AI to identify and link entities

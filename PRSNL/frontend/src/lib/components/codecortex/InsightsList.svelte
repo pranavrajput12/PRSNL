@@ -45,12 +45,10 @@
       
       // Load insights from all completed analyses
       for (const analysis of completedAnalyses) {
-        const response = await api.get(`/code-cortex/codemirror/insights/${analysis.id}`, {
-          params: { status: selectedStatus }
-        });
+        const response = await api.get(`/codemirror/insights/${analysis.id}?status=${selectedStatus}`);
         
         // Add analysis info to each insight
-        const insightsWithAnalysis = response.data.map(insight => ({
+        const insightsWithAnalysis = response.map(insight => ({
           ...insight,
           analysis_id: analysis.id,
           analysis_depth: analysis.analysis_depth,

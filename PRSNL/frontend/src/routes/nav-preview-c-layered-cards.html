@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Preview C - Layered Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: radial-gradient(ellipse at top, #0f0f23 0%, #000000 70%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Layered Card Navigation */
+        .layered-nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            perspective: 1000px;
+        }
+
+        .nav-stack {
+            position: relative;
+            width: fit-content;
+        }
+
+        .nav-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 15px 25px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .nav-layer:nth-child(1) {
+            transform: rotateX(0deg) translateZ(0px);
+            z-index: 3;
+        }
+
+        .nav-layer:nth-child(2) {
+            transform: rotateX(-5deg) translateZ(-20px) translateY(3px);
+            z-index: 2;
+            opacity: 0.8;
+        }
+
+        .nav-layer:nth-child(3) {
+            transform: rotateX(-10deg) translateZ(-40px) translateY(6px);
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        .nav-layer:hover {
+            transform: rotateX(0deg) translateZ(20px) !important;
+            opacity: 1 !important;
+            z-index: 10 !important;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            white-space: nowrap;
+        }
+
+        .logo-layer {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .nav-items-layer {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-card {
+            position: relative;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-card:hover::before {
+            opacity: 1;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-3px) rotateX(5deg);
+            color: white;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .nav-card.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-card.active::before {
+            display: none;
+        }
+
+        /* Mobile Responsive */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .mobile-dock {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .mobile-dock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 12px;
+            min-width: 50px;
+        }
+
+        .mobile-dock-item::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-dock-item:hover,
+        .mobile-dock-item.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-dock-item.active::before {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .mobile-menu-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: none;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-bars {
+            width: 20px;
+            height: 2px;
+            background: white;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-bars::before,
+        .toggle-bars::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-bars::before { top: -6px; }
+        .toggle-bars::after { top: 6px; }
+
+        .mobile-menu-toggle.active .toggle-bars {
+            background: transparent;
+        }
+
+        .mobile-menu-toggle.active .toggle-bars::before {
+            transform: rotate(45deg);
+            top: 0;
+        }
+
+        .mobile-menu-toggle.active .toggle-bars::after {
+            transform: rotate(-45deg);
+            top: 0;
+        }
+
+        .mobile-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-fullscreen.open {
+            display: flex;
+        }
+
+        .mobile-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 40px;
+            max-width: 400px;
+        }
+
+        .mobile-nav-card {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-nav-card::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-card:hover,
+        .mobile-nav-card.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .mobile-nav-card.active::before {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        @media (max-width: 768px) {
+            .layered-nav {
+                display: none;
+            }
+            .mobile-nav {
+                display: block;
+            }
+            .mobile-menu-toggle {
+                display: flex;
+            }
+        }
+
+        /* Demo Content */
+        .demo-content {
+            padding: 120px 20px 100px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            margin: 20px 0;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px) rotateX(5deg);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Particle Animation */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        .particle:nth-child(odd) {
+            background: rgba(118, 75, 162, 0.3);
+            animation-duration: 20s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 40%; animation-delay: 6s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 8s;"></div>
+        <div class="particle" style="left: 60%; animation-delay: 10s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 12s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 14s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 16s;"></div>
+    </div>
+
+    <!-- Desktop Layered Navigation -->
+    <nav class="layered-nav">
+        <div class="nav-stack">
+            <!-- Layer 3 (Background) -->
+            <div class="nav-layer">
+                <div class="nav-content">
+                    <div class="logo-layer">PRSNL</div>
+                    <div class="nav-items-layer">
+                        <a href="#" class="nav-card">Knowledge Sync</a>
+                        <a href="#" class="nav-card">Code Cortex</a>
+                        <a href="#" class="nav-card">Conversations</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Layer 2 (Middle) -->
+            <div class="nav-layer">
+                <div class="nav-content">
+                    <div class="logo-layer">PRSNL</div>
+                    <div class="nav-items-layer">
+                        <a href="#" class="nav-card">Timeline</a>
+                        <a href="#" class="nav-card">Insights</a>
+                        <a href="#" class="nav-card">Assistant</a>
+                        <a href="#" class="nav-card">Visual Cortex</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Layer 1 (Front) -->
+            <div class="nav-layer">
+                <div class="nav-content">
+                    <div class="logo-layer">PRSNL</div>
+                    <div class="nav-items-layer">
+                        <a href="#" class="nav-card active">Dashboard</a>
+                        <a href="#" class="nav-card">Capture</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Toggle -->
+    <div class="mobile-menu-toggle" id="mobileToggle">
+        <div class="toggle-bars"></div>
+    </div>
+
+    <!-- Mobile Fullscreen Menu -->
+    <div class="mobile-fullscreen" id="mobileFullscreen">
+        <div class="mobile-nav-grid">
+            <a href="#" class="mobile-nav-card active">Dashboard</a>
+            <a href="#" class="mobile-nav-card">Capture</a>
+            <a href="#" class="mobile-nav-card">Timeline</a>
+            <a href="#" class="mobile-nav-card">Insights</a>
+            <a href="#" class="mobile-nav-card">Assistant</a>
+            <a href="#" class="mobile-nav-card">Visual Cortex</a>
+            <a href="#" class="mobile-nav-card">Conversations</a>
+            <a href="#" class="mobile-nav-card">Code Cortex</a>
+            <a href="#" class="mobile-nav-card">Knowledge Sync</a>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Dock -->
+    <nav class="mobile-nav">
+        <div class="mobile-dock">
+            <a href="#" class="mobile-dock-item active">Dashboard</a>
+            <a href="#" class="mobile-dock-item">Capture</a>
+            <a href="#" class="mobile-dock-item">Timeline</a>
+            <a href="#" class="mobile-dock-item">Assistant</a>
+            <a href="#" class="mobile-dock-item">More</a>
+        </div>
+    </nav>
+
+    <div class="demo-content">
+        <div class="demo-card">
+            <h1>Navigation Preview C: Layered Cards</h1>
+            <p>Revolutionary 3D layered navigation with depth and perspective. Features stacked card layers that expand on hover, creating an immersive navigation experience with dual mobile approaches.</p>
+            
+            <div class="feature-showcase">
+                <div class="feature-card">
+                    <h4>🎭 3D Layered Design</h4>
+                    <p>Multiple navigation layers with perspective transforms and depth</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌊 Hover Interactions</h4>
+                    <p>Layers expand and rotate on hover for enhanced user experience</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Dual Mobile UX</h4>
+                    <p>Bottom dock for quick access + fullscreen grid for all options</p>
+                </div>
+                <div class="feature-card">
+                    <h4>✨ Particle Effects</h4>
+                    <p>Animated floating particles create dynamic visual atmosphere</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎨 Glass Morphism</h4>
+                    <p>Advanced glass effects with backdrop blur and transparency</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔮 Perspective Magic</h4>
+                    <p>CSS 3D transforms create realistic depth and dimension</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mobileToggle = document.getElementById('mobileToggle');
+        const mobileFullscreen = document.getElementById('mobileFullscreen');
+
+        mobileToggle.addEventListener('click', () => {
+            mobileToggle.classList.toggle('active');
+            mobileFullscreen.classList.toggle('open');
+        });
+
+        // Close fullscreen menu when clicking on nav items
+        document.querySelectorAll('.mobile-nav-card').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.mobile-nav-card').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                mobileToggle.classList.remove('active');
+                mobileFullscreen.classList.remove('open');
+            });
+        });
+
+        // Desktop nav card interactions
+        document.querySelectorAll('.nav-card').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-card').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Mobile dock interactions
+        document.querySelectorAll('.mobile-dock-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (item.textContent.trim() === 'More') {
+                    mobileToggle.classList.add('active');
+                    mobileFullscreen.classList.add('open');
+                } else {
+                    document.querySelectorAll('.mobile-dock-item').forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

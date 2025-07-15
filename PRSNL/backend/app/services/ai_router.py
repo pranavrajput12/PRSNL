@@ -1,46 +1,20 @@
 """
 AI Router Service - Intelligently routes AI tasks to appropriate providers
 Optimizes for cost, performance, and availability
+Can be enhanced with LangChain ReAct agent for content-based routing
 """
 import asyncio
 import json
 import logging
 import time
-from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
 from app.config import settings
+from app.services.ai_router_types import (
+    AIProvider, TaskType, AITask, ProviderConfig, RoutingDecision
+)
 
 logger = logging.getLogger(__name__)
-
-class AIProvider(Enum):
-    AZURE_OPENAI = "azure_openai"
-    FALLBACK = "fallback"
-
-class TaskType(Enum):
-    EMBEDDING = "embedding"
-    TEXT_GENERATION = "text_generation"
-    VISION = "vision"
-    STREAMING = "streaming"
-
-@dataclass
-class AITask:
-    type: TaskType
-    content: Any
-    options: Dict[str, Any] = None
-    priority: int = 5  # 1-10, higher is more important
-
-@dataclass
-class ProviderConfig:
-    name: AIProvider
-    cost_per_1k_tokens: float
-    max_tokens_per_request: int
-    supports_streaming: bool
-    supports_vision: bool
-    supports_embeddings: bool
-    avg_response_time_ms: float
-    success_rate: float = 0.95
 
 class AIRouter:
     """Routes AI tasks to the most appropriate provider based on multiple factors"""
@@ -50,6 +24,20 @@ class AIRouter:
         self.usage_stats = {provider: {"requests": 0, "tokens": 0, "errors": 0} 
                            for provider in AIProvider}
         self.provider_health = {provider: True for provider in AIProvider}
+        self.enhanced_ai_router = None
+        self._init_enhanced_router()
+    
+    def _init_enhanced_router(self):
+        """Initialize enhanced router if available"""
+        try:
+            from app.services.ai_router_enhanced import enhanced_ai_router
+            self.enhanced_ai_router = enhanced_ai_router
+            enhanced_ai_router.set_base_router(self)
+            logger.info("Enhanced AI router initialized successfully")
+        except ImportError:
+            logger.debug("Enhanced AI router not available")
+        except Exception as e:
+            logger.error(f"Failed to initialize enhanced AI router: {e}")
         
     def _initialize_providers(self) -> Dict[AIProvider, ProviderConfig]:
         """Initialize provider configurations"""
@@ -150,6 +138,16 @@ class AIRouter:
     
     async def execute_with_fallback(self, task: AITask, execute_fn) -> Any:
         """Execute task with automatic fallback on failure"""
+        # Use enhanced routing if available and enabled
+        if self._should_use_enhanced_routing(task):
+            try:
+                logger.info("Using enhanced AI routing with ReAct agent")
+                return await self.enhanced_ai_router.execute_with_enhanced_routing(task, execute_fn)
+            except Exception as e:
+                logger.warning(f"Enhanced routing failed, falling back to basic routing: {e}")
+                # Fall through to basic routing
+        
+        # Basic routing
         providers = [await self.route_task(task)]
         
         # Add fallback chain
@@ -181,6 +179,26 @@ class AIRouter:
                     
         # All providers failed
         raise last_error or Exception("All AI providers failed")
+    
+    def _should_use_enhanced_routing(self, task: AITask) -> bool:
+        """Determine if enhanced routing should be used"""
+        # Check if enhanced routing is available
+        if not self.enhanced_ai_router or not self.enhanced_ai_router.enabled:
+            return False
+            
+        # Use enhanced routing for complex tasks or high priority
+        if task.priority >= 7:
+            return True
+            
+        # Use enhanced routing for specific task types
+        if task.type in [TaskType.TEXT_GENERATION, TaskType.VISION]:
+            return True
+            
+        # Use enhanced routing if content is complex
+        if isinstance(task.content, str) and len(task.content) > 1000:
+            return True
+            
+        return False
     
     def _update_stats(self, provider: AIProvider, success: bool, 
                      response_time: float = 0, tokens: int = 0):
@@ -280,8 +298,37 @@ class AIRouter:
                 recommendations.append(
                     f"{provider.value} has high error rate. Check configuration."
                 )
+        
+        # Add enhanced routing recommendations if available
+        if self.enhanced_ai_router and self.enhanced_ai_router.enabled:
+            enhanced_recommendations = self.enhanced_ai_router._generate_routing_recommendations()
+            recommendations.extend([f"[Enhanced] {rec}" for rec in enhanced_recommendations])
                 
         return recommendations
+    
+    def get_enhanced_routing_report(self) -> Dict[str, Any]:
+        """Get comprehensive routing report including enhanced insights"""
+        enhanced_available = self.enhanced_ai_router is not None
+        enhanced_enabled = enhanced_available and self.enhanced_ai_router.enabled
+        
+        report = {
+            "basic_usage": self.get_usage_report(),
+            "recommendations": self.recommend_optimization(),
+            "enhanced_routing_available": enhanced_available
+        }
+        
+        if enhanced_enabled:
+            try:
+                report["enhanced_insights"] = self.enhanced_ai_router.get_performance_report()
+                report["enhanced_routing_enabled"] = True
+            except Exception as e:
+                logger.error(f"Failed to get enhanced routing report: {e}")
+                report["enhanced_routing_enabled"] = False
+                report["enhanced_error"] = str(e)
+        else:
+            report["enhanced_routing_enabled"] = False
+            
+        return report
 
 
 # Global router instance

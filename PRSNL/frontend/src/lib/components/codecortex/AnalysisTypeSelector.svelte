@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	
 	interface Props {
 		selectedRepo: any;
 		show: boolean;
+		onStart?: (event: { type: string; depth: string; repo: any }) => void;
+		onShowCLI?: () => void;
 	}
 	
-	let { selectedRepo, show = $bindable() }: Props = $props();
-	
-	const dispatch = createEventDispatcher();
+	let { selectedRepo, show = $bindable(), onStart, onShowCLI }: Props = $props();
 	
 	let selectedType = $state('web');
 	let selectedDepth = $state('standard');
@@ -18,11 +16,13 @@
 	}
 	
 	function startAnalysis() {
-		dispatch('start', {
-			type: selectedType,
-			depth: selectedDepth,
-			repo: selectedRepo
-		});
+		if (onStart) {
+			onStart({
+				type: selectedType,
+				depth: selectedDepth,
+				repo: selectedRepo
+			});
+		}
 		show = false;
 	}
 	
@@ -154,7 +154,7 @@
 						Start Analysis
 					</button>
 				{:else}
-					<button class="btn-primary" onclick={() => dispatch('showCLI')}>
+					<button class="btn-primary" onclick={() => onShowCLI && onShowCLI()}>
 						View CLI Instructions
 					</button>
 				{/if}
@@ -185,8 +185,8 @@
 	}
 	
 	.modal-content {
-		background: var(--surface-2);
-		border: 1px solid var(--border);
+		background: #1a1a1a;
+		border: 1px solid #333;
 		border-radius: 12px;
 		max-width: 800px;
 		width: 90%;
@@ -212,20 +212,20 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 1.5rem;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid #333;
 	}
 	
 	.modal-header h2 {
 		margin: 0;
 		font-size: 1.5rem;
-		color: var(--text-primary);
+		color: #e0e0e0;
 	}
 	
 	.close-btn {
 		background: none;
 		border: none;
 		font-size: 1.5rem;
-		color: var(--text-secondary);
+		color: #888;
 		cursor: pointer;
 		width: 32px;
 		height: 32px;
@@ -237,8 +237,8 @@
 	}
 	
 	.close-btn:hover {
-		background: var(--surface-3);
-		color: var(--text-primary);
+		background: #333;
+		color: #e0e0e0;
 	}
 	
 	.analysis-types {
@@ -249,8 +249,8 @@
 	}
 	
 	.analysis-option {
-		background: var(--surface-3);
-		border: 2px solid var(--border);
+		background: #2a2a2a;
+		border: 2px solid #444;
 		border-radius: 8px;
 		padding: 1.5rem;
 		cursor: pointer;
@@ -258,13 +258,13 @@
 	}
 	
 	.analysis-option:hover {
-		border-color: var(--primary);
+		border-color: #3b82f6;
 		transform: translateY(-2px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	}
 	
 	.analysis-option.selected {
-		border-color: var(--primary);
+		border-color: #3b82f6;
 		background: rgba(59, 130, 246, 0.1);
 	}
 	
@@ -296,7 +296,7 @@
 	.option-title h3 {
 		margin: 0 0 0.25rem 0;
 		font-size: 1.125rem;
-		color: var(--text-primary);
+		color: #e0e0e0;
 	}
 	
 	.badge {
@@ -323,7 +323,7 @@
 	
 	.feature {
 		font-size: 0.875rem;
-		color: var(--text-secondary);
+		color: #888;
 		margin-bottom: 0.5rem;
 	}
 	
@@ -332,9 +332,9 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-size: 0.875rem;
-		color: var(--text-secondary);
+		color: #888;
 		padding-top: 0.75rem;
-		border-top: 1px solid var(--border);
+		border-top: 1px solid #444;
 	}
 	
 	.timing-icon {
@@ -349,7 +349,7 @@
 	.depth-selection h3 {
 		margin: 0 0 1rem 0;
 		font-size: 1.125rem;
-		color: var(--text-primary);
+		color: #e0e0e0;
 	}
 	
 	.depth-options {
@@ -372,26 +372,26 @@
 		flex-direction: column;
 		gap: 0.25rem;
 		padding: 1rem;
-		background: var(--surface-3);
-		border: 2px solid var(--border);
+		background: #2a2a2a;
+		border: 2px solid #444;
 		border-radius: 8px;
 		transition: all 0.2s;
 		text-align: center;
 	}
 	
 	.depth-option input:checked + .depth-content {
-		border-color: var(--primary);
+		border-color: #3b82f6;
 		background: rgba(59, 130, 246, 0.1);
 	}
 	
 	.depth-content strong {
-		color: var(--text-primary);
+		color: #e0e0e0;
 		font-size: 0.875rem;
 	}
 	
 	.depth-content span {
 		font-size: 0.75rem;
-		color: var(--text-secondary);
+		color: #888;
 	}
 	
 	/* CLI Instructions */
@@ -412,7 +412,7 @@
 	.cli-instructions ol {
 		margin: 0;
 		padding-left: 1.5rem;
-		color: var(--text-secondary);
+		color: #888;
 		font-size: 0.875rem;
 	}
 	
@@ -421,7 +421,7 @@
 	}
 	
 	.cli-instructions code {
-		background: var(--surface-4);
+		background: #333;
 		padding: 0.125rem 0.375rem;
 		border-radius: 4px;
 		font-size: 0.8rem;
@@ -434,7 +434,7 @@
 		justify-content: flex-end;
 		gap: 0.75rem;
 		padding: 1.5rem;
-		border-top: 1px solid var(--border);
+		border-top: 1px solid #333;
 	}
 	
 	.btn-secondary,
@@ -449,17 +449,17 @@
 	}
 	
 	.btn-secondary {
-		background: var(--surface-3);
-		color: var(--text-primary);
-		border: 1px solid var(--border);
+		background: #2a2a2a;
+		color: #e0e0e0;
+		border: 1px solid #444;
 	}
 	
 	.btn-secondary:hover {
-		background: var(--surface-4);
+		background: #333;
 	}
 	
 	.btn-primary {
-		background: var(--primary);
+		background: #3b82f6;
 		color: white;
 	}
 	

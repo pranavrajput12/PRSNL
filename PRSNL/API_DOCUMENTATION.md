@@ -29,7 +29,7 @@ Currently no authentication required (development mode)
 
 **Note**: iOS app may require additional authentication mechanisms for production use.
 
-## Phase 3 AI API Endpoints
+## Phase 4 AI API Endpoints - Advanced Orchestration
 
 ### 🤖 AI Services - Intelligent Analysis
 
@@ -284,6 +284,155 @@ LibreChat bridge health check
   "service": "prsnl-librechat-bridge",
   "timestamp": "2025-07-13T02:44:11.779449",
   "models": 2
+}
+```
+
+### 🚀 AI Router - Enhanced Routing System
+
+#### GET /api/ai-router/status
+Get AI Router health and configuration status
+
+**Response:**
+```json
+{
+  "enabled": true,
+  "enhanced_routing_available": true,
+  "enhanced_routing_enabled": true,
+  "basic_usage": {
+    "total_requests": 42,
+    "total_tokens": 12500,
+    "estimated_cost": 0.375,
+    "provider_breakdown": {
+      "azure_openai": {
+        "requests": 40,
+        "tokens": 12000,
+        "errors": 0,
+        "cost": 0.36,
+        "avg_response_time_ms": 485,
+        "health": true
+      },
+      "fallback": {
+        "requests": 2,
+        "tokens": 500,
+        "errors": 0,
+        "cost": 0.0,
+        "avg_response_time_ms": 10,
+        "health": true
+      }
+    }
+  }
+}
+```
+
+#### POST /api/ai-router/test-routing
+Test AI Router provider selection with enhanced routing
+
+**Request Body:**
+```json
+{
+  "content": "Test complex routing decision",
+  "task_type": "text_generation",
+  "priority": 8,
+  "requires_vision": false,
+  "requires_streaming": false
+}
+```
+
+**Response:**
+```json
+{
+  "routing_decision": {
+    "provider": "azure_openai",
+    "complexity": "moderate",
+    "reasoning": "High priority task with complex content requires premium provider",
+    "confidence": 0.8,
+    "estimated_tokens": 1500,
+    "recommended_model": "gpt-4.1-mini",
+    "fallback_options": ["fallback"],
+    "optimization_notes": ["Using premium provider for high priority"]
+  },
+  "enhanced_routing_used": true,
+  "response_time_ms": 342
+}
+```
+
+#### GET /api/ai-router/enhanced-insights
+Get enhanced AI Router insights and analytics
+
+**Response:**
+```json
+{
+  "enhanced_insights": {
+    "total_routings": 42,
+    "provider_distribution": {
+      "azure_openai": 40,
+      "fallback": 2
+    },
+    "complexity_analysis": {
+      "simple": 15,
+      "moderate": 20,
+      "complex": 7
+    },
+    "performance_metrics": {
+      "avg_response_time": 425,
+      "success_rate": 0.98,
+      "cost_efficiency": 0.85
+    },
+    "recommendations": [
+      "Routing patterns appear optimal",
+      "Consider caching for frequently requested content types"
+    ]
+  }
+}
+```
+
+### 🔄 LangGraph Workflows - State-based Processing
+
+#### POST /api/ai-suggest (Enhanced with LangGraph)
+Process content through LangGraph state-based workflows with quality loops
+
+**Request Body:**
+```json
+{
+  "content": "Content to process through workflows",
+  "title": "Optional title",
+  "context": {
+    "type": "document",
+    "use_workflow": true,
+    "analysis_depth": "standard"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "workflow_enabled": true,
+  "processing_result": {
+    "content_id": "wf_12345",
+    "title": "Processed Title",
+    "summary": "AI-generated summary",
+    "category": "technology",
+    "tags": ["ai", "workflow", "automation"],
+    "entities": {
+      "technologies": ["LangGraph", "AI", "Workflows"],
+      "concepts": ["state-based processing", "quality loops"]
+    },
+    "quality_score": 0.85,
+    "processing_path": [
+      "route_content",
+      "analyze_content", 
+      "enrich_content",
+      "quality_check",
+      "store_content",
+      "index_content"
+    ],
+    "workflow_metadata": {
+      "workflow_type": "content_processing",
+      "quality_loops": 1,
+      "total_processing_time": 1250
+    }
+  }
 }
 ```
 

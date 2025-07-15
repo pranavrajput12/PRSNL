@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import Icon from '$lib/components/Icon.svelte';
   import RepositoryCodePreview from '$lib/components/RepositoryCodePreview.svelte';
+  import GitHubRepoCardV2 from '$lib/components/GitHubRepoCardV2.svelte';
 
   interface Repository {
     id: string;
@@ -154,6 +155,36 @@
   function goBack() {
     goto('/code-cortex');
   }
+
+  // Transform repository data for GitHubRepoCardV2 component
+  function transformRepositoryData(repo: Repository) {
+    return {
+      owner: {
+        login: repo.repository_metadata?.owner || 'Unknown',
+        avatar_url: `https://github.com/${repo.repository_metadata?.owner}.png`
+      },
+      repo: {
+        name: repo.repository_metadata?.repo_name || 'Unknown',
+        full_name: repo.repository_metadata?.repo_name || 'Unknown',
+        description: repo.repository_metadata?.description || 'No description available',
+        language: repo.repository_metadata?.language || 'Unknown',
+        private: false,
+        stargazers_count: repo.repository_metadata?.stars || 0,
+        forks_count: 0
+      },
+      stats: {
+        stars: repo.repository_metadata?.stars || 0,
+        forks: 0,
+        watchers: 0
+      },
+      languages: repo.repository_metadata?.language ? {
+        [repo.repository_metadata.language]: 100
+      } : {},
+      topics: repo.repository_metadata?.tech_stack || [],
+      last_updated: repo.created_at,
+      url: repo.repository_metadata?.repo_url || repo.url
+    };
+  }
 </script>
 
 <div class="open-source-page">
@@ -225,37 +256,15 @@
   {:else}
     <div class="repositories-grid">
       {#each filteredRepositories as repo}
-        <div class="repository-card" on:click={() => goto(`/code-cortex/open-source/${repo.id}`)}>
-          <div class="repo-header">
-            <div class="repo-title">
-              <Icon name="github" size="20" />
-              <h3>{repo.repository_metadata?.repo_name || 'Unknown'}</h3>
-            </div>
-            <div class="repo-stats">
-              {#if repo.repository_metadata?.stars}
-                <span class="stars">
-                  <Icon name="star" size="14" />
-                  {formatStars(repo.repository_metadata.stars)}
-                </span>
-              {/if}
-            </div>
-          </div>
-
-          <div class="repo-owner">
-            {repo.repository_metadata?.owner || 'Unknown Owner'}
-          </div>
-
-          <div class="repo-description">
-            {repo.repository_metadata?.description || 'No description available'}
-          </div>
-
-          <div class="repo-metadata">
-            {#if repo.repository_metadata?.language}
-              <span class="language-tag" style="background-color: {getLanguageColor(repo.repository_metadata.language)}">
-                {repo.repository_metadata.language}
-              </span>
-            {/if}
-
+        <div class="repo-card-wrapper" on:click={() => goto(`/code-cortex/open-source/${repo.id}`)}>
+          <GitHubRepoCardV2 
+            repository={transformRepositoryData(repo)}
+            variant="featured"
+            theme="dark"
+          />
+          
+          <!-- Add custom metadata overlay -->
+          <div class="repo-metadata-overlay">
             {#if repo.repository_metadata?.category}
               <span class="category-tag">
                 {getCategoryIcon(repo.repository_metadata.category)}
@@ -268,21 +277,7 @@
                 {repo.repository_metadata.difficulty}
               </span>
             {/if}
-          </div>
-
-          <div class="repo-tech-stack">
-            {#each (repo.repository_metadata?.tech_stack || []).slice(0, 3) as tech}
-              <span class="tech-tag">{tech}</span>
-            {/each}
-            {#if (repo.repository_metadata?.tech_stack || []).length > 3}
-              <span class="tech-more">+{(repo.repository_metadata?.tech_stack || []).length - 3}</span>
-            {/if}
-          </div>
-
-          <div class="repo-footer">
-            <span class="added-date">
-              Added {new Date(repo.created_at).toLocaleDateString()}
-            </span>
+            
             <span class="ai-confidence">
               AI: {Math.round((repo.repository_metadata?.ai_analysis?.confidence || 0) * 100)}%
             </span>
@@ -442,88 +437,29 @@
 
   .repositories-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
     gap: 1.5rem;
   }
 
-  .repository-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%);
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 1.5rem;
+  .repo-card-wrapper {
+    position: relative;
     cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
   }
 
-  .repository-card:hover {
-    border-color: #00ff88;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.1);
+  .repo-card-wrapper:hover {
+    transform: translateY(-4px);
   }
 
-  .repo-header {
+  .repo-metadata-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.75rem;
-  }
-
-  .repo-title {
-    display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 0.5rem;
-  }
-
-  .repo-title h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #e0e0e0;
-  }
-
-  .repo-stats .stars {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: #ffc107;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .repo-owner {
-    font-size: 0.875rem;
-    color: #00ff88;
-    margin-bottom: 1rem;
-    font-weight: 500;
-  }
-
-  .repo-description {
-    color: #ccc;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin-bottom: 1rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .repo-metadata {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .language-tag {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    align-items: flex-end;
+    z-index: 10;
   }
 
   .category-tag {
@@ -562,43 +498,14 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
 
-  .repo-tech-stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-  }
-
-  .tech-tag {
-    padding: 0.125rem 0.5rem;
-    background: rgba(100, 116, 139, 0.2);
-    color: #cbd5e1;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 500;
-  }
-
-  .tech-more {
-    padding: 0.125rem 0.5rem;
-    background: rgba(100, 116, 139, 0.1);
-    color: #64748b;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-style: italic;
-  }
-
-  .repo-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-    color: #666;
-    padding-top: 1rem;
-    border-top: 1px solid #2a2a2a;
-  }
-
   .ai-confidence {
     font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+    border-radius: 16px;
+    font-size: 0.75rem;
   }
 
   /* Preview Modal */

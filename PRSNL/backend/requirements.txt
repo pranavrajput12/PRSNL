@@ -17,6 +17,17 @@ celery==5.3.4
 kombu==5.3.4
 flower==2.0.1  # Celery monitoring dashboard
 
+# Agent Frameworks
+crewai==0.30.11
+crewai-tools==0.4.26
+
+# LangChain & LangGraph for workflow orchestration
+langgraph>=0.2.0  # State-based AI workflow orchestration
+langchain-core>=0.3.0  # Core LangChain abstractions
+langchain>=0.3.0  # LangChain framework for prompt templates
+langchain-community>=0.3.0  # Community integrations
+langchain-openai>=0.2.0  # OpenAI/Azure OpenAI integration
+
 # Web Scraping
 beautifulsoup4==4.12.3
 httpx==0.26.0
@@ -93,8 +104,15 @@ pgvector-haystack>=0.4.0  # PGVector integration for Haystack
 # AI Quality Monitoring  (will be added later)
 # ragas>=0.1.7  # RAG evaluation and monitoring - conflicts with langchain versions
 
+# LangChain & LangGraph for workflow orchestration
+langgraph>=0.2.0  # State-based AI workflow orchestration
+langchain-core>=0.3.0  # Core LangChain abstractions
+langchain>=0.3.0  # LangChain framework for prompt templates
+langchain-community>=0.3.0  # Community integrations
+langchain-openai>=0.2.0  # OpenAI/Azure OpenAI integration
+
 # Document Processing
-PyPDF2==3.0.1
+markitdown==0.1.2
 python-docx==0.8.11
 openpyxl==3.1.2
 odfpy==1.4.1

@@ -94,7 +94,7 @@ def sanitize_text(text: Optional[str]) -> Optional[str]:
 
 # Capture schemas
 class CaptureRequest(BaseModel):
-    url: Optional[HttpUrl] = Field(None, description="URL to capture")
+    url: Optional[str] = Field(None, description="URL to capture")
     content: Optional[str] = Field(None, max_length=MAX_CONTENT_LENGTH, description="Direct content to save")
     title: Optional[TitleStr] = Field(None, description="Title of the item")
     highlight: Optional[str] = Field(None, max_length=1000, description="Highlighted text")
@@ -213,7 +213,7 @@ class TimelineResponse(BaseModel):
 
 # Item schemas
 class ItemBase(BaseModel):
-    url: Optional[HttpUrl] = None
+    url: Optional[str] = None
     title: TitleStr
     summary: Optional[constr(max_length=MAX_SUMMARY_LENGTH)] = None
     tags: List[str] = Field(default_factory=list)

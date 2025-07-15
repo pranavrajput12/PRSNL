@@ -85,14 +85,17 @@ lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
 docker-compose stop frontend
 ```
 
-## Phase 3 AI Development Patterns
+## Phase 4 AI Development Patterns - LangGraph & Enhanced Routing
 
 ### AI Development
 **Key Principles:**
-1. **AI Integration**: Leverage Azure OpenAI for intelligent features
-2. **Azure OpenAI Integration**: Use prsnl-gpt-4 for complex reasoning
-3. **Model Selection**: Choose appropriate models for different tasks
-4. **Context Enhancement**: Integrate knowledge base for better responses
+1. **LangGraph Workflows**: State-based content processing with quality improvement loops
+2. **Enhanced AI Router**: ReAct agent for intelligent provider selection and cost optimization
+3. **LangChain Templates**: Centralized prompt management with versioning
+4. **AI Integration**: Leverage Azure OpenAI for intelligent features
+5. **Azure OpenAI Integration**: Use prsnl-gpt-4 for complex reasoning
+6. **Model Selection**: Choose appropriate models for different tasks
+7. **Context Enhancement**: Integrate knowledge base for better responses
 
 ### LibreChat Development
 **Key Principles:**
@@ -160,13 +163,16 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 - Remote: https://github.com/pranavrajput12/PRSNL.git
 - ALWAYS verify which commit to rollback to before suggesting git reset
 
-## Testing Commands - Phase 3 Enhanced
+## Testing Commands - Phase 4 Enhanced
 - Lint: `npm run lint`
 - Type check: `npm run check`
 - Format: `npm run format`
 - **NEW**: AI health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/ai/health`
+- **NEW**: AI Router status: `curl http://localhost:8000/api/ai-router/status`
+- **NEW**: Enhanced routing test: `curl -X POST http://localhost:8000/api/ai-router/test-routing -H "Content-Type: application/json" -d '{"content": "Test", "task_type": "text_generation", "priority": 8}'`
+- **NEW**: Integration tests: `cd backend && python3 test_integrations.py`
 
 ## HTTPie Integration for API Testing
 **HTTPie is now installed for improved API debugging and testing.**
@@ -230,6 +236,13 @@ http POST localhost:8000/api/rag/query query="test"
   - Common query patterns and maintenance commands
 - **Migration Notes**: ARM64 PostgreSQL with pgvector, normalized embeddings table
 - **Usage**: Reference before any database changes, migrations, or new features
+
+## 🚫 TEMPORARILY DISABLED FEATURES
+- **AI Insights Page (2025-07-14)** - Temporarily disabled from navigation menu
+  - **Reason**: Will be redesigned with Cognitive Fingerprint feature in future
+  - **Location**: `/insights` route still exists but not accessible via navigation
+  - **Status**: Commented out in `+layout.svelte` navigation section
+  - **Re-enable**: Uncomment lines 183-189 in `+layout.svelte` when ready
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
 - **FIXED: CodeMirror (2025-07-14)** - AI-powered repository intelligence system
@@ -300,6 +313,10 @@ cd frontend && npm run dev -- --port 3004
 - **CI/CD**: Version consistency enforced across all environments
 
 ### Future Development Tracking
+- **🚨 CRITICAL SECURITY**: Authentication bypasses added 2025-07-14 - see `SECURITY_BYPASSES.md`
+  - WebSocket authentication disabled for development
+  - Frontend using dummy tokens
+  - **MUST FIX BEFORE ANY PUBLIC DEPLOYMENT**
 - **CURRENT DEVELOPMENT**: Open Source Integrations feature (Game-changing)
   - **Phase 1**: Database schema + core services (Days 1-5)
   - **Phase 2**: AI-powered analysis + frontend integration (Days 6-10)

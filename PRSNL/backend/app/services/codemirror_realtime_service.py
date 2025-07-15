@@ -17,8 +17,9 @@ from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from app.db.database import get_db_pool
-from app.core.config import settings
+from app.config import settings
 from app.services.dragonflydb_service import dragonflydb_service
+from app.services.http_client_factory import http_client_factory, ClientType
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +417,27 @@ class CodeMirrorRealtimeService:
             resolved_state["last_source"] = update.get("source")
         
         return resolved_state
+    
+    async def _make_http_request(self, url: str, method: str = "GET", **kwargs) -> Dict[str, Any]:
+        """Make HTTP request using centralized client factory"""
+        try:
+            async with http_client_factory.client_session(ClientType.GENERAL) as client:
+                if method.upper() == "GET":
+                    response = await client.get(url, **kwargs)
+                elif method.upper() == "POST":
+                    response = await client.post(url, **kwargs)
+                elif method.upper() == "PUT":
+                    response = await client.put(url, **kwargs)
+                elif method.upper() == "DELETE":
+                    response = await client.delete(url, **kwargs)
+                else:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
+                
+                return response.json() if response.content else {}
+                
+        except Exception as e:
+            logger.error(f"HTTP request failed: {e}")
+            return {"error": str(e)}
 
 
 # Create singleton instance

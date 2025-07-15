@@ -23,7 +23,10 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 
 ## 🌟 **Key Features**
 
-### **🧠 Universal AI-Powered Content Processing**
+### **🧠 Advanced AI Orchestration System (NEW in v7.0)**
+- **LangGraph Workflows**: State-based content processing with adaptive quality improvement loops
+- **Enhanced AI Router**: ReAct agent for intelligent provider selection and cost optimization
+- **LangChain Templates**: Centralized, versioned prompt management system
 - **Intelligent Capture**: Web articles, YouTube videos, documents, images, and more
 - **AI Summarization**: GPT-4 powered content analysis and key insights extraction
 - **Smart Categorization**: Automatic tagging and topic classification
@@ -133,7 +136,8 @@ npm run dev -- --port 3004
 ```
 
 ### **Key Technologies**
-- **AI**: Azure OpenAI (GPT-4, Whisper, Ada-002), Multi-agent architecture
+- **AI**: Azure OpenAI (GPT-4, Whisper, Ada-002), LangGraph workflows, LangChain templates
+- **AI Orchestration**: Enhanced AI Router with ReAct agent, intelligent provider selection
 - **Database**: PostgreSQL + pgvector for semantic search + package intelligence
 - **Cache**: DragonflyDB (25x faster than Redis) + Celery distributed processing
 - **Code Analysis**: GitPython, PyDriller, Semgrep, Comby integration
@@ -183,6 +187,9 @@ npm run dev -- --port 3004
 - **Package Analysis**: Intelligent dependency health and security assessment
 - **Search Enhancement**: Embeddings-based semantic search with context relevance
 - **Real-time Processing**: Distributed analysis with live progress updates
+- **LangGraph Workflows**: State-based content processing with quality loops and adaptive routing
+- **Enhanced AI Router**: ReAct agent optimizes provider selection based on task complexity and cost
+- **LangChain Templates**: Centralized prompt management with versioning and optimization
 
 ### **Privacy & Security**
 - **Offline Processing**: Vosk transcription for sensitive content

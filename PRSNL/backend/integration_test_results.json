@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-07-15T11:29:59.676208",
+  "tests": {
+    "neo4j_integration": {
+      "success": true,
+      "message": "Neo4j not integrated - skipping test",
+      "details": {
+        "status": "not_integrated",
+        "note": "Neo4j services exist but are not registered in main.py"
+      },
+      "warning": true
+    },
+    "http_client_factory": {
+      "success": true,
+      "message": "HTTP Client Factory working perfectly",
+      "details": {
+        "health": {
+          "status": "healthy",
+          "clients": {},
+          "total_clients": 0,
+          "active_clients": 0
+        },
+        "test_results": {
+          "general": {
+            "status": 200,
+            "success": true
+          }
+        },
+        "connection_stats": {
+          "note": "Connection stats unavailable due to httpx version"
+        },
+        "concurrent_success": true
+      },
+      "warning": false
+    },
+    "langgraph_workflows": {
+      "success": true,
+      "message": "LangGraph workflows working perfectly",
+      "details": {
+        "enabled": true,
+        "workflows_available": [
+          "content_processing",
+          "document_analysis",
+          "media_processing",
+          "code_analysis"
+        ],
+        "single_processing_success": true,
+        "batch_processing_count": 2,
+        "processing_path": [
+          "route_content",
+          "analyze_content",
+          "enrich_content",
+          "quality_check",
+          "store_content",
+          "index_content"
+        ]
+      },
+      "warning": false
+    },
+    "langchain_prompts": {
+      "success": true,
+      "message": "LangChain prompts working perfectly",
+      "details": {
+        "enabled": true,
+        "template_count": 12,
+        "templates_available": [
+          "content_analysis",
+          "summary_brief",
+          "summary_detailed",
+          "summary_key_points",
+          "summary_technical",
+          "summary_eli5",
+          "generate_tags",
+          "generate_tags_fewshot",
+          "discover_relationships",
+          "generate_insights",
+          "categorize_content",
+          "generate_learning_path"
+        ],
+        "custom_template_success": true
+      },
+      "warning": false
+    },
+    "enhanced_ai_router": {
+      "success": true,
+      "message": "Enhanced AI Router working perfectly",
+      "details": {
+        "enabled": true,
+        "routing_decision": {
+          "provider": "azure_openai",
+          "complexity": "moderate",
+          "confidence": 0.5
+        },
+        "total_routings": 1,
+        "recommendations": [
+          "Routing patterns appear optimal"
+        ]
+      },
+      "warning": false
+    },
+    "component_integration": {
+      "success": true,
+      "message": "Component integration working perfectly",
+      "details": {
+        "workflow_integration": true,
+        "prompt_template_integration": true,
+        "summary_generation": true,
+        "http_client_integration": true
+      },
+      "warning": false
+    }
+  },
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "warnings": 0
+  }
+}

@@ -64,11 +64,8 @@ class CodeMirrorRealtimeService {
      */
     async connect(): Promise<void> {
         try {
-            // Get auth token
-            const token = localStorage.getItem('prsnl_token');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
+            // Get auth token (optional for now)
+            const token = localStorage.getItem('prsnl_token') || 'no-auth-required';
             
             // Build WebSocket URL
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';

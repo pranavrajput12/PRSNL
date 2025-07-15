@@ -17,9 +17,9 @@ from pathlib import Path
 from app.workers.celery_app import celery_app
 from app.db.database import get_db_connection
 from app.services.video_processor import VideoProcessor
-from app.services.whisper_azure_transcription import WhisperAzureTranscription
-from app.services.whisper_local_transcription import WhisperLocalTranscription
-from app.services.hybrid_transcription import HybridTranscription
+# from app.services.whisper_azure_transcription import WhisperAzureTranscription
+# from app.services.whisper_local_transcription import WhisperLocalTranscription
+from app.services.hybrid_transcription import HybridTranscriptionService
 from app.services.unified_ai_service import UnifiedAIService
 
 logger = logging.getLogger(__name__)

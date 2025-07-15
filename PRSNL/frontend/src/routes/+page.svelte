@@ -12,7 +12,14 @@
   import TagList from '$lib/components/TagList.svelte';
   import Calendar3D from '$lib/components/Calendar3D.svelte';
   import Mac3D from '$lib/components/Mac3D.svelte';
+  import MacMini3D from '$lib/components/MacMini3D.svelte';
+  import Webcam3D from '$lib/components/Webcam3D.svelte';
+  import SSD3D from '$lib/components/SSD3D.svelte';
+  import GraphicsCard3D from '$lib/components/GraphicsCard3D.svelte';
+  import Typewriter3D from '$lib/components/Typewriter3D.svelte';
+  import Terminal3D from '$lib/components/Terminal3D.svelte';
   import { getTypeIcon } from '$lib/stores/contentTypes';
+  import { goto } from '$app/navigation';
 
   type Item = {
     id: string;
@@ -195,9 +202,76 @@
 </script>
 
 <div class="container animate-in">
-  <!-- Mac3D Header Hero Section -->
-  <div class="hero-mac-section">
-    <Mac3D />
+  <!-- Motherboard Ecosystem Navigation -->
+  <div class="motherboard-hero-section">
+    <div class="hero-header">
+      <h1 class="hero-title">
+        <span class="title-main">PRSNL</span>
+        <span class="title-sub">Your Second Brain</span>
+      </h1>
+      <p class="hero-tagline">Never lose a brilliant idea again</p>
+    </div>
+    
+    <!-- Side-by-Side Layout: Mac3D Left, Icons Right -->
+    <div class="hero-layout">
+      <!-- Mac3D Monitor on Left -->
+      <div class="hero-mac-left">
+        <Mac3D />
+      </div>
+      
+      <!-- Navigation Icons Grid on Right -->
+      <div class="navigation-section-right">
+        <div class="navigation-icons-right">
+          <div class="icon-item">
+            <MacMini3D 
+              onClick={() => goto('/dashboard')}
+              tooltip="Dashboard"
+            />
+          </div>
+          
+          <div class="icon-item">
+            <Webcam3D 
+              onClick={() => goto('/capture')}
+              tooltip="Capture"
+            />
+          </div>
+          
+          <div class="icon-item">
+            <SSD3D 
+              onClick={() => goto('/timeline')}
+              tooltip="Timeline"
+            />
+          </div>
+          
+          <div class="icon-item">
+            <GraphicsCard3D 
+              onClick={() => goto('/assistant')}
+              tooltip="Assistant"
+            />
+          </div>
+          
+          <div class="icon-item">
+            <Typewriter3D 
+              onClick={() => goto('/conversations')}
+              tooltip="Conversations"
+            />
+          </div>
+          
+          <div class="icon-item">
+            <Terminal3D 
+              onClick={() => goto('/code-cortex')}
+              tooltip="Code Cortex"
+            />
+          </div>
+        </div>
+        
+        <!-- System Status Below Icons -->
+        <div class="ecosystem-status">
+          <div class="status-text">System Status: All Components Online</div>
+          <div class="status-indicator active"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Neural Interface Scanner -->
@@ -414,6 +488,50 @@
     </div>
   </div>
 
+  <!-- Cognitive Fingerprint Section -->
+  <div class="cognitive-fingerprint-section">
+    <div class="fingerprint-container">
+      <div class="fingerprint-header">
+        <div class="terminal-title-bar">
+          <span class="terminal-indicator">●</span>
+          <span class="terminal-path">cognitive_analysis.exe</span>
+          <span class="terminal-status">[RUNNING]</span>
+        </div>
+        <h3>🧭 The Explorer</h3>
+        <div class="confidence-meter">
+          <div class="confidence-bar">
+            <div class="confidence-fill" style="width: 49%"></div>
+          </div>
+          <span class="confidence-text">49% confidence</span>
+        </div>
+      </div>
+      
+      <div class="fingerprint-content">
+        <div class="traits-metrics">
+          <div class="traits-list">
+            <span class="trait">curious</span>
+            <span class="trait">diverse</span>
+            <span class="trait">adventurous</span>
+          </div>
+          <div class="metrics-compact">
+            <div class="metric">
+              <span class="metric-label">types:</span>
+              <span class="metric-value">9</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">diversity:</span>
+              <span class="metric-value">98</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">analyzed:</span>
+              <span class="metric-value">98</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="stats-section">
     {#if error}
       <ErrorMessage
@@ -530,13 +648,256 @@
     margin-bottom: 4rem;
   }
 
-  .hero-mac-section {
-    padding: 2rem 0;
+  /* MOTHERBOARD ECOSYSTEM NAVIGATION */
+  .motherboard-hero-section {
+    padding: 3rem 0 4rem 0;
     position: relative;
     width: 100%;
     margin-bottom: 4rem;
-    text-align: center;
     background: transparent;
+    overflow: hidden;
+  }
+  
+  .hero-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+  }
+  
+  .title-main {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00ff64, #00ccff, #ff6600, #ff4081);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-flow 4s ease-in-out infinite, title-glow 3s ease-in-out infinite;
+    text-shadow: 0 0 40px rgba(0, 255, 100, 0.4);
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+  
+  .title-sub {
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    opacity: 0.9;
+    background: linear-gradient(90deg, #888, #fff, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: subtitle-shimmer 6s ease-in-out infinite;
+    letter-spacing: 0.02em;
+  }
+  
+  .hero-tagline {
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    font-weight: 300;
+    margin: 0;
+    opacity: 0.8;
+    font-style: italic;
+    position: relative;
+    padding: 0 2rem;
+  }
+  
+  .hero-tagline::before {
+    content: '"';
+    position: absolute;
+    left: 0;
+    top: -0.2rem;
+    font-size: 2rem;
+    color: var(--synapse-teal);
+    opacity: 0.6;
+  }
+  
+  .hero-tagline::after {
+    content: '"';
+    position: absolute;
+    right: 0;
+    top: -0.2rem;
+    font-size: 2rem;
+    color: var(--synapse-teal);
+    opacity: 0.6;
+  }
+  
+  @keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes title-glow {
+    0%, 100% { 
+      filter: brightness(1) drop-shadow(0 0 15px rgba(0, 255, 100, 0.3));
+      transform: scale(1);
+    }
+    50% { 
+      filter: brightness(1.3) drop-shadow(0 0 30px rgba(0, 255, 100, 0.6));
+      transform: scale(1.02);
+    }
+  }
+  
+  @keyframes subtitle-shimmer {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+  
+  /* SIDE-BY-SIDE HERO LAYOUT */
+  .hero-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .hero-mac-left {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    transform: scale(1.3);
+    padding: 2rem 1rem;
+  }
+  
+  .navigation-section-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem;
+  }
+  
+  .navigation-icons-right {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    justify-items: center;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  .icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transform: scale(1.8);
+    transition: all 0.3s ease;
+  }
+  
+  .icon-item:hover {
+    transform: scale(2.0) translateY(-5px);
+  }
+  
+  
+  .icon-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .ecosystem-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: rgba(0, 255, 100, 0.1);
+    border: 1px solid var(--synapse-teal);
+    border-radius: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .status-text {
+    color: var(--synapse-teal);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--synapse-teal);
+    box-shadow: 0 0 12px var(--synapse-teal);
+    animation: status-heartbeat 2s ease-in-out infinite;
+  }
+  
+  @keyframes status-heartbeat {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.3); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .title-main {
+      font-size: 2.5rem;
+    }
+    
+    .title-sub {
+      font-size: 1.3rem;
+    }
+    
+    .hero-tagline {
+      font-size: 1.1rem;
+      padding: 0 1rem;
+    }
+    
+    .hero-header {
+      margin-bottom: 3rem;
+    }
+    
+    .hero-layout {
+      flex-direction: column;
+      gap: 3rem;
+    }
+    
+    .hero-mac-left {
+      transform: scale(1.1);
+    }
+    
+    .navigation-section-right {
+      padding: 0;
+    }
+    
+    .navigation-icons-right {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      max-width: 400px;
+    }
+    
+    .icon-item {
+      transform: scale(1.4);
+    }
+    
+    .icon-item:hover {
+      transform: scale(1.6) translateY(-3px);
+    }
+    
+    .ecosystem-status {
+      max-width: 300px;
+      padding: 0.8rem 1.5rem;
+    }
   }
 
   /* NEURAL MOTHERBOARD CONSOLE */
@@ -3797,6 +4158,309 @@
     }
     50% {
       opacity: 0.6;
+    }
+  }
+
+  /* Cognitive Fingerprint Section - Neural Design Language */
+  .cognitive-fingerprint-section {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    max-width: 400px;
+  }
+
+  .cognitive-fingerprint-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      linear-gradient(45deg, transparent 30%, rgba(0, 255, 100, 0.03) 50%, transparent 70%),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 255, 100, 0.1) 2px, rgba(0, 255, 100, 0.1) 4px);
+    animation: circuit-flow 8s linear infinite;
+    pointer-events: none;
+  }
+
+  .cognitive-fingerprint-section::after {
+    content: '█';
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: rgba(0, 255, 100, 0.8);
+    font-size: 1rem;
+    animation: terminal-cursor 1s infinite;
+  }
+
+  @keyframes circuit-flow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes terminal-cursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .fingerprint-container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .fingerprint-header {
+    margin-bottom: 3rem;
+  }
+
+  .terminal-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .terminal-title-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+  }
+
+  .terminal-indicator {
+    color: #00ff64;
+    font-size: 1.2rem;
+    animation: pulse 2s infinite;
+  }
+
+  .terminal-path {
+    color: rgba(255, 255, 255, 0.8);
+    flex: 1;
+  }
+
+  .terminal-status {
+    color: #00ff64;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 255, 100, 0.1);
+    border-radius: 4px;
+  }
+
+  .fingerprint-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #00ff64;
+    margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: left;
+  }
+
+  .terminal-output {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 1rem;
+    border-left: 2px solid rgba(0, 255, 100, 0.3);
+    padding-left: 1rem;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .fingerprint-content {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .explorer-profile {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .explorer-icon {
+    font-size: 4rem;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .explorer-info h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+  }
+
+  .confidence-meter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .confidence-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .confidence-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+  }
+
+  .explorer-info p {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    font-size: 1rem;
+  }
+
+  .traits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .trait-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #00ff64;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .metrics-section h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #00ff64;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .traits-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .trait {
+    background: rgba(0, 255, 100, 0.1);
+    color: #00ff64;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    text-transform: lowercase;
+  }
+
+  .metrics-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 100, 0.2);
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.3s ease;
+  }
+
+  .metric:hover {
+    border-color: rgba(0, 255, 100, 0.5);
+    box-shadow: 0 0 10px rgba(0, 255, 100, 0.2);
+  }
+
+  .metric-prefix {
+    color: #00ff64;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+
+  .metric-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+  }
+
+  .metric-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+  }
+
+  .metric-value {
+    color: #00ff64;
+    font-weight: bold;
+    font-size: 1.2rem;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .cognitive-fingerprint-section {
+      padding: 2rem 1rem;
+      margin: 2rem 0;
+    }
+
+    .explorer-profile {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .traits-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .fingerprint-header h2 {
+      font-size: 2rem;
+    }
+
+    .confidence-meter {
+      justify-content: center;
     }
   }
 </style>

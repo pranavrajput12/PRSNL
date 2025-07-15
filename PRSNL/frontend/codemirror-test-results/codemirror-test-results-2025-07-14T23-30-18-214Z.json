@@ -1,0 +1,203 @@
+[
+  {
+    "feature": "Main CodeMirror Page",
+    "status": "warn",
+    "timestamp": "2025-07-14T23:29:22.738Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/main-codemirror-page-1752535761443.png",
+    "message": "Feature element not found",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": [
+      "404 Not Found - http://localhost:3004/favicon.png"
+    ]
+  },
+  {
+    "feature": "Onboarding Wizard",
+    "status": "warn",
+    "timestamp": "2025-07-14T23:29:34.068Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/onboarding-wizard-1752535763852.png",
+    "message": "Feature element not found",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Repository Listing",
+    "status": "pass",
+    "timestamp": "2025-07-14T23:29:36.658Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/repository-listing-1752535775741.png",
+    "message": "Feature found and tested",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Repository Search",
+    "status": "pass",
+    "timestamp": "2025-07-14T23:29:39.701Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/repository-search-1752535777711.png",
+    "message": "Feature found and tested",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Analysis Type Selection",
+    "status": "warn",
+    "timestamp": "2025-07-14T23:29:52.055Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/analysis-type-selection-1752535781855.png",
+    "message": "Feature element not found",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Timeline View",
+    "status": "pass",
+    "timestamp": "2025-07-14T23:29:54.443Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/timeline-view-1752535792837.png",
+    "message": "Feature found and tested",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Insights Tab",
+    "status": "pass",
+    "timestamp": "2025-07-14T23:29:55.594Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/insights-tab-1752535795188.png",
+    "message": "Feature found and tested",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "Issues Tab",
+    "status": "warn",
+    "timestamp": "2025-07-14T23:30:06.581Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/issues-tab-1752535796370.png",
+    "message": "Feature element not found",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  },
+  {
+    "feature": "History Tab",
+    "status": "warn",
+    "timestamp": "2025-07-14T23:30:18.163Z",
+    "url": "http://localhost:3004/code-cortex/codemirror",
+    "screenshot": "codemirror-test-screenshots/history-tab-1752535807856.png",
+    "message": "Feature element not found",
+    "consoleMessages": [
+      "[debug] [vite] connecting...",
+      "[debug] [vite] connected.",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🔵 API Request: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟡 API Response: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object",
+      "[log] 🟢 API Success: JSHandle@object"
+    ],
+    "networkErrors": []
+  }
+]

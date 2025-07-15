@@ -34,9 +34,9 @@
 		loading = true;
 		try {
 			// Load analyses
-			let analysesUrl = '/api/codemirror/analyses';
+			let analysesUrl = '/codemirror/analyses';
 			if (repoId) {
-				analysesUrl = `/api/codemirror/analyses/${repoId}`;
+				analysesUrl = `/codemirror/analyses/${repoId}`;
 			}
 			
 			const analyses = await api.get(analysesUrl);
@@ -84,7 +84,7 @@
 			
 			// Load patterns
 			try {
-				const patterns = await api.get('/api/codemirror/patterns?limit=5');
+				const patterns = await api.get('/codemirror/patterns?limit=5');
 				topPatterns = patterns || [];
 				stats.totalPatterns = patterns.length;
 			} catch (e) {
@@ -96,7 +96,7 @@
 			for (const analysis of analyses) {
 				if (analysis.id) {
 					try {
-						const insights = await api.get(`/api/codemirror/insights/${analysis.id}`);
+						const insights = await api.get(`/codemirror/insights/${analysis.id}`);
 						insightCount += insights.length;
 					} catch (e) {
 						// Ignore individual insight loading errors

@@ -12,7 +12,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 
-from app.auth.dependencies import get_current_user
+from app.core.auth import get_current_user
 from app.workers.knowledge_graph_tasks import (
     build_knowledge_graph_distributed,
     semantic_search_distributed_task,

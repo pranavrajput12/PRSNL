@@ -8,8 +8,14 @@
 - **Reason**: Better performance and easier management for development
 
 ### Services Running in Docker
-- **Redis**: For caching (port 6379)
+- **DragonflyDB**: For caching (port 6379) - 25x faster than Redis
 - **Ollama**: For local LLM (port 11434) - optional
+
+### AI Services (Phase 4)
+- **LangGraph Workflows**: State-based content processing (integrated in backend)
+- **Enhanced AI Router**: ReAct agent routing system (integrated in backend)
+- **LangChain Templates**: Centralized prompt management (integrated in backend)
+- **Azure OpenAI**: GPT-4 integration for AI services
 
 ### Backend
 - **Development**: Run locally with `python3 -m uvicorn app.main:app --reload`
@@ -17,9 +23,23 @@
 
 ## Common Commands
 
-### Start Redis only
+### Start DragonflyDB only
 ```bash
-docker-compose up -d redis
+docker-compose up -d dragonflydb
+```
+
+### Test AI Services
+```bash
+# Test AI Router
+curl http://localhost:8000/api/ai-router/status
+
+# Test LangGraph Workflows
+curl -X POST http://localhost:8000/api/ai-suggest \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Test workflow processing", "context": {"use_workflow": true}}'
+
+# Run comprehensive integration tests
+cd backend && python3 test_integrations.py
 ```
 
 ### Start all services (excluding database)
@@ -60,8 +80,8 @@ psql -U pronav prsnl < backup_file.sql
 - Consider using requirements.minimal.txt for faster builds
 
 ### Port conflicts
-- Database: 5432 (local PostgreSQL)
-- Redis: 6379 (Docker)
+- Database: 5433 (local PostgreSQL ARM64)
+- DragonflyDB: 6379 (Docker)
 - Backend: 8000 (local or Docker)
 - Frontend: 3004 (local development)
 
@@ -69,3 +89,6 @@ psql -U pronav prsnl < backup_file.sql
 1. Create minimal requirements.txt for Docker
 2. Fix OpenTelemetry dependencies
 3. Consider using Docker only for services, not application code
+4. Add Docker health checks for AI services
+5. Implement AI service monitoring and metrics collection
+6. Add automated backup system for AI model configurations

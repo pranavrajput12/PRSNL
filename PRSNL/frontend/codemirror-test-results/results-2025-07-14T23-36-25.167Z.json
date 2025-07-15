@@ -1,0 +1,27 @@
+[
+  {
+    "feature": "Main CodeMirror Page",
+    "status": "fail",
+    "error": "Element not found"
+  },
+  {
+    "feature": "Repository Listing",
+    "status": "fail",
+    "error": "Element not found"
+  },
+  {
+    "feature": "Repository Search",
+    "status": "fail",
+    "error": "Element not found"
+  },
+  {
+    "feature": "Timeline Sections",
+    "status": "fail",
+    "error": "Element not found"
+  },
+  {
+    "feature": "Tab Navigation",
+    "status": "fail",
+    "error": "Element not found"
+  }
+]

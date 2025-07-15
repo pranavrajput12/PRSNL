@@ -24,8 +24,19 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.db.database import get_db_pool
-from app.services.vision_processor import vision_processor
-from app.services.whisper_cpp_transcription import whisper_cpp_service
+try:
+    from app.services.vision_processor import vision_processor
+    VISION_PROCESSOR_AVAILABLE = True
+except ImportError:
+    VISION_PROCESSOR_AVAILABLE = False
+    vision_processor = None
+
+try:
+    from app.services.whisper_cpp_transcription import whisper_cpp_service
+    WHISPER_CPP_AVAILABLE = True
+except ImportError:
+    WHISPER_CPP_AVAILABLE = False
+    whisper_cpp_service = None
 from app.services.unified_ai_service import unified_ai_service
 from app.services.cache import cache_service, CacheKeys
 from app.services.embedding_manager import embedding_manager
@@ -57,6 +68,7 @@ class OCRImageAnalysisAgent:
         self.description = "Extracts text from images, analyzes context, and generates searchable tags"
         self.vision_processor = vision_processor
         self.ai_service = unified_ai_service
+        self.vision_available = VISION_PROCESSOR_AVAILABLE
         
     async def execute(self, task_data: Dict[str, Any]) -> MediaAgentResult:
         """
@@ -84,6 +96,9 @@ class OCRImageAnalysisAgent:
             logger.info(f"🖼️ Processing image: {file_path}")
             
             # Step 1: Run OCR and vision analysis
+            if not self.vision_available:
+                raise ValueError("Vision processor not available. Check OCR dependencies.")
+            
             vision_result = await self.vision_processor.process_image(file_path)
             
             # Step 2: Enhanced AI contextualization if requested
@@ -293,6 +308,7 @@ class VideoTranscriptionAgent:
         self.description = "Transcribes videos using Whisper CPP and creates intelligent summaries"
         self.whisper_service = whisper_cpp_service
         self.ai_service = unified_ai_service
+        self.whisper_available = WHISPER_CPP_AVAILABLE
         
     async def execute(self, task_data: Dict[str, Any]) -> MediaAgentResult:
         """
@@ -320,6 +336,9 @@ class VideoTranscriptionAgent:
             
             if not file_path or not os.path.exists(file_path):
                 raise ValueError(f"Video file not found: {file_path}")
+            
+            if not self.whisper_available:
+                raise ValueError("Whisper CPP not available. Check audio transcription dependencies.")
             
             logger.info(f"🎥 Processing video: {file_path}")
             
@@ -610,6 +629,7 @@ class AudioJournalAgent:
         self.description = "Processes audio journals with advanced analysis and contextualization"
         self.whisper_service = whisper_cpp_service
         self.ai_service = unified_ai_service
+        self.whisper_available = WHISPER_CPP_AVAILABLE
         
     async def execute(self, task_data: Dict[str, Any]) -> MediaAgentResult:
         """
@@ -639,6 +659,9 @@ class AudioJournalAgent:
             
             if not file_path or not os.path.exists(file_path):
                 raise ValueError(f"Audio file not found: {file_path}")
+            
+            if not self.whisper_available:
+                raise ValueError("Whisper CPP not available. Check audio transcription dependencies.")
             
             logger.info(f"🎙️ Processing audio journal: {file_path}")
             

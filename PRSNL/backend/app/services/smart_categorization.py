@@ -201,7 +201,6 @@ class SmartCategorizationService:
                 FROM items
                 WHERE embedding IS NOT NULL
                 ORDER BY created_at DESC
-                LIMIT 500
             """)
             
             if len(items) < 10:

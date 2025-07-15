@@ -63,9 +63,8 @@ CREATE TABLE codemirror_patterns (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    user_id),
-    pattern_signature),
-    pattern_type),
+    UNIQUE(user_id, pattern_signature),
+    INDEX(pattern_type)
 );
 
 -- CodeMirror repository mappings table (for CLI integration tracking)
@@ -89,7 +88,7 @@ CREATE TABLE codemirror_repo_mappings (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     UNIQUE(user_id, local_path),
-    user_id)
+    INDEX(user_id)
 );
 
 -- CodeMirror insights table (actionable recommendations)
@@ -124,9 +123,9 @@ CREATE TABLE codemirror_insights (
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
-    analysis_id),
-    status),
-    insight_type)
+    INDEX(analysis_id),
+    INDEX(status),
+    INDEX(insight_type)
 );
 
 -- CodeMirror CLI sync table (for offline/online sync)
@@ -147,8 +146,8 @@ CREATE TABLE codemirror_cli_sync (
     synced_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     
-    user_id),
-    sync_token)
+    INDEX(user_id),
+    UNIQUE(sync_token)
 );
 
 -- Add triggers for updated_at

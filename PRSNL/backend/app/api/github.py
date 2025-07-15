@@ -42,6 +42,11 @@ class GitHubRepo(BaseModel):
     is_private: bool
     default_branch: str
     last_synced: Optional[datetime]
+    slug: Optional[str] = None
+    html_url: Optional[str] = None
+    owner: Optional[str] = None
+    owner_avatar_url: Optional[str] = None
+    owner_login: Optional[str] = None
     
 class SyncReposRequest(BaseModel):
     force_refresh: bool = False
@@ -205,7 +210,11 @@ async def get_repos(
                 gr.forks,
                 gr.is_private,
                 gr.default_branch,
-                gr.last_synced_at as last_synced
+                gr.last_synced_at as last_synced,
+                gr.slug,
+                gr.html_url,
+                ga.avatar_url as owner_avatar_url,
+                ga.github_username as owner_login
             FROM github_repos gr
             JOIN github_accounts ga ON gr.account_id = ga.id
             WHERE ga.user_id = $1
@@ -246,7 +255,12 @@ async def get_repos(
                 forks=r['forks'],
                 is_private=r['is_private'],
                 default_branch=r['default_branch'],
-                last_synced=r['last_synced']
+                last_synced=r['last_synced'],
+                slug=r['slug'],
+                html_url=r['html_url'],
+                owner=r['owner_login'],
+                owner_avatar_url=r['owner_avatar_url'],
+                owner_login=r['owner_login']
             )
             for r in repos
         ]
@@ -315,6 +329,8 @@ async def sync_repos(
                                 forks = $8,
                                 is_private = $9,
                                 default_branch = $10,
+                                html_url = $11,
+                                slug = $12,
                                 last_synced_at = NOW()
                             WHERE id = $1
                         """, 
@@ -326,7 +342,9 @@ async def sync_repos(
                             repo['stargazers_count'],
                             repo['forks_count'],
                             repo['private'],
-                            repo['default_branch']
+                            repo['default_branch'],
+                            repo['html_url'],
+                            repo['name'].lower().replace(' ', '-')
                         )
                     else:
                         # Insert new repo
@@ -334,8 +352,8 @@ async def sync_repos(
                             INSERT INTO github_repos (
                                 account_id, github_id, name, full_name,
                                 description, language, stars, forks,
-                                is_private, default_branch
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                                is_private, default_branch, html_url, slug
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                         """,
                             account['id'],
                             repo['id'],
@@ -346,7 +364,9 @@ async def sync_repos(
                             repo['stargazers_count'],
                             repo['forks_count'],
                             repo['private'],
-                            repo['default_branch']
+                            repo['default_branch'],
+                            repo['html_url'],
+                            repo['name'].lower().replace(' ', '-')
                         )
                     
                     total_synced += 1
@@ -415,3 +435,34 @@ async def get_languages(
             {"language": l['language'], "repo_count": l['repo_count']}
             for l in languages
         ]
+
+@router.get("/repos/by-slug/{slug}")
+async def get_repo_by_slug(
+    slug: str,
+    current_user = Depends(get_current_user)
+) -> GitHubRepo:
+    """Get repository by slug"""
+    
+    pool = await get_db_pool()
+    async with pool.acquire() as db:
+        repo = await db.fetchrow("""
+            SELECT gr.* FROM github_repos gr
+            JOIN github_accounts ga ON gr.account_id = ga.id
+            WHERE gr.slug = $1 AND ga.user_id = $2
+        """, slug, current_user.id)
+        
+        if not repo:
+            raise HTTPException(status_code=404, detail="Repository not found")
+        
+        return GitHubRepo(
+            id=str(repo['id']),
+            name=repo['name'],
+            full_name=repo['full_name'],
+            description=repo['description'],
+            language=repo['language'],
+            stars=repo['stars'],
+            forks=repo['forks'],
+            is_private=repo['is_private'],
+            default_branch=repo['default_branch'],
+            last_synced=repo['last_synced_at']
+        )

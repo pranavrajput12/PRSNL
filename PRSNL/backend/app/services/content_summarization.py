@@ -424,7 +424,7 @@ class ContentSummarizationService:
             results = []
             
             # Process in batches to avoid overwhelming the API
-            batch_size = 5
+            batch_size = 20
             for i in range(0, len(item_ids), batch_size):
                 batch = item_ids[i:i + batch_size]
                 

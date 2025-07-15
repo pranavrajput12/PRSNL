@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import CodeMirrorBreadcrumbs from '$lib/components/codecortex/CodeMirrorBreadcrumbs.svelte';
 	
 	let repoId = $page.params.id;
 	let repository = null;
@@ -14,6 +13,17 @@
 		try {
 			loading = true;
 			
+			// Load repository info from GitHub repos table
+			const repoResponse = await fetch(`/api/github/repos/by-slug/${repoId}`, {
+				headers: {
+					'X-PRSNL-Integration': 'frontend'
+				}
+			});
+			
+			if (repoResponse.ok) {
+				repository = await repoResponse.json();
+			}
+			
 			// Load analyses for this repository
 			const analysesResponse = await fetch(`/api/codemirror/analyses/${repoId}`, {
 				headers: {
@@ -21,17 +31,16 @@
 				}
 			});
 			
-			if (!analysesResponse.ok) {
-				throw new Error(`Failed to load analyses: ${analysesResponse.status}`);
+			if (analysesResponse.ok) {
+				analyses = await analysesResponse.json();
 			}
 			
-			analyses = await analysesResponse.json();
-			
-			// Get repository name from first analysis
-			if (analyses.length > 0 && analyses[0].repository_name) {
+			// Fallback: Get repository name from first analysis if repo API fails
+			if (!repository && analyses.length > 0 && analyses[0].repository_name) {
 				repository = {
 					name: analyses[0].repository_name,
-					id: repoId
+					id: repoId,
+					description: 'Repository from CodeMirror analysis'
 				};
 			}
 			
@@ -112,7 +121,6 @@
 					</div>
 				</div>
 			</div>
-			<CodeMirrorBreadcrumbs />
 		</div>
 	</div>
 
@@ -141,23 +149,50 @@
 			<!-- Repository Header -->
 			<div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6 mb-6">
 				<div class="flex items-start justify-between">
-					<div>
-						<h2 class="text-2xl font-bold text-white mb-2">
-							{repository?.name || 'Repository'}
-						</h2>
-						<div class="flex items-center space-x-4 text-sm text-gray-400">
+					<div class="flex-1">
+						<div class="flex items-center space-x-3 mb-2">
+							<h2 class="text-2xl font-bold text-white">
+								{repository?.name || 'Repository'}
+							</h2>
+							{#if repository?.html_url}
+								<a 
+									href={repository.html_url} 
+									target="_blank" 
+									class="text-blue-400 hover:text-blue-300 transition-colors"
+									title="View on GitHub"
+								>
+									<svg class="w-5 h-5" viewBox="0 0 16 16" fill="currentColor">
+										<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+									</svg>
+								</a>
+							{/if}
+						</div>
+						
+						{#if repository?.description}
+							<p class="text-gray-300 mb-3">{repository.description}</p>
+						{/if}
+						
+						<div class="flex items-center space-x-6 text-sm text-gray-400">
+							{#if repository?.language}
+								<span class="flex items-center space-x-1">
+									<span class="w-3 h-3 rounded-full bg-blue-500"></span>
+									<span>{repository.language}</span>
+								</span>
+							{/if}
 							<span class="flex items-center space-x-1">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 								</svg>
-								<span>{analyses.length} analyses</span>
+								<span>{analyses.length} analysis{analyses.length !== 1 ? 'es' : ''}</span>
 							</span>
-							<span class="flex items-center space-x-1">
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-								</svg>
-								<span>Repository ID: {repoId.slice(0, 8)}...</span>
-							</span>
+							{#if repository?.stargazers_count !== undefined}
+								<span class="flex items-center space-x-1">
+									<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+									</svg>
+									<span>{repository.stargazers_count}</span>
+								</span>
+							{/if}
 						</div>
 					</div>
 					<button

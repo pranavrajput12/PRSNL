@@ -238,6 +238,70 @@ async def _send_progress_update(
         logger.error(f"Failed to send progress update: {e}")
 
 
+async def _fetch_readme_content(repo_id: str, user_id: str) -> Dict[str, Any]:
+    """Fetch README content from GitHub repository"""
+    try:
+        async with get_db_connection() as db:
+            # Get repository information
+            repo = await db.fetchrow("""
+                SELECT gr.full_name, gr.name, gr.owner
+                FROM github_repos gr
+                JOIN github_accounts ga ON gr.account_id = ga.id
+                WHERE gr.id = $1 AND ga.user_id = $2
+            """, UUID(repo_id), UUID(user_id))
+            
+            if not repo:
+                return {"error": "Repository not found"}
+            
+            # Try to fetch README using GitHub service
+            from app.services.github_service import GitHubService
+            
+            github_service = GitHubService()
+            
+            # Common README file names
+            readme_files = ["README.md", "readme.md", "README.rst", "readme.rst", "README.txt", "readme.txt", "README"]
+            
+            readme_content = None
+            readme_filename = None
+            
+            for filename in readme_files:
+                try:
+                    content = await github_service.fetch_file(repo['full_name'], filename)
+                    if content:
+                        readme_content = content
+                        readme_filename = filename
+                        break
+                except Exception as e:
+                    logger.debug(f"Failed to fetch {filename}: {e}")
+                    continue
+            
+            if readme_content:
+                return {
+                    "filename": readme_filename,
+                    "content": readme_content,
+                    "size": len(readme_content),
+                    "found": True
+                }
+            else:
+                return {
+                    "filename": None,
+                    "content": None,
+                    "size": 0,
+                    "found": False,
+                    "message": "No README file found"
+                }
+                
+    except Exception as e:
+        logger.error(f"Failed to fetch README content: {e}")
+        return {
+            "filename": None,
+            "content": None,
+            "size": 0,
+            "found": False,
+            "error": str(e)
+        }
+
+
 async def _analyze_repository_structure_async(repo_id: str, user_id: str) -> Dict[str, Any]:
     """Async implementation of repository structure analysis"""
     
@@ -282,6 +346,13 @@ async def _analyze_repository_structure_async(repo_id: str, user_id: str) -> Dic
         package_files = {}  # detect_package_files(repo_path) if repo_path else {}
         package_ecosystem = analyze_package_ecosystem(package_files)
         
+        # Fetch README content
+        readme_content = await _fetch_readme_content(repo_id, user_id)
+        
+        await _send_progress_update(
+            task_id, repo_id, "structure_analysis", 3, 5, "Processing README and documentation"
+        )
+        
         # This would typically call the CLI or run analysis
         # For now, we'll create a mock structure analysis with package info
         analysis_result = {
@@ -300,6 +371,7 @@ async def _analyze_repository_structure_async(repo_id: str, user_id: str) -> Dic
                 "python": ["fastapi", "uvicorn", "pydantic"],
                 "javascript": ["react", "svelte", "vite"]
             },
+            "readme": readme_content,
             "analysis_type": "structure",
             "completed_at": datetime.utcnow().isoformat()
         }
@@ -337,42 +409,6 @@ async def _analyze_repository_structure_async(repo_id: str, user_id: str) -> Dic
         raise
     finally:
         loop.close()
-
-
-async def _analyze_repository_structure_async(repo_id: str, user_id: str) -> Dict[str, Any]:
-    """Async implementation of repository structure analysis."""
-    async with get_db_connection() as db:
-        # Get repository details
-        repo = await db.fetchrow("""
-            SELECT gr.*, ga.access_token
-            FROM github_repos gr
-            JOIN github_accounts ga ON gr.account_id = ga.id
-            WHERE gr.id = $1 AND ga.user_id = $2
-        """, UUID(repo_id), UUID(user_id))
-        
-        if not repo:
-            raise ValueError(f"Repository {repo_id} not found")
-        
-        # Initialize service
-        service = CodeMirrorService()
-        
-        # Analyze repository structure
-        structure_data = await service._analyze_repository_structure(
-            repo['full_name'],
-            repo['access_token']
-        )
-        
-        # Send real-time update
-        await realtime_service.notify_analysis_progress(
-            user_id=user_id,
-            analysis_id=repo_id,
-            progress=30,
-            stage="structure_analyzed",
-            details={"files_analyzed": structure_data.get("file_count", 0)}
-        )
-        
-        return structure_data
-
 
 @celery_app.task(name="app.workers.codemirror_tasks.detect_code_patterns")
 def detect_code_patterns(repo_id: str, user_id: str) -> Dict[str, Any]:
@@ -660,13 +696,34 @@ async def generate_insights(analysis_data: Dict[str, Any], depth: str) -> List[D
 async def generate_ai_insights(analysis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Generate insights using AI."""
     try:
+        # Extract README content for analysis
+        readme_info = analysis_data.get("readme", {})
+        readme_content = readme_info.get("content", "") if readme_info.get("found") else ""
+        
+        # Create comprehensive analysis prompt
         prompt = f"""
 Based on this repository analysis, provide actionable insights:
 
+Repository Analysis:
 {json.dumps(analysis_data, indent=2)}
 
+README Content Analysis:
+{f"README found ({readme_info.get('filename', 'N/A')}): {readme_content[:2000]}..." if readme_content else "No README file found"}
+
 Generate 3-5 specific, actionable insights that would help improve the codebase.
-Focus on architecture, performance, security, and maintainability.
+Focus on:
+1. Architecture and code organization
+2. Documentation quality (especially README)
+3. Performance and scalability
+4. Security considerations
+5. Maintainability and best practices
+
+For README analysis, consider:
+- Documentation completeness
+- Setup instructions clarity
+- API documentation
+- Contributing guidelines
+- License information
 
 Return as JSON array with format:
 [{{"type": "insight_type", "severity": "low|medium|high", "title": "short title", "description": "detailed description", "recommendation": "specific action"}}]
@@ -674,7 +731,7 @@ Return as JSON array with format:
 
         response = await unified_ai_service.complete(
             prompt=prompt,
-            system_prompt="You are a senior software architect providing code review insights.",
+            system_prompt="You are a senior software architect providing code review insights. Pay special attention to documentation quality and developer experience.",
             temperature=0.5,
             response_format={"type": "json_object"}
         )
@@ -708,6 +765,37 @@ def calculate_analysis_scores(analysis_data: Dict[str, Any]) -> Dict[str, float]
     patterns = analysis_data.get('patterns', [])
     if any(p['type'] == 'testing' for p in patterns):
         scores['quality'] += 10
+    
+    # Adjust quality score based on README presence and quality
+    readme_info = analysis_data.get('readme', {})
+    if readme_info.get('found'):
+        readme_content = readme_info.get('content', '')
+        readme_size = readme_info.get('size', 0)
+        
+        # Base score for having a README
+        scores['quality'] += 5
+        
+        # Additional points for comprehensive README
+        if readme_size > 500:  # Substantial README
+            scores['quality'] += 5
+        if readme_size > 1500:  # Comprehensive README
+            scores['quality'] += 5
+        
+        # Check for common README sections
+        readme_lower = readme_content.lower()
+        if 'installation' in readme_lower or 'setup' in readme_lower:
+            scores['quality'] += 3
+        if 'usage' in readme_lower or 'example' in readme_lower:
+            scores['quality'] += 3
+        if 'contributing' in readme_lower:
+            scores['quality'] += 2
+        if 'license' in readme_lower:
+            scores['quality'] += 2
+        if 'api' in readme_lower or 'documentation' in readme_lower:
+            scores['quality'] += 3
+    else:
+        # Penalize for missing README
+        scores['quality'] -= 10
     
     # Ensure scores are within bounds
     for key in scores:

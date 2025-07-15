@@ -1,0 +1,21 @@
+{
+  "name": "prsnl-testing",
+  "version": "1.0.0",
+  "description": "Testing utilities for PRSNL CodeMirror feature",
+  "main": "test_codemirror.js",
+  "scripts": {
+    "test:codemirror": "node test_codemirror.js",
+    "test:codemirror:watch": "nodemon test_codemirror.js",
+    "test:api": "node -e \"require('./test_codemirror.js'); new (require('./test_codemirror.js'))().testApiEndpoints().then(() => process.exit(0)).catch(() => process.exit(1));\"",
+    "setup:browserless": "docker-compose up -d browserless"
+  },
+  "dependencies": {
+    "puppeteer-core": "^21.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["testing", "automation", "browserless", "codemirror"],
+  "author": "PRSNL",
+  "license": "MIT"
+}
