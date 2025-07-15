@@ -17,9 +17,9 @@ celery==5.3.4
 kombu==5.3.4
 flower==2.0.1  # Celery monitoring dashboard
 
-# Agent Frameworks
-crewai==0.30.11
-crewai-tools==0.4.26
+# Agent Frameworks (Updated to latest versions - no LangChain conflicts)
+crewai==0.141.0  # Latest version - no LangChain dependency conflicts
+crewai-tools==0.51.1  # Latest compatible version
 
 # LangChain & LangGraph for workflow orchestration
 langgraph>=0.2.0  # State-based AI workflow orchestration
