@@ -237,7 +237,7 @@ from app.api import background_processing  # Phase 1 Celery background processin
 from app.api import knowledge_graph_api  # Phase 2 Knowledge Graph API
 from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API
 from app.api import github  # GitHub OAuth and repository sync
-from app.api import crew_api  # Crew.ai autonomous agent system
+# from app.api import crew_api  # Crew.ai autonomous agent system - temporarily disabled
 from app.api import (
     admin,
     ai,
@@ -335,7 +335,7 @@ app.include_router(background_processing.router)  # Phase 1 Celery background pr
 app.include_router(knowledge_graph_api.router)  # Phase 2 Knowledge Graph API
 app.include_router(agent_monitoring_api.router)  # Phase 2 Agent Monitoring API
 app.include_router(github.router)  # GitHub OAuth and repository sync
-app.include_router(crew_api.router)  # Crew.ai autonomous agent system
+# app.include_router(crew_api.router)  # Crew.ai autonomous agent system - temporarily disabled
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
 app.include_router(ws.router)

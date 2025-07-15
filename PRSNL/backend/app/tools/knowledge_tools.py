@@ -6,11 +6,11 @@ import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional, Type
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from app.db.database import get_db_pool
-from app.services.knowledge_graph_service import KnowledgeGraphService
+from app.services.knowledge_graph import KnowledgeGraphService
 from app.services.unified_ai_service import unified_ai_service
 from app.tools import register_tool
 

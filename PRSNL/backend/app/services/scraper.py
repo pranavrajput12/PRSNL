@@ -1,13 +1,16 @@
-"""Web scraping service"""
+"""Web scraping service with MarkItDown enhancement"""
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
 from urllib.parse import urljoin
+import tempfile
+import os
 
 import httpx
 from bs4 import BeautifulSoup
 from readability.readability import Document
+from markitdown import MarkItDown
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ class ScrapedData:
 
 
 class WebScraper:
-    """Scrapes and extracts content from web pages"""
+    """Scrapes and extracts content from web pages with MarkItDown enhancement"""
     
     def __init__(self):
         self.client = httpx.AsyncClient(
@@ -40,6 +43,7 @@ class WebScraper:
                 "Upgrade-Insecure-Requests": "1"
             }
         )
+        self.markitdown = MarkItDown()  # Initialize MarkItDown processor
     
     async def scrape(self, url: str) -> ScrapedData:
         """
@@ -73,31 +77,36 @@ class WebScraper:
                 if og_desc and og_desc.get('content'):
                     content = og_desc.get('content').strip()
             
-            # Fallback: extract first paragraph or use readability
+            # Enhanced fallback: use MarkItDown, then readability, then basic extraction
             if not content or len(content) < 50:
                 try:
-                    # Try readability first
-                    doc = Document(response.text)
-                    readable_content = doc.summary()
-                    if readable_content:
-                        readable_soup = BeautifulSoup(readable_content, 'html.parser')
-                        content = readable_soup.get_text(strip=True)[:500] + "..."
-                    
-                    # If readability fails, try first paragraph
-                    if not content or len(content) < 50:
-                        paragraphs = soup.find_all(['p', 'article', 'main'])
-                        for p in paragraphs:
-                            text = p.get_text(strip=True)
-                            if len(text) > 50:
-                                content = text[:500] + ("..." if len(text) > 500 else "")
-                                break
-                    
-                    # Final fallback: use title as content
-                    if not content and title:
-                        content = f"Content from {url}: {title}"
+                    # First, try MarkItDown for better HTML processing
+                    markitdown_content = await self._extract_with_markitdown(response.text, url)
+                    if markitdown_content and len(markitdown_content) > 50:
+                        content = markitdown_content
+                    else:
+                        # Fallback to readability
+                        doc = Document(response.text)
+                        readable_content = doc.summary()
+                        if readable_content:
+                            readable_soup = BeautifulSoup(readable_content, 'html.parser')
+                            content = readable_soup.get_text(strip=True)[:500] + "..."
+                        
+                        # If readability fails, try first paragraph
+                        if not content or len(content) < 50:
+                            paragraphs = soup.find_all(['p', 'article', 'main'])
+                            for p in paragraphs:
+                                text = p.get_text(strip=True)
+                                if len(text) > 50:
+                                    content = text[:500] + ("..." if len(text) > 500 else "")
+                                    break
+                        
+                        # Final fallback: use title as content
+                        if not content and title:
+                            content = f"Content from {url}: {title}"
                         
                 except Exception as e:
-                    logger.warning(f"Content extraction fallback failed for {url}: {e}")
+                    logger.warning(f"Enhanced content extraction failed for {url}: {e}")
                     content = f"Content from {url}: {title or 'Web page'}"
             
             # Extract basic metadata  
@@ -226,6 +235,105 @@ class WebScraper:
                     return element.get('datetime')
         
         return None
+    
+    async def _extract_with_markitdown(self, html_content: str, url: str) -> Optional[str]:
+        """Extract content using MarkItDown for better HTML processing"""
+        try:
+            # Create temporary HTML file for MarkItDown processing
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as temp_file:
+                temp_file.write(html_content)
+                temp_file_path = temp_file.name
+            
+            try:
+                # Process with MarkItDown
+                result = self.markitdown.convert(temp_file_path)
+                
+                # Extract text content
+                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
+                
+                # Clean and format the content
+                if text_content:
+                    # Remove excessive whitespace
+                    cleaned_content = ' '.join(text_content.split())
+                    
+                    # Truncate to reasonable length for preview
+                    if len(cleaned_content) > 1000:
+                        cleaned_content = cleaned_content[:1000] + "..."
+                    
+                    logger.info(f"MarkItDown successfully extracted {len(cleaned_content)} characters from {url}")
+                    return cleaned_content
+                
+                return None
+                
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file_path)
+                except OSError:
+                    pass
+                    
+        except Exception as e:
+            logger.warning(f"MarkItDown HTML extraction failed for {url}: {e}")
+            return None
+    
+    async def scrape_with_markitdown(self, url: str) -> ScrapedData:
+        """
+        Enhanced scraping method that uses MarkItDown for full content extraction
+        """
+        try:
+            # Fetch the page
+            response = await self.client.get(url)
+            response.raise_for_status()
+            
+            # Use MarkItDown to extract full content
+            markitdown_content = await self._extract_with_markitdown(response.text, url)
+            
+            # Parse with BeautifulSoup for metadata
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract title
+            title = None
+            og_title = soup.find('meta', property='og:title')
+            if og_title and og_title.get('content'):
+                title = og_title.get('content').strip()
+            else:
+                title_tag = soup.find('title')
+                if title_tag and title_tag.text:
+                    title = title_tag.text.strip()
+            
+            # Use MarkItDown content as primary content
+            content = markitdown_content
+            
+            # Fallback to meta description if MarkItDown fails
+            if not content:
+                meta_desc = soup.find('meta', attrs={'name': 'description'})
+                if meta_desc and meta_desc.get('content'):
+                    content = meta_desc.get('content').strip()
+                else:
+                    og_desc = soup.find('meta', property='og:description')
+                    if og_desc and og_desc.get('content'):
+                        content = og_desc.get('content').strip()
+            
+            # Extract metadata
+            author = self._extract_author(soup)
+            published_date = self._extract_publish_date(soup)
+            images = self._extract_images(soup, url)
+            
+            return ScrapedData(
+                url=url,
+                title=title,
+                content=content,
+                html=response.text,
+                author=author,
+                published_date=published_date,
+                scraped_at=datetime.now(),
+                images=images
+            )
+            
+        except Exception as e:
+            logger.error(f"Error scraping {url} with MarkItDown: {str(e)}", exc_info=True)
+            # Fallback to regular scraping
+            return await self.scrape(url)
     
     async def __aenter__(self):
         return self

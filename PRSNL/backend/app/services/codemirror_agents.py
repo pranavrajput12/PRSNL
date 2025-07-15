@@ -73,7 +73,7 @@ class CodeRepositoryAnalysisAgent:
             response = await self._route_analysis_task(prompt, analysis_depth)
             
             # Parse AI response
-            analysis_results = self._parse_analysis_response(response)
+            analysis_results = self._parse_analysis_response(response, repo_data)
             
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             
@@ -172,7 +172,7 @@ class CodeRepositoryAnalysisAgent:
         
         return prompt
     
-    def _parse_analysis_response(self, response: str) -> Dict[str, Any]:
+    def _parse_analysis_response(self, response: str, repo_data: Dict[str, Any]) -> Dict[str, Any]:
         """Parse AI response into structured analysis results"""
         
         try:
@@ -182,50 +182,11 @@ class CodeRepositoryAnalysisAgent:
         except json.JSONDecodeError:
             pass
         
-        # Enhanced analysis with realistic, varied metrics
-        import random
-        
-        # Generate realistic scores based on common repository patterns
-        security_score = random.randint(35, 95)
-        performance_score = random.randint(40, 90)
-        quality_score = random.randint(45, 85)
-        doc_completeness = random.randint(25, 80)
-        outdated_deps = random.randint(0, 15)
-        
-        # Determine repository characteristics for better insights
-        repo_size = repo_data.get('size', 1000)
-        language = repo_data.get('language', 'unknown').lower()
-        
-        # Language-specific adjustments
-        if language in ['python', 'javascript', 'typescript']:
-            security_score = max(30, security_score - 10)  # Common vulnerability languages
-        elif language in ['rust', 'go']:
-            security_score = min(95, security_score + 15)  # Memory-safe languages
-            
-        if language in ['javascript', 'typescript', 'python']:
-            outdated_deps = random.randint(3, 20)  # Fast-moving ecosystems
-        
+        # Return error state instead of fake data
         return {
+            "error": "Failed to parse AI response",
             "raw_analysis": response,
-            "security_score": security_score,
-            "performance_score": performance_score,
-            "quality_score": quality_score,
-            "documentation_completeness": doc_completeness,
-            "outdated_dependencies": outdated_deps,
-            "has_readme": True,
-            "repository_size": repo_size,
-            "primary_language": language,
-            "architecture_complexity": "medium" if repo_size > 5000 else "simple",
-            "test_coverage": random.randint(20, 90),
-            "dependency_health": "good" if outdated_deps < 5 else "needs_attention",
-            "confidence_score": 0.85,
-            "summary": response[:200] + "..." if len(response) > 200 else response,
-            "recommendations": [
-                f"Improve {language} best practices",
-                "Enhance security measures",
-                "Optimize performance bottlenecks",
-                "Update documentation"
-            ]
+            "status": "parse_error"
         }
 
     async def _route_analysis_task(self, content: str, complexity_level: str = "medium") -> str:
@@ -267,15 +228,22 @@ class CodeRepositoryAnalysisAgent:
             logger.error(f"Enhanced routing failed: {e}")
             return await self._execute_direct_analysis(content)
     
-    async def _execute_direct_analysis(self, content: str) -> str:
+    async def _execute_direct_analysis(self, content: str, task: Optional[AITask] = None) -> str:
         """Execute direct analysis without routing"""
+        # Handle both direct calls and fallback calls from router
+        if isinstance(content, AITask):
+            # Called as fallback from router
+            actual_content = content.content
+        else:
+            # Direct call
+            actual_content = content
         return await unified_ai_service.complete(
-            prompt=content,
+            prompt=actual_content,
             system_prompt="You are a senior software architect and security expert.",
             model=settings.AZURE_OPENAI_DEPLOYMENT
         )
     
-    async def _get_template_prompt(self, template_name: str, variables: Dict[str, Any]) -> str:
+    def _get_template_prompt(self, template_name: str, variables: Dict[str, Any]) -> str:
         """Get prompt from template manager"""
         if not self.use_prompt_templates or not prompt_template_manager.enabled:
             return variables.get("default_prompt", "")
@@ -400,112 +368,8 @@ class CodePatternDetectionAgent:
         except json.JSONDecodeError:
             pass
         
-        # Enhanced pattern generation based on repository analysis
-        import random
-        
-        # Generate diverse patterns based on common code patterns
-        patterns = []
-        
-        # Authentication patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "authentication",
-                "pattern_signature": "jwt_token_validation",
-                "description": "JWT token validation pattern with middleware implementation",
-                "confidence": random.uniform(0.7, 0.95),
-                "occurrence_count": random.randint(1, 5),
-                "code_snippet": "middleware.use(authenticateToken)"
-            })
-        
-        # API patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "api_call",
-                "pattern_signature": "rest_api_error_handling",
-                "description": "Consistent REST API error handling with proper HTTP status codes",
-                "confidence": random.uniform(0.6, 0.9),
-                "occurrence_count": random.randint(2, 8),
-                "code_snippet": "try { ... } catch(error) { res.status(500).json({error}) }"
-            })
-        
-        # Data processing patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "data_processing",
-                "pattern_signature": "async_data_pipeline",
-                "description": "Asynchronous data processing pipeline with proper error handling",
-                "confidence": random.uniform(0.75, 0.95),
-                "occurrence_count": random.randint(1, 4),
-                "code_snippet": "await Promise.all(tasks.map(async task => ...))"
-            })
-        
-        # Configuration patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "configuration",
-                "pattern_signature": "environment_config_management",
-                "description": "Environment-based configuration management with validation",
-                "confidence": random.uniform(0.8, 0.95),
-                "occurrence_count": random.randint(1, 3),
-                "code_snippet": "const config = process.env.NODE_ENV === 'production' ? prodConfig : devConfig"
-            })
-        
-        # Testing patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "testing",
-                "pattern_signature": "unit_test_structure",
-                "description": "Consistent unit test structure with setup and teardown",
-                "confidence": random.uniform(0.7, 0.9),
-                "occurrence_count": random.randint(5, 15),
-                "code_snippet": "describe('Component', () => { beforeEach(() => {}); it('should...', () => {}); })"
-            })
-        
-        # Architecture patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "architecture",
-                "pattern_signature": "dependency_injection",
-                "description": "Dependency injection pattern for loose coupling",
-                "confidence": random.uniform(0.8, 0.95),
-                "occurrence_count": random.randint(2, 6),
-                "code_snippet": "constructor(private service: ServiceInterface)"
-            })
-        
-        # Error handling patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "error_handling",
-                "pattern_signature": "centralized_error_handling",
-                "description": "Centralized error handling with logging and user-friendly messages",
-                "confidence": random.uniform(0.75, 0.9),
-                "occurrence_count": random.randint(3, 10),
-                "code_snippet": "app.use((error, req, res, next) => { logger.error(error); ... })"
-            })
-        
-        # UI patterns
-        if random.choice([True, False]):
-            patterns.append({
-                "pattern_type": "ui_pattern",
-                "pattern_signature": "component_composition",
-                "description": "Reusable component composition with props interface",
-                "confidence": random.uniform(0.7, 0.9),
-                "occurrence_count": random.randint(4, 12),
-                "code_snippet": "<Component {...props} onAction={handleAction} />"
-            })
-        
-        # Ensure at least one pattern is generated
-        if not patterns:
-            patterns.append({
-                "pattern_type": "other",
-                "pattern_signature": "code_organization",
-                "description": "Well-organized code structure with clear separation of concerns",
-                "confidence": 0.7,
-                "occurrence_count": 1,
-                "code_snippet": response[:100] if response else "// Well-structured code"
-            })
-        
-        return patterns
+        # Return empty list when parsing fails
+        return []
 
 
 class CodeInsightGeneratorAgent:

@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, Type
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from app.tools import register_tool

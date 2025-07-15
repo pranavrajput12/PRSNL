@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional, Type
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from app.services.unified_ai_service import unified_ai_service

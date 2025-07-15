@@ -1104,9 +1104,16 @@ class CodeMirrorService:
             # Fallback to direct analysis
             return await self._execute_direct_analysis(content)
     
-    async def _execute_direct_analysis(self, content: str) -> Dict[str, Any]:
+    async def _execute_direct_analysis(self, content: str, task: Optional[AITask] = None) -> Dict[str, Any]:
         """Execute direct analysis without routing"""
-        return await unified_ai_service.analyze_content(content)
+        # Handle both direct calls and fallback calls from router
+        if isinstance(content, AITask):
+            # Called as fallback from router
+            actual_content = content.content
+        else:
+            # Direct call
+            actual_content = content
+        return await unified_ai_service.analyze_content(actual_content)
     
     async def _fallback_analysis(
         self,

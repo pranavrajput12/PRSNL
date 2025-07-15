@@ -1,6 +1,6 @@
 # 🔗 PRSNL Third-Party Integrations - Complete Guide
 
-*Last Updated: 2025-07-13 - Phase 3 AI Second Brain Complete*
+*Last Updated: 2025-07-15 - Phase 4 MarkItDown Integration Complete*
 
 ## Overview
 
@@ -134,6 +134,102 @@ curl -X POST http://localhost:8000/api/openclip/batch/encode-text \
 #### Rate Limits
 - **30 requests per minute** for all OpenCLIP endpoints
 - Automatic throttling for resource-intensive operations
+
+---
+
+## 📄 Document Processing & Content Extraction
+
+### 2. MarkItDown (Microsoft)
+
+#### ✅ Integration Status: **COMPLETE** (NEW - Phase 4)
+- **Purpose**: Unified document processing across all formats
+- **Capabilities**: PDF, DOCX, PPTX, images, HTML, EPub, ZIP, XML, JSON, YouTube URLs
+- **Benefits**: Single API for all document types, better content extraction, reduced dependencies
+
+#### Configuration
+```python
+# Automatic initialization in services
+from markitdown import MarkItDown
+markitdown = MarkItDown()  # No configuration needed
+```
+
+#### Supported Formats
+- **Documents**: PDF, DOCX, PPTX, RTF, ODT
+- **Spreadsheets**: XLSX, XLS, CSV  
+- **E-books**: EPub
+- **Archives**: ZIP files
+- **Structured Data**: XML, JSON
+- **Web Content**: HTML, YouTube URLs
+- **Images**: JPG, PNG, GIF, BMP, TIFF (with OCR)
+
+#### Integration Points
+```python
+# Document Processor (Primary)
+from app.services.document_processor import DocumentProcessor
+processor = DocumentProcessor()
+result = await processor.extract_text("document.pdf")
+
+# Web Scraper Enhancement
+from app.services.scraper import WebScraper
+scraper = WebScraper()
+data = await scraper.scrape_with_markitdown("https://example.com")
+
+# YouTube Transcript Extraction
+from app.services.video_streaming import VideoStreamingService
+video_service = VideoStreamingService()
+transcript = await video_service.get_video_transcript(video_id, "youtube", url)
+```
+
+#### API Endpoints
+```bash
+# File processing with MarkItDown (via document processor)
+POST /api/capture/files/upload
+POST /api/capture/files/batch-upload
+
+# Enhanced web scraping
+POST /api/capture/url  # Uses MarkItDown for content extraction
+
+# Video transcript extraction
+POST /api/video/analyze  # Includes MarkItDown YouTube support
+```
+
+#### Usage Examples
+```bash
+# Upload document for processing
+curl -X POST http://localhost:8000/api/capture/files/upload \
+  -F "file=@document.pdf" \
+  -F "content_type=document"
+
+# Enhanced web content extraction
+curl -X POST http://localhost:8000/api/capture/url \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/article", 
+    "content_type": "article"
+  }'
+
+# YouTube transcript extraction  
+curl -X POST http://localhost:8000/api/video/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://youtube.com/watch?v=VIDEO_ID"
+  }'
+```
+
+#### Migration Benefits Achieved
+- **Unified API**: Single `convert()` method for all formats
+- **Better Extraction**: Improved content quality from complex documents  
+- **Reduced Dependencies**: Replaced PyPDF2, multiple format-specific libraries
+- **Enhanced Formats**: Added EPub, ZIP, XML, JSON support
+- **Intelligent Fallbacks**: OCR fallback for failed extractions
+- **YouTube Integration**: Direct URL processing for transcripts
+- **Web Enhancement**: Better HTML content extraction
+
+#### Performance Characteristics
+- **Speed**: Comparable to specialized libraries
+- **Memory**: Efficient temporary file handling
+- **Reliability**: Microsoft-maintained with active development
+- **Format Support**: Continuously expanding format support
 
 ---
 
@@ -515,7 +611,11 @@ curl -X POST http://localhost:8000/api/firecrawl/scrape \
 
 ## 📋 Integration Roadmap
 
-### ✅ Phase 3 Complete (Current)
+### ✅ Phase 4 Complete (Current)
+- **NEW**: MarkItDown unified document processing integration
+- **NEW**: Enhanced web scraping with HTML processing
+- **NEW**: YouTube transcript extraction with MarkItDown
+- **NEW**: Support for EPub, ZIP, XML, JSON formats
 - Azure OpenAI dual-model optimization
 - AI-powered content analysis
 - LibreChat integration bridge

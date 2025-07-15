@@ -12,6 +12,8 @@ import asyncio
 import json
 import logging
 import re
+import tempfile
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -20,6 +22,7 @@ import httpx
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from youtube_transcript_api import YouTubeTranscriptApi
+from markitdown import MarkItDown
 
 from app.config import settings
 from app.db.database import get_db
@@ -36,6 +39,7 @@ class VideoStreamingService:
         self.llm_processor = LLMProcessor()
         self.embedding_service = EmbeddingService()
         self.client = httpx.AsyncClient(timeout=30.0)
+        self.markitdown = MarkItDown()  # Initialize MarkItDown processor
         
         # Platform patterns
         self.PLATFORM_PATTERNS = {
@@ -137,14 +141,16 @@ class VideoStreamingService:
     async def get_video_transcript(
         self,
         video_id: str,
-        platform: str
+        platform: str,
+        url: Optional[str] = None
     ) -> Optional[str]:
         """
-        Get video transcript if available
+        Get video transcript if available using MarkItDown and YouTube API fallback
         
         Args:
             video_id: Video ID
             platform: Video platform
+            url: Original video URL (for MarkItDown)
             
         Returns:
             Transcript text or None
@@ -153,7 +159,17 @@ class VideoStreamingService:
             # Currently only YouTube provides easy transcript access
             return None
         
+        # First try MarkItDown for YouTube URL processing
+        if url:
+            markitdown_transcript = await self._extract_transcript_with_markitdown(url)
+            if markitdown_transcript:
+                logger.info(f"Successfully extracted transcript using MarkItDown for {video_id}")
+                return markitdown_transcript
+        
+        # Fallback to YouTube Transcript API
         try:
+            logger.info(f"Trying YouTube Transcript API fallback for {video_id}")
+            
             # Get available transcripts
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
             
@@ -184,11 +200,75 @@ class VideoStreamingService:
                     text = entry['text'].strip()
                     full_text += f"[{timestamp}] {text}\n"
                 
+                logger.info(f"Successfully extracted transcript using YouTube API for {video_id}")
                 return full_text
                 
         except Exception as e:
             logger.warning(f"Could not fetch transcript for {video_id}: {e}")
             return None
+    
+    async def _extract_transcript_with_markitdown(self, url: str) -> Optional[str]:
+        """
+        Extract transcript using MarkItDown for YouTube videos
+        
+        Args:
+            url: YouTube video URL
+            
+        Returns:
+            Transcript text or None
+        """
+        try:
+            logger.info(f"Attempting MarkItDown transcript extraction for: {url}")
+            
+            # MarkItDown can process YouTube URLs directly
+            result = self.markitdown.convert(url)
+            
+            # Extract text content
+            text_content = result.text_content if hasattr(result, 'text_content') else str(result)
+            
+            if text_content and len(text_content.strip()) > 50:
+                # Clean and format the transcript
+                cleaned_transcript = self._clean_video_transcript(text_content)
+                return cleaned_transcript
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"MarkItDown transcript extraction failed for {url}: {e}")
+            return None
+    
+    def _clean_video_transcript(self, transcript: str) -> str:
+        """
+        Clean and format video transcript text
+        
+        Args:
+            transcript: Raw transcript text
+            
+        Returns:
+            Cleaned transcript
+        """
+        if not transcript:
+            return ""
+        
+        # Remove excessive whitespace
+        cleaned = ' '.join(transcript.split())
+        
+        # Add line breaks for better readability (every ~100 characters at sentence boundaries)
+        sentences = cleaned.split('. ')
+        formatted_lines = []
+        current_line = ''
+        
+        for sentence in sentences:
+            if len(current_line + sentence) > 100 and current_line:
+                formatted_lines.append(current_line.strip() + '.')
+                current_line = sentence
+            else:
+                current_line += ('. ' if current_line else '') + sentence
+        
+        if current_line:
+            formatted_lines.append(current_line + ('.' if not current_line.endswith('.') else ''))
+        
+        return '\n'.join(formatted_lines)
     
     async def analyze_video_content(
         self,
@@ -303,8 +383,8 @@ class VideoStreamingService:
             # Get video metadata
             metadata = await self.get_video_metadata(item.url, video_id, platform)
             
-            # Get transcript if available
-            transcript = await self.get_video_transcript(video_id, platform)
+            # Get transcript if available (pass URL for MarkItDown)
+            transcript = await self.get_video_transcript(video_id, platform, item.url)
             
             # Analyze video content
             analysis = await self.analyze_video_content(metadata, transcript, db)

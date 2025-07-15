@@ -90,7 +90,7 @@ pgvector-haystack>=0.4.0  # PGVector integration for Haystack
 # ragas>=0.1.7  # RAG evaluation and monitoring - conflicts with langchain versions
 
 # Document Processing
-PyPDF2==3.0.1
+markitdown==0.1.2
 python-docx==0.8.11
 openpyxl==3.1.2
 odfpy==1.4.1

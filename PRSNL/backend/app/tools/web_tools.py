@@ -5,7 +5,7 @@ Web-related Crew.ai tools that wrap existing PRSNL services
 import asyncio
 import logging
 from typing import Any, Dict, Optional, Type, Union
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from app.services.crawl_ai_service import CrawlAIService

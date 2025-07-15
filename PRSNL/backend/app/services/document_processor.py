@@ -19,8 +19,6 @@ import docx
 from markitdown import MarkItDown
 import pytesseract
 from PIL import Image
-import tempfile
-import os
 
 # For file type detection
 try:
@@ -39,16 +37,153 @@ class DocumentProcessor:
         self.storage_root = Path(storage_root)
         self.markitdown = MarkItDown()  # Initialize MarkItDown processor
         self.supported_types = {
-            'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv'],
+            'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv', '.epub', '.zip'],
             'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff'],
-            'text': ['.txt', '.md', '.rtf'],
-            'office': ['.doc', '.docx', '.odt'],
+            'text': ['.txt', '.md', '.rtf', '.xml', '.json'],
+            'office': ['.doc', '.docx', '.odt', '.pptx', '.xlsx', '.xls'],
             'pdf': ['.pdf'],
-            'spreadsheet': ['.csv', '.xls', '.xlsx']
+            'spreadsheet': ['.csv', '.xls', '.xlsx'],
+            'ebook': ['.epub'],
+            'archive': ['.zip']
         }
         
         # Create storage directories
         self._ensure_storage_directories()
+    
+    async def extract_text(self, file_path: str) -> Dict[str, Any]:
+        """Extract text from any supported file format using MarkItDown"""
+        try:
+            logger.info(f"Starting text extraction for: {file_path}")
+            
+            # Read file content
+            with open(file_path, 'rb') as f:
+                file_content = f.read()
+            
+            # Get file info
+            filename = Path(file_path).name
+            file_info = self._detect_file_type(file_content, filename)
+            
+            # Extract content using unified method
+            result = await self._extract_content(file_content, file_info, filename)
+            
+            return {
+                "success": True,
+                "text": result.get("text", ""),
+                "metadata": result.get("metadata", {}),
+                "extraction_method": result.get("extraction_method", "unknown"),
+                "pages": result.get("pages", 0),
+                "word_count": result.get("word_count", 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Text extraction failed for {file_path}: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "text": "",
+                "metadata": {}
+            }
+    
+    async def extract_pdf_text(self, file_path: str, use_ocr_fallback: bool = True, 
+                              extract_images: bool = False) -> Dict[str, Any]:
+        """Extract text specifically from PDF files using MarkItDown with OCR fallback"""
+        try:
+            logger.info(f"Starting PDF text extraction for: {file_path}")
+            
+            with open(file_path, 'rb') as f:
+                file_content = f.read()
+            
+            filename = Path(file_path).name
+            
+            # First try MarkItDown
+            result = await self._extract_with_markitdown(file_content, '.pdf', filename)
+            
+            if result and not result.get('error'):
+                return {
+                    "success": True,
+                    "text": result.get("text", ""),
+                    "pages": result.get("pages", 0),
+                    "metadata": result.get("metadata", {}),
+                    "extraction_method": result.get("extraction_method", "markitdown"),
+                    "used_ocr": False
+                }
+            
+            # If MarkItDown fails and OCR is enabled, try OCR fallback
+            if use_ocr_fallback:
+                logger.info(f"MarkItDown failed for {filename}, attempting OCR fallback")
+                ocr_result = await self._extract_image_content_fallback(file_content)
+                
+                if ocr_result and not ocr_result.get('error'):
+                    return {
+                        "success": True,
+                        "text": ocr_result.get("text", ""),
+                        "pages": ocr_result.get("pages", 1),
+                        "metadata": ocr_result.get("metadata", {}),
+                        "extraction_method": "tesseract_ocr",
+                        "used_ocr": True
+                    }
+            
+            return {
+                "success": False,
+                "error": "PDF extraction failed with all methods",
+                "text": "",
+                "metadata": {}
+            }
+            
+        except Exception as e:
+            logger.error(f"PDF extraction failed for {file_path}: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "text": "",
+                "metadata": {}
+            }
+    
+    async def clean_extracted_text(self, text: str, remove_headers_footers: bool = True) -> str:
+        """Clean extracted text by removing headers, footers, and normalizing whitespace"""
+        if not text:
+            return ""
+        
+        logger.info(f"Cleaning extracted text ({len(text)} characters)")
+        
+        cleaned = text
+        
+        if remove_headers_footers:
+            # Remove common header/footer patterns
+            lines = cleaned.split('\n')
+            cleaned_lines = []
+            
+            for line in lines:
+                line_stripped = line.strip()
+                
+                # Skip lines that look like headers/footers
+                if not (
+                    line_stripped.isdigit() or  # Page numbers
+                    ('Page' in line_stripped and any(char.isdigit() for char in line_stripped)) or
+                    len(line_stripped) < 3 or  # Very short lines
+                    line_stripped.startswith('___') or  # Underline separators
+                    line_stripped.startswith('---') or  # Dash separators
+                    line_stripped.count('|') > 3  # Table separators
+                ):
+                    cleaned_lines.append(line)
+            
+            cleaned = '\n'.join(cleaned_lines)
+        
+        # Normalize whitespace while preserving paragraph breaks
+        paragraphs = cleaned.split('\n\n')
+        normalized_paragraphs = []
+        
+        for paragraph in paragraphs:
+            # Normalize whitespace within paragraphs
+            normalized = ' '.join(paragraph.split())
+            if normalized:  # Only add non-empty paragraphs
+                normalized_paragraphs.append(normalized)
+        
+        cleaned = '\n\n'.join(normalized_paragraphs)
+        
+        logger.info(f"Text cleaning completed ({len(cleaned)} characters after cleaning)")
+        
+        return cleaned
     
     def _ensure_storage_directories(self):
         """Create storage directory structure"""
@@ -96,8 +231,10 @@ class DocumentProcessor:
     def _categorize_file_type(self, extension: str, mime_type: str) -> str:
         """Categorize file based on extension and MIME type"""
         # All document-like files should be categorized as 'document'
-        if extension in ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv']:
+        if extension in ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv', '.epub', '.zip', '.xml', '.json']:
             return 'document'
+        elif extension in ['.pptx', '.xlsx', '.xls']:
+            return 'office'
         elif extension in self.supported_types['image']:
             return 'image'
         elif extension in self.supported_types['document']:
@@ -171,31 +308,34 @@ class DocumentProcessor:
         logger.info(f"Saved file to: {file_path}")
     
     async def _extract_content(self, file_content: bytes, file_info: Dict, filename: str) -> Dict[str, Any]:
-        """Extract content from file based on type"""
-        category = file_info['category']
+        """Extract content from file using MarkItDown as primary processor with intelligent fallbacks"""
         extension = file_info['extension']
         
+        # First, try MarkItDown for all supported formats
+        markitdown_result = await self._extract_with_markitdown(file_content, extension, filename)
+        if markitdown_result and not markitdown_result.get('error'):
+            return markitdown_result
+        
+        # If MarkItDown fails, use intelligent fallbacks
+        logger.warning(f"MarkItDown failed for {filename}, using fallback extraction")
+        
         try:
-            # Handle 'document' category by checking specific extensions
+            category = file_info['category']
+            
+            # Fallback extraction methods
             if category == 'document':
-                if extension == '.pdf':
-                    return await self._extract_pdf_content(file_content)
-                elif extension in ['.doc', '.docx', '.odt']:
-                    return await self._extract_office_content(file_content, extension)
-                elif extension == '.csv':
+                if extension == '.csv':
                     return await self._extract_csv_content(file_content)
-                elif extension in ['.txt', '.rtf']:
+                elif extension in ['.txt', '.rtf', '.xml', '.json']:
                     return await self._extract_text_content(file_content)
+                elif extension in ['.doc', '.docx', '.odt']:
+                    return await self._extract_office_content_fallback(file_content, extension)
                 else:
                     return await self._extract_text_content(file_content)
-            elif category == 'pdf':
-                return await self._extract_pdf_content(file_content)
             elif category == 'office':
-                return await self._extract_office_content(file_content, file_info['extension'])
-            elif category == 'text':
-                return await self._extract_text_content(file_content)
+                return await self._extract_office_content_fallback(file_content, extension)
             elif category == 'image':
-                return await self._extract_image_content(file_content)
+                return await self._extract_image_content_fallback(file_content)
             else:
                 logger.warning(f"Unsupported file type: {category}")
                 return {
@@ -214,56 +354,8 @@ class DocumentProcessor:
                 'error': str(e)
             }
     
-    async def _extract_pdf_content(self, file_content: bytes) -> Dict[str, Any]:
-        """Extract text from PDF file using MarkItDown"""
-        try:
-            # Create temporary file for MarkItDown processing
-            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
-                temp_file.write(file_content)
-                temp_file_path = temp_file.name
-            
-            try:
-                # Process with MarkItDown
-                result = self.markitdown.convert(temp_file_path)
-                
-                # Extract text content
-                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
-                
-                # Estimate page count from content length (rough approximation)
-                estimated_pages = max(1, len(text_content) // 2000)  # ~2000 chars per page
-                
-                return {
-                    'text': text_content,
-                    'pages': estimated_pages,
-                    'word_count': len(text_content.split()) if text_content else 0,
-                    'extraction_method': 'markitdown',
-                    'metadata': {
-                        'source_type': 'pdf',
-                        'content_type': getattr(result, 'content_type', 'application/pdf'),
-                        'title': getattr(result, 'title', ''),
-                        'preserves_formatting': True
-                    }
-                }
-            finally:
-                # Clean up temporary file
-                try:
-                    os.unlink(temp_file_path)
-                except OSError:
-                    pass
-                    
-        except Exception as e:
-            logger.error(f"MarkItDown PDF extraction failed: {e}")
-            # Fallback to basic text extraction if MarkItDown fails
-            return {
-                'text': f"Failed to extract PDF content: {str(e)}",
-                'pages': 0,
-                'word_count': 0,
-                'extraction_method': 'markitdown_failed',
-                'error': str(e)
-            }
-    
-    async def _extract_office_content(self, file_content: bytes, extension: str) -> Dict[str, Any]:
-        """Extract text from Office documents using MarkItDown"""
+    async def _extract_with_markitdown(self, file_content: bytes, extension: str, filename: str) -> Dict[str, Any]:
+        """Extract content using MarkItDown for all supported formats"""
         try:
             # Create temporary file for MarkItDown processing
             with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temp_file:
@@ -277,18 +369,35 @@ class DocumentProcessor:
                 # Extract text content
                 text_content = result.text_content if hasattr(result, 'text_content') else str(result)
                 
+                # Determine pages count based on file type
+                pages = self._estimate_pages(text_content, extension)
+                
+                # Create comprehensive metadata
+                metadata = {
+                    'source_type': self._get_source_type(extension),
+                    'content_type': getattr(result, 'content_type', 'unknown'),
+                    'title': getattr(result, 'title', ''),
+                    'preserves_formatting': True,
+                    'unified_processor': True,
+                    'markitdown_version': 'latest'
+                }
+                
+                # Add format-specific metadata
+                if extension in ['.epub']:
+                    metadata['format'] = 'ebook'
+                elif extension in ['.zip']:
+                    metadata['format'] = 'archive'
+                elif extension in ['.pptx']:
+                    metadata['format'] = 'presentation'
+                elif extension in ['.xlsx', '.xls']:
+                    metadata['format'] = 'spreadsheet'
+                
                 return {
                     'text': text_content,
-                    'pages': 1,  # Office documents are typically single "page" from text perspective
+                    'pages': pages,
                     'word_count': len(text_content.split()) if text_content else 0,
-                    'extraction_method': 'markitdown',
-                    'metadata': {
-                        'source_type': 'office',
-                        'format': extension,
-                        'content_type': getattr(result, 'content_type', 'application/octet-stream'),
-                        'title': getattr(result, 'title', ''),
-                        'preserves_formatting': True
-                    }
+                    'extraction_method': 'markitdown_unified',
+                    'metadata': metadata
                 }
             finally:
                 # Clean up temporary file
@@ -298,42 +407,102 @@ class DocumentProcessor:
                     pass
                     
         except Exception as e:
-            logger.error(f"MarkItDown office extraction failed: {e}")
-            # Fallback for .docx files
+            logger.error(f"MarkItDown extraction failed for {filename}: {e}")
+            return {
+                'error': f"MarkItDown extraction failed: {str(e)}",
+                'extraction_method': 'markitdown_failed'
+            }
+    
+    def _estimate_pages(self, text_content: str, extension: str) -> int:
+        """Estimate page count based on content and file type"""
+        if not text_content:
+            return 0
+        
+        # Different estimation strategies based on file type
+        if extension == '.pdf':
+            return max(1, len(text_content) // 2000)  # ~2000 chars per page
+        elif extension in ['.pptx']:
+            # PowerPoint slides - estimate based on content sections
+            return max(1, text_content.count('\n\n') + 1)
+        elif extension in ['.xlsx', '.xls']:
+            # Spreadsheet sheets - estimate based on table structures
+            return max(1, text_content.count('---') + 1)
+        elif extension in ['.epub']:
+            # E-book chapters
+            return max(1, len(text_content) // 3000)  # ~3000 chars per e-book page
+        elif extension in ['.zip']:
+            # Archive files - count of contained files
+            return max(1, text_content.count('File:'))
+        else:
+            return 1  # Single page for most other formats
+    
+    def _get_source_type(self, extension: str) -> str:
+        """Get source type description for metadata"""
+        type_map = {
+            '.pdf': 'pdf_document',
+            '.docx': 'word_document', 
+            '.doc': 'word_document',
+            '.pptx': 'powerpoint_presentation',
+            '.xlsx': 'excel_spreadsheet',
+            '.xls': 'excel_spreadsheet',
+            '.epub': 'ebook',
+            '.zip': 'archive',
+            '.xml': 'structured_data',
+            '.json': 'structured_data',
+            '.txt': 'plain_text',
+            '.rtf': 'rich_text',
+            '.csv': 'tabular_data'
+        }
+        return type_map.get(extension, 'unknown')
+
+    
+    async def _extract_office_content_fallback(self, file_content: bytes, extension: str) -> Dict[str, Any]:
+        """Fallback extraction for Office documents using python-docx"""
+        try:
+            # Only handle .docx files with python-docx fallback
             if extension == '.docx':
-                try:
-                    doc = docx.Document(io.BytesIO(file_content))
-                    text_content = []
-                    
-                    for paragraph in doc.paragraphs:
-                        if paragraph.text.strip():
-                            text_content.append(paragraph.text)
-                    
-                    full_text = '\n'.join(text_content)
-                    
-                    return {
-                        'text': full_text,
-                        'pages': len(doc.paragraphs),
-                        'word_count': len(full_text.split()) if full_text else 0,
-                        'extraction_method': 'python-docx_fallback',
-                        'metadata': {
-                            'paragraphs': len(doc.paragraphs),
-                            'tables': len(doc.tables)
-                        }
+                doc = docx.Document(io.BytesIO(file_content))
+                text_content = []
+                
+                for paragraph in doc.paragraphs:
+                    if paragraph.text.strip():
+                        text_content.append(paragraph.text)
+                
+                full_text = '\n'.join(text_content)
+                
+                return {
+                    'text': full_text,
+                    'pages': len(doc.paragraphs),
+                    'word_count': len(full_text.split()) if full_text else 0,
+                    'extraction_method': 'python-docx_fallback',
+                    'metadata': {
+                        'paragraphs': len(doc.paragraphs),
+                        'tables': len(doc.tables),
+                        'fallback_reason': 'markitdown_failed'
                     }
-                except Exception as docx_error:
-                    logger.error(f"Both MarkItDown and docx extraction failed: {docx_error}")
-            
+                }
+            else:
+                # For other office formats, return error since we don't have fallbacks
+                return {
+                    'text': f"No fallback available for {extension} files",
+                    'pages': 1,
+                    'word_count': 0,
+                    'extraction_method': 'no_fallback',
+                    'error': f"Unsupported format for fallback: {extension}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Office document fallback extraction failed: {e}")
             return {
                 'text': f"Failed to extract office content: {str(e)}",
                 'pages': 1,
                 'word_count': 0,
-                'extraction_method': 'markitdown_failed',
+                'extraction_method': 'fallback_failed',
                 'error': str(e)
             }
     
     async def _extract_text_content(self, file_content: bytes) -> Dict[str, Any]:
-        """Extract content from plain text files"""
+        """Extract content from plain text files with enhanced structured data handling"""
         try:
             # Try UTF-8 first
             text = file_content.decode('utf-8')
@@ -344,16 +513,61 @@ class DocumentProcessor:
             except UnicodeDecodeError:
                 text = file_content.decode('utf-8', errors='replace')
         
+        # Enhanced processing for structured data
+        extraction_method = 'text_decode'
+        metadata = {
+            'encoding': 'utf-8',
+            'characters': len(text)
+        }
+        
+        # Check if it's JSON or XML and format it nicely
+        try:
+            import json
+            if text.strip().startswith('{') or text.strip().startswith('['):
+                # Try to parse and pretty-print JSON
+                parsed_json = json.loads(text)
+                text = json.dumps(parsed_json, indent=2)
+                extraction_method = 'json_formatted'
+                metadata['data_type'] = 'json'
+                metadata['json_valid'] = True
+        except (json.JSONDecodeError, ValueError):
+            pass
+        
+        try:
+            import xml.etree.ElementTree as ET
+            if text.strip().startswith('<'):
+                # Try to parse and format XML
+                root = ET.fromstring(text)
+                # Convert to a more readable format
+                text = f"XML Document: {root.tag}\n" + self._xml_to_text(root)
+                extraction_method = 'xml_formatted'
+                metadata['data_type'] = 'xml'
+                metadata['xml_valid'] = True
+        except ET.ParseError:
+            pass
+        
         return {
             'text': text,
             'pages': 1,
             'word_count': len(text.split()) if text else 0,
-            'extraction_method': 'text_decode',
-            'metadata': {
-                'encoding': 'utf-8',
-                'characters': len(text)
-            }
+            'extraction_method': extraction_method,
+            'metadata': metadata
         }
+    
+    def _xml_to_text(self, element, level=0) -> str:
+        """Convert XML element to readable text format"""
+        result = []
+        indent = "  " * level
+        
+        if element.text and element.text.strip():
+            result.append(f"{indent}{element.tag}: {element.text.strip()}")
+        else:
+            result.append(f"{indent}{element.tag}:")
+        
+        for child in element:
+            result.append(self._xml_to_text(child, level + 1))
+        
+        return "\n".join(result)
     
     async def _extract_csv_content(self, file_content: bytes) -> Dict[str, Any]:
         """Extract content from CSV files"""
@@ -395,84 +609,40 @@ class DocumentProcessor:
             # Fallback to plain text extraction
             return await self._extract_text_content(file_content)
     
-    async def _extract_image_content(self, file_content: bytes) -> Dict[str, Any]:
-        """Extract text from images using MarkItDown with Tesseract fallback"""
-        # Try MarkItDown first for better image handling
+    async def _extract_image_content_fallback(self, file_content: bytes) -> Dict[str, Any]:
+        """Fallback extraction for images using Tesseract OCR"""
         try:
-            # Detect image format
-            image_format = self._detect_image_format(file_content)
+            # Open image
+            image = Image.open(io.BytesIO(file_content))
             
-            # Create temporary file for MarkItDown processing
-            with tempfile.NamedTemporaryFile(suffix=image_format, delete=False) as temp_file:
-                temp_file.write(file_content)
-                temp_file_path = temp_file.name
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
             
-            try:
-                # Process with MarkItDown
-                result = self.markitdown.convert(temp_file_path)
-                
-                # Extract text content
-                text_content = result.text_content if hasattr(result, 'text_content') else str(result)
-                
-                # Get image metadata
-                image = Image.open(io.BytesIO(file_content))
-                
-                return {
-                    'text': text_content,
-                    'pages': 1,
-                    'word_count': len(text_content.split()) if text_content else 0,
-                    'extraction_method': 'markitdown_ocr',
-                    'metadata': {
-                        'image_size': image.size,
-                        'image_mode': image.mode,
-                        'has_text': bool(text_content.strip()),
-                        'source_type': 'image',
-                        'format': image_format
-                    }
-                }
-            finally:
-                # Clean up temporary file
-                try:
-                    os.unlink(temp_file_path)
-                except OSError:
-                    pass
-                    
-        except Exception as markitdown_error:
-            logger.warning(f"MarkItDown image extraction failed, falling back to Tesseract: {markitdown_error}")
+            # Perform OCR
+            extracted_text = pytesseract.image_to_string(image)
             
-            # Fallback to Tesseract OCR
-            try:
-                # Open image
-                image = Image.open(io.BytesIO(file_content))
-                
-                # Convert to RGB if necessary
-                if image.mode != 'RGB':
-                    image = image.convert('RGB')
-                
-                # Perform OCR
-                extracted_text = pytesseract.image_to_string(image)
-                
-                return {
-                    'text': extracted_text,
-                    'pages': 1,
-                    'word_count': len(extracted_text.split()) if extracted_text else 0,
-                    'extraction_method': 'tesseract_ocr_fallback',
-                    'metadata': {
-                        'image_size': image.size,
-                        'image_mode': image.mode,
-                        'has_text': bool(extracted_text.strip()),
-                        'markitdown_error': str(markitdown_error)
-                    }
+            return {
+                'text': extracted_text,
+                'pages': 1,
+                'word_count': len(extracted_text.split()) if extracted_text else 0,
+                'extraction_method': 'tesseract_ocr_fallback',
+                'metadata': {
+                    'image_size': image.size,
+                    'image_mode': image.mode,
+                    'has_text': bool(extracted_text.strip()),
+                    'fallback_reason': 'markitdown_failed'
                 }
-            except Exception as e:
-                logger.error(f"Both MarkItDown and Tesseract OCR failed: {e}")
-                return {
-                    'text': "Image content (OCR not available)",
-                    'pages': 1,
-                    'word_count': 0,
-                    'extraction_method': 'ocr_failed',
-                    'error': str(e)
-                }
+            }
+        except Exception as e:
+            logger.error(f"Tesseract OCR fallback failed: {e}")
+            return {
+                'text': "Image content (OCR not available)",
+                'pages': 1,
+                'word_count': 0,
+                'extraction_method': 'ocr_failed',
+                'error': str(e)
+            }
     
     def _detect_image_format(self, file_content: bytes) -> str:
         """Detect image format from file content"""
