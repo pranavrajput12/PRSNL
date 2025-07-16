@@ -26,11 +26,14 @@ except ImportError:
     logging.warning("⚠️ uvloop not available - install with: pip install uvloop")
 
 # Import Sentry
-# from app.core.sentry import init_sentry
+from app.core.sentry import init_sentry
 
 # Import observability (disabled - missing dependencies)
 # TODO: Fix observability dependencies in Docker build
 # from app.core.observability import instrument_fastapi_app
+
+# Import performance monitoring
+from app.services.performance_monitoring import PerformanceMonitor
 
 # Configure comprehensive logging with secure temp file
 # Create secure temporary directory for logs
@@ -55,7 +58,7 @@ logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Initialize Sentry before other imports
-# init_sentry()  # Temporarily disabled
+init_sentry()
 
 from prometheus_client import generate_latest
 from starlette_exporter import handle_metrics, PrometheusMiddleware
@@ -94,6 +97,9 @@ app.add_middleware(ExceptionHandlerMiddleware)
 # app.add_middleware(AuthMiddleware)  # Temporarily disabled for debugging
 app.add_middleware(APIResponseTimeMiddleware)
 app.add_middleware(RequestIDMiddleware)
+
+# Add Sentry 2.33.0 Performance Monitoring middleware
+app.add_middleware(PerformanceMonitor.create_performance_middleware())
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -237,6 +243,8 @@ from app.api import background_processing  # Phase 1 Celery background processin
 from app.api import knowledge_graph_api  # Phase 2 Knowledge Graph API
 from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API
 from app.api import github  # GitHub OAuth and repository sync
+from app.api import websocket_enhanced  # Enhanced WebSocket with FastAPI 0.116.1 improvements
+from app.api import enhanced_processing  # Enhanced processing with new package features
 # from app.api import crew_api  # Crew.ai autonomous agent system - temporarily disabled
 from app.api import (
     admin,
@@ -339,6 +347,8 @@ app.include_router(github.router)  # GitHub OAuth and repository sync
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
 app.include_router(ws.router)
+app.include_router(websocket_enhanced.router)  # Enhanced WebSocket with FastAPI 0.116.1 improvements
+app.include_router(enhanced_processing.router)  # Enhanced processing with updated package features
 
 # V2 API endpoints with improved standards
 app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])
