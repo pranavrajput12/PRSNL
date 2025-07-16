@@ -214,7 +214,8 @@ class DocumentProcessingFlow(Flow):
         
         return state
     
-    @listen(analyze_text, analyze_images)
+    @listen(analyze_text)
+    @listen(analyze_images)
     async def quality_check(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Perform quality check on extracted data"""
         try:

@@ -101,6 +101,14 @@ class Settings(BaseSettings):
     # Version tracking
     VERSION: str = os.getenv("VERSION", "2.3.0")
     
+    # Authentication
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production-to-a-secure-random-value")
+    
+    # Email Configuration (Resend)
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    EMAIL_FROM_ADDRESS: str = os.getenv("EMAIL_FROM_ADDRESS", "noreply@prsnl.ai")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "PRSNL")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

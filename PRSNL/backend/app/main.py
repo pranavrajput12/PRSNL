@@ -94,7 +94,7 @@ app.add_exception_handler(Exception, generic_error_handler)
 
 # Add custom middleware
 app.add_middleware(ExceptionHandlerMiddleware)
-# app.add_middleware(AuthMiddleware)  # Temporarily disabled for debugging
+app.add_middleware(AuthMiddleware)  # JWT authentication middleware
 app.add_middleware(APIResponseTimeMiddleware)
 app.add_middleware(RequestIDMiddleware)
 
@@ -231,6 +231,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 
 from fastapi.staticfiles import StaticFiles
 
+from app.api import auth  # Authentication API endpoints
 from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
 from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
@@ -286,6 +287,7 @@ logger.warning(f"🔍 ABOUT TO INCLUDE CAPTURE ROUTER: {capture.router}")
 logger.warning(f"🔍 CAPTURE ROUTER ROUTES: {[r.path for r in capture.router.routes]}")
 logger.warning(f"🔍 API_V1_STR: {settings.API_V1_STR}")
 
+app.include_router(auth.router)  # Authentication endpoints at /api/auth
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 logger.warning("🔍 CAPTURE ROUTER INCLUDED")
 app.include_router(search.router, prefix=settings.API_V1_STR)

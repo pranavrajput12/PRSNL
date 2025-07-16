@@ -63,8 +63,12 @@ class GitHubService:
         # if not user_id:
         #     raise ValueError("Invalid or expired OAuth state")
         
-        # Extract user_id from state for now
-        user_id = state.split(":")[0] if ":" in state else "temp-user-for-oauth"
+        # Extract user_id from state
+        # State format: "user_id:random_string"
+        user_id = state.split(":")[0] if ":" in state else None
+        
+        if not user_id:
+            raise ValueError("Invalid state parameter - missing user ID")
         
         # Exchange code for token
         async with self.http_client_factory.client_session(ClientType.GITHUB) as client:

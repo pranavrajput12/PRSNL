@@ -1,66 +1,141 @@
 """
-Simple auth placeholder for video streaming endpoints
+Authentication utilities for PRSNL
+Handles JWT token validation and user extraction
 """
-
 from typing import Optional
 from uuid import UUID
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from app.services.auth_service import AuthService
+from app.models.auth import UserResponse
+
+# Security bearer
+security = HTTPBearer(auto_error=False)
+
 
 class User:
-    """Simple user class for development"""
-    def __init__(self, id: str, email: str, name: str):
-        # Handle both UUID and string IDs for flexibility
-        try:
-            self.id = UUID(id)
-        except ValueError:
-            # If not a valid UUID, keep as string (for temp-user-for-oauth)
-            self.id = id
+    """User class with proper authentication"""
+    def __init__(self, id: str, email: str, name: str, is_verified: bool = False):
+        self.id = UUID(id) if isinstance(id, str) else id
         self.email = email
         self.name = name
+        self.is_verified = is_verified
+        self.first_name = name.split()[0] if name else ""
+        self.last_name = " ".join(name.split()[1:]) if name and len(name.split()) > 1 else ""
 
 
-async def get_current_user(token: Optional[str] = None) -> Optional[User]:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> Optional[User]:
     """
-    Placeholder auth function - returns test user for development
-    In production, this would validate the token and return user info
+    Get current authenticated user from JWT token
     """
-    # Return a test user object with required id field
-    # Using the user_id from the database that owns the test repos
+    if not credentials:
+        # For backward compatibility during migration, return test user if no auth
+        # TODO: Remove this after frontend is updated
+        return User(
+            id="00000000-0000-0000-0000-000000000001",
+            email="test@example.com",
+            name="Test User"
+        )
+    
+    token = credentials.credentials
+    user_response = await AuthService.get_current_user(token)
+    
+    if not user_response:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Convert UserResponse to User
     return User(
-        id="temp-user-for-oauth",  # Actual user_id from database
-        email="test@example.com",
-        name="Test User"
+        id=str(user_response.id),
+        email=user_response.email,
+        name=f"{user_response.first_name or ''} {user_response.last_name or ''}".strip() or user_response.email,
+        is_verified=user_response.is_verified
     )
 
 
-async def get_current_user_optional(token: Optional[str] = None) -> Optional[dict]:
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> Optional[User]:
     """
-    Optional auth function - same as get_current_user but explicitly optional
+    Optional auth function - returns user if authenticated, None otherwise
     """
-    return None
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials)
+    except HTTPException:
+        return None
 
 
 async def get_current_user_ws(websocket, token: Optional[str] = None) -> Optional[User]:
     """
-    WebSocket auth function - returns test user for development
-    In production, this would validate the token and return user info
+    WebSocket auth function - validates JWT token from WebSocket
     """
-    # Return a test user object with required id field
+    if not token:
+        # For backward compatibility during migration
+        # TODO: Remove this after frontend is updated
+        return User(
+            id="00000000-0000-0000-0000-000000000001",
+            email="test@example.com",
+            name="Test User"
+        )
+    
+    user_response = await AuthService.get_current_user(token)
+    
+    if not user_response:
+        return None
+    
+    # Convert UserResponse to User
     return User(
-        id="temp-user-for-oauth",  # Actual user_id from database
-        email="test@example.com",
-        name="Test User"
+        id=str(user_response.id),
+        email=user_response.email,
+        name=f"{user_response.first_name or ''} {user_response.last_name or ''}".strip() or user_response.email,
+        is_verified=user_response.is_verified
     )
 
 
 async def verify_token(token: str) -> Optional[dict]:
     """
     Verify token and return user info
-    In production, this would validate the token against a secure token store
     """
-    # For development, return a test user
+    user_response = await AuthService.get_current_user(token)
+    
+    if not user_response:
+        return None
+    
     return {
-        "user_id": "temp-user-for-oauth",
-        "email": "test@example.com",
-        "name": "Test User"
+        "user_id": str(user_response.id),
+        "email": user_response.email,
+        "name": f"{user_response.first_name or ''} {user_response.last_name or ''}".strip() or user_response.email,
+        "is_verified": user_response.is_verified
     }
+
+
+# For backward compatibility
+async def get_test_user() -> User:
+    """
+    Get test user for development/migration purposes
+    This should only be used in non-authenticated endpoints during migration
+    """
+    return User(
+        id="00000000-0000-0000-0000-000000000001",
+        email="admin@prsnl.local",
+        name="Admin User",
+        is_verified=True
+    )
+
+
+async def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> str:
+    """Get current authenticated user ID from JWT token"""
+    user = await get_current_user(credentials)
+    return str(user.id)

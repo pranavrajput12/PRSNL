@@ -417,8 +417,11 @@ async def get_patterns(
     """Get detected code patterns for the user"""
     
     try:
-        # Use temp user for testing if no current user
-        user_id = str(current_user.id) if current_user else 'temp-user-for-oauth'
+        # Get authenticated user ID
+        user_id = str(current_user.id) if current_user else None
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Authentication required")
         
         pool = await get_db_pool()
         async with pool.acquire() as db:
@@ -486,15 +489,18 @@ async def get_insights(
     try:
         pool = await get_db_pool()
         async with pool.acquire() as db:
-            # Check access with relaxed authentication for testing
-            user_id = str(current_user.id) if current_user else 'temp-user-for-oauth'
+            # Check access for authenticated user
+            user_id = str(current_user.id) if current_user else None
+            
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Authentication required")
             
             has_access = await db.fetchval("""
                 SELECT EXISTS(
                     SELECT 1 FROM codemirror_analyses ca
                     LEFT JOIN github_repos gr ON ca.repo_id = gr.id
                     LEFT JOIN github_accounts ga ON gr.account_id = ga.id
-                    WHERE ca.id = $1 AND (ga.user_id = $2 OR ga.user_id = 'temp-user-for-oauth' OR $2 = 'temp-user-for-oauth')
+                    WHERE ca.id = $1 AND (ga.user_id = $2)
                 )
             """, UUID(analysis_id), user_id)
             
@@ -770,8 +776,8 @@ async def get_analysis_by_id(
             FROM codemirror_analyses ca
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
-            WHERE {where_clause} AND (ga.user_id = $2 OR $2 = 'temp-user-for-oauth')
-        """, query_param, str(current_user.id) if current_user else 'temp-user-for-oauth')
+            WHERE {where_clause} AND (ga.user_id = $2)
+        """, query_param, str(current_user.id))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -800,8 +806,8 @@ async def get_analysis_knowledge(
             FROM codemirror_analyses ca
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
-            WHERE ca.id = $1 AND (ga.user_id = $2 OR $2 = 'temp-user-for-oauth')
-        """, UUID(analysis_id), str(current_user.id) if current_user else 'temp-user-for-oauth')
+            WHERE ca.id = $1 AND (ga.user_id = $2)
+        """, UUID(analysis_id), str(current_user.id))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -872,9 +878,9 @@ async def get_analysis_packages(
                 SELECT 1 FROM codemirror_analyses ca
                 LEFT JOIN github_repos gr ON ca.repo_id = gr.id
                 LEFT JOIN github_accounts ga ON gr.account_id = ga.id
-                WHERE ca.id = $1 AND (ga.user_id = $2 OR $2 = 'temp-user-for-oauth')
+                WHERE ca.id = $1 AND (ga.user_id = $2)
             )
-        """, UUID(analysis_id), str(current_user.id) if current_user else 'temp-user-for-oauth')
+        """, UUID(analysis_id), str(current_user.id))
         
         if not has_access:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -1023,8 +1029,8 @@ async def get_analysis_by_slug(
             FROM codemirror_analyses ca
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
-            WHERE ca.analysis_slug = $1 AND (ga.user_id = $2 OR $2 = 'temp-user-for-oauth')
-        """, analysis_slug, str(current_user.id) if current_user else 'temp-user-for-oauth')
+            WHERE ca.analysis_slug = $1 AND (ga.user_id = $2)
+        """, analysis_slug, str(current_user.id))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -1091,7 +1097,7 @@ async def get_analysis_timeline(
         timeline_items = []
         
         # Get all analyses for user's repositories
-        user_id = current_user.id if current_user else 'temp-user-for-oauth'
+        user_id = str(current_user.id)
         analyses = await db.fetch("""
             SELECT 
                 ca.id,

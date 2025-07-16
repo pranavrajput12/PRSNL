@@ -16,7 +16,29 @@ from app.db.database import get_db_pool, get_db_connection
 from app.services.unified_ai_service import unified_ai_service
 from app.services.job_persistence_service import JobPersistenceService
 from app.services.embedding_manager import embedding_manager
-from app.services.langgraph_workflows import langgraph_workflow_service, ContentType
+
+# LangGraph integration with graceful fallback
+try:
+    from app.services.langgraph_workflows import create_workflow_manager
+    from enum import Enum
+    
+    class ContentType(str, Enum):
+        DOCUMENT = "document"
+        VIDEO = "video"
+        AUDIO = "audio"
+        CODE = "code"
+        IMAGE = "image"
+        URL = "url"
+        TEXT = "text"
+    
+    langgraph_workflow_service = create_workflow_manager()
+    langgraph_workflow_service.enabled = True
+    LANGGRAPH_AVAILABLE = True
+except ImportError:
+    LANGGRAPH_AVAILABLE = False
+    langgraph_workflow_service = None
+    ContentType = str  # Fallback
+    
 from app.services.ai_router import ai_router
 from app.services.ai_router_types import AITask, TaskType
 from app.services.langchain_prompts import prompt_template_manager

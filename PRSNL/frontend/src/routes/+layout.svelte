@@ -9,6 +9,7 @@
   import { preferences } from '$lib/stores/app';
   import { goto } from '$app/navigation';
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+  import { user, isAuthenticated, authActions } from '$lib/stores/auth';
 
   // Create QueryClient instance
   const queryClient = new QueryClient({
@@ -142,7 +143,13 @@
     </button>
 
     <!-- Mobile Backdrop -->
-    <div class="mobile-backdrop {mobileMenuOpen ? 'show' : ''}" on:click={toggleMobileMenu}></div>
+    <button 
+        class="mobile-backdrop {mobileMenuOpen ? 'show' : ''}" 
+        on:click={toggleMobileMenu}
+        on:keydown={(e) => e.key === 'Enter' || e.key === ' ' ? toggleMobileMenu() : null}
+        aria-label="Close mobile menu"
+        tabindex={mobileMenuOpen ? 0 : -1}
+    ></button>
 
     <!-- Innovative Morphing Sidebar -->
     <aside
@@ -230,6 +237,53 @@
           <div class="nav-tooltip">Knowledge Sync</div>
         </a>
       </nav>
+
+      <!-- User Authentication Section -->
+      <div class="user-auth-section">
+        {#if $isAuthenticated && $user}
+          <div class="user-profile">
+            <div class="user-avatar">
+              {$user.first_name ? $user.first_name.charAt(0).toUpperCase() : $user.email.charAt(0).toUpperCase()}
+            </div>
+            <div class="user-info">
+              <div class="user-name">
+                {$user.first_name && $user.last_name 
+                  ? `${$user.first_name} ${$user.last_name}` 
+                  : $user.first_name || $user.email}
+              </div>
+              <div class="user-type">{$user.user_type}</div>
+              {#if !$user.is_verified}
+                <div class="verification-status">Email not verified</div>
+              {/if}
+            </div>
+          </div>
+          <div class="auth-actions">
+            <a href="/profile" class="auth-link">
+              <Icon name="user" class="w-4 h-4" />
+              <span>Profile</span>
+            </a>
+            <a href="/settings" class="auth-link">
+              <Icon name="settings" class="w-4 h-4" />
+              <span>Settings</span>
+            </a>
+            <button on:click={() => authActions.logout()} class="auth-link logout-btn">
+              <Icon name="log-out" class="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
+        {:else}
+          <div class="auth-prompt">
+            <a href="/auth/login" class="auth-link primary">
+              <Icon name="log-in" class="w-4 h-4" />
+              <span>Sign In</span>
+            </a>
+            <a href="/auth/signup" class="auth-link">
+              <Icon name="user-plus" class="w-4 h-4" />
+              <span>Sign Up</span>
+            </a>
+          </div>
+        {/if}
+      </div>
     </aside>
 
     <ErrorBoundary fallback="full">
@@ -1863,5 +1917,161 @@
     .main-content {
       margin-left: 0;
     }
+  }
+
+  /* User Authentication Section Styles */
+  .user-auth-section {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-type {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+    margin-bottom: 0.25rem;
+  }
+
+  .verification-status {
+    font-size: 0.7rem;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+
+  .auth-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .auth-prompt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .auth-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all var(--transition-base);
+    cursor: pointer;
+  }
+
+  .auth-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+
+  .auth-link.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+  }
+
+  .auth-link.primary:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .logout-btn {
+    border: none;
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+
+  /* Morphed sidebar adjustments */
+  .innovative-sidebar.morphed .user-auth-section {
+    padding: 0.5rem;
+  }
+
+  .innovative-sidebar.morphed .user-profile {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .innovative-sidebar.morphed .user-info {
+    display: none;
+  }
+
+  .innovative-sidebar.morphed .auth-actions {
+    gap: 0.25rem;
+  }
+
+  .innovative-sidebar.morphed .auth-link {
+    padding: 0.5rem;
+    justify-content: center;
+    font-size: 0.75rem;
+  }
+
+  .innovative-sidebar.morphed .auth-link span {
+    display: none;
   }
 </style>

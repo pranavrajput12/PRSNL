@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, User
 from app.db.database import get_db_pool
 from app.services.github_service import GitHubService
 from app.config import settings
@@ -54,7 +54,8 @@ class SyncReposRequest(BaseModel):
 # Endpoints
 @router.get("/auth/login")
 async def github_login(
-    redirect_uri: Optional[str] = Query(None)
+    redirect_uri: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
 ):
     """Initiate GitHub OAuth flow"""
     
@@ -64,12 +65,11 @@ async def github_login(
             detail="GitHub OAuth not configured"
         )
     
-    # For now, use a temporary user ID. In a real app, you'd get this from session/auth
-    # This will be replaced with proper user management
-    temp_user_id = "temp-user-for-oauth"
+    # Use the authenticated user's ID
+    user_id = str(current_user.id)
     
     github_service = GitHubService()
-    auth_url = await github_service.init_oauth_flow(temp_user_id)
+    auth_url = await github_service.init_oauth_flow(user_id)
     
     # Store redirect URI for after auth (temporarily disabled - cache not implemented)
     # if redirect_uri:
@@ -97,13 +97,13 @@ async def github_callback(
     # if not user_id:
     #     raise HTTPException(status_code=400, detail="Invalid or expired state")
     
-    # For now, use temp user ID
-    user_id = "temp-user-for-oauth"
-    
     # Exchange code for token
     github_service = GitHubService()
     try:
         account = await github_service.complete_oauth_flow(code, state)
+    except ValueError as e:
+        # Handle missing user ID in state
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"GitHub OAuth error: {str(e)}")
         raise HTTPException(status_code=400, detail="OAuth authentication failed")
@@ -120,12 +120,11 @@ async def github_callback(
 
 @router.get("/accounts")
 async def get_github_accounts(
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> List[GitHubAccount]:
     """Get connected GitHub accounts"""
     
-    # For development/demo, check for temp user accounts too
-    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    user_id = str(current_user.id)
     
     pool = await get_db_pool()
     async with pool.acquire() as db:
@@ -159,7 +158,7 @@ async def get_github_accounts(
 @router.delete("/accounts/{account_id}")
 async def disconnect_github_account(
     account_id: str,
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Disconnect a GitHub account"""
     
@@ -190,12 +189,11 @@ async def get_repos(
     language: Optional[str] = None,
     is_private: Optional[bool] = None,
     limit: int = Query(50, ge=1, le=200),
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> List[GitHubRepo]:
     """Get synchronized repositories"""
     
-    # For development/demo, check for temp user accounts too
-    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    user_id = str(current_user.id)
     
     pool = await get_db_pool()
     async with pool.acquire() as db:
@@ -269,12 +267,11 @@ async def get_repos(
 async def sync_repos(
     request: SyncReposRequest,
     account_id: Optional[str] = None,
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Sync repositories from GitHub"""
     
-    # For development/demo, check for temp user accounts too
-    user_id = current_user.id if current_user else "temp-user-for-oauth"
+    user_id = str(current_user.id)
     
     github_service = GitHubService()
     
@@ -383,7 +380,7 @@ async def sync_repos(
 @router.get("/repos/{repo_id}")
 async def get_repo_details(
     repo_id: str,
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> GitHubRepo:
     """Get detailed repository information"""
     
@@ -416,7 +413,7 @@ async def get_repo_details(
 
 @router.get("/languages")
 async def get_languages(
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get all programming languages from user's repos"""
     
@@ -439,7 +436,7 @@ async def get_languages(
 @router.get("/repos/by-slug/{slug}")
 async def get_repo_by_slug(
     slug: str,
-    current_user = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> GitHubRepo:
     """Get repository by slug"""
     

@@ -87,12 +87,12 @@
     "
   >
     <!-- Background effects -->
-    <div class="toast-glow" />
-    <div class="toast-shine" />
+    <div class="toast-glow"></div>
+    <div class="toast-shine"></div>
 
     <!-- Icon with animation -->
     <div class="icon-container">
-      <div class="icon-bg" />
+      <div class="icon-bg"></div>
       <Icon name={icons[type]} size={24} />
 
       <!-- Success checkmark animation -->
@@ -120,7 +120,7 @@
 
     <!-- Progress bar -->
     <div class="progress-bar">
-      <div class="progress-fill" style="width: {progress}%" />
+      <div class="progress-fill" style="width: {progress}%"></div>
     </div>
 
     <!-- Particles for success -->
@@ -134,7 +134,7 @@
               top: {particle.y}px;
               animation-delay: {particle.id * 0.1}s;
             "
-          />
+          ></span>
         {/each}
       </div>
     {/if}

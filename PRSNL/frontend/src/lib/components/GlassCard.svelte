@@ -70,6 +70,7 @@
   class="glass-card {variant}"
   class:interactive
   class:hovering={isHovering}
+  role="article"
   on:mousemove={handleMouseMove}
   on:mouseenter={handleMouseEnter}
   on:mouseleave={handleMouseLeave}
@@ -95,12 +96,12 @@
           rgba(99, 102, 241, 0.1)
         );
       "
-    />
+    ></div>
   {/if}
 
   <!-- Glass effect layers -->
-  <div class="glass-layer" />
-  <div class="frost-layer" />
+  <div class="glass-layer"></div>
+  <div class="frost-layer"></div>
 
   <!-- Holographic effect -->
   {#if interactive && isHovering}
@@ -113,7 +114,7 @@
           transparent 50%
         );
       "
-    />
+    ></div>
   {/if}
 
   <!-- Glow effect -->
@@ -127,10 +128,10 @@
         transparent 70%
       );
     "
-  />
+  ></div>
 
   <!-- Border gradient -->
-  <div class="border-gradient" />
+  <div class="border-gradient"></div>
 
   <!-- Content -->
   <div class="card-content">
@@ -139,7 +140,7 @@
 
   <!-- Reflection -->
   {#if variant === 'elevated'}
-    <div class="reflection" />
+    <div class="reflection"></div>
   {/if}
 </div>
 
