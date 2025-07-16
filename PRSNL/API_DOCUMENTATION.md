@@ -25,9 +25,224 @@
 - **Knowledge Sync** (`/import`) - External data import and synchronization
 
 ## Authentication
-Currently no authentication required (development mode)
 
-**Note**: iOS app may require additional authentication mechanisms for production use.
+### JWT Authentication System
+PRSNL uses JWT (JSON Web Token) based authentication with access and refresh tokens. The system supports email verification and magic link (passwordless) authentication.
+
+**Authentication Flow:**
+1. User registers with email and password
+2. Email verification sent via Resend API
+3. User verifies email or uses magic link
+4. Access and refresh tokens issued
+5. Tokens automatically refresh on expiry
+
+### Authentication Endpoints
+
+#### POST /api/auth/register
+Register a new user account
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!",
+  "name": "John Doe"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "User registered successfully. Please check your email for verification.",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "is_verified": false
+  }
+}
+```
+
+#### POST /api/auth/login
+Login with email and password
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "is_verified": true
+  }
+}
+```
+
+#### POST /api/auth/refresh
+Refresh access token using refresh token
+
+**Request Body:**
+```json
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+#### POST /api/auth/verify-email
+Verify email address with token from email
+
+**Request Body:**
+```json
+{
+  "token": "verification_token_from_email"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Email verified successfully",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+#### POST /api/auth/send-magic-link
+Request a magic link for passwordless login
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Magic link sent to your email"
+}
+```
+
+#### POST /api/auth/verify-magic-link
+Login using magic link token
+
+**Request Body:**
+```json
+{
+  "token": "magic_link_token_from_email"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "is_verified": true
+  }
+}
+```
+
+#### POST /api/auth/resend-verification
+Resend email verification
+
+**Headers:**
+- `Authorization: Bearer {access_token}`
+
+**Response:**
+```json
+{
+  "message": "Verification email sent"
+}
+```
+
+#### GET /api/auth/me
+Get current user profile
+
+**Headers:**
+- `Authorization: Bearer {access_token}`
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "is_verified": true,
+  "created_at": "2025-07-16T08:00:00Z",
+  "updated_at": "2025-07-16T08:00:00Z"
+}
+```
+
+#### PUT /api/auth/profile
+Update user profile
+
+**Headers:**
+- `Authorization: Bearer {access_token}`
+
+**Request Body:**
+```json
+{
+  "name": "Jane Doe"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Profile updated successfully",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "Jane Doe",
+    "is_verified": true
+  }
+}
+```
+
+### Authentication Headers
+All protected endpoints require the Authorization header:
+```
+Authorization: Bearer {access_token}
+```
+
+### Token Expiration
+- **Access Token**: 15 minutes
+- **Refresh Token**: 7 days
+
+### Email Templates
+The system uses customizable email templates for:
+- Email verification
+- Magic link login
+- Password reset (future feature)
+
+**Note**: Email functionality requires `RESEND_API_KEY` environment variable to be set.
 
 ## Phase 4 AI API Endpoints - Advanced Orchestration
 

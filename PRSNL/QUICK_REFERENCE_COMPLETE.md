@@ -116,6 +116,57 @@ curl -X POST "http://localhost:8000/api/conversations/intelligence/batch/process
   -H "Content-Type: application/json"
 ```
 
+### 🔐 Authentication System - NEW (2025-07-16)
+```bash
+# Register new user
+curl -X POST http://localhost:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePassword123!",
+    "name": "John Doe"
+  }'
+
+# Login with email/password
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePassword123!"
+  }'
+
+# Refresh access token
+curl -X POST http://localhost:8000/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }'
+
+# Send magic link (passwordless login)
+curl -X POST http://localhost:8000/api/auth/send-magic-link \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com"}'
+
+# Verify email with token
+curl -X POST http://localhost:8000/api/auth/verify-email \
+  -H "Content-Type: application/json" \
+  -d '{"token": "verification_token_from_email"}'
+
+# Get current user profile (requires auth)
+curl http://localhost:8000/api/auth/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Update user profile
+curl -X PUT http://localhost:8000/api/auth/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane Doe"}'
+
+# Resend verification email
+curl -X POST http://localhost:8000/api/auth/resend-verification \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
 ### Job Persistence System - NEW (2025-07-13)
 ```bash
 # Check job persistence service health

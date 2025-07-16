@@ -173,6 +173,7 @@ npm run dev -- --port 3004
 - **Real-time Updates**: Distributed processing with live progress tracking
 
 ### **Enterprise Features**
+- **Authentication System**: JWT-based auth with email verification and magic links via Resend API
 - **Dual Analysis Modes**: Web-based instant analysis and CLI tool for advanced features
 - **Distributed Processing**: Celery task queues for scalable background processing
 - **Real-time Sync**: WebSocket updates with DragonflyDB pub/sub

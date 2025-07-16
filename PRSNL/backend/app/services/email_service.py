@@ -7,12 +7,14 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
 from uuid import UUID
 import secrets
+import json
 
 import resend
 from jinja2 import Template
 
 from app.config import settings
 from app.db.database import get_db_pool
+from app.services.email.email_config import EmailType, EMAIL_CONFIG, SUBJECT_TEMPLATES
 
 logger = logging.getLogger(__name__)
 
@@ -135,12 +137,15 @@ class EmailService:
                     user_name=name
                 )
                 
-                # Send email
+                # Send email with verification-specific from address
+                config = EMAIL_CONFIG[EmailType.VERIFICATION]
                 message_id = await cls.send_email(
                     to=email,
-                    subject=template["subject"],
+                    subject=SUBJECT_TEMPLATES[EmailType.VERIFICATION],
                     html=html,
-                    text=text
+                    text=text,
+                    from_email=config["from"],
+                    from_name=config["from_name"]
                 )
                 
                 if message_id:
@@ -215,12 +220,15 @@ class EmailService:
                     user_email=email
                 )
                 
-                # Send email
+                # Send email with magic link-specific from address
+                config = EMAIL_CONFIG[EmailType.MAGIC_LINK]
                 message_id = await cls.send_email(
                     to=email,
-                    subject=template["subject"],
+                    subject=SUBJECT_TEMPLATES[EmailType.MAGIC_LINK],
                     html=html,
-                    text=text
+                    text=text,
+                    from_email=config["from"],
+                    from_name=config["from_name"]
                 )
                 
                 if message_id:
@@ -273,12 +281,15 @@ class EmailService:
                     app_link=settings.FRONTEND_URL
                 )
                 
-                # Send email
+                # Send email with welcome-specific from address
+                config = EMAIL_CONFIG[EmailType.WELCOME]
                 message_id = await cls.send_email(
                     to=email,
-                    subject=template["subject"],
+                    subject=SUBJECT_TEMPLATES[EmailType.WELCOME],
                     html=html,
-                    text=text
+                    text=text,
+                    from_email=config["from"],
+                    from_name=config["from_name"]
                 )
                 
                 if message_id:
@@ -406,11 +417,11 @@ class EmailService:
                         subject, status, provider_message_id, 
                         error_message, metadata, sent_at
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10)
                 """, 
                     user_id, email_to, email_type, template_name,
                     subject, status, provider_message_id,
-                    error_message, metadata or {},
+                    error_message, json.dumps(metadata or {}),
                     datetime.utcnow() if status == "sent" else None
                 )
         except Exception as e:

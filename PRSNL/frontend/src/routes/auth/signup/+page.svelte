@@ -4,6 +4,10 @@
   import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/auth';
   import { addNotification } from '$lib/stores/app';
   import Icon from '$lib/components/Icon.svelte';
+  import NeuralBackground from '$lib/components/NeuralBackground.svelte';
+  import InspirationMessage from '$lib/components/InspirationMessage.svelte';
+  import MagneticButton from '$lib/components/MagneticButton.svelte';
+  import BreathingCard from '$lib/components/BreathingCard.svelte';
 
   // Form state
   let formData = {
@@ -19,6 +23,35 @@
   let formErrors: Record<string, string> = {};
   let showPassword = false;
   let showConfirmPassword = false;
+  let isFormActive = false;
+
+  // Inspirational messages for each step
+  const stepMessages = {
+    1: [
+      "Your journey to amplified intelligence begins",
+      "Create your neural interface",
+      "Join the cognitive revolution",
+      "Your second brain awaits activation"
+    ],
+    2: [
+      "Let's personalize your neural interface",
+      "Tell us who's behind the brilliant mind",
+      "Every great brain has a name",
+      "Identity unlocks infinite possibilities"
+    ],
+    3: [
+      "Choose how your brain will evolve",
+      "Select your cognitive enhancement path",
+      "Pick your intelligence amplification mode",
+      "Your brain, your rules"
+    ]
+  };
+
+  const successMessages = [
+    "Neural pathways initialized...",
+    "Preparing your cognitive enhancement...",
+    "Welcome to the future of intelligence"
+  ];
 
   // User type options with dynamic descriptions
   const userTypes = [
@@ -146,33 +179,62 @@
   <meta name="description" content="Create your PRSNL account and unlock AI-powered knowledge management" />
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-  <!-- Background Pattern -->
-  <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+  <!-- Animated Neural Network Background -->
+  <NeuralBackground 
+    particleCount={120}
+    connectionDistance={150}
+    mouseInfluence={true}
+    colorScheme={{
+      particles: '#8b5cf6',
+      connections: '#ec4899',
+      mouseGlow: '#10b981'
+    }}
+  />
+  
+  <!-- Gradient Overlay for depth -->
+  <div class="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-purple-900/30 pointer-events-none"></div>
+  
+  <!-- Inspirational Messages -->
+  {#if !$isLoading}
+    <InspirationMessage 
+      messages={stepMessages[currentStep]}
+      position="top"
+      size="medium"
+      interval={5000}
+    />
+  {:else}
+    <InspirationMessage 
+      messages={successMessages}
+      position="top"
+      size="medium"
+      interval={3000}
+    />
+  {/if}
 
   <div class="w-full max-w-md relative">
-    <!-- Header -->
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center space-x-2 mb-4">
-        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+    <!-- Header with enhanced animation -->
+    <div class="text-center mb-8 animate-fade-in">
+      <div class="inline-flex items-center space-x-2 mb-4 group">
+        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
           <Icon name="brain" class="w-6 h-6 text-white" />
         </div>
-        <span class="text-2xl font-bold text-white">PRSNL</span>
+        <span class="text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">PRSNL</span>
       </div>
-      <h1 class="text-3xl font-bold text-white mb-2">Create your account</h1>
-      <p class="text-slate-300">Join the future of AI-powered knowledge management</p>
+      <h1 class="text-3xl font-bold text-white mb-2 animate-slide-up">Create your account</h1>
+      <p class="text-slate-300 animate-slide-up-delayed">Join the future of AI-powered knowledge management</p>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="mb-8">
+    <!-- Animated Progress Bar -->
+    <div class="mb-8 animate-fade-in">
       <div class="flex items-center justify-between mb-2">
         {#each [1, 2, 3] as step}
           <div class="flex items-center">
-            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 {
+            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 transform {
               currentStep >= step 
-                ? 'bg-purple-500 border-purple-500 text-white' 
-                : 'border-slate-600 text-slate-400'
-            }">
+                ? 'bg-purple-500 border-purple-500 text-white scale-110' 
+                : 'border-slate-600 text-slate-400 scale-100'
+            } step-indicator">
               {#if currentStep > step}
                 <Icon name="check" class="w-4 h-4" />
               {:else}
@@ -180,7 +242,9 @@
               {/if}
             </div>
             {#if step < 3}
-              <div class="w-12 h-0.5 mx-2 {currentStep > step ? 'bg-purple-500' : 'bg-slate-600'} transition-colors duration-300"></div>
+              <div class="relative w-12 h-0.5 mx-2 bg-slate-600 overflow-hidden">
+                <div class="absolute inset-0 bg-purple-500 transition-transform duration-300 {currentStep > step ? 'translate-x-0' : '-translate-x-full'}"></div>
+              </div>
             {/if}
           </div>
         {/each}
@@ -192,12 +256,18 @@
       </div>
     </div>
 
-    <!-- Form Card -->
-    <div class="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-8 shadow-2xl">
+    <!-- Form Card with breathing effect -->
+    <BreathingCard 
+      glowColor={isFormActive ? '#10b981' : '#8b5cf6'} 
+      breathingScale={0.02} 
+      breathingDuration={4}
+      interactive={true}
+    >
+      <div on:focusin={() => isFormActive = true} on:focusout={() => isFormActive = false}>
       <form on:submit|preventDefault={handleSubmit} class="space-y-6">
         <!-- Step 1: Account Details -->
         {#if currentStep === 1}
-          <div class="space-y-4">
+          <div class="space-y-4 animate-slide-in">
             <h2 class="text-xl font-semibold text-white mb-4">Account Details</h2>
             
             <!-- Email -->
@@ -289,7 +359,7 @@
 
         <!-- Step 2: Profile Information -->
         {#if currentStep === 2}
-          <div class="space-y-4">
+          <div class="space-y-4 animate-slide-in">
             <h2 class="text-xl font-semibold text-white mb-4">Tell us about yourself</h2>
             
             <div class="grid grid-cols-2 gap-4">
@@ -327,7 +397,7 @@
 
         <!-- Step 3: User Type Selection -->
         {#if currentStep === 3}
-          <div class="space-y-4">
+          <div class="space-y-4 animate-slide-in">
             <h2 class="text-xl font-semibold text-white mb-4">Choose your plan</h2>
             
             <div class="space-y-3">
@@ -339,10 +409,10 @@
                     value={type.value}
                     class="sr-only"
                   />
-                  <div class="cursor-pointer p-4 border-2 rounded-lg transition-all duration-200 {
+                  <div class="cursor-pointer p-4 border-2 rounded-lg transition-all duration-200 transform hover:scale-[1.02] {
                     formData.user_type === type.value
-                      ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25'
-                      : 'border-white/20 hover:border-white/40 bg-white/5'
+                      ? 'border-purple-500 bg-purple-500/20 shadow-lg shadow-purple-500/25 scale-[1.02]'
+                      : 'border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/10'
                   }">
                     <div class="flex items-start space-x-3">
                       <div class="flex-shrink-0 mt-1">
@@ -386,37 +456,40 @@
         <!-- Navigation Buttons -->
         <div class="flex items-center justify-between pt-4">
           {#if currentStep > 1}
-            <button
+            <MagneticButton
               type="button"
+              variant="ghost"
+              size="medium"
+              icon="arrow-left"
+              iconPosition="left"
               on:click={prevStep}
-              class="px-6 py-3 text-slate-300 hover:text-white transition-colors duration-200 flex items-center space-x-2"
             >
-              <Icon name="arrow-left" class="w-4 h-4" />
-              <span>Back</span>
-            </button>
+              Back
+            </MagneticButton>
           {:else}
             <div></div>
           {/if}
 
-          <button
+          <MagneticButton
             type="submit"
+            variant="primary"
             disabled={$isLoading}
-            class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
+            loading={$isLoading}
+            size="medium"
+            icon={currentStep < 3 ? 'arrow-right' : 'user-plus'}
           >
             {#if $isLoading}
-              <Icon name="loader-2" class="w-4 h-4 animate-spin" />
-              <span>Creating account...</span>
+              Creating account...
             {:else if currentStep < 3}
-              <span>Continue</span>
-              <Icon name="arrow-right" class="w-4 h-4" />
+              Continue
             {:else}
-              <span>Create Account</span>
-              <Icon name="user-plus" class="w-4 h-4" />
+              Create Account
             {/if}
-          </button>
+          </MagneticButton>
         </div>
       </form>
-    </div>
+      </div>
+    </BreathingCard>
 
     <!-- Login Link -->
     <div class="text-center mt-6">
@@ -452,5 +525,110 @@
 
   :global(html::-webkit-scrollbar-thumb:hover) {
     background: rgba(139, 92, 246, 0.7);
+  }
+
+  /* Animations */
+  :global(.animate-fade-in) {
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  :global(.animate-slide-up) {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  :global(.animate-slide-up-delayed) {
+    animation: slideUp 0.6s ease-out 0.2s both;
+  }
+
+  :global(.animate-slide-in) {
+    animation: slideIn 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Step indicator pulse animation */
+  .step-indicator {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .step-indicator:not(.bg-purple-500) {
+    animation: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+    }
+    50% {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.2);
+    }
+  }
+
+  /* Input focus effects */
+  :global(input:focus) {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+
+  /* Password strength indicators animation */
+  :global(.w-2.h-2.rounded-full) {
+    transition: all 0.3s ease;
+  }
+
+  :global(.bg-green-500) {
+    animation: checkmark 0.3s ease-out;
+  }
+
+  @keyframes checkmark {
+    from {
+      transform: scale(0);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    :global(.animate-fade-in),
+    :global(.animate-slide-up),
+    :global(.animate-slide-up-delayed),
+    :global(.animate-slide-in) {
+      animation: none;
+    }
+    
+    .step-indicator {
+      animation: none;
+    }
   }
 </style>

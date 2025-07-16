@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getApiEndpoint, getServerApiUrl } from '$lib/utils/api-url';
 
 const VALID_CATEGORIES = ['dev', 'learn', 'media', 'ideas'];
 
@@ -19,12 +20,8 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
   // Special handling for videos: redirect to video player to avoid massive content processing
   if (category === 'media') {
     try {
-      const apiUrl =
-        url.origin.includes('localhost:3004') || url.origin.includes('localhost:3003')
-          ? 'http://localhost:8000'
-          : '';
       const videoResolutionResponse = await fetch(
-        `${apiUrl}/api/video-resolution/${category}/${slug}`
+        getApiEndpoint(`/video-resolution/${category}/${slug}`)
       );
 
       if (videoResolutionResponse.ok) {
@@ -52,11 +49,7 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
   try {
     // Fetch content by category and slug
     // Use the provided fetch function which handles SSR properly
-    const apiUrl =
-      url.origin.includes('localhost:3004') || url.origin.includes('localhost:3003')
-        ? 'http://localhost:8000'
-        : '';
-    const response = await fetch(`${apiUrl}/api/content/${category}/${slug}`);
+    const response = await fetch(getApiEndpoint(`/content/${category}/${slug}`));
 
     if (!response.ok) {
       if (response.status === 404) {

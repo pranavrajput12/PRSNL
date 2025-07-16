@@ -22,9 +22,10 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 - Frontend port changed from 3003 to 3004 for development
 - All integrations tested and verified working
 
-## **✅ Completed Integrations (Updated 2025-07-12)**
+## **✅ Completed Integrations (Updated 2025-07-16)**
 | Integration | Status | Purpose | Priority | Implementation Details |
 |-------------|--------|---------|----------|------------------------|
+| **Resend** | ✅ Added | Email verification & magic links | High | Email API for authentication, customizable templates |
 | **Sentry** | ✅ Added | Error monitoring & performance tracking | High | Frontend + Backend integration, 5k events/month free |
 | **Svelte-Query** | ✅ Added | Data fetching, caching & synchronization | High | TanStack Query v5, QueryClient setup, utility functions |
 | **Content Fingerprinting** | ✅ Added | Duplicate detection & change tracking | High | SHA-256 hashing, database field, indexed |
@@ -131,10 +132,16 @@ This document catalogs all third-party libraries, APIs, and integrations used in
 | `Azure OpenAI API` | Content analysis, embeddings, summaries | API Key | Varies by plan | **High** |
 | `scikit-learn` | Local ML processing | - | - | Low |
 
+### **Email & Authentication Services**
+| Service | Purpose | Authentication | Rate Limits | Risk Level |
+|---------|---------|---------------|-------------|------------|
+| `Resend API` | Email verification, magic links | API Key | 3,000 emails/month (free tier) | Low |
+
 **Environment Variables:**
 - `AZURE_OPENAI_API_KEY` - Required for AI features
 - `AZURE_OPENAI_ENDPOINT` - Azure OpenAI endpoint
 - `AZURE_OPENAI_DEPLOYMENT` - Model deployment name
+- `RESEND_API_KEY` - Required for email functionality
 
 ## **📊 Data Processing & Analysis**
 

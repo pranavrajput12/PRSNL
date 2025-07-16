@@ -65,6 +65,9 @@
 
   onMount(async () => {
     mounted = true;
+    // Wait for auth to be initialized before making API calls
+    const { authInitialized } = await import('$lib/stores/auth');
+    await authInitialized;
     await loadData();
   });
 

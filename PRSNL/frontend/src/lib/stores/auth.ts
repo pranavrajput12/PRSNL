@@ -146,7 +146,8 @@ async function apiCall(endpoint: string, options: RequestInit = {}): Promise<any
       headers: {
         ...getAuthHeaders(),
         ...options.headers
-      }
+      },
+      credentials: 'include' // Include cookies for authentication
     });
 
     if (!response.ok) {
@@ -482,13 +483,31 @@ export const authActions = {
   }
 };
 
-// Auto-refresh token on page load if user is authenticated
+// Create a promise that resolves when auth is initialized
+let authInitialized: Promise<void>;
+let authInitializedResolve: () => void;
+
 if (browser) {
-  const auth = get(authStore);
-  if (auth.isAuthenticated && auth.refreshToken) {
-    // Try to refresh token on app start
-    authActions.refreshToken().catch(() => {
-      // If refresh fails on startup, that's okay
-    });
-  }
+  authInitialized = new Promise((resolve) => {
+    authInitializedResolve = resolve;
+  });
+  
+  // Initialize auth state
+  setTimeout(async () => {
+    const auth = get(authStore);
+    if (auth.isAuthenticated && auth.refreshToken) {
+      // Try to refresh token on app start
+      try {
+        await authActions.refreshToken();
+      } catch (error) {
+        console.log('Token refresh on startup failed, using existing token');
+      }
+    }
+    authInitializedResolve();
+  }, 0);
+} else {
+  authInitialized = Promise.resolve();
 }
+
+// Export the initialization promise
+export { authInitialized };

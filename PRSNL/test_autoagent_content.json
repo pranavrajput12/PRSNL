@@ -1,7 +1,0 @@
-{
-  "content": "The rise of Large Language Models (LLMs) has transformed artificial intelligence, enabling capabilities from natural language understanding to code generation. However, challenges remain in areas like factual accuracy, reasoning consistency, and computational efficiency. Recent developments in multi-agent systems suggest a promising approach where specialized AI agents collaborate to solve complex problems, potentially addressing limitations of single large models.",
-  "title": "Multi-Agent AI Systems: Beyond Single LLMs",
-  "tags": ["AI", "machine learning", "multi-agent systems", "LLMs"],
-  "url": "https://example.com/ai-research",
-  "type": "research"
-}

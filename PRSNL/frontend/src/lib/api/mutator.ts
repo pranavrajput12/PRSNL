@@ -1,10 +1,22 @@
 // Use built-in fetch types instead of node-fetch
 
 // Base API configuration - handle both browser and build environments
-const API_BASE_URL =
-  typeof window !== 'undefined' && import.meta.env?.VITE_API_URL
-    ? import.meta.env.VITE_API_URL
-    : 'http://localhost:8000';
+const getApiBaseUrl = () => {
+  // Use environment variable if set
+  if (typeof window !== 'undefined' && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In browser, use relative URL for API calls
+  if (typeof window !== 'undefined') {
+    return '/api';
+  }
+  
+  // Fallback for SSR/build time
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Extended config interface for Orval-generated API clients
@@ -62,6 +74,7 @@ export const customInstance = async <T>(config: OrvalRequestConfig): Promise<T> 
     ...requestConfig,
     headers,
     body,
+    credentials: 'include', // Include cookies for cross-origin requests
   });
 
   if (!response.ok) {

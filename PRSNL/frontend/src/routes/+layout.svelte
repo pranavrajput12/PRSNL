@@ -10,6 +10,8 @@
   import { goto } from '$app/navigation';
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import { user, isAuthenticated, authActions } from '$lib/stores/auth';
+  
+  export let data;
 
   // Create QueryClient instance
   const queryClient = new QueryClient({
@@ -125,7 +127,7 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-  <div class="app-layout">
+  <div class="app-layout {data?.isPublicRoute ? 'auth-layout' : ''}">
     <!-- Universal neural motherboard background for all pages except homepage -->
     <div class="neural-motherboard-bg {$page.url.pathname === '/' ? 'hide-bg' : ''}">
       <div class="pcb-traces"></div>
@@ -137,6 +139,7 @@
       </div>
     </div>
 
+    {#if !data?.isPublicRoute}
     <!-- Mobile Toggle -->
     <button class="mobile-toggle {mobileMenuOpen ? 'active' : ''}" on:click={toggleMobileMenu}>
       <span class="toggle-icon">≡</span>
@@ -285,9 +288,10 @@
         {/if}
       </div>
     </aside>
+    {/if}
 
     <ErrorBoundary fallback="full">
-      <main class="main-content {sidebarCollapsed ? 'sidebar-collapsed' : ''}">
+      <main class="main-content {sidebarCollapsed ? 'sidebar-collapsed' : ''} {data?.isPublicRoute ? 'auth-page' : ''}">
         <slot />
       </main>
 
@@ -782,6 +786,24 @@
 
   .main-content.sidebar-collapsed {
     margin-left: 70px;
+  }
+
+  /* Auth page specific styles */
+  .app-layout.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .main-content.auth-page {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 
   .prsnl-logo-text {

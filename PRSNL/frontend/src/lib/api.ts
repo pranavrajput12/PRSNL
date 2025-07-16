@@ -15,6 +15,8 @@ import type {
   InsightsResponse,
   ContentTypesResponse,
 } from './types/api';
+import { get } from 'svelte/store';
+import { authStore } from './stores/auth';
 
 // Add RequestInit type for fetch API
 type RequestInit = {
@@ -58,13 +60,23 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
     });
   }
 
+  // Get auth token from store
+  const auth = get(authStore);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  // Add authorization header if user is authenticated
+  if (auth.accessToken) {
+    headers['Authorization'] = `Bearer ${auth.accessToken}`;
+  }
+
   try {
     const response = await fetch(fullUrl, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
+      credentials: 'include', // Include cookies for cross-origin requests
     });
 
     if (import.meta.env.DEV) {
@@ -83,6 +95,39 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
         status: response.status,
         errorData,
       });
+      
+      // Handle 401 Unauthorized - try to refresh token first
+      if (response.status === 401 && !endpoint.includes('/auth/')) {
+        // Try to refresh the token once
+        const { authActions } = await import('./stores/auth');
+        const refreshed = await authActions.refreshToken();
+        
+        if (refreshed) {
+          // Retry the original request with new token
+          const newAuth = get(authStore);
+          if (newAuth.accessToken) {
+            headers['Authorization'] = `Bearer ${newAuth.accessToken}`;
+            const retryResponse = await fetch(fullUrl, {
+              ...options,
+              headers,
+              credentials: 'include', // Include cookies for cross-origin requests
+            });
+            
+            if (retryResponse.ok) {
+              return await retryResponse.json();
+            }
+          }
+        }
+        
+        // If refresh failed or retry failed, logout
+        await authActions.logout();
+        
+        // Redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+      }
+      
       throw new ApiError(
         errorData.message || `API request failed with status ${response.status}`,
         response.status

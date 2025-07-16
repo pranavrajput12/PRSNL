@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getApiEndpoint } from '$lib/utils/api-url';
 
 const VALID_CATEGORIES = ['dev', 'learn', 'media', 'ideas'];
 
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 
     // Fetch content by category using the new API endpoint
     const response = await fetch(
-      `http://localhost:8000/api/content/category/${category}?${queryParams}`
+      getApiEndpoint(`/content/category/${category}?${queryParams}`)
     );
 
     if (!response.ok) {

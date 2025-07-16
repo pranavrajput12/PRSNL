@@ -329,7 +329,11 @@ Search Query → API Endpoint → Query Parser
 ## Security Architecture
 
 ### Authentication & Authorization
-- Session-based authentication
+- JWT-based authentication with access and refresh tokens
+- Email verification via Resend API
+- Magic link (passwordless) authentication
+- Session management in PostgreSQL
+- Protected routes with auth guards
 - API key authentication for extensions
 - Role-based access control (future)
 

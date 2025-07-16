@@ -1,11 +1,11 @@
 # PRSNL Database Schema Documentation
 
-Last Updated: 2025-07-12  
+Last Updated: 2025-07-16  
 **Complete and Current Database Schema Reference**
 
 ## Overview
 
-The PRSNL database uses PostgreSQL 16 with ARM64 architecture and includes the pgvector extension for semantic search capabilities.
+The PRSNL database uses PostgreSQL 16 with ARM64 architecture and includes the pgvector extension for semantic search capabilities. The system now includes comprehensive authentication and user management tables for JWT-based authentication.
 
 ## Core Tables
 
@@ -215,6 +215,53 @@ CREATE TABLE video_analysis (
     analysis    JSONB NOT NULL,                        -- AI analysis results
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+```
+
+### 8. Authentication & User Management
+
+JWT-based authentication with email verification and session management.
+
+```sql
+CREATE TABLE users (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email           VARCHAR(255) UNIQUE NOT NULL,
+    name            VARCHAR(255),
+    password_hash   VARCHAR(255) NOT NULL,
+    is_active       BOOLEAN DEFAULT TRUE,
+    is_verified     BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE user_sessions (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    refresh_token   VARCHAR(255) UNIQUE NOT NULL,
+    expires_at      TIMESTAMPTZ NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    
+    CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE verification_tokens (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token           VARCHAR(255) UNIQUE NOT NULL,
+    token_type      VARCHAR(50) NOT NULL,           -- 'email_verification', 'magic_link'
+    expires_at      TIMESTAMPTZ NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    
+    CONSTRAINT verification_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Indexes for authentication tables
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_is_active ON users(is_active);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at);
+CREATE INDEX idx_verification_tokens_user_id ON verification_tokens(user_id);
+CREATE INDEX idx_verification_tokens_token ON verification_tokens(token);
+CREATE INDEX idx_verification_tokens_expires_at ON verification_tokens(expires_at);
 ```
 
 ## Database Indexes

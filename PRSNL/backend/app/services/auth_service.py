@@ -274,7 +274,7 @@ class AuthService:
         pool = await get_db_pool()
         async with pool.acquire() as db:
             result = await db.execute(
-                "UPDATE user_sessions SET revoked_at = NOW() WHERE session_token = $1",
+                "UPDATE user_sessions SET revoked_at = NOW() WHERE session_token = $1 AND revoked_at IS NULL",
                 token
             )
             return result != "UPDATE 0"
@@ -299,28 +299,48 @@ class AuthService:
         """Verify a user's email address"""
         pool = await get_db_pool()
         async with pool.acquire() as db:
-            # Check token
-            verification = await db.fetchrow("""
-                SELECT * FROM email_verifications 
-                WHERE token = $1 
-                AND expires_at > NOW()
-                AND verified_at IS NULL
+            # Check token in users table (where it's actually stored)
+            user = await db.fetchrow("""
+                SELECT id, email_verification_token, email_verification_token_expires, is_verified
+                FROM users 
+                WHERE email_verification_token = $1 
+                AND email_verification_token_expires > NOW()
+                AND is_verified = FALSE
             """, verification_data.token)
             
-            if not verification:
-                raise ValueError("Invalid or expired verification token")
-            
-            # Mark as verified
-            await db.execute(
-                "UPDATE email_verifications SET verified_at = NOW() WHERE id = $1",
-                verification["id"]
-            )
-            
-            # Update user
-            await db.execute(
-                "UPDATE users SET is_verified = TRUE WHERE id = $1",
-                verification["user_id"]
-            )
+            if not user:
+                # Also check email_verifications table for backward compatibility
+                verification = await db.fetchrow("""
+                    SELECT * FROM email_verifications 
+                    WHERE token = $1 
+                    AND expires_at > NOW()
+                    AND verified_at IS NULL
+                """, verification_data.token)
+                
+                if not verification:
+                    raise ValueError("Invalid or expired verification token")
+                
+                # Mark as verified in email_verifications
+                await db.execute(
+                    "UPDATE email_verifications SET verified_at = NOW() WHERE id = $1",
+                    verification["id"]
+                )
+                
+                # Update user
+                await db.execute(
+                    "UPDATE users SET is_verified = TRUE, email_verified_at = NOW() WHERE id = $1",
+                    verification["user_id"]
+                )
+            else:
+                # Update user - clear token and mark as verified
+                await db.execute("""
+                    UPDATE users 
+                    SET is_verified = TRUE, 
+                        email_verified_at = NOW(),
+                        email_verification_token = NULL,
+                        email_verification_token_expires = NULL
+                    WHERE id = $1
+                """, user["id"])
             
             return True
     
