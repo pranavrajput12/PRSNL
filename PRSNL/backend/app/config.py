@@ -27,6 +27,22 @@ class Settings(BaseSettings):
         "https://api.prsnl.fyi"
     ]
     
+    # Authentication Services Configuration
+    KEYCLOAK_URL: str = os.getenv("KEYCLOAK_URL", "http://localhost:8080")
+    KEYCLOAK_REALM: str = os.getenv("KEYCLOAK_REALM", "prsnl")
+    KEYCLOAK_CLIENT_ID: str = os.getenv("KEYCLOAK_CLIENT_ID", "prsnl-frontend")
+    
+    FUSIONAUTH_URL: str = os.getenv("FUSIONAUTH_URL", "http://localhost:9011")
+    FUSIONAUTH_API_KEY: str = os.getenv("FUSIONAUTH_API_KEY", "")
+    FUSIONAUTH_APPLICATION_ID: str = os.getenv("FUSIONAUTH_APPLICATION_ID", "")
+    FUSIONAUTH_CLIENT_ID: str = os.getenv("FUSIONAUTH_CLIENT_ID", "prsnl-frontend")
+    FUSIONAUTH_CLIENT_SECRET: str = os.getenv("FUSIONAUTH_CLIENT_SECRET", "")
+    
+    # Auth Integration Settings
+    AUTH_COOKIE_DOMAIN: str = os.getenv("AUTH_COOKIE_DOMAIN", "localhost")
+    AUTH_COOKIE_SECURE: bool = os.getenv("AUTH_COOKIE_SECURE", "false").lower() == "true"
+    AUTH_SESSION_TIMEOUT: int = int(os.getenv("AUTH_SESSION_TIMEOUT", "3600"))  # 1 hour
+    
     # LLM
     AZURE_OPENAI_API_KEY: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/auth';
+  import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   import NeuralBackground from '$lib/components/NeuralBackground.svelte';
   import InspirationMessage from '$lib/components/InspirationMessage.svelte';
@@ -71,18 +71,23 @@
     if (!validateForm()) return;
 
     if (loginMode === 'password') {
-      const success = await authActions.login({
-        email: formData.email,
-        password: formData.password
-      });
-
-      if (success) {
+      try {
+        // Use auth service for proper state management
+        await authActions.loginWithPRSNL({
+          email: formData.email,
+          password: formData.password
+        });
         goto('/');
+      } catch (error) {
+        console.error('Login failed:', error);
       }
     } else {
-      const success = await authActions.sendMagicLink(formData.email);
-      if (success) {
-        magicLinkSent = true;
+      // Magic link not implemented in unified auth yet
+      // Fall back to Google SSO for passwordless experience
+      try {
+        await authActions.loginWithGoogle();
+      } catch (error) {
+        console.error('Google login failed:', error);
       }
     }
   }
@@ -344,8 +349,7 @@
       </p>
     </div>
 
-    <!-- Social Login (Future) -->
-    <!-- 
+    <!-- Social Login with Enterprise SSO -->
     <div class="mt-8">
       <div class="relative">
         <div class="absolute inset-0 flex items-center">
@@ -356,19 +360,42 @@
         </div>
       </div>
       
-      <div class="mt-6 grid grid-cols-2 gap-3">
-        <button class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors">
-          <Icon name="github" class="w-5 h-5" />
-          <span class="ml-2">GitHub</span>
+      <div class="mt-6 space-y-3">
+        <button 
+          on:click={() => authActions.loginWithGoogle()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="chrome" class="w-5 h-5" />
+          <span class="ml-2">Continue with Google</span>
         </button>
         
-        <button class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors">
-          <Icon name="chrome" class="w-5 h-5" />
-          <span class="ml-2">Google</span>
+        <button 
+          on:click={() => authActions.loginWithGitHub()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="github" class="w-5 h-5" />
+          <span class="ml-2">Continue with GitHub</span>
+        </button>
+        
+        <button 
+          on:click={() => authActions.loginWithMicrosoft()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="windows" class="w-5 h-5" />
+          <span class="ml-2">Continue with Microsoft</span>
         </button>
       </div>
+      
+      <div class="mt-4 text-center">
+        <p class="text-xs text-slate-400">
+          <Icon name="shield-check" class="w-3 h-3 inline mr-1" />
+          Secure enterprise SSO via Keycloak
+        </p>
+      </div>
     </div>
-    -->
   </div>
 </div>
 

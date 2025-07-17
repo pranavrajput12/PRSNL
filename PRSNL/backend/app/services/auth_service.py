@@ -55,7 +55,11 @@ class AuthService:
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         
-        to_encode.update({"exp": expire, "type": "access"})
+        to_encode.update({
+            "exp": expire, 
+            "type": "access",
+            "jti": str(UUID(bytes=secrets.token_bytes(16)))  # JWT ID for uniqueness
+        })
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
     
@@ -64,7 +68,11 @@ class AuthService:
         """Create a JWT refresh token"""
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        to_encode.update({"exp": expire, "type": "refresh"})
+        to_encode.update({
+            "exp": expire, 
+            "type": "refresh",
+            "jti": str(UUID(bytes=secrets.token_bytes(16)))  # JWT ID for uniqueness
+        })
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
     

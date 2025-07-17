@@ -4,7 +4,7 @@ import logging
 import re
 import time
 from typing import Dict, List, Optional
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import asyncpg
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
@@ -15,6 +15,7 @@ from app.core.capture_engine import CaptureEngine
 from app.core.exceptions import InternalServerError, InvalidInput
 from app.db.database import get_db_connection, get_db_pool, update_item_embedding
 from app.middleware.rate_limit import capture_limiter, capture_throttle_limiter
+from app.middleware.user_context import require_user_id
 from app.models.schemas import CaptureRequest, CaptureResponse, ItemStatus
 from app.monitoring.metrics import (
     VIDEO_CAPTURE_REQUESTS,
@@ -119,7 +120,7 @@ from app.services.cache import CacheKeys, invalidate_cache
 
 @router.post("/capture", status_code=status.HTTP_201_CREATED)
 @capture_throttle_limiter
-async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks):
+async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, user_id: UUID = Depends(require_user_id)):
     """Capture a new item (web page, note, file, etc.)."""
     print(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force print
     logger.error(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force error level
@@ -169,9 +170,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 existing_item = await db_connection.fetchrow("""
                     SELECT id, title, created_at, status
                     FROM items
-                    WHERE url = $1
+                    WHERE url = $1 AND user_id = $2
                     LIMIT 1
-                """, str(capture_request.url))
+                """, str(capture_request.url), user_id)
                 
                 if existing_item:
                     raise InvalidInput(
@@ -436,9 +437,9 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 INSERT INTO public.items (
                     id, url, title, raw_content, status, type, content_type, enable_summarization, metadata,
                     programming_language, project_category, difficulty_level, is_career_related, platform,
-                    repository_metadata
+                    repository_metadata, user_id
                 )
-                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb)
+                VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb, $15)
             """
             params = (
                 item_id, 
@@ -454,7 +455,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 capture_request.difficulty_level,
                 capture_request.is_career_related,
                 platform,
-                json.dumps(repository_metadata) if repository_metadata else None
+                json.dumps(repository_metadata) if repository_metadata else None,
+                user_id
             )
             
             logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")
@@ -485,12 +487,12 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             # Process tags if provided
             if capture_request.tags:
                 for tag_name in capture_request.tags:
-                    # Get or create tag
+                    # Get or create tag for this user
                     tag_id = await db_connection.fetchval("""
-                        INSERT INTO tags (name) VALUES ($1)
-                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                        INSERT INTO tags (name, user_id) VALUES ($1, $2)
+                        ON CONFLICT (name, user_id) DO UPDATE SET name = EXCLUDED.name
                         RETURNING id
-                    """, tag_name.lower())
+                    """, tag_name.lower(), user_id)
                     
                     # Link tag to item
                     await db_connection.execute("""
@@ -870,15 +872,16 @@ class CheckDuplicateResponse(BaseModel):
 @router.post("/capture/check-duplicate", response_model=CheckDuplicateResponse)
 async def check_duplicate_url(
     request: CheckDuplicateRequest,
-    db_connection: asyncpg.Connection = Depends(get_db_connection)
+    db_connection: asyncpg.Connection = Depends(get_db_connection),
+    user_id: UUID = Depends(require_user_id)
 ):
     """Check if a URL already exists in the knowledge base before capture."""
     existing_item = await db_connection.fetchrow("""
         SELECT id, title, created_at, status, summary
         FROM items
-        WHERE url = $1
+        WHERE url = $1 AND user_id = $2
         LIMIT 1
-    """, str(request.url))
+    """, str(request.url), user_id)
     
     if existing_item:
         return CheckDuplicateResponse(

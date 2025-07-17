@@ -1,0 +1,139 @@
+services:
+  # Keycloak - Identity Provider & Authentication
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: prsnl-keycloak
+    environment:
+      # Database Configuration (using your existing PostgreSQL)
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://host.docker.internal:5433/prsnl
+      KC_DB_USERNAME: pronav
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-}
+      KC_DB_SCHEMA: keycloak
+      
+      # Admin Configuration
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      
+      # Keycloak Configuration
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+      
+      # Performance & Security
+      KC_PROXY: edge
+      KC_LOG_LEVEL: INFO
+      
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak/themes:/opt/keycloak/themes:ro
+      - ./keycloak/providers:/opt/keycloak/providers:ro
+    
+    command: 
+      - start-dev
+      - --import-realm
+    
+    depends_on:
+      - postgres-init
+    
+    networks:
+      - prsnl-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://127.0.0.1:8080\r\nConnection: close\r\n\r\n' >&3;grep 'HTTP/1.1 200 OK' <&3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # FusionAuth - User Lifecycle Management
+  fusionauth:
+    image: fusionauth/fusionauth-app:1.50.1
+    container_name: prsnl-fusionauth
+    environment:
+      # Database Configuration (using your existing PostgreSQL)
+      DATABASE_URL: jdbc:postgresql://host.docker.internal:5433/prsnl?currentSchema=fusionauth
+      DATABASE_ROOT_USERNAME: pronav
+      DATABASE_ROOT_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      DATABASE_USERNAME: pronav
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      
+      # FusionAuth Configuration
+      FUSIONAUTH_APP_MEMORY: 512M
+      FUSIONAUTH_APP_RUNTIME_MODE: development
+      FUSIONAUTH_APP_URL: http://localhost:9011
+      FUSIONAUTH_APP_SILENT_MODE: false
+      
+      # Search Engine (using database search for simplicity)
+      FUSIONAUTH_APP_SEARCH_TYPE: database
+      
+      # Kickstart configuration
+      FUSIONAUTH_APP_KICKSTART_FILE: /usr/local/fusionauth/kickstart/kickstart.json
+      
+    ports:
+      - "9011:9011"
+    
+    volumes:
+      - fusionauth_config:/usr/local/fusionauth/config
+      - ./fusionauth/kickstart:/usr/local/fusionauth/kickstart:ro
+      - ./fusionauth/logs:/usr/local/fusionauth/logs
+    
+    depends_on:
+      - postgres-init
+      - keycloak
+    
+    networks:
+      - prsnl-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9011/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL Schema Initialization
+  postgres-init:
+    image: postgres:16
+    container_name: prsnl-postgres-init
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - ./auth/sql/init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql:ro
+    command: >
+      bash -c "
+        echo 'Waiting for PostgreSQL to be ready...'
+        until pg_isready -h host.docker.internal -p 5433 -U pronav; do
+          sleep 2
+        done
+        echo 'PostgreSQL is ready. Creating auth schemas...'
+        psql -h host.docker.internal -p 5433 -U pronav -d prsnl -f /docker-entrypoint-initdb.d/init-schemas.sql
+        echo 'Schema initialization complete.'
+      "
+    networks:
+      - prsnl-network
+    
+    depends_on: []
+
+volumes:
+  keycloak_data:
+    driver: local
+  fusionauth_config:
+    driver: local
+
+networks:
+  prsnl-network:
+    driver: bridge
+    external: false

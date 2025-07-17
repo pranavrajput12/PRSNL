@@ -6,7 +6,7 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
-import { authStore, authActions } from '$lib/stores/auth';
+import { authStore, authActions } from '$lib/stores/unified-auth';
 
 export interface AuthGuardOptions {
   redirectTo?: string;
@@ -89,8 +89,13 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
   const auth = get(authStore);
 
   // Check if user is authenticated
-  if (!auth.isAuthenticated || !auth.user || !auth.accessToken) {
-    console.log('Auth guard: User not authenticated, redirecting to', redirectTo);
+  if (!auth.isAuthenticated || !auth.user || !auth.token) {
+    console.log('Auth guard: User not authenticated, redirecting to', redirectTo, {
+      isAuthenticated: auth.isAuthenticated,
+      hasUser: !!auth.user,
+      hasToken: !!auth.token,
+      authSource: auth.authSource
+    });
     goto(redirectTo);
     return false;
   }
@@ -109,14 +114,8 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
     return false;
   }
 
-  // Try to refresh token if it might be expired
-  try {
-    await authActions.refreshToken();
-  } catch (error) {
-    console.log('Auth guard: Token refresh failed, redirecting to login');
-    goto(redirectTo);
-    return false;
-  }
+  // Don't try to refresh on every route change - the service handles this
+  // Only the initial auth check in the service will handle token refresh
 
   return true;
 }

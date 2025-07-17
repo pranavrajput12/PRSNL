@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Request, Depends
 from pydantic import BaseModel
 
 from app.core.exceptions import InternalServerError
 from app.db.database import get_db_pool
+from app.middleware.user_context import require_user_id
 
 router = APIRouter()
 
@@ -37,7 +38,8 @@ class TimelineResponse(BaseModel):
 async def get_timeline(
     limit: int = Query(20, ge=1, le=100),
     cursor: Optional[str] = None,
-    page: Optional[int] = Query(None, description="Page number (for backward compatibility)")
+    page: Optional[int] = Query(None, description="Page number (for backward compatibility)"),
+    user_id: UUID = Depends(require_user_id)
 ):
     """Retrieve a chronological list of captured items using cursor-based pagination."""
     try:
@@ -71,13 +73,14 @@ async def get_timeline(
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.status IN ('completed', 'bookmark', 'pending')
+                AND i.user_id = $1
             """
-            params = []
+            params = [user_id]
             if cursor:
                 try:
                     # The cursor is the created_at timestamp of the last item
                     cursor_dt = datetime.fromisoformat(cursor.replace("Z", "+00:00"))
-                    query += " AND i.created_at < $1"
+                    query += " AND i.created_at < $2"
                     params.append(cursor_dt)
                 except ValueError:
                     raise HTTPException(status_code=400, detail="Invalid cursor format.")

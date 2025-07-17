@@ -16,7 +16,8 @@ import type {
   ContentTypesResponse,
 } from './types/api';
 import { get } from 'svelte/store';
-import { authStore } from './stores/auth';
+import { authStore } from './stores/unified-auth';
+import { authDebugger } from './debug-auth';
 
 // Add RequestInit type for fetch API
 type RequestInit = {
@@ -68,9 +69,18 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
   };
   
   // Add authorization header if user is authenticated
-  if (auth.accessToken) {
-    headers['Authorization'] = `Bearer ${auth.accessToken}`;
+  if (auth.token) {
+    headers['Authorization'] = `Bearer ${auth.token}`;
   }
+  
+  authDebugger.log('API_REQUEST', {
+    endpoint,
+    method: options.method || 'GET',
+    hasAuth: !!auth.token,
+    isAuthenticated: auth.isAuthenticated,
+    tokenLength: auth.token?.length || 0,
+    userId: auth.user?.id || null
+  });
 
   try {
     const response = await fetch(fullUrl, {
@@ -98,11 +108,24 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
       
       // Handle 401 Unauthorized - try to refresh token first
       if (response.status === 401 && !endpoint.includes('/auth/')) {
+        authDebugger.log('API_401_UNAUTHORIZED', {
+          endpoint,
+          currentAuth: {
+            hasAccessToken: !!auth.accessToken,
+            hasRefreshToken: !!auth.refreshToken,
+            isAuthenticated: auth.isAuthenticated,
+            userId: auth.user?.id
+          }
+        });
+        
         // Try to refresh the token once
         const { authActions } = await import('./stores/auth');
+        authDebugger.log('API_REFRESH_ATTEMPT', { endpoint });
+        
         const refreshed = await authActions.refreshToken();
         
         if (refreshed) {
+          authDebugger.log('API_REFRESH_SUCCESS', { endpoint });
           // Retry the original request with new token
           const newAuth = get(authStore);
           if (newAuth.accessToken) {
@@ -114,12 +137,18 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
             });
             
             if (retryResponse.ok) {
+              authDebugger.log('API_RETRY_SUCCESS', { endpoint, status: retryResponse.status });
               return await retryResponse.json();
+            } else {
+              authDebugger.log('API_RETRY_FAILED', { endpoint, status: retryResponse.status });
             }
           }
+        } else {
+          authDebugger.log('API_REFRESH_FAILED', { endpoint });
         }
         
         // If refresh failed or retry failed, logout
+        authDebugger.log('API_FORCING_LOGOUT', { endpoint, reason: 'auth failed' });
         await authActions.logout();
         
         // Redirect to login
@@ -591,6 +620,46 @@ export async function getPersonalityAnalysis(timeRange: string = '30d'): Promise
 export async function getContentTypes(): Promise<ContentTypesResponse> {
   return fetchWithErrorHandling<ContentTypesResponse>('/content-types');
 }
+
+/**
+ * User Profile API
+ */
+export const profileApi = {
+  getProfile: async () => 
+    fetchWithErrorHandling('/profile'),
+  
+  updateProfile: async (data: {
+    name?: string;
+    first_name?: string;
+    last_name?: string;
+  }) =>
+    fetchWithErrorHandling('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  
+  changePassword: async (data: {
+    current_password: string;
+    new_password: string;
+  }) =>
+    fetchWithErrorHandling('/profile/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  getStats: async () =>
+    fetchWithErrorHandling('/profile/stats'),
+  
+  deleteAccount: async () =>
+    fetchWithErrorHandling('/profile', {
+      method: 'DELETE',
+    }),
+  
+  completeOnboarding: async () =>
+    fetchWithErrorHandling('/profile/complete-onboarding', {
+      method: 'POST',
+    }),
+};
 
 export const api = {
   get: fetchWithErrorHandling,

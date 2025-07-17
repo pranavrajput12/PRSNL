@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { authGuard, redirectIfAuthenticated } from '$lib/auth/auth-guard';
-  import { isAuthenticated, isLoading } from '$lib/stores/auth';
+  import { isAuthenticated, isLoading } from '$lib/stores/unified-auth';
   
   let authCheckComplete = false;
 

@@ -9,7 +9,7 @@
   import { preferences } from '$lib/stores/app';
   import { goto } from '$app/navigation';
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
-  import { user, isAuthenticated, authActions } from '$lib/stores/auth';
+  import { currentUser, isAuthenticated, authActions } from '$lib/stores/unified-auth';
   
   export let data;
 
@@ -129,17 +129,17 @@
 <QueryClientProvider client={queryClient}>
   <div class="app-layout {data?.isPublicRoute ? 'auth-layout' : ''}">
     <!-- Universal neural motherboard background for all pages except homepage -->
-    <div class="neural-motherboard-bg {$page.url.pathname === '/' ? 'hide-bg' : ''}">
-      <div class="pcb-traces"></div>
-      <div class="circuit-nodes">
-        <div class="node node-1"></div>
-        <div class="node node-2"></div>
-        <div class="node node-3"></div>
-        <div class="node node-4"></div>
+      <div class="neural-motherboard-bg {$page.url.pathname === '/' ? 'hide-bg' : ''}">
+        <div class="pcb-traces"></div>
+        <div class="circuit-nodes">
+          <div class="node node-1"></div>
+          <div class="node node-2"></div>
+          <div class="node node-3"></div>
+          <div class="node node-4"></div>
+        </div>
       </div>
-    </div>
 
-    {#if !data?.isPublicRoute}
+      {#if !data?.isPublicRoute}
     <!-- Mobile Toggle -->
     <button class="mobile-toggle {mobileMenuOpen ? 'active' : ''}" on:click={toggleMobileMenu}>
       <span class="toggle-icon">≡</span>
@@ -243,19 +243,19 @@
 
       <!-- User Authentication Section -->
       <div class="user-auth-section">
-        {#if $isAuthenticated && $user}
+        {#if $isAuthenticated && $currentUser}
           <div class="user-profile">
             <div class="user-avatar">
-              {$user.first_name ? $user.first_name.charAt(0).toUpperCase() : $user.email.charAt(0).toUpperCase()}
+              {$currentUser.firstName ? $currentUser.firstName.charAt(0).toUpperCase() : $currentUser.email.charAt(0).toUpperCase()}
             </div>
             <div class="user-info">
               <div class="user-name">
-                {$user.first_name && $user.last_name 
-                  ? `${$user.first_name} ${$user.last_name}` 
-                  : $user.first_name || $user.email}
+                {$currentUser.firstName && $currentUser.lastName 
+                  ? `${$currentUser.firstName} ${$currentUser.lastName}` 
+                  : $currentUser.firstName || $currentUser.email}
               </div>
-              <div class="user-type">{$user.user_type}</div>
-              {#if !$user.is_verified}
+              <div class="user-type">{$currentUser.source}</div>
+              {#if !$currentUser.isEmailVerified}
                 <div class="verification-status">Email not verified</div>
               {/if}
             </div>
@@ -2096,4 +2096,5 @@
   .innovative-sidebar.morphed .auth-link span {
     display: none;
   }
+
 </style>

@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { user, authActions, isLoading, authError } from '$lib/stores/auth';
+  import { currentUser as user, authActions, isLoading, authError } from '$lib/stores/unified-auth';
   import { addNotification } from '$lib/stores/app';
   import Icon from '$lib/components/Icon.svelte';
+  import { profileApi } from '$lib/api';
 
   // Form state
   let profileData = {
     first_name: '',
     last_name: '',
+    name: '',
     email: '',
     user_type: 'individual' as 'individual' | 'team' | 'enterprise'
   };
@@ -18,6 +20,13 @@
     confirm_password: ''
   };
 
+  let userStats = {
+    total_items: 0,
+    total_tags: 0,
+    items_this_month: 0,
+    last_capture: null as string | null
+  };
+
   let formErrors: Record<string, string> = {};
   let activeTab: 'profile' | 'password' | 'account' = 'profile';
   let showCurrentPassword = false;
@@ -25,6 +34,8 @@
   let showConfirmPassword = false;
   let isUpdatingProfile = false;
   let isUpdatingPassword = false;
+  let isLoadingProfile = true;
+  let isLoadingStats = true;
 
   // User type options
   const userTypes = [
@@ -45,14 +56,45 @@
     }
   ];
 
-  // Load user data
-  $: if ($user) {
-    profileData = {
-      first_name: $user.first_name || '',
-      last_name: $user.last_name || '',
-      email: $user.email,
-      user_type: $user.user_type as any
-    };
+  // Load user data on mount
+  onMount(async () => {
+    await loadProfileData();
+    await loadUserStats();
+  });
+
+  async function loadProfileData() {
+    try {
+      isLoadingProfile = true;
+      const profile = await profileApi.getProfile();
+      profileData = {
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        name: profile.name || '',
+        email: profile.email,
+        user_type: profile.user_type as any
+      };
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      addNotification({
+        type: 'error',
+        message: 'Failed to load profile data'
+      });
+    } finally {
+      isLoadingProfile = false;
+    }
+  }
+
+  async function loadUserStats() {
+    try {
+      isLoadingStats = true;
+      const stats = await profileApi.getStats();
+      userStats = stats;
+    } catch (error) {
+      console.error('Failed to load user stats:', error);
+      // Don't show error notification for stats as it's not critical
+    } finally {
+      isLoadingStats = false;
+    }
   }
 
   // Validation functions
@@ -105,9 +147,13 @@
     isUpdatingProfile = true;
     
     try {
-      // This would be an API call to update profile
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Build update data, only including changed fields
+      const updateData: any = {};
+      if (profileData.first_name.trim()) updateData.first_name = profileData.first_name.trim();
+      if (profileData.last_name.trim()) updateData.last_name = profileData.last_name.trim();
+      if (profileData.name.trim()) updateData.name = profileData.name.trim();
+      
+      await profileApi.updateProfile(updateData);
       
       addNotification({
         type: 'success',
@@ -116,7 +162,9 @@
       
       // Refresh user data
       await authActions.getCurrentUser();
+      await loadProfileData();
     } catch (error) {
+      console.error('Profile update error:', error);
       addNotification({
         type: 'error',
         message: 'Failed to update profile. Please try again.'
@@ -132,9 +180,10 @@
     isUpdatingPassword = true;
     
     try {
-      // This would be an API call to update password
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await profileApi.changePassword({
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password
+      });
       
       addNotification({
         type: 'success',
@@ -148,9 +197,22 @@
         confirm_password: ''
       };
     } catch (error) {
+      console.error('Password update error:', error);
+      let errorMessage = 'Failed to update password. Please try again.';
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('Current password is incorrect')) {
+          errorMessage = 'Current password is incorrect.';
+          formErrors.current_password = 'Current password is incorrect';
+        } else if (error.message.includes('password')) {
+          errorMessage = error.message;
+        }
+      }
+      
       addNotification({
         type: 'error',
-        message: 'Failed to update password. Please try again.'
+        message: errorMessage
       });
     } finally {
       isUpdatingPassword = false;
@@ -175,14 +237,13 @@
     if (!confirmed) return;
 
     const doubleConfirmed = confirm(
-      'This will permanently delete all your captured content, notes, and account data. Type "DELETE" to confirm.'
+      'This will permanently delete all your captured content, notes, and account data. Are you absolutely sure?'
     );
     
     if (!doubleConfirmed) return;
 
     try {
-      // This would be an API call to delete account
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await profileApi.deleteAccount();
       
       addNotification({
         type: 'success',
@@ -191,7 +252,13 @@
       
       // Logout and redirect
       await authActions.logout();
+      
+      // Redirect to home page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     } catch (error) {
+      console.error('Account deletion error:', error);
       addNotification({
         type: 'error',
         message: 'Failed to delete account. Please try again or contact support.'
@@ -302,6 +369,19 @@
           <h2 class="text-xl font-semibold text-white">Profile Information</h2>
 
           <form on:submit|preventDefault={updateProfile} class="space-y-6">
+            <!-- Display Name -->
+            <div>
+              <label for="displayName" class="block text-sm font-medium text-slate-200 mb-2">Display Name</label>
+              <input
+                type="text"
+                id="displayName"
+                bind:value={profileData.name}
+                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                placeholder="Your display name"
+              />
+              <p class="text-slate-400 text-xs mt-1">This is how your name appears throughout the application</p>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
               <!-- First Name -->
               <div>
@@ -547,6 +627,38 @@
                 </span>
               </div>
             </div>
+          </div>
+
+          <!-- User Statistics -->
+          <div class="bg-white/5 border border-white/10 rounded-lg p-6">
+            <h3 class="text-lg font-medium text-white mb-4">Your Data</h3>
+            {#if isLoadingStats}
+              <div class="flex items-center justify-center py-8">
+                <Icon name="loader-2" class="w-6 h-6 animate-spin text-purple-400" />
+                <span class="ml-2 text-slate-300">Loading statistics...</span>
+              </div>
+            {:else}
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="text-center p-4 bg-white/5 rounded-lg">
+                  <div class="text-2xl font-bold text-purple-400">{userStats.total_items}</div>
+                  <div class="text-slate-300">Total Items</div>
+                </div>
+                <div class="text-center p-4 bg-white/5 rounded-lg">
+                  <div class="text-2xl font-bold text-pink-400">{userStats.total_tags}</div>
+                  <div class="text-slate-300">Total Tags</div>
+                </div>
+                <div class="text-center p-4 bg-white/5 rounded-lg">
+                  <div class="text-2xl font-bold text-green-400">{userStats.items_this_month}</div>
+                  <div class="text-slate-300">This Month</div>
+                </div>
+                <div class="text-center p-4 bg-white/5 rounded-lg">
+                  <div class="text-xs font-medium text-blue-400">
+                    {userStats.last_capture ? new Date(userStats.last_capture).toLocaleDateString() : 'Never'}
+                  </div>
+                  <div class="text-slate-300">Last Capture</div>
+                </div>
+              </div>
+            {/if}
           </div>
 
           <!-- Danger Zone -->

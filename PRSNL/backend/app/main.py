@@ -67,6 +67,7 @@ from app.api.middleware import ExceptionHandlerMiddleware, RequestIDMiddleware
 from app.config import settings
 from app.core.errors import generic_error_handler, standard_error_handler, StandardError
 from app.middleware.auth import AuthMiddleware
+from app.middleware.unified_auth import unified_auth
 from app.middleware.logging import APIResponseTimeMiddleware
 from app.middleware.rate_limit import limiter, rate_limit_handler, RateLimitExceeded
 from app.monitoring.metrics import HEALTH_CHECK_STATUS, STORAGE_USAGE_BYTES
@@ -275,6 +276,7 @@ from app.api import (
     summarization,
     tags,
     timeline,
+    user_profile,  # User profile and settings management
     video_streaming,
     videos,
     vision,
@@ -294,6 +296,7 @@ app.include_router(search.router, prefix=settings.API_V1_STR)
 app.include_router(timeline.router, prefix=settings.API_V1_STR)
 app.include_router(items.router, prefix=settings.API_V1_STR)
 app.include_router(tags.router, prefix=settings.API_V1_STR)
+app.include_router(user_profile.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(videos.router, prefix=settings.API_V1_STR)
 app.include_router(vision.router, prefix=settings.API_V1_STR)

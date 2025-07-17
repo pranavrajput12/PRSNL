@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/auth';
+  import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/unified-auth';
   import { addNotification } from '$lib/stores/app';
   import Icon from '$lib/components/Icon.svelte';
   import NeuralBackground from '$lib/components/NeuralBackground.svelte';
@@ -149,16 +149,16 @@
       return;
     }
 
-    const success = await authActions.register({
-      email: formData.email,
-      password: formData.password,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      user_type: formData.user_type
-    });
-
-    if (success) {
+    try {
+      await authActions.signupWithPRSNL({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.first_name,
+        lastName: formData.last_name
+      });
       goto('/');
+    } catch (error) {
+      console.error('Signup failed:', error);
     }
   }
 
@@ -490,6 +490,54 @@
       </form>
       </div>
     </BreathingCard>
+
+    <!-- Social Signup Options -->
+    <div class="mt-8">
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-white/20"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-slate-900 text-slate-400">Or sign up with</span>
+        </div>
+      </div>
+      
+      <div class="mt-6 space-y-3">
+        <button 
+          on:click={() => authActions.loginWithGoogle()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="chrome" class="w-5 h-5" />
+          <span class="ml-2">Continue with Google</span>
+        </button>
+        
+        <button 
+          on:click={() => authActions.loginWithGitHub()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="github" class="w-5 h-5" />
+          <span class="ml-2">Continue with GitHub</span>
+        </button>
+        
+        <button 
+          on:click={() => authActions.loginWithMicrosoft()}
+          disabled={$isLoading}
+          class="w-full inline-flex justify-center py-3 px-4 border border-white/20 rounded-lg bg-white/10 text-sm font-medium text-white hover:bg-white/20 transition-colors disabled:opacity-50"
+        >
+          <Icon name="windows" class="w-5 h-5" />
+          <span class="ml-2">Continue with Microsoft</span>
+        </button>
+      </div>
+      
+      <div class="mt-4 text-center">
+        <p class="text-xs text-slate-400">
+          <Icon name="shield-check" class="w-3 h-3 inline mr-1" />
+          Secure enterprise SSO via Keycloak
+        </p>
+      </div>
+    </div>
 
     <!-- Login Link -->
     <div class="text-center mt-6">

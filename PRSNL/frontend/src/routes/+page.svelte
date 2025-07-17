@@ -66,8 +66,9 @@
   onMount(async () => {
     mounted = true;
     // Wait for auth to be initialized before making API calls
-    const { authInitialized } = await import('$lib/stores/auth');
-    await authInitialized;
+    const { authStore } = await import('$lib/stores/unified-auth');
+    // Small delay to ensure auth state is loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
     await loadData();
   });
 

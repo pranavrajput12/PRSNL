@@ -6,6 +6,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { addNotification } from './app.js';
+import { authDebugger } from '../debug-auth';
 
 // Auth Types
 export interface User {

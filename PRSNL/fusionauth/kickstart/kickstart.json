@@ -1,0 +1,241 @@
+{
+  "variables": {
+    "defaultTenantId": "30663132-6464-6665-3032-326466613934",
+    "adminEmail": "admin@prsnl.local",
+    "adminPassword": "prsnl_admin_2024!",
+    "prsnlApplicationId": "85a03867-dccf-4882-adde-1a79aeec50df",
+    "apiKey": "bf69486b-4733-4470-a592-f1bfce7af580"
+  },
+  "apiKeys": [
+    {
+      "key": "#{apiKey}",
+      "description": "PRSNL Backend API Key",
+      "permissions": {
+        "endpoints": {
+          "/api/application": ["GET", "POST", "PUT", "DELETE"],
+          "/api/user": ["GET", "POST", "PUT", "DELETE"],
+          "/api/user/registration": ["GET", "POST", "PUT", "DELETE"],
+          "/api/user/search": ["GET", "POST"],
+          "/api/login": ["POST"],
+          "/api/logout": ["POST"],
+          "/api/user/verify-email": ["POST"],
+          "/api/user/forgot-password": ["POST"],
+          "/api/user/change-password": ["POST"],
+          "/api/jwt/refresh": ["POST"],
+          "/api/report/daily-active-users": ["GET"],
+          "/api/report/monthly-active-users": ["GET"],
+          "/api/report/registration": ["GET"],
+          "/api/report/login": ["GET"]
+        }
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "POST",
+      "url": "/api/user",
+      "body": {
+        "user": {
+          "email": "#{adminEmail}",
+          "password": "#{adminPassword}",
+          "data": {
+            "displayName": "PRSNL Administrator",
+            "Department": "Engineering"
+          }
+        },
+        "skipVerification": true,
+        "sendSetPasswordEmail": false
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/application/#{prsnlApplicationId}",
+      "body": {
+        "application": {
+          "name": "PRSNL Knowledge Management",
+          "oauthConfiguration": {
+            "authorizedRedirectURLs": [
+              "http://localhost:3004/auth/callback",
+              "http://localhost:3004/auth/fusionauth/callback",
+              "https://prsnl.app/auth/callback",
+              "https://app.prsnl.app/auth/callback"
+            ],
+            "authorizedOriginURLs": [
+              "http://localhost:3004",
+              "https://prsnl.app",
+              "https://app.prsnl.app"
+            ],
+            "logoutURL": "http://localhost:3004/auth/logout",
+            "clientId": "prsnl-frontend",
+            "clientSecret": "prsnl-secret-2024-secure-key",
+            "enabledGrants": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "generateRefreshTokens": true,
+            "requireClientAuthentication": false,
+            "logoutBehavior": "AllApplications"
+          },
+          "jwtConfiguration": {
+            "enabled": true,
+            "timeToLiveInSeconds": 3600,
+            "refreshTokenTimeToLiveInMinutes": 43200,
+            "algorithm": "HS256"
+          },
+          "registrationConfiguration": {
+            "enabled": true,
+            "type": "basic"
+          },
+          "loginConfiguration": {
+            "allowTokenRefresh": true,
+            "generateRefreshTokens": true,
+            "requireAuthentication": true
+          },
+          "data": {
+            "description": "PRSNL Personal Knowledge Management Platform",
+            "category": "Productivity"
+          }
+        },
+        "roles": [
+          {
+            "name": "user",
+            "description": "Standard PRSNL user with access to personal knowledge management features",
+            "isDefault": true
+          },
+          {
+            "name": "admin",
+            "description": "PRSNL administrator with full access to user management and analytics"
+          },
+          {
+            "name": "premium",
+            "description": "Premium PRSNL user with access to advanced features"
+          },
+          {
+            "name": "enterprise",
+            "description": "Enterprise PRSNL user with team collaboration features"
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/user/registration/#{prsnlApplicationId}",
+      "body": {
+        "registration": {
+          "applicationId": "#{prsnlApplicationId}",
+          "roles": ["admin"]
+        },
+        "user": {
+          "email": "#{adminEmail}"
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/system-configuration",
+      "body": {
+        "systemConfiguration": {
+          "corsConfiguration": {
+            "allowCredentials": true,
+            "allowedHeaders": [
+              "Accept",
+              "Access-Control-Request-Headers",
+              "Access-Control-Request-Method",
+              "Authorization",
+              "Content-Type",
+              "Last-Event-ID",
+              "Origin",
+              "X-FusionAuth-TenantId",
+              "X-Requested-With"
+            ],
+            "allowedMethods": [
+              "GET",
+              "POST", 
+              "PUT",
+              "DELETE",
+              "OPTIONS",
+              "HEAD",
+              "PATCH"
+            ],
+            "allowedOrigins": [
+              "http://localhost:3004",
+              "https://prsnl.app",
+              "https://app.prsnl.app"
+            ],
+            "enabled": true,
+            "exposedHeaders": [
+              "Access-Control-Allow-Origin",
+              "Access-Control-Allow-Credentials"
+            ],
+            "preflightMaxAgeInSeconds": 0
+          },
+          "eventConfiguration": {
+            "events": {
+              "user.create": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.login.success": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.login.failed": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.password.update": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.registration.create": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.registration.update": {
+                "enabled": true,
+                "transactionType": "None"
+              },
+              "user.registration.delete": {
+                "enabled": true,
+                "transactionType": "None"
+              }
+            }
+          },
+          "uiConfiguration": {
+            "headerColor": "#8B5CF6",
+            "menuFontColor": "#FFFFFF",
+            "logoURL": "/images/prsnl-logo.png"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template",
+      "body": {
+        "emailTemplate": {
+          "name": "PRSNL Welcome Email",
+          "defaultFromName": "PRSNL Team",
+          "defaultSubject": "Welcome to PRSNL - Your Personal Knowledge Vault",
+          "defaultHtmlTemplate": "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Welcome to PRSNL</title></head><body style='font-family: system-ui, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;'><div style='background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 40px; text-align: center; border-radius: 12px; margin-bottom: 30px;'><h1 style='color: white; margin: 0; font-size: 32px; font-weight: 800;'>Welcome to PRSNL!</h1><p style='color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 18px;'>Your Personal Knowledge Management Platform</p></div><div style='padding: 0 20px;'><h2 style='color: #8B5CF6; margin-bottom: 20px;'>Hello ${user.firstName}!</h2><p>Thank you for joining PRSNL, the intelligent platform for capturing, organizing, and discovering your digital knowledge.</p><h3 style='color: #EC4899; margin-top: 30px;'>Get Started:</h3><ul style='margin: 20px 0;'><li>📚 <strong>Capture Content:</strong> Save articles, videos, and notes instantly</li><li>🔍 <strong>Smart Search:</strong> Find anything with AI-powered semantic search</li><li>🏷️ <strong>Auto-tagging:</strong> Let AI organize your content automatically</li><li>📊 <strong>Insights:</strong> Discover patterns in your knowledge consumption</li></ul><div style='text-align: center; margin: 40px 0;'><a href='http://localhost:3004/timeline' style='background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;'>Start Exploring →</a></div><p style='color: #666; font-size: 14px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;'>Questions? Reply to this email or visit our <a href='http://localhost:3004/docs' style='color: #8B5CF6;'>documentation</a>.</p></div></body></html>",
+          "defaultTextTemplate": "Welcome to PRSNL!\n\nHello ${user.firstName}!\n\nThank you for joining PRSNL, your personal knowledge management platform.\n\nGet started:\n- Capture content: Save articles, videos, and notes\n- Smart search: Find anything with AI-powered search\n- Auto-tagging: Let AI organize your content\n- Insights: Discover patterns in your knowledge\n\nVisit: http://localhost:3004/timeline\n\nQuestions? Reply to this email.\n\nThe PRSNL Team",
+          "id": "659dcdde-72b4-4dbd-8e84-21b4a0aee06c"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "url": "/api/email/template",
+      "body": {
+        "emailTemplate": {
+          "name": "PRSNL Email Verification",
+          "defaultFromName": "PRSNL Team",
+          "defaultSubject": "Verify your PRSNL account",
+          "defaultHtmlTemplate": "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Verify your PRSNL account</title></head><body style='font-family: system-ui, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;'><div style='background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 40px; text-align: center; border-radius: 12px; margin-bottom: 30px;'><h1 style='color: white; margin: 0; font-size: 28px; font-weight: 800;'>Verify Your Email</h1></div><div style='padding: 0 20px;'><h2 style='color: #8B5CF6;'>Almost there!</h2><p>Click the button below to verify your email address and complete your PRSNL account setup:</p><div style='text-align: center; margin: 40px 0;'><a href='${verificationURL}' style='background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;'>Verify Email Address</a></div><p style='color: #666; font-size: 14px;'>If the button doesn't work, copy and paste this link into your browser:</p><p style='word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;'>${verificationURL}</p><p style='color: #666; font-size: 14px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;'>This verification link will expire in 24 hours.</p></div></body></html>",
+          "defaultTextTemplate": "Verify Your PRSNL Account\n\nAlmost there!\n\nClick the link below to verify your email address:\n${verificationURL}\n\nThis verification link will expire in 24 hours.\n\nThe PRSNL Team",
+          "id": "659dcdde-72b4-4dbd-8e84-21b4a0aee06d"
+        }
+      }
+    }
+  ]
+}
