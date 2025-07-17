@@ -78,9 +78,11 @@ class UnifiedAuthService {
       // Initialize FusionAuth configuration
       this.fusionAuthConfig = {
         url: 'http://localhost:9011',
-        clientId: 'prsnl-frontend',
-        clientSecret: 'prsnl-secret-2024-secure-key',
-        applicationId: '85a03867-dccf-4882-adde-1a79aeec50df'
+        clientId: '4218d574-603a-48b4-b980-39a0b73e4cff',
+        clientSecret: '6f16bb7d-08f6-4008-a7ce-bef1cee8398b',
+        applicationId: '4218d574-603a-48b4-b980-39a0b73e4cff',
+        redirectUri: 'http://localhost:3004/auth/callback',
+        scope: 'openid profile email offline_access'
       };
 
       // Try to restore existing session

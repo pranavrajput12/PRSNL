@@ -25,10 +25,14 @@ This is your single source of truth for starting tasks properly. Use these promp
 @TASK_INITIATION_GUIDE.md Improve UI responsiveness
 ```
 
-### ⚠️ CRITICAL ENVIRONMENT INFO
+### ⚠️ CRITICAL ENVIRONMENT INFO - v8.0 UPDATE
 - **Container Runtime**: RANCHER DESKTOP (NOT Docker)
-- **Frontend Port**: 3003 (Updated from 3002)
+- **Frontend Port**: 3004 (Updated from 3003)
 - **Backend Port**: 8000
+- **Keycloak Port**: 8080 (Enterprise SSO)
+- **FusionAuth Port**: 9011 (User Management)
+- **PostgreSQL**: 5433 (ARM64 for M1/M2 Macs)
+- **DragonflyDB**: 6379 (25x faster than Redis)
 - **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
 
 ### 🏗️ MANDATORY: System Architecture Repository
@@ -63,6 +67,8 @@ When you tag this file, the AI will:
 - **`PROJECT_STRUCTURE.md`** - File organization and project layout
 - **`FRONTEND_SETUP.md`** - Frontend development environment
 - **`backend/docs/DATABASE_SCHEMA.md`** - Database structure and schema
+- **`docs/FUSIONAUTH_ADMIN_GUIDE.md`** - FusionAuth user management (v8.0)
+- **`docs/FUSIONAUTH_FRONTEND_INTEGRATION.md`** - OAuth2 integration guide (v8.0)
 
 ---
 
@@ -95,8 +101,9 @@ When you tag this file, the AI will:
 # Check for conflicts:
 - Review "IN PROGRESS" tasks in TASK_HISTORY.md
 - Verify no file locks in AI_COORDINATION_COMPLETE.md
-- Check port availability: lsof -i :3002,8000,5433
+- Check port availability: lsof -i :3004,8000,5433,8080,9011,6379
 - Ensure no other AI is working on same files
+- Verify auth services: docker ps | grep -E "keycloak|fusionauth"
 ```
 
 ### 3. Impact Assessment (REQUIRED)
@@ -194,6 +201,34 @@ curl -X POST http://localhost:8000/api/ai-suggest -H "Content-Type: application/
 - Embedding service implementation
 - Vision AI processing
 - Web scraping improvements
+
+### 🔐 Authentication Tasks (Claude) - NEW v8.0
+**Typical Changes**: Auth providers, SSO, user management
+**Files to Update on Completion**:
+- ✅ `TASK_HISTORY.md` (status update)
+- ✅ `docs/FUSIONAUTH_ADMIN_GUIDE.md` (user management changes)
+- ✅ `docs/FUSIONAUTH_FRONTEND_INTEGRATION.md` (OAuth flow changes)
+- ✅ `PROJECT_STATUS.md` (auth capabilities)
+- ⚠️ `API_DOCUMENTATION.md` (auth endpoints)
+
+**Sanity Checks Required**:
+```bash
+# Check auth services running
+docker ps | grep -E "keycloak|fusionauth"
+# Test Keycloak
+curl -s http://localhost:8080/health/ready
+# Test FusionAuth
+curl -s http://localhost:9011/api/status
+# Test OAuth callback
+curl -s http://localhost:3004/auth/callback
+```
+
+**Example Tasks**:
+- Configure social login providers
+- Implement MFA/2FA
+- User role management
+- SSO integration
+- JWT token validation
 
 ### 🧠 Simple Backend Tasks (Gemini)
 **Typical Changes**: Scripts, utilities, tests

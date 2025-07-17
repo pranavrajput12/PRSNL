@@ -1,22 +1,41 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { authActions } from '$lib/stores/unified-auth';
+  import { FUSIONAUTH_CONFIG } from '$lib/config/fusionauth';
   import Icon from '$lib/components/Icon.svelte';
   import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 
   let status: 'loading' | 'success' | 'error' = 'loading';
   let errorMessage = '';
+  let provider: 'keycloak' | 'fusionauth' = 'keycloak';
 
   onMount(async () => {
     try {
-      // Handle Keycloak callback
-      await authActions.handleCallback('keycloak');
+      // Check if this is a FusionAuth callback (has 'code' parameter)
+      const code = $page.url.searchParams.get('code');
+      const state = $page.url.searchParams.get('state');
+      const error = $page.url.searchParams.get('error');
+      
+      if (error) {
+        throw new Error($page.url.searchParams.get('error_description') || error);
+      }
+      
+      if (code) {
+        provider = 'fusionauth';
+        // Handle FusionAuth OAuth2 callback
+        await handleFusionAuthCallback(code, state);
+      } else {
+        // Handle Keycloak callback
+        await authActions.handleCallback('keycloak');
+      }
+      
       status = 'success';
       
       // Small delay for UX, then redirect
       setTimeout(() => {
-        goto('/');
+        goto(state || '/');
       }, 2000);
     } catch (error) {
       console.error('Callback handling failed:', error);
@@ -29,6 +48,50 @@
       }, 3000);
     }
   });
+
+  async function handleFusionAuthCallback(code: string, state: string | null) {
+    // Exchange code for tokens
+    const tokenResponse = await fetch(FUSIONAUTH_CONFIG.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: FUSIONAUTH_CONFIG.clientId,
+        client_secret: FUSIONAUTH_CONFIG.clientSecret,
+        code,
+        redirect_uri: FUSIONAUTH_CONFIG.redirectUri
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      throw new Error(`Token exchange failed: ${error}`);
+    }
+
+    const tokens = await tokenResponse.json();
+    
+    // Get user info
+    const userInfoResponse = await fetch(FUSIONAUTH_CONFIG.userInfoUrl, {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`
+      }
+    });
+
+    if (!userInfoResponse.ok) {
+      throw new Error('Failed to fetch user info');
+    }
+
+    const userInfo = await userInfoResponse.json();
+    
+    // Update auth store through actions
+    await authActions.handleFusionAuthLogin({
+      user: userInfo,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token
+    });
+  }
 </script>
 
 <svelte:head>
