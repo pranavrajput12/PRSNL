@@ -1,348 +1,228 @@
-# PRSNL - Personal Knowledge Management System v7.1
+# PRSNL - Personal Knowledge Management System v8.0
 
-> **Enterprise-grade AI-powered knowledge management with advanced performance features and multimodal processing**
+> **Enterprise-grade AI-powered knowledge management with dual authentication, 3D navigation, and revolutionary performance**
 
-PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 7.1 introduces revolutionary performance improvements and multimodal capabilities through major package upgrades.
+PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 8.0 introduces enterprise dual authentication, innovative 3D UI navigation, and complete authentication system overhaul.
 
-## 🚨 **Major Release v7.1 (July 2025) - Performance Revolution**
+## 🚨 **Major Release v8.0 (July 2025) - Authentication & UI Revolution**
 
-### **🚀 Performance & Reliability Upgrades (NEW in v7.1)**
-- **50-70% Faster Processing**: Multimodal document analysis with CrewAI 0.141.0
-- **Zero Data Loss**: LangGraph 0.5.3 persistent workflows with crash recovery
-- **100% Reliable JSON**: OpenAI 1.96.0 structured outputs guarantee valid data
-- **85%+ Cache Hit Rate**: Redis 6.2.0 client-side caching with automatic invalidation
-- **3x Task Throughput**: Celery 5.5.3 priority queues for critical operations
-- **40% Search Improvement**: Haystack 2.15.2 hybrid search (BM25 + embeddings)
+### **🔐 Dual Authentication System (NEW in v8.0)**
+- **Keycloak Integration**: Enterprise SSO with SAML/OIDC support
+- **FusionAuth**: Advanced user lifecycle management with analytics
+- **Unified Auth**: Seamless switching between providers
+- **Role-Based Access**: Admin, user, and premium role management
+- **JWT Tokens**: Secure token-based authentication with refresh
+- **User Migration**: Automated migration tools for existing users
 
-### **🧠 CodeMirror - AI Repository Intelligence**
-- **Repository Analysis**: Deep AI-powered code analysis with pattern detection
-- **Package Intelligence**: Comprehensive dependency analysis (npm, PyPI, Cargo, Maven)
-- **Security Scanning**: Vulnerability detection and maintenance scoring
-- **Multi-Agent System**: Specialized AI agents for content relevance and integration analysis
-- **Enterprise Processing**: Celery distributed tasks with real-time WebSocket updates
-- **Dual Analysis Modes**: Web-based analysis and advanced CLI tool integration
+### **🎮 Revolutionary 3D Navigation (NEW in v8.0)**
+- **Interactive 3D Homepage**: Computer museum aesthetic with functional navigation
+- **Component Mapping**: Mac for dashboard, Fan for analytics, Neural board for AI
+- **Spatial Memory**: Visual metaphors matching component functions
+- **WebGL Performance**: Smooth 60fps 3D rendering with Three.js
+- **Responsive Design**: Adaptive 3D elements for all screen sizes
 
-### **🏗️ Enterprise Architecture**
-- **HTTP/3 Support**: Uvicorn 0.35.0 with QUIC protocol for 20-30% faster connections
-- **Advanced Profiling**: Sentry SDK 2.33.0 performance monitoring and tracing
-- **Distributed Processing**: Celery task queues with DragonflyDB pub/sub
-- **Real-time Sync**: Enhanced WebSocket with FastAPI 0.116.1 improvements
-- **Database Intelligence**: SQLAlchemy 2.0.41 with 40% faster JSON operations
-- **Multi-Platform Support**: Package analysis across major package managers
+### **🚀 Performance & Reliability (v7.1 Features)**
+- **50-70% Faster Processing**: Multimodal document analysis with CrewAI
+- **Zero Data Loss**: LangGraph persistent workflows with crash recovery
+- **100% Reliable JSON**: OpenAI structured outputs guarantee valid data
+- **85%+ Cache Hit Rate**: DragonflyDB (25x faster than Redis)
+- **3x Task Throughput**: Celery priority queues for critical operations
+- **40% Search Improvement**: Haystack hybrid search (BM25 + embeddings)
 
-## 🌟 **Key Features**
+## 🌟 **Core Features**
 
-### **🧠 Advanced AI Orchestration System (Enhanced in v7.1)**
-- **Persistent Workflows**: LangGraph 0.5.3 with SQLite checkpointing and crash recovery
-- **Multimodal Processing**: CrewAI 0.141.0 Flows for text + image analysis
-- **Structured Outputs**: OpenAI 1.96.0 guaranteed JSON extraction
-- **Enhanced AI Router**: ReAct agent for intelligent provider selection and cost optimization
-- **LangChain Templates**: Centralized, versioned prompt management system
-- **Intelligent Capture**: Web articles, YouTube videos, documents, images, and more
-- **AI Summarization**: GPT-4 powered content analysis and key insights extraction
+### **🧠 Advanced AI Orchestration**
+- **Multi-Agent Workflows**: LangGraph state-based content processing
+- **Intelligent Router**: ReAct agent for provider selection and cost optimization
+- **Azure OpenAI Integration**: GPT-4 for complex reasoning, GPT-4-mini for speed
+- **LibreChat API**: OpenAI-compatible endpoint for third-party integrations
+- **Multimodal Processing**: Text, image, code, and document analysis
+- **Knowledge Graphs**: Dynamic relationship mapping between content
+
+### **📡 Capture & Processing**
+- **Universal Capture**: Screenshots, documents, code, web articles, videos
+- **AI Summarization**: Intelligent content analysis and key insights
 - **Smart Categorization**: Automatic tagging and topic classification
-- **Knowledge Graphs**: Dynamic relationship mapping between content items
+- **OCR Processing**: Extract text from images and PDFs
+- **Metadata Extraction**: Rich contextual information preservation
 
-### **🎙️ Hybrid Transcription System (NEW in v2.2)**
-- **Offline Speech Recognition**: Vosk-powered local transcription for privacy
-- **Cloud Fallback**: Azure OpenAI Whisper for high-quality transcription
-- **Smart Routing**: Automatically chooses optimal service based on context
-- **Privacy Mode**: Force offline processing for sensitive content
+### **🔍 Search & Discovery**
+- **Hybrid Search**: Combining keyword and semantic search
+- **Vector Similarity**: pgvector-powered content recommendations
+- **Natural Language**: Ask questions about your captured content
+- **Timeline View**: Visual history of your digital footprint
+- **Tag Management**: Hierarchical organization system
 
-### **🔍 Advanced Search & Discovery (Enhanced in v7.1)**
-- **Hybrid Search**: Haystack 2.15.2 combining BM25 + embeddings for 40% better relevance
-- **Semantic Search**: Vector-based similarity search with pgvector
-- **Full-Text Search**: PostgreSQL-powered content indexing
-- **AI-Suggested Content**: Intelligent content recommendations
-- **Knowledge Graph**: Multi-agent system connecting content, conversations, and integrations
-- **Repository Intelligence**: CodeMirror-powered code pattern discovery
-- **Package Discovery**: Intelligent dependency and vulnerability analysis
+### **🛡️ Security & Privacy**
+- **Enterprise SSO**: Keycloak SAML/OIDC integration
+- **Role-Based Access**: Granular permission management
+- **Data Encryption**: At-rest and in-transit protection
+- **API Key Management**: Secure token generation and rotation
+- **Audit Logging**: Complete activity tracking
 
-### **📊 Enterprise-Grade Observability (NEW in v2.2)**
-- **Comprehensive Monitoring**: OpenTelemetry + Grafana + Loki stack
-- **Performance Tracking**: Request latency, error rates, resource usage
-- **Business Metrics**: Content processing rates, search performance
-- **Real-time Dashboards**: Visual monitoring and alerting
-
-### **💻 Developer Experience (NEW in v2.2)**
-- **Automated Code Quality**: Pre-commit hooks with formatting, linting, security
-- **Consistent Development**: Black, isort, flake8, mypy, bandit integration
-- **Documentation**: Comprehensive setup and deployment guides
+### **📊 Analytics & Insights**
+- **User Analytics**: Login patterns, activity tracking
+- **Content Metrics**: Capture rates, processing statistics
+- **AI Insights**: Pattern detection and trend analysis
+- **Custom Reports**: Export data in multiple formats
+- **Real-time Dashboards**: WebSocket-powered live updates
 
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
-- **Local PostgreSQL 14+** with pgvector extension (primary database)
-- **Rancher Desktop** for Redis container only
+- **PostgreSQL 16+** with pgvector extension (ARM64 for M1/M2 Macs)
+- **Docker** (Rancher Desktop recommended for Mac)
 - **Python 3.11+**
-- **Node.js 18+** (v20+ recommended)
-- **Redis 7+** (runs in Docker)
+- **Node.js 20+**
+- **Minimum 8GB RAM**
 
 ### **1. Clone and Setup**
 ```bash
-git clone https://github.com/pranavrajput12/PRSNL.git
+git clone https://github.com/your-username/PRSNL.git
 cd PRSNL
 
-# Run automated setup script
+# Run automated setup
 ./setup-development.sh
 ```
 
-### **2. Configure Environment**
+### **2. Configure Authentication**
+```bash
+# Start auth services
+docker-compose -f docker-compose.auth.yml up -d
+
+# Access consoles
+# Keycloak: http://localhost:8080 (admin/admin123)
+# FusionAuth: http://localhost:9011 (configured during setup)
+```
+
+### **3. Configure Environment**
 ```bash
 # Copy environment template
 cp backend/.env.example backend/.env
 
-# Update with your API keys
-nano backend/.env
+# Required configurations:
+# - AZURE_OPENAI_API_KEY
+# - AZURE_OPENAI_ENDPOINT
+# - DATABASE_URL (postgresql://user@localhost:5433/prsnl)
 ```
 
-**Required API Keys:**
-- **Azure OpenAI**: For GPT-4 and Whisper transcription
-- **GitHub Token**: For enhanced API rate limits (optional)
-
-### **3. Start Services**
+### **4. Start Services**
 ```bash
-# Start Redis only (database is local PostgreSQL)
-docker-compose up -d redis
-
-# Start backend locally
+# Backend (port 8000)
 cd backend
-python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+source venv/bin/activate
+uvicorn app.main:app --reload
 
-# Start frontend (in new terminal)
+# Frontend (port 3004)
 cd frontend
+npm install
 npm run dev -- --port 3004
 ```
 
-### **4. Access Applications**
-| Service | URL | Purpose |
-|---------|-----|---------|
-| **PRSNL Web App** | http://localhost:3004 | Main application |
-| **API Documentation** | http://localhost:8000/docs | Backend API docs |
-| **Grafana Monitoring** | http://localhost:3000 | Performance dashboards |
-| **Prometheus Metrics** | http://localhost:9090 | Raw metrics data |
+### **5. Access PRSNL**
+- **Application**: http://localhost:3004
+- **API Documentation**: http://localhost:8000/docs
+- **Keycloak Admin**: http://localhost:8080
+- **FusionAuth Admin**: http://localhost:9011
 
-## 🏗️ **Architecture Overview**
+## 📦 **Technology Stack**
 
-### **Backend (FastAPI)**
-```
-📁 backend/
-├── 🔧 app/
-│   ├── 🚦 api/           # API endpoints (22 routers)
-│   ├── 🧠 services/      # Business logic & AI services
-│   ├── 🗄️ db/            # Database models & migrations
-│   ├── 🔍 core/          # Core utilities & observability
-│   └── 🎛️ middleware/    # Request processing middleware
-├── 📊 monitoring/        # Observability configurations
-└── 🗃️ storage/          # File storage & Vosk models
-```
+### **Frontend**
+- **Svelte 5**: Latest reactive framework with runes
+- **SvelteKit 2**: Full-stack application framework
+- **Three.js**: 3D graphics and WebGL rendering
+- **TailwindCSS**: Utility-first styling
+- **TypeScript**: Type-safe development
 
-### **Frontend (SvelteKit)**
-```
-📁 frontend/
-├── 🎨 src/
-│   ├── 📄 routes/        # Page components
-│   ├── 🧩 lib/           # Shared components & utilities
-│   └── 🎭 static/        # Static assets & 3D models
-└── 📦 build/             # Production build
-```
+### **Backend**
+- **FastAPI**: High-performance Python framework
+- **SQLAlchemy 2.0**: Modern ORM with async support
+- **Celery**: Distributed task processing
+- **LangChain/LangGraph**: AI orchestration
+- **Azure OpenAI**: GPT-4 and Whisper integration
 
-### **Key Technologies**
-- **AI**: Azure OpenAI (GPT-4, Whisper, Ada-002), LangGraph workflows, LangChain templates
-- **AI Orchestration**: Enhanced AI Router with ReAct agent, intelligent provider selection
-- **Database**: PostgreSQL + pgvector for semantic search + package intelligence
-- **Cache**: DragonflyDB (25x faster than Redis) + Celery distributed processing
-- **Code Analysis**: GitPython, PyDriller, Semgrep, Comby integration
-- **Package Intelligence**: Free APIs for npm, PyPI, Cargo, Maven Central
-- **Monitoring**: OpenTelemetry + Grafana + Loki + Prometheus
-- **Quality**: Pre-commit hooks + automated testing + security scanning
+### **Infrastructure**
+- **PostgreSQL 16**: Primary database with pgvector
+- **DragonflyDB**: Ultra-fast caching (25x Redis performance)
+- **Keycloak**: Enterprise SSO and identity management
+- **FusionAuth**: User lifecycle and analytics
+- **Docker**: Container orchestration
 
-## 🧠 **CodeMirror Repository Intelligence**
+### **AI & ML**
+- **OpenAI GPT-4**: Advanced reasoning and analysis
+- **CrewAI**: Multi-agent collaboration framework
+- **Haystack**: Hybrid search and RAG pipeline
+- **pgvector**: Vector similarity search
+- **Vosk**: Offline speech recognition
 
-### **AI-Powered Code Analysis**
-- **Pattern Detection**: Identify architectural patterns, anti-patterns, and optimization opportunities
-- **Framework Recognition**: Automatic detection of technologies, libraries, and frameworks
-- **Code Quality Scoring**: Security, performance, and maintainability metrics
-- **Knowledge Integration**: Connect code analysis with relevant learning resources
+## 🔧 **Development**
 
-### **Package Intelligence System**
-- **Multi-Platform Support**: npm (Node.js), PyPI (Python), Cargo (Rust), Maven (Java)
-- **Security Analysis**: Vulnerability detection, deprecated package identification
-- **License Compliance**: Automatic license risk assessment and compatibility checking
-- **Maintenance Scoring**: Package health metrics and update recommendations
-- **Real-time Updates**: Distributed processing with live progress tracking
-
-### **Enterprise Features**
-- **Authentication System**: JWT-based auth with email verification and magic links via Resend API
-- **Dual Analysis Modes**: Web-based instant analysis and CLI tool for advanced features
-- **Distributed Processing**: Celery task queues for scalable background processing
-- **Real-time Sync**: WebSocket updates with DragonflyDB pub/sub
-- **Database Intelligence**: Comprehensive package metadata and vulnerability tracking
-- **Multi-Agent Architecture**: Specialized AI agents for different analysis aspects
-
-## 📖 **Core Capabilities**
-
-### **Content Types Supported**
-| Type | Processing | Features |
-|------|------------|----------|
-| **Web Articles** | ✅ AI Summary + OCR fallback | Readability extraction, metadata |
-| **YouTube Videos** | ✅ Hybrid transcription | Offline/cloud speech-to-text |
-| **Documents** | ✅ OCR + AI analysis | PDF, DOC, images with tesseract |
-| **Images** | ✅ Vision AI + OCR | Text extraction, visual analysis |
-| **Code Repositories** | ✅ CodeMirror Intelligence | Deep analysis, pattern detection, package security |
-| **Package Dependencies** | ✅ Multi-platform analysis | npm, PyPI, Cargo, Maven with vulnerability scanning |
-
-### **AI-Powered Features**
-- **Content Summarization**: Key insights and takeaways
-- **Automatic Tagging**: Smart categorization and topic extraction
-- **Knowledge Relationships**: Multi-agent system connecting diverse content types
-- **Repository Intelligence**: AI-powered code pattern detection and recommendations
-- **Package Analysis**: Intelligent dependency health and security assessment
-- **Search Enhancement**: Embeddings-based semantic search with context relevance
-- **Real-time Processing**: Distributed analysis with live progress updates
-- **LangGraph Workflows**: State-based content processing with quality loops and adaptive routing
-- **Enhanced AI Router**: ReAct agent optimizes provider selection based on task complexity and cost
-- **LangChain Templates**: Centralized prompt management with versioning and optimization
-
-### **Enhanced Processing APIs (NEW in v7.1)**
-- **Structured Extraction**: `/api/enhanced/extract/structured` - Guaranteed JSON with OpenAI 1.96.0
-- **Persistent Workflows**: `/api/enhanced/process/persistent-workflow` - Resume from crashes
-- **Multimodal Analysis**: `/api/enhanced/process/multimodal` - Process text + images together
-- **Priority Tasks**: Celery 5.5.3 queues - Critical, High, Normal, Low priorities
-- **Client-Side Cache**: Redis 6.2.0 - 85%+ hit rate with automatic invalidation
-
-### **Privacy & Security**
-- **Offline Processing**: Vosk transcription for sensitive content
-- **Local OCR**: Tesseract processing without cloud dependencies
-- **Secure Configuration**: Environment-based secrets management
-- **Input Validation**: Comprehensive request sanitization
-
-## 🔧 **Development & Deployment**
-
-### **Development Workflow**
+### **Code Quality**
 ```bash
-# Install pre-commit hooks (automatic code quality)
-pre-commit install
+# Backend
+cd backend
+ruff check .          # Fast Python linter
+mypy .               # Type checking
+pytest               # Run tests
 
-# Start development environment
+# Frontend  
+cd frontend
+npm run lint         # ESLint
+npm run check        # Type checking
+npm run test         # Vitest
+```
+
+### **Database Migrations**
+```bash
+cd backend
+alembic upgrade head  # Apply migrations
+alembic revision -m "description"  # Create new migration
+```
+
+### **Authentication Development**
+- Test users are pre-migrated during setup
+- Use `prsnlfyi@gmail.com` for admin access
+- OAuth2 flow configured for local development
+- JWT tokens: 1-hour access, 7-day refresh
+
+## 🚢 **Deployment**
+
+### **Docker Deployment**
+```bash
+# Build and run all services
 docker-compose up -d
-cd frontend && npm run dev
 
-# Monitor application performance
-./start-monitoring.sh
+# Services:
+# - frontend: http://localhost:3003
+# - backend: http://localhost:8000
+# - keycloak: http://localhost:8080
+# - fusionauth: http://localhost:9011
 ```
 
-### **Code Quality Tools**
-- **Formatting**: Black (Python), Prettier (Frontend)
-- **Linting**: flake8, ESLint, mypy type checking
-- **Security**: Bandit security scanning
-- **Documentation**: pydocstyle compliance checking
-- **Build Tools**: Vite (sole bundler, optimized for SvelteKit)
-
-### **🎯 Performance Optimization (July 2025)**
-Recent comprehensive cleanup of build and code quality tools resulted in significant improvements:
-
-#### **Build Tools Cleanup Impact**
-- **Removed**: tsup, jscodeshift, ts-morph (redundant with Vite)
-- **Package Reduction**: 76 packages removed from node_modules
-- **Disk Space**: ~50-80MB saved
-- **npm install**: ~10-15% faster
-- **CI/CD**: Faster builds, reduced cache size
-
-#### **Code Quality Tools Optimization**
-- **Consolidated Configs**: Single ESLint & Prettier configs
-- **Lint Performance**: ~15-20% faster startup
-- **Format Checks**: ~10% faster
-- **CI/CD Savings**: 5-10 seconds per run (~8.3 hours/year)
-- **Developer Experience**: 75% reduction in config debugging time
-
-### **Monitoring & Observability**
-```bash
-# View application metrics
-curl http://localhost:8000/metrics
-
-# Access monitoring dashboards
-open http://localhost:3000  # Grafana (admin/admin)
-
-# Check application logs
-tail -f backend/logs/prsnl.log
-```
-
-### **Production Deployment**
-1. **Environment Setup**: Configure production environment variables
-2. **Security**: Use proper secrets management (Azure Key Vault, AWS Secrets)
-3. **Monitoring**: Deploy Grafana stack with persistent storage
-4. **Scaling**: Configure load balancing and database replication
+### **Production Considerations**
+- Configure proper SSL/TLS certificates
+- Set up reverse proxy (Nginx/Caddy)
+- Enable production auth providers
+- Configure email services (SMTP)
+- Set up monitoring (Grafana/Prometheus)
 
 ## 📚 **Documentation**
 
-### **Technical Documentation**
-- **[Third-Party Integrations](docs/THIRD_PARTY_INTEGRATIONS.md)**: Complete integration inventory
-- **[Monitoring Guide](docs/MONITORING_DEPLOYMENT_GUIDE.md)**: Observability setup
-- **[CLAUDE.md](CLAUDE.md)**: Development configuration for AI assistants
-
-### **API Documentation**
-- **Interactive Docs**: http://localhost:8000/docs (Swagger UI)
-- **ReDoc**: http://localhost:8000/redoc (Alternative documentation)
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
+- **[API Documentation](http://localhost:8000/docs)**: Interactive API explorer
+- **[Architecture Guide](docs/ARCHITECTURE.md)**: System design and patterns
+- **[Authentication Guide](docs/AUTH_GUIDE.md)**: Dual auth system setup
+- **[Development Guide](docs/DEVELOPMENT.md)**: Contributing guidelines
+- **[Deployment Guide](docs/DEPLOYMENT.md)**: Production setup
 
 ## 🤝 **Contributing**
 
-### **Getting Started**
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Install pre-commit hooks (`pre-commit install`)
-4. Make your changes (automatic code quality checks will run)
-5. Commit with descriptive messages
-6. Push and create a Pull Request
-
-### **Development Standards**
-- **Code Quality**: All code passes pre-commit hooks
-- **Testing**: Add tests for new functionality
-- **Documentation**: Update docs for API changes
-- **Security**: No hardcoded secrets or credentials
-
-## 📊 **Performance & Scalability**
-
-### **Current Capabilities**
-- **Content Items**: Handles 100K+ items efficiently
-- **Search Performance**: Sub-second semantic search
-- **Concurrent Users**: Supports 50+ simultaneous users
-- **Processing Speed**: Real-time content analysis
-
-### **Optimization Features**
-- **Redis Caching**: API response and embedding caching
-- **Database Indexing**: Optimized PostgreSQL queries
-- **Lazy Loading**: Frontend component optimization
-- **CDN Ready**: Static asset optimization
-
-## 🔮 **Roadmap**
-
-### **v7.1 (Next Release)**
-- **Enhanced Package Intelligence**: OSV database integration for vulnerability scanning
-- **Advanced Code Patterns**: Machine learning-based pattern recommendation system
-- **Repository Insights**: AI-powered architecture recommendations and technical debt analysis
-- **Extended Language Support**: Go, Rust, Ruby, PHP package manager support
-
-### **v8.0 (Future Roadmap)**
-- **Agent Evaluation System**: Automated agent performance monitoring and improvement
-- **Advanced Security Features**: SAST/DAST integration, compliance reporting
-- **Multi-Repository Analysis**: Cross-project dependency and pattern analysis
-- **Enterprise Deployment**: Kubernetes orchestration, advanced monitoring
-- **Plugin Architecture**: Extensible integration framework for custom analyzers
-
-## 🛟 **Support & Community**
-
-### **Getting Help**
-- **Documentation**: Comprehensive guides in `/docs`
-- **Issues**: GitHub Issues for bug reports and features
-- **Discussions**: GitHub Discussions for community support
-
-### **Troubleshooting**
-- **Setup Issues**: Check `setup-development.sh` output
-- **Database Problems**: Verify PostgreSQL connection and migrations
-- **API Errors**: Check backend logs and environment configuration
-- **Performance**: Use Grafana dashboards for monitoring
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 **License**
 
@@ -350,15 +230,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 **Acknowledgments**
 
-- **OpenAI/Azure**: AI capabilities and transcription services
-- **PostgreSQL/pgvector**: Semantic search infrastructure  
-- **Grafana Labs**: Observability and monitoring stack
-- **Vosk**: Offline speech recognition technology
-- **SvelteKit**: Modern frontend framework
-- **FastAPI**: High-performance API framework
+- **OpenAI** for GPT-4 and Whisper APIs
+- **Anthropic** for Claude integration
+- **LangChain** community for AI orchestration tools
+- **Three.js** for amazing 3D graphics capabilities
+- **Svelte** team for the revolutionary framework
 
 ---
 
-**Built with ❤️ for knowledge workers who want to stay organized and discover insights in their digital content.**
+**PRSNL v8.0** - Your AI-powered second brain with enterprise authentication 🧠🔐
 
-*PRSNL v7.1 - Performance Revolution • Released 2025-07-16*
+For support: [GitHub Issues](https://github.com/your-username/PRSNL/issues) | [Discord](https://discord.gg/prsnl)

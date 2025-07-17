@@ -1,2 +1,2 @@
-"""PRSNL Backend - Local-first knowledge vault"""
-__version__ = "0.1.0"
+"""PRSNL Backend - Local-first knowledge vault with enterprise authentication"""
+__version__ = "8.0.0"
