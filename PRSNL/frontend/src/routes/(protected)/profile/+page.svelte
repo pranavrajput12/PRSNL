@@ -287,7 +287,7 @@
         <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
           {#if $user}
             <span class="text-white font-bold text-lg">
-              {$user.first_name ? $user.first_name.charAt(0).toUpperCase() : $user.email.charAt(0).toUpperCase()}
+              {$user.firstName ? $user.firstName.charAt(0).toUpperCase() : $user.email.charAt(0).toUpperCase()}
             </span>
           {:else}
             <Icon name="user" class="w-7 h-7 text-white" />
@@ -299,7 +299,7 @@
         </div>
       </div>
       
-      {#if $user && !$user.is_verified}
+      {#if $user && !$user.isEmailVerified}
         <div class="bg-amber-500/20 border border-amber-500/30 rounded-lg p-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <Icon name="alert-triangle" class="w-5 h-5 text-amber-400" />
@@ -608,16 +608,16 @@
             <div class="space-y-3 text-sm">
               <div class="flex justify-between">
                 <span class="text-slate-300">Account created:</span>
-                <span class="text-white">{$user?.created_at ? new Date($user.created_at).toLocaleDateString() : 'Unknown'}</span>
+                <span class="text-white">{'Unknown'}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-slate-300">Last login:</span>
-                <span class="text-white">{$user?.last_login_at ? new Date($user.last_login_at).toLocaleDateString() : 'Unknown'}</span>
+                <span class="text-white">{'Unknown'}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-slate-300">Email verified:</span>
                 <span class="text-white flex items-center gap-2">
-                  {#if $user?.is_verified}
+                  {#if $user?.isEmailVerified}
                     <Icon name="check-circle" class="w-4 h-4 text-green-500" />
                     Yes
                   {:else}

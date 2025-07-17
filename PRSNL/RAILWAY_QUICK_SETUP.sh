@@ -3,7 +3,10 @@
 echo "🚂 PRSNL Railway Quick Setup"
 echo "==========================="
 echo ""
-echo "⚠️  IMPORTANT: This script will:"
+echo "⚠️  IMPORTANT: Set your Azure OpenAI API key before running:"
+echo "export AZURE_OPENAI_API_KEY='your-api-key-here'"
+echo ""
+echo "This script will:"
 echo "1. Create a new Railway project"
 echo "2. Add PostgreSQL with pgvector"
 echo "3. Deploy your backend"
@@ -41,7 +44,7 @@ railway variables set PROJECT_NAME="PRSNL" \
   API_V1_STR="/api" \
   BACKEND_CORS_ORIGINS='["*"]' \
   ENVIRONMENT="production" \
-  AZURE_OPENAI_API_KEY="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" \
+  AZURE_OPENAI_API_KEY="${AZURE_OPENAI_API_KEY}" \
   AZURE_OPENAI_ENDPOINT="https://api.openai.com" \
   AZURE_OPENAI_DEPLOYMENT="gpt-4" \
   AZURE_OPENAI_EMBEDDING_DEPLOYMENT="text-embedding-ada-002" \

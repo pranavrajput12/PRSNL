@@ -43,6 +43,7 @@ dist/
 
 # Environment variables
 .env
+.env.auth
 .env.local
 .env.*.local
 

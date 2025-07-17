@@ -17,7 +17,6 @@ import type {
 } from './types/api';
 import { get } from 'svelte/store';
 import { authStore } from './stores/unified-auth';
-import { authDebugger } from './debug-auth';
 
 // Add RequestInit type for fetch API
 type RequestInit = {
@@ -73,14 +72,17 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
     headers['Authorization'] = `Bearer ${auth.token}`;
   }
   
-  authDebugger.log('API_REQUEST', {
-    endpoint,
-    method: options.method || 'GET',
-    hasAuth: !!auth.token,
-    isAuthenticated: auth.isAuthenticated,
-    tokenLength: auth.token?.length || 0,
-    userId: auth.user?.id || null
-  });
+  // Debug logging
+  if (import.meta.env.DEV) {
+    console.log('🔐 AUTH DEBUG [API_REQUEST]:', {
+      endpoint,
+      method: options.method || 'GET',
+      hasAuth: !!auth.token,
+      isAuthenticated: auth.isAuthenticated,
+      tokenLength: auth.token?.length || 0,
+      userId: auth.user?.id || null
+    });
+  }
 
   try {
     const response = await fetch(fullUrl, {
@@ -108,28 +110,34 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
       
       // Handle 401 Unauthorized - try to refresh token first
       if (response.status === 401 && !endpoint.includes('/auth/')) {
-        authDebugger.log('API_401_UNAUTHORIZED', {
-          endpoint,
-          currentAuth: {
-            hasAccessToken: !!auth.accessToken,
-            hasRefreshToken: !!auth.refreshToken,
-            isAuthenticated: auth.isAuthenticated,
-            userId: auth.user?.id
-          }
-        });
+        if (import.meta.env.DEV) {
+          console.log('🔐 AUTH DEBUG [API_401_UNAUTHORIZED]:', {
+            endpoint,
+            currentAuth: {
+              hasToken: !!auth.token,
+              hasRefreshToken: !!auth.refreshToken,
+              isAuthenticated: auth.isAuthenticated,
+              userId: auth.user?.id
+            }
+          });
+        }
         
         // Try to refresh the token once
-        const { authActions } = await import('./stores/auth');
-        authDebugger.log('API_REFRESH_ATTEMPT', { endpoint });
+        const { authActions } = await import('./stores/unified-auth');
+        if (import.meta.env.DEV) {
+          console.log('🔐 AUTH DEBUG [API_REFRESH_ATTEMPT]:', { endpoint });
+        }
         
         const refreshed = await authActions.refreshToken();
         
         if (refreshed) {
-          authDebugger.log('API_REFRESH_SUCCESS', { endpoint });
+          if (import.meta.env.DEV) {
+            console.log('🔐 AUTH DEBUG [API_REFRESH_SUCCESS]:', { endpoint });
+          }
           // Retry the original request with new token
           const newAuth = get(authStore);
-          if (newAuth.accessToken) {
-            headers['Authorization'] = `Bearer ${newAuth.accessToken}`;
+          if (newAuth.token) {
+            headers['Authorization'] = `Bearer ${newAuth.token}`;
             const retryResponse = await fetch(fullUrl, {
               ...options,
               headers,
@@ -137,18 +145,26 @@ async function fetchWithErrorHandling<T>(endpoint: string, options: RequestInit 
             });
             
             if (retryResponse.ok) {
-              authDebugger.log('API_RETRY_SUCCESS', { endpoint, status: retryResponse.status });
+              if (import.meta.env.DEV) {
+                console.log('🔐 AUTH DEBUG [API_RETRY_SUCCESS]:', { endpoint, status: retryResponse.status });
+              }
               return await retryResponse.json();
             } else {
-              authDebugger.log('API_RETRY_FAILED', { endpoint, status: retryResponse.status });
+              if (import.meta.env.DEV) {
+                console.log('🔐 AUTH DEBUG [API_RETRY_FAILED]:', { endpoint, status: retryResponse.status });
+              }
             }
           }
         } else {
-          authDebugger.log('API_REFRESH_FAILED', { endpoint });
+          if (import.meta.env.DEV) {
+            console.log('🔐 AUTH DEBUG [API_REFRESH_FAILED]:', { endpoint });
+          }
         }
         
         // If refresh failed or retry failed, logout
-        authDebugger.log('API_FORCING_LOGOUT', { endpoint, reason: 'auth failed' });
+        if (import.meta.env.DEV) {
+          console.log('🔐 AUTH DEBUG [API_FORCING_LOGOUT]:', { endpoint, reason: 'auth failed' });
+        }
         await authActions.logout();
         
         // Redirect to login

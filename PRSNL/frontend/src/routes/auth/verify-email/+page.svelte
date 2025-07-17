@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { authActions, isAuthenticated, isLoading } from '$lib/stores/auth';
+  import { authActions, isAuthenticated, isLoading } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
 
   let verificationStatus: 'loading' | 'success' | 'error' | 'expired' = 'loading';

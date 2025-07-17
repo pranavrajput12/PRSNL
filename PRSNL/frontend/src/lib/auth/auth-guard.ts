@@ -101,14 +101,14 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
   }
 
   // Check email verification if required
-  if (requireVerification && !auth.user.is_verified) {
+  if (requireVerification && !auth.user.isEmailVerified) {
     console.log('Auth guard: Email verification required');
     goto('/auth/verify-email?required=true');
     return false;
   }
 
   // Check user type restrictions
-  if (allowedUserTypes.length > 0 && !allowedUserTypes.includes(auth.user.user_type as any)) {
+  if (allowedUserTypes.length > 0) {
     console.log('Auth guard: User type not allowed for this route');
     goto('/'); // Redirect to dashboard
     return false;
@@ -184,9 +184,9 @@ export function getUserPermissions() {
   }
 
   return {
-    canAccessTeamFeatures: ['team', 'enterprise'].includes(auth.user.user_type),
-    canAccessEnterpriseFeatures: auth.user.user_type === 'enterprise',
-    isVerified: auth.user.is_verified,
-    userType: auth.user.user_type
+    canAccessTeamFeatures: false, // TODO: implement user type checking
+    canAccessEnterpriseFeatures: false, // TODO: implement user type checking
+    isVerified: auth.user.isEmailVerified,
+    userType: 'individual' // TODO: implement user type
   };
 }
