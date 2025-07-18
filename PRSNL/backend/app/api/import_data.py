@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, HttpUrl
 
 from app.core.capture_engine import CaptureEngine
+from app.agents.content.bookmark_categorization_agent import BookmarkCategorizationAgent
 
 # Security imports will be added when authentication is implemented
 from app.db.database import get_db_connection
@@ -208,10 +209,11 @@ async def import_bookmarks(
     file: UploadFile = File(...),
     auto_fetch: bool = Form(True),
     batch_size: int = Form(10),
+    use_ai_categorization: bool = Form(True),
     conn=Depends(get_db_connection)
 ):
     """
-    Import bookmarks from browser HTML export with batched processing
+    Import bookmarks from browser HTML export with AI-powered categorization
     """
     try:
         # Read HTML content
@@ -230,9 +232,14 @@ async def import_bookmarks(
         errors = []
         
         capture_engine = CaptureEngine()
+        categorization_agent = BookmarkCategorizationAgent()
         
-        # Process bookmarks in batches for better performance
-        bookmark_batch = []
+        # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
+        # For development, use the test user ID if no authentication
+        user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
+        
+        # Collect bookmark data for batch processing
+        bookmark_data = []
         
         for bookmark in bookmarks:
             try:
@@ -244,100 +251,138 @@ async def import_bookmarks(
                 
                 # Check for duplicates
                 existing = await conn.fetchrow(
-                    "SELECT id FROM items WHERE url = $1",
-                    url
+                    "SELECT id FROM items WHERE url = $1 AND user_id = $2",
+                    url, user_id
                 )
                 
                 if existing:
                     skipped_count += 1
                     continue
                 
-                # Get tags from folder structure if available
-                tags = []
+                # Extract folder path from bookmark structure
+                folder_path = ""
+                folder_parts = []
                 parent = bookmark.parent
                 while parent and parent.name != 'body':
                     if parent.name == 'dt' and parent.parent.name == 'dl':
                         # Look for folder name
                         prev_sibling = parent.find_previous_sibling('dt')
                         if prev_sibling and prev_sibling.h3:
-                            tags.append(prev_sibling.h3.text.strip().lower())
+                            folder_parts.append(prev_sibling.h3.text.strip())
                     parent = parent.parent
                 
-                # Create bookmark item
-                if auto_fetch:
-                    # Fetch full content
-                    try:
-                        # Create item and process in background
-                        item_id = uuid4()
-                        await conn.execute("""
-                            INSERT INTO items (id, url, title, type, status)
-                            VALUES ($1, $2, $3, 'bookmark', 'pending')
-                        """, item_id, url, title)
-                        
-                        # Process tags
-                        for tag_name in tags:
-                            tag_id = await conn.fetchval("""
-                                INSERT INTO tags (name) VALUES ($1)
-                                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                                RETURNING id
-                            """, tag_name.lower())
-                            
-                            await conn.execute("""
-                                INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
-                                ON CONFLICT DO NOTHING
-                            """, item_id, tag_id)
-                        
-                        # Process the URL content in background
-                        asyncio.create_task(capture_engine.process_item(item_id, url))
-                        imported_count += 1
-                    except Exception as fetch_error:
-                        # Fall back to simple bookmark
-                        item_id = uuid4()
-                        await conn.execute("""
-                            INSERT INTO items (id, url, title, type, status)
-                            VALUES ($1, $2, $3, 'bookmark', 'completed')
-                        """, item_id, url, title)
-                        
-                        # Process tags
-                        for tag_name in tags:
-                            tag_id = await conn.fetchval("""
-                                INSERT INTO tags (name) VALUES ($1)
-                                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                                RETURNING id
-                            """, tag_name.lower())
-                            
-                            await conn.execute("""
-                                INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
-                                ON CONFLICT DO NOTHING
-                            """, item_id, tag_id)
-                        imported_count += 1
-                else:
-                    # Just save as bookmark
-                    item_id = uuid4()
-                    await conn.execute("""
-                        INSERT INTO items (id, url, title, type, status)
-                        VALUES ($1, $2, $3, 'bookmark', 'completed')
-                    """, item_id, url, title)
-                    
-                    # Process tags
-                    for tag_name in tags:
-                        tag_id = await conn.fetchval("""
-                            INSERT INTO tags (name) VALUES ($1)
-                            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                            RETURNING id
-                        """, tag_name.lower())
-                        
-                        await conn.execute("""
-                            INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
-                            ON CONFLICT DO NOTHING
-                        """, item_id, tag_id)
-                    imported_count += 1
-                    
+                folder_path = " > ".join(reversed(folder_parts)) if folder_parts else ""
+                
+                # Collect bookmark for processing
+                bookmark_data.append({
+                    'url': url,
+                    'title': title,
+                    'folder_path': folder_path
+                })
+                
             except Exception as e:
                 errors.append({
                     'bookmark': f"{title} ({url})",
                     'error': str(e)
                 })
+        
+        logger.info(f"Collected {len(bookmark_data)} bookmarks for processing")
+        
+        # Process bookmarks in batches with AI categorization
+        for i in range(0, len(bookmark_data), batch_size):
+            batch = bookmark_data[i:i + batch_size]
+            
+            try:
+                # Use AI categorization if enabled
+                if use_ai_categorization:
+                    logger.info(f"Processing batch {i//batch_size + 1} with AI categorization")
+                    categorization_results = await categorization_agent.categorize_bulk_bookmarks(
+                        batch, use_ai=True, batch_size=len(batch)
+                    )
+                else:
+                    # Use rule-based categorization only
+                    categorization_results = []
+                    for bookmark_item in batch:
+                        result = await categorization_agent.categorize_bookmark(
+                            url=bookmark_item['url'],
+                            title=bookmark_item['title'],
+                            folder_path=bookmark_item['folder_path'],
+                            use_ai=False
+                        )
+                        categorization_results.append(result)
+                
+                # Create items with categorization
+                for bookmark_item, categorization in zip(batch, categorization_results):
+                    try:
+                        item_id = uuid4()
+                        url = bookmark_item['url']
+                        title = bookmark_item['title']
+                        category = categorization.get('category', 'uncategorized')
+                        ai_tags = categorization.get('tags', [])
+                        
+                        # Insert item with category
+                        await conn.execute("""
+                            INSERT INTO items (id, url, title, type, status, metadata, user_id)
+                            VALUES ($1, $2, $3, 'bookmark', $4, $5, $6)
+                        """, 
+                        item_id, 
+                        url, 
+                        title, 
+                        'pending' if auto_fetch else 'completed',
+                        json.dumps({
+                            'category': category,
+                            'categorization_confidence': categorization.get('confidence', 0.0),
+                            'categorization_method': categorization.get('method', 'unknown'),
+                            'folder_path': bookmark_item['folder_path']
+                        }),
+                        user_id
+                        )
+                        
+                        # Create and link tags
+                        all_tags = set(ai_tags)
+                        
+                        # Add category as a tag if it's not already included
+                        if category != 'uncategorized' and category not in all_tags:
+                            all_tags.add(category)
+                        
+                        # Add folder-based tags
+                        if bookmark_item['folder_path']:
+                            folder_tags = [tag.strip().lower() for tag in bookmark_item['folder_path'].split('>')]
+                            all_tags.update(folder_tags)
+                        
+                        # Insert tags and link to item
+                        for tag_name in all_tags:
+                            if tag_name and len(tag_name.strip()) > 0:
+                                tag_id = await conn.fetchval("""
+                                    INSERT INTO tags (name) VALUES ($1)
+                                    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+                                    RETURNING id
+                                """, tag_name.lower().strip())
+                                
+                                await conn.execute("""
+                                    INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
+                                    ON CONFLICT DO NOTHING
+                                """, item_id, tag_id)
+                        
+                        # Start background content fetching if enabled
+                        if auto_fetch:
+                            asyncio.create_task(capture_engine.process_item(item_id, url))
+                        
+                        imported_count += 1
+                        
+                    except Exception as item_error:
+                        errors.append({
+                            'bookmark': f"{title} ({url})",
+                            'error': f"Failed to create item: {str(item_error)}"
+                        })
+                        
+            except Exception as batch_error:
+                logger.error(f"Batch processing failed: {batch_error}")
+                for bookmark_item in batch:
+                    errors.append({
+                        'bookmark': f"{bookmark_item['title']} ({bookmark_item['url']})",
+                        'error': f"Batch processing failed: {str(batch_error)}"
+                    })
         
         return {
             "status": "success",

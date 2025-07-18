@@ -12,6 +12,7 @@
   let importResults = null;
   let error = null;
   let autoFetch = true;
+  let useAiCategorization = true;
   let importType = 'bookmarks';
   let progress = 0;
   let currentItem = '';
@@ -72,18 +73,32 @@
     progress = 0;
 
     try {
+      const file = files[0]; // Get the first file
       const formData = new FormData();
-      files.forEach((file) => formData.append('files', file));
-      formData.append('type', importType);
-      formData.append('auto_fetch', autoFetch.toString());
+      
+      // Use the correct endpoint based on import type
+      let endpoint;
+      if (importType === 'bookmarks') {
+        formData.append('file', file);
+        formData.append('auto_fetch', autoFetch.toString());
+        formData.append('use_ai_categorization', useAiCategorization.toString());
+        endpoint = `${API_BASE_URL}/api/import/bookmarks`;
+      } else if (importType === 'json') {
+        formData.append('file', file);
+        endpoint = `${API_BASE_URL}/api/import/json`;
+      } else if (importType === 'notes') {
+        files.forEach((f) => formData.append('files', f));
+        endpoint = `${API_BASE_URL}/api/import/notes`;
+      }
 
-      const response = await fetch(`${API_BASE_URL}/api/import-data`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Import failed: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Import failed: ${response.statusText}`);
       }
 
       importResults = await response.json();
@@ -231,6 +246,15 @@
         <span class="component-label">AUTO-FETCH CONTENT</span>
       </label>
     </div>
+    {#if importType === 'bookmarks'}
+      <div class="option-component">
+        <label class="switch-component">
+          <input type="checkbox" bind:checked={useAiCategorization} />
+          <div class="switch-slider"></div>
+          <span class="component-label">AI CATEGORIZATION</span>
+        </label>
+      </div>
+    {/if}
   </div>
 
   <!-- Process Button - Power button style -->
