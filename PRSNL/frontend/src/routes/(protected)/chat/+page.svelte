@@ -1,11 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { page } from '$app/stores';
-  import { spring, tweened } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
   import Icon from '$lib/components/Icon.svelte';
   import StreamingMessage from '$lib/components/StreamingMessage.svelte';
-  import ModeOnboarding from '$lib/components/ModeOnboarding.svelte';
   import { formatDate } from '$lib/utils/date';
   import { createStreamingConnection, type StreamingWebSocket } from '$lib/utils/websocket';
   import { api } from '$lib/api';
@@ -42,161 +39,23 @@
     exploration_suggestions: { action: string; topic: string; reason: string }[];
   }
 
-  interface ChatMode {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    bgGradient: string;
-  }
-
   let messages: ChatMessage[] = [];
   let inputMessage = '';
   let isLoading = false;
-  let selectedMode = 'general';
   let suggestedQuestions: string[] = [];
   let showSuggestions = true;
   let conversationId: string | null = null;
   let ws: StreamingWebSocket | null = null;
   let messagesContainer: HTMLElement;
   let contextItems: string[] = [];
-  let showModeSelector = false;
   let currentStreamingMessage: ChatMessage | null = null;
-  let showModeOnboarding = false;
-  let onboardingMode: ChatMode | null = null;
-
-  // Visual effects
-  const orbPositions = Array(5)
-    .fill(null)
-    .map(() => ({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      scale: 0.8 + Math.random() * 0.4,
-      rotation: 0,
-    }));
-
-  // Create springs for orbs at top level
-  const orbX1 = spring(orbPositions[0].x);
-  const orbY1 = spring(orbPositions[0].y);
-  const orbScale1 = spring(orbPositions[0].scale);
-  const orbRotation1 = tweened(0, { duration: 20000 });
-
-  const orbX2 = spring(orbPositions[1].x);
-  const orbY2 = spring(orbPositions[1].y);
-  const orbScale2 = spring(orbPositions[1].scale);
-  const orbRotation2 = tweened(0, { duration: 20000 });
-
-  const orbX3 = spring(orbPositions[2].x);
-  const orbY3 = spring(orbPositions[2].y);
-  const orbScale3 = spring(orbPositions[2].scale);
-  const orbRotation3 = tweened(0, { duration: 20000 });
-
-  const orbX4 = spring(orbPositions[3].x);
-  const orbY4 = spring(orbPositions[3].y);
-  const orbScale4 = spring(orbPositions[3].scale);
-  const orbRotation4 = tweened(0, { duration: 20000 });
-
-  const orbX5 = spring(orbPositions[4].x);
-  const orbY5 = spring(orbPositions[4].y);
-  const orbScale5 = spring(orbPositions[4].scale);
-  const orbRotation5 = tweened(0, { duration: 20000 });
-
-  // Enhanced chat modes with visual styling
-  const chatModes: ChatMode[] = [
-    {
-      id: 'general',
-      name: 'General',
-      description: 'General conversation about your knowledge base',
-      icon: 'message-circle',
-      color: '#6366f1',
-      bgGradient: 'from-indigo-500/20 to-purple-500/20',
-    },
-    {
-      id: 'research',
-      name: 'Research',
-      description: 'Deep dive into topics and find connections',
-      icon: 'search',
-      color: '#10b981',
-      bgGradient: 'from-emerald-500/20 to-teal-500/20',
-    },
-    {
-      id: 'learning',
-      name: 'Learning',
-      description: 'Understand and retain information better',
-      icon: 'book-open',
-      color: '#f59e0b',
-      bgGradient: 'from-amber-500/20 to-orange-500/20',
-    },
-    {
-      id: 'creative',
-      name: 'Creative',
-      description: 'Generate new ideas and unexpected connections',
-      icon: 'lightbulb',
-      color: '#ec4899',
-      bgGradient: 'from-pink-500/20 to-rose-500/20',
-    },
-  ];
-
-  $: currentMode = chatModes.find((mode) => mode.id === selectedMode) || chatModes[0];
-
-  // Animate background orbs
-  function animateOrbs() {
-    // Animate orb 1
-    setInterval(() => {
-      orbX1.set(Math.random() * 100);
-      orbY1.set(Math.random() * 100);
-      orbScale1.set(0.8 + Math.random() * 0.4);
-    }, 5000);
-
-    // Animate orb 2
-    setInterval(() => {
-      orbX2.set(Math.random() * 100);
-      orbY2.set(Math.random() * 100);
-      orbScale2.set(0.8 + Math.random() * 0.4);
-    }, 6000);
-
-    // Animate orb 3
-    setInterval(() => {
-      orbX3.set(Math.random() * 100);
-      orbY3.set(Math.random() * 100);
-      orbScale3.set(0.8 + Math.random() * 0.4);
-    }, 7000);
-
-    // Animate orb 4
-    setInterval(() => {
-      orbX4.set(Math.random() * 100);
-      orbY4.set(Math.random() * 100);
-      orbScale4.set(0.8 + Math.random() * 0.4);
-    }, 8000);
-
-    // Animate orb 5
-    setInterval(() => {
-      orbX5.set(Math.random() * 100);
-      orbY5.set(Math.random() * 100);
-      orbScale5.set(0.8 + Math.random() * 0.4);
-    }, 9000);
-
-    // Rotation animations
-    orbRotation1.set(360);
-    orbRotation2.set(360);
-    orbRotation3.set(360);
-    orbRotation4.set(360);
-    orbRotation5.set(360);
-
-    setInterval(() => {
-      orbRotation1.update((r) => r + 360);
-      orbRotation2.update((r) => r + 360);
-      orbRotation3.update((r) => r + 360);
-      orbRotation4.update((r) => r + 360);
-      orbRotation5.update((r) => r + 360);
-    }, 20000);
-  }
-
-  // Load chat modes
-  async function loadChatModes() {
-    // Modes are now hardcoded with enhanced styling
-  }
+  
+  // Multi-modal states
+  let isRecording = false;
+  let recordingTime = 0;
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+  let recordingInterval: NodeJS.Timeout | null = null;
 
   // Load suggested questions
   async function loadSuggestedQuestions() {
@@ -317,7 +176,6 @@
       ws.send({
         message: message,
         history: history,
-        chat_mode: selectedMode,
         conversation_id: conversationId,
         context_items: contextItems.length > 0 ? contextItems : null,
       });
@@ -351,11 +209,73 @@
     }
   }
 
+  // Audio recording functions
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        // TODO: Send audio to backend for transcription
+        console.log('Audio recorded:', audioBlob);
+      };
+      
+      mediaRecorder.start();
+      isRecording = true;
+      recordingTime = 0;
+      
+      recordingInterval = setInterval(() => {
+        recordingTime++;
+      }, 1000);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Unable to access microphone. Please check your permissions.');
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      isRecording = false;
+      
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+        recordingInterval = null;
+      }
+      
+      // Stop all tracks
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+  }
+
+  // File handling
+  function handleImageUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      console.log('Image selected:', file);
+      // TODO: Process and send image
+    }
+  }
+
+  function handleFileUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      console.log('File selected:', file);
+      // TODO: Process and send file
+    }
+  }
+
   onMount(() => {
-    loadChatModes();
     loadSuggestedQuestions();
     connectWebSocket();
-    animateOrbs();
 
     // Check for context items from URL
     const urlContextItems = $page.url.searchParams.get('context');
@@ -371,120 +291,16 @@
   });
 </script>
 
-<!-- Mode Selector Popup - Outside of everything -->
-{#if showModeSelector}
-  <div class="mode-selector-overlay" on:click={() => (showModeSelector = false)}>
-    <div class="mode-selector" on:click|stopPropagation>
-      <h3>Choose your thinking mode</h3>
-      <div class="modes-grid">
-        {#each chatModes as mode}
-          <button
-            class="mode-card"
-            class:active={selectedMode === mode.id}
-            on:click={() => {
-              selectedMode = mode.id;
-              currentMode = mode;
-              showModeSelector = false;
-
-              // Always show onboarding when switching modes
-              onboardingMode = mode;
-              showModeOnboarding = true;
-
-              console.log('Mode selected:', mode.id);
-            }}
-            style="--mode-color: {mode.color}"
-          >
-            <div class="mode-icon">
-              <Icon name={mode.icon} size={24} />
-            </div>
-            <h4>{mode.name}</h4>
-            <p>{mode.description}</p>
-            <div class="mode-bg-gradient {mode.bgGradient}"></div>
-          </button>
-        {/each}
-      </div>
-    </div>
-  </div>
-{/if}
-
-<!-- Mode Onboarding -->
-{#if showModeOnboarding && onboardingMode}
-  <ModeOnboarding
-    mode={onboardingMode}
-    onComplete={() => {
-      showModeOnboarding = false;
-      onboardingMode = null;
-    }}
-  />
-{/if}
-
-<div class="chat-page" style="--mode-color: {currentMode.color}">
-  <!-- Animated background -->
-  <div class="background-animation">
-    <div
-      class="orb"
-      style="
-        left: {$orbX1}%;
-        top: {$orbY1}%;
-        transform: scale({$orbScale1}) rotate({$orbRotation1}deg);
-        background: radial-gradient(circle, {currentMode.color}40, transparent);
-      "
-    ></div>
-    <div
-      class="orb"
-      style="
-        left: {$orbX2}%;
-        top: {$orbY2}%;
-        transform: scale({$orbScale2}) rotate({$orbRotation2}deg);
-        background: radial-gradient(circle, {currentMode.color}40, transparent);
-      "
-    ></div>
-    <div
-      class="orb"
-      style="
-        left: {$orbX3}%;
-        top: {$orbY3}%;
-        transform: scale({$orbScale3}) rotate({$orbRotation3}deg);
-        background: radial-gradient(circle, {currentMode.color}40, transparent);
-      "
-    ></div>
-    <div
-      class="orb"
-      style="
-        left: {$orbX4}%;
-        top: {$orbY4}%;
-        transform: scale({$orbScale4}) rotate({$orbRotation4}deg);
-        background: radial-gradient(circle, {currentMode.color}40, transparent);
-      "
-    ></div>
-    <div
-      class="orb"
-      style="
-        left: {$orbX5}%;
-        top: {$orbY5}%;
-        transform: scale({$orbScale5}) rotate({$orbRotation5}deg);
-        background: radial-gradient(circle, {currentMode.color}40, transparent);
-      "
-    ></div>
-  </div>
-
+<div class="chat-page">
   <div class="chat-header">
     <div class="header-content">
-      <div class="title-section">
-        <h1 class="page-title">
-          <div class="brain-icon">
-            <Icon name="brain" size={32} />
-            <div class="pulse-ring"></div>
-          </div>
-          Second Brain
-        </h1>
-
-        <button class="mode-indicator" on:click={() => (showModeSelector = !showModeSelector)}>
-          <Icon name={currentMode.icon} size={20} />
-          <span>{currentMode.name} Mode</span>
-          <Icon name="chevron-down" size={16} />
-        </button>
-      </div>
+      <h1 class="page-title">
+        <div class="brain-icon">
+          <Icon name="brain" size={32} />
+          <div class="pulse-ring"></div>
+        </div>
+        Second Brain Chat
+      </h1>
     </div>
   </div>
 
@@ -494,54 +310,13 @@
         <div class="welcome-message">
           <div class="welcome-animation">
             <div class="brain-visualization">
-              <svg viewBox="0 0 200 200" class="brain-svg">
-                <defs>
-                  <linearGradient id="brain-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:{currentMode.color};stop-opacity:0.6" />
-                    <stop offset="100%" style="stop-color:{currentMode.color};stop-opacity:0.2" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M 100 50 Q 60 50 40 80 T 50 140 Q 80 170 100 170 Q 120 170 150 140 T 160 80 Q 140 50 100 50"
-                  fill="url(#brain-gradient)"
-                  stroke={currentMode.color}
-                  stroke-width="2"
-                  opacity="0.8"
-                >
-                  <animate
-                    attributeName="d"
-                    values="M 100 50 Q 60 50 40 80 T 50 140 Q 80 170 100 170 Q 120 170 150 140 T 160 80 Q 140 50 100 50;
-                            M 100 50 Q 65 45 45 75 T 55 135 Q 85 165 100 165 Q 115 165 145 135 T 155 75 Q 135 45 100 50;
-                            M 100 50 Q 60 50 40 80 T 50 140 Q 80 170 100 170 Q 120 170 150 140 T 160 80 Q 140 50 100 50"
-                    dur="4s"
-                    repeatCount="indefinite"
-                  />
-                </path>
-
-                <!-- Neural connections -->
-                {#each Array(6) as _, i}
-                  <circle r="3" fill={currentMode.color}>
-                    <animateMotion
-                      dur="{3 + i}s"
-                      repeatCount="indefinite"
-                      path="M {50 + i * 20} 100 Q 100 {50 + i * 10} {150 - i * 20} 100"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0;1;0"
-                      dur="{3 + i}s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                {/each}
-              </svg>
+              <Icon name="brain" size={60} />
             </div>
           </div>
 
           <h2>Welcome to your Second Brain</h2>
           <p class="welcome-subtitle">
-            I'm here to help you explore, understand, and connect your knowledge in {currentMode.name.toLowerCase()}
-            mode.
+            I'm here to help you explore, understand, and connect your knowledge.
           </p>
 
           {#if suggestedQuestions.length > 0}
@@ -644,6 +419,29 @@
     <div class="input-area">
       <div class="input-container">
         <div class="input-wrapper">
+          <div class="input-actions-left">
+            {#if !isRecording}
+              <button class="input-action-button" title="Record audio" on:click={startRecording}>
+                <Icon name="message-circle" size={20} />
+              </button>
+            {:else}
+              <button class="input-action-button recording" title="Stop recording" on:click={stopRecording}>
+                <Icon name="close" size={20} />
+                <span class="recording-time">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
+              </button>
+            {/if}
+            
+            <label class="input-action-button" title="Upload image">
+              <Icon name="image" size={20} />
+              <input type="file" accept="image/*" on:change={handleImageUpload} class="hidden-input" />
+            </label>
+            
+            <label class="input-action-button" title="Attach file">
+              <Icon name="file-text" size={20} />
+              <input type="file" accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.json" on:change={handleFileUpload} class="hidden-input" />
+            </label>
+          </div>
+
           <textarea
             class="message-input"
             placeholder="Ask your Second Brain anything..."
@@ -652,7 +450,7 @@
             rows="1"
           ></textarea>
 
-          <div class="input-actions">
+          <div class="input-actions-right">
             {#if contextItems.length > 0}
               <button class="context-indicator" title="{contextItems.length} items in context">
                 <Icon name="layers" size={16} />
@@ -667,7 +465,6 @@
               class:pulse={inputMessage.trim() && !isLoading}
             >
               <Icon name="send" size={20} />
-              <div class="send-ripple"></div>
             </button>
           </div>
         </div>
@@ -686,33 +483,6 @@
     position: relative;
   }
 
-  /* Animated background */
-  .background-animation {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.5;
-  }
-
-  .orb {
-    position: absolute;
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    filter: blur(80px);
-    animation: float 20s infinite ease-in-out;
-  }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0) rotate(0deg);
-    }
-    50% {
-      transform: translateY(-20px) rotate(180deg);
-    }
-  }
-
   /* Header */
   .chat-header {
     background: rgba(26, 26, 26, 0.8);
@@ -726,12 +496,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
-  }
-
-  .title-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   .page-title {
@@ -749,12 +513,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #6366f1;
   }
 
   .pulse-ring {
     position: absolute;
     inset: -8px;
-    border: 2px solid var(--mode-color);
+    border: 2px solid #6366f1;
     border-radius: 50%;
     animation: pulse 2s infinite;
   }
@@ -770,158 +535,6 @@
     }
   }
 
-  .mode-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 2px solid var(--mode-color);
-    border-radius: 2rem;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-weight: 600;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .mode-indicator:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-    transform: translateY(-2px);
-    box-shadow:
-      0 6px 30px rgba(0, 0, 0, 0.4),
-      0 0 30px var(--mode-color);
-  }
-
-  /* Mode Selector */
-  .mode-selector-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(10px);
-    padding: 2rem;
-    padding-top: 10vh;
-    overflow-y: auto;
-  }
-
-  .mode-selector {
-    background: #1a1a1a;
-    border-radius: 1.5rem;
-    padding: 2rem;
-    max-width: 600px;
-    width: 90%;
-    max-height: 70vh;
-    overflow-y: auto;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    animation: slideUp 0.3s ease-out;
-    position: relative;
-    z-index: 10000;
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .mode-selector::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .mode-selector::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-  }
-
-  .mode-selector::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-  }
-
-  .mode-selector::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .mode-selector h3 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: white;
-    font-size: 1.5rem;
-  }
-
-  .modes-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  .mode-card {
-    position: relative;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    overflow: hidden;
-    text-align: center;
-  }
-
-  .mode-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--mode-color);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  }
-
-  .mode-card.active {
-    border-color: var(--mode-color);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .mode-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--mode-color);
-    border-radius: 50%;
-    color: white;
-  }
-
-  .mode-card h4 {
-    margin: 0 0 0.5rem;
-    color: white;
-    font-size: 1.125rem;
-  }
-
-  .mode-card p {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.875rem;
-  }
-
-  .mode-bg-gradient {
-    position: absolute;
-    inset: 0;
-    opacity: 0.1;
-    z-index: -1;
-  }
-
   /* Chat Container */
   .chat-container {
     flex: 1;
@@ -935,7 +548,7 @@
   .messages-area {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem 2rem;
+    padding: 2rem;
     scroll-behavior: smooth;
     max-width: 1200px;
     margin: 0 auto;
@@ -945,7 +558,7 @@
   /* Welcome Message */
   .welcome-message {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 3rem 1rem;
     animation: fadeIn 0.6s ease-out;
   }
 
@@ -965,26 +578,32 @@
   }
 
   .brain-visualization {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    animation: float 3s ease-in-out infinite;
   }
 
-  .brain-svg {
-    width: 100%;
-    height: 100%;
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
 
   .welcome-message h2 {
-    font-size: 1.25rem;
-    margin: 0.5rem 0;
+    font-size: 2rem;
+    margin: 1rem 0;
     color: white;
   }
 
   .welcome-subtitle {
-    font-size: 0.9rem;
+    font-size: 1.125rem;
     color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
   }
 
   /* Suggested Questions */
@@ -994,21 +613,21 @@
   }
 
   .suggested-questions h3 {
-    font-size: 0.75rem;
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .questions-grid {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .suggestion-card {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
@@ -1032,20 +651,21 @@
 
   .suggestion-card:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: var(--mode-color);
+    border-color: #6366f1;
     transform: translateX(8px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
 
   .suggestion-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(99, 102, 241, 0.2);
     border-radius: 50%;
     flex-shrink: 0;
+    color: #6366f1;
   }
 
   /* Messages */
@@ -1077,7 +697,7 @@
   }
 
   .user .avatar {
-    background: var(--mode-color);
+    background: #6366f1;
     color: white;
   }
 
@@ -1102,7 +722,7 @@
   }
 
   .user .message-bubble {
-    background: var(--mode-color);
+    background: #6366f1;
     color: white;
     border: none;
   }
@@ -1117,7 +737,7 @@
     display: inline-block;
     width: 2px;
     height: 1.2em;
-    background: var(--mode-color);
+    background: #6366f1;
     margin-left: 2px;
     vertical-align: text-bottom;
     animation: blink 1s infinite;
@@ -1237,7 +857,7 @@
 
   /* Input Area */
   .input-area {
-    padding: 1.5rem 4rem 2rem;
+    padding: 1.5rem 2rem 2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(10, 10, 10, 0.95);
     backdrop-filter: blur(20px);
@@ -1258,13 +878,61 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
     transition: all 0.3s;
   }
 
   .input-wrapper:focus-within {
-    border-color: var(--mode-color);
-    box-shadow: 0 0 30px rgba(var(--mode-color), 0.2);
+    border-color: #6366f1;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+  }
+
+  .input-actions-left {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .input-action-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .input-action-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .input-action-button.recording {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    gap: 0.5rem;
+    width: auto;
+    padding: 0 0.75rem;
+  }
+
+  .recording-time {
+    font-size: 0.75rem;
+    font-family: monospace;
+  }
+
+  .hidden-input {
+    display: none;
+  }
+
+  label.input-action-button {
+    cursor: pointer;
   }
 
   .message-input {
@@ -1277,6 +945,7 @@
     max-height: 8rem;
     line-height: 1.5;
     font-size: 1rem;
+    padding: 0.5rem 0;
   }
 
   .message-input:focus {
@@ -1287,10 +956,11 @@
     color: rgba(255, 255, 255, 0.4);
   }
 
-  .input-actions {
+  .input-actions-right {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0;
   }
 
   .context-indicator {
@@ -1318,7 +988,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--mode-color);
+    background: #6366f1;
     color: white;
     border: none;
     border-radius: 50%;
@@ -1328,7 +998,7 @@
 
   .send-button:hover:not(:disabled) {
     transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(var(--mode-color), 0.5);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
   }
 
   .send-button:disabled {
@@ -1338,26 +1008,6 @@
 
   .send-button.pulse {
     animation: pulse 2s infinite;
-  }
-
-  .send-ripple {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: var(--mode-color);
-    opacity: 0;
-    transform: scale(0);
-  }
-
-  .send-button:active .send-ripple {
-    animation: ripple 0.6s ease-out;
-  }
-
-  @keyframes ripple {
-    to {
-      opacity: 0;
-      transform: scale(2);
-    }
   }
 
   /* Scrollbar */
@@ -1378,35 +1028,34 @@
     background: rgba(255, 255, 255, 0.3);
   }
 
-  /* Gradient backgrounds for modes */
-  .from-indigo-500\/20 {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
-  }
-
-  .from-emerald-500\/20 {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2));
-  }
-
-  .from-amber-500\/20 {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 146, 60, 0.2));
-  }
-
-  .from-pink-500\/20 {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(244, 63, 94, 0.2));
-  }
-
   /* Responsive */
   @media (max-width: 768px) {
-    .chat-container {
-      padding: 0 1rem;
+    .header-content {
+      padding: 1rem;
     }
 
-    .modes-grid {
-      grid-template-columns: 1fr;
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .messages-area {
+      padding: 1rem;
     }
 
     .message-metadata {
       margin-left: 0;
+    }
+
+    .input-area {
+      padding: 1rem;
+    }
+
+    .input-actions-left {
+      display: none; /* Hide on mobile for now */
+    }
+
+    .message-content {
+      max-width: 85%;
     }
   }
 </style>

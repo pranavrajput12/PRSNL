@@ -19,7 +19,7 @@ from app.agents.conversation import (
     KnowledgeGapDetectorAgent,
     AdvancedKnowledgeGapDetectorAgent
 )
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -29,7 +29,7 @@ def list_crews() -> List[str]:
 from app.crews.knowledge_crew import *
 from app.crews.code_crew import *
 from app.crews.media_crew import *
-from app.crews.research_crew import *
+# from app.crews.research_crew import *  # Module not created yet
 from app.crews.conversation_crew import *
 from app.crews.autonomous_crew import *
 

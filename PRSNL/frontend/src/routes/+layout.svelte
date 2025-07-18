@@ -10,6 +10,7 @@
   import { goto } from '$app/navigation';
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import { currentUser, isAuthenticated, authActions } from '$lib/stores/unified-auth';
+  import FloatingChat from '$lib/components/FloatingChat.svelte';
   
   export let data;
 
@@ -2098,3 +2099,6 @@
   }
 
 </style>
+
+<!-- Floating Chat - Available on all pages -->
+<FloatingChat />

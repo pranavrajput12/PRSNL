@@ -15,7 +15,7 @@ from enum import Enum
 from app.crews.base_crew import PRSNLBaseCrew
 from app.crews import register_crew, CREW_REGISTRY
 from app.agents import AGENT_REGISTRY
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

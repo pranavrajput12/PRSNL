@@ -342,3 +342,87 @@ Return as JSON with a 'questions' array, each item having 'question' and 'type' 
         except Exception as e:
             logger.error(f"Async question generation failed: {e}")
             raise
+
+
+class TagSuggesterInput(BaseModel):
+    """Input schema for tag suggester tool"""
+    content: str = Field(..., description="Content to analyze for tag suggestions")
+    content_type: Optional[str] = Field("general", description="Type of content")
+    max_tags: Optional[int] = Field(10, description="Maximum number of tags to suggest")
+
+
+@register_tool("tag_suggester")
+class TagSuggesterTool(BaseTool):
+    name: str = "Tag Suggester"
+    description: str = (
+        "Suggests relevant tags for content based on its topics, themes, and context. "
+        "Useful for content categorization and organization."
+    )
+    args_schema: Type[BaseModel] = TagSuggesterInput
+    
+    def _run(
+        self,
+        content: str,
+        content_type: str = "general",
+        max_tags: int = 10
+    ) -> str:
+        """Generate tag suggestions for content"""
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(
+                self._async_suggest_tags(content, content_type, max_tags)
+            )
+            loop.close()
+            return result
+        except Exception as e:
+            logger.error(f"Tag suggestion failed: {e}")
+            return f"Failed to suggest tags: {str(e)}"
+    
+    async def _async_suggest_tags(
+        self,
+        content: str,
+        content_type: str,
+        max_tags: int
+    ) -> str:
+        """Async tag suggestion"""
+        try:
+            prompt = f"""Analyze this {content_type} content and suggest up to {max_tags} relevant tags.
+
+Content: {content[:2000]}
+
+Consider:
+- Main topics and themes
+- Key concepts and entities
+- Category or domain
+- Technical terms (if applicable)
+- Relevant keywords
+
+Return as JSON with a 'tags' array, each item having 'tag' and 'relevance_score' (0-1) fields.
+Sort by relevance score (highest first)."""
+
+            response = await unified_ai_service.complete(
+                prompt=prompt,
+                system_prompt="You are an expert content curator who creates precise, relevant tags.",
+                temperature=0.3,
+                response_format={"type": "json_object"}
+            )
+            
+            try:
+                result = json.loads(response)
+                tags = result.get("tags", [])
+            except:
+                return "Failed to suggest tags"
+            
+            output = f"Suggested Tags ({len(tags)}):\n\n"
+            
+            for i, tag_info in enumerate(tags[:max_tags], 1):
+                tag = tag_info.get('tag', 'N/A')
+                score = tag_info.get('relevance_score', 0)
+                output += f"{i}. {tag} (relevance: {score:.2f})\n"
+            
+            return output
+            
+        except Exception as e:
+            logger.error(f"Async tag suggestion failed: {e}")
+            raise

@@ -11,6 +11,7 @@ from app.core.websocket_manager import manager
 from app.db.database import get_db_pool
 from app.services.llm_processor import LLMProcessor
 from app.services.unified_ai_service import UnifiedAIService
+from app.services.floating_chat_service import FloatingChatService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -95,6 +96,7 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
             data = await websocket.receive_json()
             message = data.get("message", "")
             conversation_history = data.get("history", [])
+            context = data.get("context", {})
             
             if not message:
                 await websocket.send_json({
@@ -374,8 +376,22 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 Always cite the sources you're using from the knowledge base.
                 Be helpful, concise, and accurate."""
                 
-                user_prompt = f"""Based on the following items from the knowledge base, answer the user's question.
+                # Add page context if available
+                page_context_prompt = ""
+                if context and context.get("page"):
+                    page_info = context["page"]
+                    page_context_prompt = f"\n\nUser Context:\n"
+                    page_context_prompt += f"- Current page: {page_info.get('pageTitle', page_info.get('url', 'Unknown'))}\n"
+                    page_context_prompt += f"- Page type: {page_info.get('pageType', 'unknown')}\n"
+                    
+                    if page_info.get("itemId"):
+                        page_context_prompt += f"- Viewing item ID: {page_info['itemId']}\n"
+                    
+                    if page_info.get("searchQuery"):
+                        page_context_prompt += f"- Search query: {page_info['searchQuery']}\n"
                 
+                user_prompt = f"""Based on the following items from the knowledge base, answer the user's question.
+                {page_context_prompt}
                 Knowledge Base Items:
                 {knowledge_base_context}
                 
@@ -426,6 +442,103 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
         logger.info(f"Client {client_id} disconnected from chat")
     except Exception as e:
         logger.error(f"Error in chat for {client_id}: {e}", exc_info=True)
+        await websocket.send_json({
+            "type": "error",
+            "message": f"Connection error: {str(e)}"
+        })
+        manager.disconnect(client_id)
+
+
+@router.websocket("/ws/floating-chat/{client_id}")
+async def floating_chat(websocket: WebSocket, client_id: str):
+    """
+    Floating chat endpoint using CrewAI for intelligent responses.
+    Optimized for quick, contextual assistance.
+    """
+    await manager.connect(websocket, client_id)
+    floating_chat_service = FloatingChatService()
+    
+    # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
+    # For development, use the test user ID if no authentication
+    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
+    logger.warning(f"SECURITY BYPASS: Using hardcoded user_id for FloatingChat WebSocket connection")
+    
+    logger.debug(f"Floating chat connection established for client: {client_id}")
+    
+    try:
+        # Send initial connection success message
+        await websocket.send_json({
+            "type": "connection",
+            "status": "connected",
+            "message": "Connected to PRSNL floating chat assistant"
+        })
+        
+        while True:
+            # Receive message from client
+            data = await websocket.receive_json()
+            message = data.get("message", "")
+            page_context = data.get("context", {}).get("page", {})
+            crew_type = data.get("crew_type", "simple")  # Default to fast simple crew
+            
+            if not message:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "No message provided"
+                })
+                continue
+            
+            logger.debug(f"Received floating chat message from {client_id}: {message}")
+            logger.debug(f"Page context: {page_context}")
+            
+            # Send typing indicator
+            await websocket.send_json({
+                "type": "status",
+                "message": "Thinking..."
+            })
+            
+            try:
+                # Use CrewAI service for intelligent response
+                result = await floating_chat_service.get_contextual_response(
+                    message=message,
+                    page_context=page_context,
+                    user_id=user_id,
+                    crew_type=crew_type,
+                    max_knowledge_items=3  # Limit for speed
+                )
+                
+                # Stream the response character by character for real-time feel
+                response = result["response"]
+                for char in response:
+                    await websocket.send_json({
+                        "type": "chunk",
+                        "content": char
+                    })
+                    await asyncio.sleep(0.02)  # Small delay for streaming effect
+                
+                # Send completion with metadata
+                await websocket.send_json({
+                    "type": "complete",
+                    "citations": result.get("citations", []),
+                    "context_count": result.get("knowledge_items_used", 0),
+                    "crew_type": result.get("crew_type", crew_type),
+                    "response_time": result.get("response_time_seconds", 0),
+                    "metadata": result.get("metadata", {})
+                })
+                
+                logger.debug(f"Completed floating chat response for {client_id} using {result.get('crew_type')} crew")
+                
+            except Exception as e:
+                logger.error(f"Error processing floating chat message: {e}", exc_info=True)
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Sorry, I encountered an error processing your request: {str(e)}"
+                })
+    
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+        logger.info(f"Client {client_id} disconnected from floating chat")
+    except Exception as e:
+        logger.error(f"Error in floating chat for {client_id}: {e}", exc_info=True)
         await websocket.send_json({
             "type": "error",
             "message": f"Connection error: {str(e)}"

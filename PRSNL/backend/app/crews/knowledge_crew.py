@@ -7,6 +7,7 @@ This crew handles all knowledge curation, organization, and enrichment tasks.
 import logging
 from typing import Any, Dict, List, Optional
 from crewai import Agent, Crew, Task, Process
+from crewai.project import CrewBase, agent, crew, task
 from app.crews.base_crew import PRSNLBaseCrew
 from app.crews import register_crew
 from app.agents.knowledge import (
@@ -23,11 +24,13 @@ logger = logging.getLogger(__name__)
 class KnowledgeCurationCrew(PRSNLBaseCrew):
     """Crew for comprehensive knowledge curation"""
     
+    @agent
     def knowledge_curator(self) -> Agent:
         """Knowledge Curator agent"""
         agent_instance = KnowledgeCuratorAgent()
         return agent_instance.get_agent()
     
+    @agent
     @agent
     def research_synthesizer(self) -> Agent:
         """Research Synthesizer agent"""
@@ -35,17 +38,20 @@ class KnowledgeCurationCrew(PRSNLBaseCrew):
         return agent_instance.get_agent()
     
     @agent
+    @agent
     def content_explorer(self) -> Agent:
         """Content Explorer agent"""
         agent_instance = ContentExplorerAgent()
         return agent_instance.get_agent()
     
     @agent
+    @agent
     def learning_path_creator(self) -> Agent:
         """Learning Path Creator agent"""
         agent_instance = LearningPathAgent()
         return agent_instance.get_agent()
     
+    @task
     @task
     def curate_knowledge_task(self) -> Task:
         """Task for curating knowledge from a source"""
@@ -68,6 +74,7 @@ class KnowledgeCurationCrew(PRSNLBaseCrew):
         )
     
     @task
+    @task
     def synthesize_research_task(self) -> Task:
         """Task for synthesizing research from multiple sources"""
         return Task(
@@ -88,6 +95,7 @@ class KnowledgeCurationCrew(PRSNLBaseCrew):
         )
     
     @task
+    @task
     def explore_related_content_task(self) -> Task:
         """Task for exploring related content"""
         return Task(
@@ -105,6 +113,7 @@ class KnowledgeCurationCrew(PRSNLBaseCrew):
             agent=self.content_explorer()
         )
     
+    @task
     @task
     def create_learning_path_task(self) -> Task:
         """Task for creating a learning path"""
@@ -124,6 +133,7 @@ class KnowledgeCurationCrew(PRSNLBaseCrew):
             agent=self.learning_path_creator()
         )
     
+    @crew
     @crew
     def crew(self) -> Crew:
         """Creates the Knowledge Curation crew"""
@@ -153,6 +163,7 @@ class DeepKnowledgeAnalysisCrew(KnowledgeCurationCrew):
         """Use hierarchical process for complex analysis"""
         return "hierarchical"
     
+    @task
     @task
     def deep_analysis_task(self) -> Task:
         """Task for deep knowledge analysis"""
@@ -192,6 +203,7 @@ class KnowledgeWebCrew(PRSNLBaseCrew):
     """Crew for building interconnected knowledge webs"""
     
     @agent
+    @agent
     def web_builder(self) -> Agent:
         """Agent specialized in building knowledge connections"""
         from app.tools.knowledge_tools import KnowledgeGraphTool, ConnectionFinderTool
@@ -209,6 +221,7 @@ class KnowledgeWebCrew(PRSNLBaseCrew):
             memory=True
         )
     
+    @task
     @task
     def build_knowledge_web_task(self) -> Task:
         """Task for building knowledge web"""
