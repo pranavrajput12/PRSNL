@@ -64,7 +64,7 @@ export const customInstance = async <T>(config: OrvalRequestConfig): Promise<T> 
 
   // Get auth token from localStorage if available
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('prsnl_auth_token');
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }

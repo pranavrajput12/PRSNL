@@ -11,6 +11,7 @@
   let importResults = null;
   let error = null;
   let autoFetch = true;
+  let useAiCategorization = true;
   let importType = 'bookmarks';
   let progress = 0;
   let currentItem = '';
@@ -81,11 +82,22 @@
 
         if (importType === 'bookmarks') {
           formData.append('auto_fetch', autoFetch.toString());
+          formData.append('use_ai_categorization', useAiCategorization.toString());
+        }
+
+        // Add authorization header if token exists
+        const headers = {};
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('prsnl_auth_token');
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
         }
 
         const response = await fetch(`${API_BASE_URL}/import/${importType}`, {
           method: 'POST',
           body: formData,
+          headers,
         });
 
         if (!response.ok) {

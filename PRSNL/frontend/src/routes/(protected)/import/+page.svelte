@@ -91,9 +91,19 @@
         endpoint = `${API_BASE_URL}/api/import/notes`;
       }
 
+      // Add authorization header if token exists
+      const headers = {};
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('prsnl_auth_token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
+        headers,
       });
 
       if (!response.ok) {
