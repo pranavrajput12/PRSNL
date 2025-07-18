@@ -16,7 +16,8 @@ from pydantic import BaseModel, HttpUrl
 from app.core.capture_engine import CaptureEngine
 from app.agents.content.bookmark_categorization_agent import BookmarkCategorizationAgent
 
-# Security imports will be added when authentication is implemented
+# Authentication
+from app.core.auth import get_current_user, User
 from app.db.database import get_db_connection
 from app.models.schemas import ItemCreate
 from app.services.embedding_manager import embedding_manager
@@ -87,6 +88,7 @@ async def get_import_options():
 async def import_json(
     file: UploadFile = File(...),
     merge_duplicates: bool = Form(False),
+    current_user: User = Depends(get_current_user),
     conn=Depends(get_db_connection)
 ):
     """
@@ -113,8 +115,9 @@ async def import_json(
                 existing = None
                 if item_data.get('url'):
                     existing = await conn.fetchrow(
-                        "SELECT id FROM items WHERE url = $1",
-                        item_data['url']
+                        "SELECT id FROM items WHERE url = $1 AND user_id = $2",
+                        item_data['url'],
+                        str(current_user.id)
                     )
                 
                 if existing and not merge_duplicates:
@@ -141,8 +144,8 @@ async def import_json(
                     content_fingerprint = calculate_content_fingerprint(item_create.content or '')
                     
                     await conn.execute("""
-                        INSERT INTO items (id, url, title, type, raw_content, summary, status, metadata, content_fingerprint)
-                        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7::jsonb, $8)
+                        INSERT INTO items (id, url, title, type, raw_content, summary, status, metadata, content_fingerprint, user_id)
+                        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7::jsonb, $8, $9)
                     """, 
                         item_id,
                         str(item_create.url) if item_create.url else None,
@@ -151,7 +154,8 @@ async def import_json(
                         item_create.content,
                         item_create.summary,
                         json.dumps(item_data.get('metadata', {})),
-                        content_fingerprint
+                        content_fingerprint,
+                        str(current_user.id)
                     )
                     
                     # Create embedding if content exists
@@ -210,6 +214,7 @@ async def import_bookmarks(
     auto_fetch: bool = Form(True),
     batch_size: int = Form(10),
     use_ai_categorization: bool = Form(True),
+    current_user: User = Depends(get_current_user),
     conn=Depends(get_db_connection)
 ):
     """
@@ -234,9 +239,8 @@ async def import_bookmarks(
         capture_engine = CaptureEngine()
         categorization_agent = BookmarkCategorizationAgent()
         
-        # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
-        # For development, use the test user ID if no authentication
-        user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
+        # Use authenticated user ID
+        user_id = str(current_user.id) if current_user else "e03c9686-09b0-4a06-b236-d0839ac7f5df"
         
         # Collect bookmark data for batch processing
         bookmark_data = []
