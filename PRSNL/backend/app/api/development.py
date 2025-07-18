@@ -342,7 +342,7 @@ async def get_development_stats():
                            ELSE NULL
                        END as permalink
                 FROM items i
-                LEFT JOIN content_urls cu ON i.id = cu.content_id
+                LEFT JOIN content_urls cu ON i.id = cu.item_id
                 WHERE i.type = 'development'
                 ORDER BY i.created_at DESC
                 LIMIT 10

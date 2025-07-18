@@ -55,7 +55,7 @@ async def get_item_detail(item_id: UUID):
                         ARRAY[]::TEXT[]
                     ) as tags
                 FROM items i
-                LEFT JOIN content_urls cu ON i.id = cu.content_id
+                LEFT JOIN content_urls cu ON i.id = cu.item_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.id = $1

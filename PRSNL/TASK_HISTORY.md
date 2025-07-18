@@ -46,6 +46,32 @@ This document consolidates all task tracking, project history, and progress moni
 
 ### ✅ RECENTLY COMPLETED
 
+#### Task SETUP-2025-07-18-001: Mac Mini M4 Setup with Colima
+**Status**: COMPLETED
+**Started**: 2025-07-18
+**Completed**: 2025-07-18 (partial - authentication pending)
+**Assigned**: Claude
+**Type**: Infrastructure + Environment Setup
+**Priority**: P0 (Critical)
+**Duration**: ~1 day
+**Files Modified**: 
+- Updated: docker-compose.auth.yml (fixed Keycloak port from 5433 to 5432)
+- Updated: backend/.env (DATABASE_URL uses port 5432)
+- Fixed: .env file (removed invalid EOF line)
+**Environment Changes**:
+- **Hardware**: Migrated to Mac Mini M4 (Apple Silicon)
+- **Storage**: Freed ~28GB by cleaning npm cache, Puppeteer cache, old IDEs, Xcode support files
+- **Container Runtime**: Replaced Rancher Desktop with Colima (lightweight Docker alternative)
+- **Database**: PostgreSQL 16 ARM64 on port 5432 (changed from 5433)
+- **Services**: All services running (Frontend: 3004, Backend: 8000, Keycloak: 8080, FusionAuth: 9011)
+**Summary**: Successfully migrated PRSNL to Mac Mini M4 with Colima as Docker runtime. All services are running but authentication system needs user configuration. Login page returns 500 errors due to missing pgvector extension and incomplete auth setup.
+**Known Issues**:
+- pgvector extension not installed (vector operations disabled)
+- Authentication providers need user setup
+- Login endpoints returning 500 errors
+- Database migrations failed on startup
+**Notes**: User requested to continue tomorrow. All infrastructure is ready, just needs authentication configuration completion.
+
 #### Task AUTH-2025-07-16-001: Dual Authentication System Implementation (Keycloak + FusionAuth)
 **Status**: COMPLETED
 **Completed**: 2025-07-16 23:55

@@ -8,6 +8,7 @@
   import ModeOnboarding from '$lib/components/ModeOnboarding.svelte';
   import { formatDate } from '$lib/utils/date';
   import { createStreamingConnection, type StreamingWebSocket } from '$lib/utils/websocket';
+  import { api } from '$lib/api';
 
   interface ChatMessage {
     id: string;
@@ -205,11 +206,8 @@
         params.append('context_items', contextItems.join(','));
       }
 
-      const response = await fetch(`/api/suggest-questions?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        suggestedQuestions = data.questions;
-      }
+      const data = await api.get(`/suggest-questions?${params}`);
+      suggestedQuestions = data.questions;
     } catch (error) {
       console.error('Error loading suggested questions:', error);
     }

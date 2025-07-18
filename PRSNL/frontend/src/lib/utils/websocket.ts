@@ -164,9 +164,9 @@ export function createStreamingConnection(
 ): StreamingWebSocket {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = window.location.hostname;
-  // In development, use the same port as frontend (Vite will proxy)
+  // In development, connect directly to backend port 8000
   // In production, use port 8001 (NGINX proxy)
-  const port = import.meta.env.MODE === 'production' ? 8001 : window.location.port;
+  const port = import.meta.env.MODE === 'production' ? 8001 : 8000;
   const url = `${protocol}//${host}:${port}${endpoint}`;
 
   console.debug('[WebSocket] Creating connection to:', url);

@@ -44,6 +44,9 @@ OPTIONAL_AUTH_ROUTES = [
     "/api/search",
     "/api/content-types",
     "/api/development",
+    "/api/conversations",  # Neural Echo conversations
+    "/api/conversation_groups",  # Conversation groups
+    "/api/suggest-questions",  # Chat suggested questions
 ]
 
 

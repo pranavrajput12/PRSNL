@@ -5,7 +5,10 @@ This is a placeholder implementation that will be enhanced with Azure models lat
 import random
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
+from uuid import UUID
+from app.middleware.user_context import require_user_id
+from app.core.auth import get_current_user_optional
 
 router = APIRouter()
 
@@ -40,7 +43,8 @@ SAMPLE_QUESTIONS = {
 @router.get("/suggest-questions")
 async def suggest_questions(
     context: Optional[str] = Query(None, description="Context for questions (general, empty, contextual)"),
-    limit: int = Query(5, ge=1, le=10, description="Number of questions to return")
+    limit: int = Query(5, ge=1, le=10, description="Number of questions to return"),
+    user = Depends(get_current_user_optional)
 ):
     """
     Get suggested questions based on context.
@@ -69,7 +73,8 @@ async def suggest_questions(
 async def suggest_questions_v1(
     context: Optional[str] = Query(None, description="Context for questions"),
     item_id: Optional[str] = Query(None, description="Item ID for contextual questions"),
-    limit: int = Query(5, ge=1, le=10, description="Number of questions to return")
+    limit: int = Query(5, ge=1, le=10, description="Number of questions to return"),
+    user_id: UUID = Depends(require_user_id)
 ):
     """
     Version 1 endpoint for backward compatibility.

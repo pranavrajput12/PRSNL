@@ -1,6 +1,9 @@
 # 📊 PRSNL PROJECT STATUS - Phase 3 Complete + Authentication
-*Last Updated: 2025-07-16 by Claude*
+*Last Updated: 2025-07-18 by Claude*
 *Version: 3.1.0 - AI-Powered Second Brain with Full Authentication*
+
+## 🚨 IMPORTANT: Mac Mini M4 Migration in Progress
+**Current Status**: System migrated to Mac Mini M4 with Colima (Docker alternative). All services running but authentication configuration incomplete. Login page returns 500 errors - will continue setup tomorrow.
 
 ## 🎯 SINGLE SOURCE OF TRUTH
 This document consolidates all project status, context, and task assignments. Other documentation files will be archived with redirect notices.
@@ -221,25 +224,28 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
    - ✅ **Modern Styling**: 259+ lines of comprehensive form CSS for professional appearance
    - ✅ **Cross-Platform Integration**: Extension, frontend, and backend all support GitHub detection
 
-### 🚧 CURRENT STATUS
-- **Website**: ✅ Running on http://localhost:3004 (development) or 3003 (container)
+### 🚧 CURRENT STATUS (Mac Mini M4 Setup - 2025-07-18)
+- **Website**: ✅ Running on http://localhost:3004 (development)
 - **Backend**: ✅ Running locally on port 8000 (not in Docker for better DX)
-- **Database**: ✅ Local PostgreSQL (not Docker) - postgresql://pronav@localhost:5432/prsnl
-- **Cache**: ✅ DragonflyDB in Docker (25x faster than Redis)
-- **Chat**: ✅ WORKING - WebSocket connection fixed, RAG implemented
-- **Search**: ✅ Working correctly with semantic capabilities
+- **Database**: ✅ Local PostgreSQL - postgresql://pronav@localhost:5432/prsnl (port changed from 5433)
+- **Cache**: ✅ DragonflyDB in Docker via Colima (25x faster than Redis)
+- **Chat**: ⚠️ NEEDS AUTH CONFIG - WebSocket connection requires user setup
+- **Search**: ⚠️ NEEDS AUTH CONFIG - Working but requires authentication
 - **Videos**: ✅ Display properly with YouTube embeds and transcripts
-- **API**: ✅ All endpoints use /api prefix (NOT /api/v1)
+- **API**: ⚠️ 500 errors on auth endpoints - missing pgvector and user configuration
 - **AI Provider**: ✅ Azure OpenAI exclusive (Ollama completely removed)
 - **Chrome Extension**: ✅ Fixed and functional with GitHub auto-detection
 - **Development Tools**: ✅ Enhanced with expert engineer improvements
+- **Container Runtime**: ✅ Colima running (replaced Rancher Desktop)
+- **Auth Services**: ✅ Keycloak (8080) and FusionAuth (9011) running but need configuration
 
-### 🏗️ INFRASTRUCTURE STACK (v2.4)
+### 🏗️ INFRASTRUCTURE STACK (v2.5 - Mac Mini M4)
+- **Hardware**: Mac Mini M4 (Apple Silicon) - NEW as of 2025-07-18
 - **Cache Layer**: DragonflyDB (replaced Redis) - 25x performance improvement
 - **HTTP Client**: httpx (standardized) - replaced aiohttp across all services
 - **Rate Limiting**: slowapi only - native Starlette integration
-- **Database**: PostgreSQL 16 with pgvector extension (local installation)
-- **Container Runtime**: Rancher Desktop (only for DragonflyDB now)
+- **Database**: PostgreSQL 16 (ARM64) - port 5432 (changed from 5433)
+- **Container Runtime**: Colima (replaced Rancher Desktop) - lightweight Docker alternative
 - **CI/CD**: GitHub Actions with security scanning and automated deployment
 - **Monitoring**: Sentry for error tracking, OpenTelemetry for observability
 
@@ -247,7 +253,34 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 
 ## 🔧 RECENT FIXES & IMPROVEMENTS
 
-### Latest Updates (2025-07-12)
+### Latest Updates (2025-07-18)
+
+#### Mac Mini M4 Migration:
+1. **Storage Cleanup**
+   - Freed ~28GB disk space
+   - Cleaned npm cache (2GB), Puppeteer cache (964MB), old IDEs (333MB), Xcode support (4.4GB)
+   - Status: ✅ COMPLETED
+
+2. **Infrastructure Migration**
+   - Installed Homebrew, PostgreSQL 16 (ARM64), Colima
+   - Replaced Rancher Desktop with Colima for Docker runtime
+   - Updated all port configurations (PostgreSQL: 5433 → 5432)
+   - Status: ✅ COMPLETED
+
+3. **Service Configuration**
+   - Fixed .env file invalid EOF line
+   - Updated Keycloak database connection to use port 5432
+   - Created basic database schema (items and users tables)
+   - Status: ✅ PARTIALLY COMPLETE
+
+4. **Known Issues**
+   - pgvector extension not installed (vector operations disabled)
+   - Authentication providers need user configuration
+   - Login page returns 500 errors on /api/timeline and /api/auth/login
+   - Database migrations failed on backend startup
+   - Status: ⚠️ TO BE CONTINUED TOMORROW
+
+### Previous Updates (2025-07-12)
 
 #### Infrastructure Quick Wins Implementation:
 1. **DragonflyDB Migration**

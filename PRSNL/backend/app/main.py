@@ -233,6 +233,7 @@ async def update_storage_metrics_periodically(storage_manager: StorageManager):
 from fastapi.staticfiles import StaticFiles
 
 from app.api import auth  # Authentication API endpoints
+from app.api import questions  # Questions API for suggested questions
 from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
 from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
@@ -259,6 +260,7 @@ from app.api import (
     content_urls,
     conversations,  # Neural Echo - AI chat conversations
     conversation_intelligence,  # AI-powered conversation analysis
+    conversation_groups,  # Conversation groups endpoint
     debug,
     development,
     duplicates,
@@ -289,7 +291,7 @@ logger.warning(f"🔍 ABOUT TO INCLUDE CAPTURE ROUTER: {capture.router}")
 logger.warning(f"🔍 CAPTURE ROUTER ROUTES: {[r.path for r in capture.router.routes]}")
 logger.warning(f"🔍 API_V1_STR: {settings.API_V1_STR}")
 
-app.include_router(auth.router)  # Authentication endpoints at /api/auth
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])  # Authentication endpoints at /api/auth
 app.include_router(capture.router, prefix=settings.API_V1_STR)
 logger.warning("🔍 CAPTURE ROUTER INCLUDED")
 app.include_router(search.router, prefix=settings.API_V1_STR)
@@ -314,6 +316,7 @@ app.include_router(insights.router, prefix=settings.API_V1_STR)
 app.include_router(import_data.router, prefix=settings.API_V1_STR)
 app.include_router(conversations.router, prefix=settings.API_V1_STR)  # Neural Echo - AI chat conversations
 app.include_router(conversation_intelligence.router, prefix=settings.API_V1_STR)  # AI-powered analysis
+app.include_router(conversation_groups.router, prefix=settings.API_V1_STR)  # Conversation groups endpoint
 # Backward compatibility alias
 @app.get("/api/import-data")
 async def import_data_alias():

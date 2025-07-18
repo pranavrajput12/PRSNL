@@ -415,3 +415,6 @@ class AuthService:
             )
             
             return True
+
+# Create singleton instance
+auth_service = AuthService()

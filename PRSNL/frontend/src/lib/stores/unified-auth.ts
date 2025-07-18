@@ -135,7 +135,7 @@ export const authActions = {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Login failed');
+        throw new Error(error.detail || 'Incorrect email or password');
       }
 
       const data = await response.json();

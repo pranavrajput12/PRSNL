@@ -68,14 +68,7 @@ class UnifiedAuthService {
    */
   private async initializeServices() {
     try {
-      // Initialize Keycloak
-      this.keycloak = new Keycloak({
-        url: 'http://localhost:8080',
-        realm: 'prsnl',
-        clientId: 'prsnl-frontend'
-      });
-
-      // Initialize FusionAuth configuration
+      // Store FusionAuth configuration for later use
       this.fusionAuthConfig = {
         url: 'http://localhost:9011',
         clientId: '4218d574-603a-48b4-b980-39a0b73e4cff',
@@ -85,11 +78,11 @@ class UnifiedAuthService {
         scope: 'openid profile email offline_access'
       };
 
-      // Try to restore existing session
+      // Try to restore existing session (PRSNL backend only)
       await this.restoreSession();
     } catch (error) {
-      console.error('Failed to initialize auth services:', error);
-      this.updateState({ error: 'Failed to initialize authentication' });
+      // Initialization errors are not critical - user can still login
+      this.updateState({ error: null, isLoading: false });
     }
   }
 
@@ -97,8 +90,6 @@ class UnifiedAuthService {
    * Try to restore existing authentication session
    */
   private async restoreSession() {
-    this.updateState({ isLoading: true });
-
     try {
       // Check for stored tokens
       const storedToken = localStorage.getItem('prsnl_auth_token');
@@ -124,41 +115,17 @@ class UnifiedAuthService {
             error: null
           });
           return;
+        } else if (response.status === 401) {
+          // Token is expired or invalid, clear it
+          this.clearStoredTokens();
         }
       }
 
-      // Try Keycloak session restore
-      if (this.keycloak) {
-        const authenticated = await this.keycloak.init({
-          onLoad: 'check-sso',
-          silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-          checkLoginIframe: false
-        });
-
-        if (authenticated && this.keycloak.token) {
-          const user = await this.getKeycloakUser();
-          this.updateState({
-            isAuthenticated: true,
-            user,
-            token: this.keycloak.token,
-            refreshToken: this.keycloak.refreshToken || null,
-            authSource: 'keycloak',
-            isLoading: false,
-            error: null
-          });
-          this.storeTokens(this.keycloak.token, this.keycloak.refreshToken, 'keycloak');
-          return;
-        }
-      }
-
-      // No valid session found
+      // No valid session found - this is normal, not an error
       this.updateState({ isLoading: false });
     } catch (error) {
-      console.error('Session restore failed:', error);
-      this.updateState({ 
-        isLoading: false, 
-        error: 'Failed to restore session' 
-      });
+      // Session restore errors are not critical - user just needs to login
+      this.updateState({ isLoading: false });
     }
   }
 
@@ -189,12 +156,27 @@ class UnifiedAuthService {
    * Login with Keycloak
    */
   private async loginWithKeycloak(options: LoginOptions) {
+    // Initialize Keycloak on-demand
     if (!this.keycloak) {
-      throw new Error('Keycloak not initialized');
+      try {
+        this.keycloak = new Keycloak({
+          url: 'http://localhost:8080',
+          realm: 'prsnl',
+          clientId: 'prsnl-frontend'
+        });
+        
+        await this.keycloak.init({
+          onLoad: 'login-required',
+          checkLoginIframe: false // Disable iframe to prevent timeout issues
+        });
+      } catch (error) {
+        console.error('Failed to initialize Keycloak:', error);
+        throw new Error('Keycloak service is not available. Please use email/password login.');
+      }
     }
 
     const loginOptions: any = {
-      redirectUri: options.redirectUri || window.location.origin + '/auth/callback'
+      redirectUri: options.redirectUri || `${window.location.origin}/auth/callback`
     };
 
     // Handle social providers
@@ -323,12 +305,18 @@ class UnifiedAuthService {
    * Handle Keycloak callback
    */
   private async handleKeycloakCallback() {
+    // Initialize Keycloak if not already initialized
     if (!this.keycloak) {
-      throw new Error('Keycloak not initialized');
+      this.keycloak = new Keycloak({
+        url: 'http://localhost:8080',
+        realm: 'prsnl',
+        clientId: 'prsnl-frontend'
+      });
     }
 
     const authenticated = await this.keycloak.init({
-      onLoad: 'login-required'
+      onLoad: 'check-sso',
+      checkLoginIframe: false
     });
 
     if (authenticated && this.keycloak.token) {
@@ -447,7 +435,7 @@ class UnifiedAuthService {
    */
   async refreshToken(): Promise<boolean> {
     try {
-      if (this.currentState.authSource === 'keycloak' && this.keycloak) {
+      if (this.currentState.authSource === 'keycloak' && this.keycloak && this.keycloak.authenticated) {
         const refreshed = await this.keycloak.updateToken(30);
         if (refreshed && this.keycloak.token) {
           this.updateState({ token: this.keycloak.token });
@@ -512,26 +500,31 @@ class UnifiedAuthService {
   // Private helper methods
 
   private async getKeycloakUser(): Promise<AuthUser> {
-    if (!this.keycloak) {
-      throw new Error('Keycloak not initialized');
+    if (!this.keycloak || !this.keycloak.authenticated) {
+      throw new Error('Keycloak not authenticated');
     }
 
-    const profile = await this.keycloak.loadUserProfile();
-    const tokenParsed = this.keycloak.tokenParsed as any;
+    try {
+      const profile = await this.keycloak.loadUserProfile();
+      const tokenParsed = this.keycloak.tokenParsed as any;
 
-    return {
-      id: profile.id || tokenParsed.sub,
-      email: profile.email || tokenParsed.email || '',
-      name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      roles: tokenParsed.realm_access?.roles || [],
-      source: 'keycloak',
-      isEmailVerified: tokenParsed.email_verified || false
-    };
+      return {
+        id: profile.id || tokenParsed.sub,
+        email: profile.email || tokenParsed.email || '',
+        name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        roles: tokenParsed.realm_access?.roles || [],
+        source: 'keycloak',
+        isEmailVerified: tokenParsed.email_verified || false
+      };
+    } catch (error) {
+      console.error('Failed to load Keycloak user profile:', error);
+      throw new Error('Failed to load user profile');
+    }
   }
 
-  private normalizeUser(userData: any, source: 'keycloak' | 'fusionauth' | 'prsnl'): AuthUser {
+  normalizeUser(userData: any, source: 'keycloak' | 'fusionauth' | 'prsnl'): AuthUser {
     return {
       id: userData.id || userData.sub || userData.user_id,
       email: userData.email || '',
@@ -545,12 +538,12 @@ class UnifiedAuthService {
     };
   }
 
-  private updateState(updates: Partial<AuthState>) {
+  updateState(updates: Partial<AuthState>) {
     this.currentState = { ...this.currentState, ...updates };
     this.stateListeners.forEach(listener => listener(this.getState()));
   }
 
-  private storeTokens(accessToken: string, refreshToken: string | null, source: string) {
+  storeTokens(accessToken: string, refreshToken: string | null, source: string) {
     localStorage.setItem('prsnl_auth_token', accessToken);
     localStorage.setItem('prsnl_auth_source', source);
     if (refreshToken) {

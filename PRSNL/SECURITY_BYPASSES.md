@@ -122,10 +122,52 @@ See also:
 - Issue #15 in CI/CD pipeline - SQL injection risks
 - Issue #19 in CI/CD pipeline - Hardcoded secrets
 
+### 6. Chat WebSocket Authentication Bypass
+**File**: `/backend/app/api/ws.py`
+**Line**: ~77-81
+**Added**: 2025-07-18
+**Change**: Hardcoded user ID for WebSocket chat connections
+
+```python
+# SECURITY BYPASS - REMOVE BEFORE PRODUCTION
+# For development, use the test user ID if no authentication
+# This should be replaced with proper WebSocket authentication
+user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
+logger.warning(f"SECURITY BYPASS: Using hardcoded user_id for WebSocket connection")
+```
+
+**Risk**: All WebSocket chat connections use the same user ID
+**Fix**: Implement JWT token validation for WebSocket connections
+
+### 7. Development Login Endpoints
+**File**: `/backend/app/api/auth.py`
+**Line**: ~98-118, ~131-155
+**Added**: 2025-07-18
+**Change**: Accept any credentials for development login
+
+```python
+# /api/auth/login/prsnl endpoint
+# DEVELOPMENT BYPASS: Accept any email/password for now
+logger.warning("SECURITY BYPASS: Accepting any login credentials for development")
+
+# /api/auth/me endpoint
+# DEVELOPMENT BYPASS: Return test user for any request with Bearer token
+logger.warning("SECURITY BYPASS: Returning test user for /api/auth/me")
+```
+
+**Risk**: Anyone can authenticate with any credentials
+**Fix**: Implement proper user authentication with database validation
+
+**Development Login Page**: `/backend/dev_login.html`
+- Simple HTML page that calls the bypass login endpoint
+- Sets tokens in localStorage for frontend authentication
+- Access at: `file:///Users/pronav/Personal Knowledge Base/PRSNL/backend/dev_login.html`
+
 ## Tracking
 
 - [ ] Remove WebSocket authentication bypass in `codemirror_websocket.py`
 - [ ] Remove frontend token bypass in `codemirror-realtime.ts`
+- [ ] Remove chat WebSocket bypass in `ws.py`
 - [ ] Implement proper JWT authentication
 - [ ] Add login/signup pages
 - [ ] Add authentication middleware
@@ -136,5 +178,5 @@ See also:
 ---
 
 **Created**: 2025-07-14
-**Last Updated**: 2025-07-14
+**Last Updated**: 2025-07-18
 **Priority**: CRITICAL - Must fix before any public deployment

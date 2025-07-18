@@ -1,6 +1,8 @@
 # 🚀 PRSNL Complete Quick Reference & Troubleshooting Guide - Phase 3
 
-## 🎯 System Status - Phase 3 AI Second Brain Complete (2025-07-13)
+## 🎯 System Status - Mac Mini M4 Setup (2025-07-18)
+- 🚨 **Mac Mini M4 Migration**: Services running but auth configuration incomplete
+- ✅ **Hardware**: Mac Mini M4 (Apple Silicon) with Colima Docker runtime
 - ✅ **PHASE 3 COMPLETE**: AI-powered system with intelligent features
 - ✅ **LibreChat Integration**: OpenAI-compatible chat with knowledge base context
 - ✅ **Azure OpenAI Dual-Model**: prsnl-gpt-4 (complex) + gpt-4.1-mini (fast)
@@ -8,28 +10,35 @@
 - ✅ **AI Testing**: Verified 2-5s AI-powered responses
 - ✅ **LibreChat Testing**: Verified 4.0-5.5s chat responses with streaming
 - ✅ **Function Calling**: Azure OpenAI tools API working with 2023-12-01-preview
-- ✅ **ARM64 PostgreSQL 16**: Port 5433 (not 5432!) optimized for Apple Silicon
+- ✅ **ARM64 PostgreSQL 16**: Port 5432 (changed from 5433!) optimized for Apple Silicon
 - ✅ **Frontend Development**: Working on port 3004 (upgraded from 3003)
 - ✅ **Frontend Container**: Working on port 3003 (production only)
 - ✅ **Backend + AI**: Working locally on port 8000 (not Docker)
 - ✅ **Chrome Extension**: Fixed and functional with GitHub auto-detection
 - ✅ **CI/CD**: GitHub Actions pipeline fully operational
+- ⚠️ **Auth Services**: Keycloak (8080) + FusionAuth (9011) running but need config
 - 📱 **iOS App**: PRSNL APP - *separate codebase, pending integration*
 
 ---
 
 ## ⚡ Quick Start Commands
 
-### Start All Services - Phase 3
+### Start All Services - Mac Mini M4 with Colima
 ```bash
-# Start ARM64 PostgreSQL 16 (port 5433)
+# Start Colima (Docker runtime)
+colima start
+
+# Start ARM64 PostgreSQL 16 (port 5432 - changed!)
+brew services start postgresql@16
+# OR manually:
 /opt/homebrew/opt/postgresql@16/bin/pg_ctl -D /opt/homebrew/var/postgresql@16 start
 
-# Start DragonflyDB cache
+# Start DragonflyDB cache and Auth services
 docker-compose up -d redis
+docker-compose -f docker-compose.auth.yml up -d
 
 # Start Backend + AI Services (Terminal 1)
-cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/backend && source venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Start Frontend (Terminal 2)
 cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev -- --port 3004
@@ -42,6 +51,52 @@ cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/frontend && npm run dev -- --po
 - **API Documentation**: http://localhost:8000/docs
 - **🤖 AI API**: http://localhost:8000/api/ai/
 - **💬 LibreChat API**: http://localhost:8000/api/ai/
+
+### Essential URLs - Mac Mini M4 Setup
+- **Frontend Development**: http://localhost:3004
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Keycloak Admin**: http://localhost:8080 (admin/admin123)
+- **FusionAuth Admin**: http://localhost:9011 (needs setup)
+- **🤖 AI API**: http://localhost:8000/api/ai/
+- **💬 LibreChat API**: http://localhost:8000/api/ai/
+
+---
+
+## 🔧 Mac Mini M4 Quick Setup Commands
+
+### Initial Setup (One Time)
+```bash
+# Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install PostgreSQL 16
+brew install postgresql@16
+brew services start postgresql@16
+
+# Create database
+createdb prsnl
+
+# Install Colima (Docker alternative)
+brew install colima docker docker-compose
+colima start
+```
+
+### Storage Cleanup Commands
+```bash
+# Clean npm cache
+npm cache clean --force
+
+# Clean Puppeteer cache
+rm -rf ~/Library/Caches/Puppeteer
+
+# Clean old IDE caches
+rm -rf ~/Library/Application\ Support/Cursor
+rm -rf ~/Library/Application\ Support/Trae
+
+# Clean Xcode iOS Device Support (if not needed)
+rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*
+```
 
 ---
 

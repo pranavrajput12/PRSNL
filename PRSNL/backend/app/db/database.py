@@ -191,6 +191,98 @@ async def apply_migrations():
             else:
                 print(f"Skipping migration {migration_file_path} - content_type column already exists")
 
+        # Migration 018: Add AI conversation tables
+        migration_file_path = os.path.join(base_path, "migrations", "018_rename_ai_conversations_tables.sql")
+        if os.path.exists(migration_file_path):
+            # Check if ai_conversation_imports table already exists
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'ai_conversation_imports'
+                )
+            """)
+            if not exists:
+                with open(migration_file_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {migration_file_path}")
+            else:
+                print(f"Skipping migration {migration_file_path} - ai_conversation_imports table already exists")
+
+        # Development features migration
+        dev_migration_path = os.path.join(os.path.dirname(base_path), "migrations", "001_add_development_features.sql")
+        if os.path.exists(dev_migration_path):
+            # Check if development_categories table already exists
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'development_categories'
+                )
+            """)
+            if not exists:
+                with open(dev_migration_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {dev_migration_path}")
+            else:
+                print(f"Skipping migration {dev_migration_path} - development_categories table already exists")
+
+        # Repository metadata migration
+        repo_migration_path = os.path.join(base_path, "migrations", "016_add_repository_metadata.sql")
+        if os.path.exists(repo_migration_path):
+            # Check if repository_metadata column already exists
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = 'items'
+                    AND column_name = 'repository_metadata'
+                )
+            """)
+            if not exists:
+                with open(repo_migration_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {repo_migration_path}")
+            else:
+                print(f"Skipping migration {repo_migration_path} - repository_metadata column already exists")
+        
+        # GitHub tables migration
+        github_migration_path = os.path.join(base_path, "migrations", "020_add_github_tables.sql")
+        if os.path.exists(github_migration_path):
+            # Check if github_accounts table already exists
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'github_accounts'
+                )
+            """)
+            if not exists:
+                with open(github_migration_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {github_migration_path}")
+            else:
+                print(f"Skipping migration {github_migration_path} - github_accounts table already exists")
+        
+        # CodeMirror tables migration
+        codemirror_migration_path = os.path.join(base_path, "migrations", "021_add_codemirror_tables_simple.sql")
+        if os.path.exists(codemirror_migration_path):
+            # Check if codemirror_analyses table already exists
+            exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'codemirror_analyses'
+                )
+            """)
+            if not exists:
+                with open(codemirror_migration_path, "r") as f:
+                    migration_sql = f.read()
+                await conn.execute(migration_sql)
+                print(f"Applied migration: {codemirror_migration_path}")
+            else:
+                print(f"Skipping migration {codemirror_migration_path} - codemirror_analyses table already exists")
+
 async def update_item_embedding(item_id: str, embedding: List[float]):
     """Update the embedding for a specific item"""
     pool = await get_db_pool()

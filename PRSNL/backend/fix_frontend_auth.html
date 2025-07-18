@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix PRSNL Authentication</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #6366f1;
+            margin-bottom: 20px;
+        }
+        .token-box {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .info {
+            background: #3b82f6;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix PRSNL Authentication</h1>
+        
+        <div class="info">
+            This page will help fix authentication issues by setting the correct tokens in localStorage.
+        </div>
+
+        <h2>Authentication Tokens</h2>
+        <p>Access Token:</p>
+        <div class="token-box" id="access-token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTk2ZTNhNC01ODJhLTRhMjAtYmUyNS0wOTA3NGE0MWFkMmMiLCJleHAiOjE3NTI4NzQxMTksInR5cGUiOiJhY2Nlc3MiLCJqdGkiOiI4NjA1OGQzYi1lMzc1LTdlYzYtNGVlNC1mNzk5NjJkZDkxYjAifQ.EuD05wJSXK9PTAIHN6G0cjqAy0cVZELOMD5_6R3iYU0</div>
+
+        <p>Refresh Token:</p>
+        <div class="token-box" id="refresh-token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTk2ZTNhNC01ODJhLTRhMjAtYmUyNS0wOTA3NGE0MWFkMmMiLCJleHAiOjE3NTM0NzcxMTksInR5cGUiOiJyZWZyZXNoIiwianRpIjoiMjQ0Y2UxNGYtOTk1YS00NzYxLTFhMzYtMjQ3MDFhODg4ZTg1In0._MN_0WZ5sMncpRWC1OqWOWsFNvWefRVYQCbHXAkp5w0</div>
+
+        <h2>Actions</h2>
+        <button onclick="setTokens()">🔐 Set Authentication Tokens</button>
+        <button onclick="checkAuth()">✅ Check Authentication</button>
+        <button onclick="clearTokens()">🗑️ Clear Tokens</button>
+        <button onclick="goToChat()">💬 Go to Chat</button>
+
+        <div class="success" id="success-msg"></div>
+        <div class="error" id="error-msg"></div>
+
+        <h2>Current Status</h2>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showSuccess(msg) {
+            const elem = document.getElementById('success-msg');
+            elem.textContent = msg;
+            elem.style.display = 'block';
+            setTimeout(() => elem.style.display = 'none', 5000);
+        }
+
+        function showError(msg) {
+            const elem = document.getElementById('error-msg');
+            elem.textContent = msg;
+            elem.style.display = 'block';
+            setTimeout(() => elem.style.display = 'none', 5000);
+        }
+
+        function setTokens() {
+            try {
+                const accessToken = document.getElementById('access-token').textContent.trim();
+                const refreshToken = document.getElementById('refresh-token').textContent.trim();
+                
+                // Store in localStorage
+                localStorage.setItem('prsnl_auth_token', accessToken);
+                localStorage.setItem('prsnl_refresh_token', refreshToken);
+                localStorage.setItem('prsnl_auth_source', 'prsnl');
+                
+                showSuccess('✅ Tokens set successfully! You can now navigate to the chat page.');
+                updateStatus();
+            } catch (error) {
+                showError('❌ Error setting tokens: ' + error.message);
+            }
+        }
+
+        function clearTokens() {
+            localStorage.removeItem('prsnl_auth_token');
+            localStorage.removeItem('prsnl_refresh_token');
+            localStorage.removeItem('prsnl_auth_source');
+            showSuccess('🗑️ Tokens cleared!');
+            updateStatus();
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('prsnl_auth_token');
+            if (!token) {
+                showError('❌ No token found in localStorage');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3004/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    showSuccess(`✅ Authentication valid! User: ${user.email}`);
+                } else {
+                    showError(`❌ Authentication failed: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                showError('❌ Error checking authentication: ' + error.message);
+            }
+        }
+
+        function goToChat() {
+            window.location.href = 'http://localhost:3004/chat';
+        }
+
+        function updateStatus() {
+            const token = localStorage.getItem('prsnl_auth_token');
+            const refreshToken = localStorage.getItem('prsnl_refresh_token');
+            const authSource = localStorage.getItem('prsnl_auth_source');
+            
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <p><strong>Access Token:</strong> ${token ? '✅ Set' : '❌ Not set'}</p>
+                <p><strong>Refresh Token:</strong> ${refreshToken ? '✅ Set' : '❌ Not set'}</p>
+                <p><strong>Auth Source:</strong> ${authSource || 'Not set'}</p>
+            `;
+        }
+
+        // Update status on load
+        updateStatus();
+    </script>
+</body>
+</html>

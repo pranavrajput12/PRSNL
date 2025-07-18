@@ -38,8 +38,8 @@ class UserContextMiddleware:
         try:
             payload = jwt.decode(
                 token,
-                settings.JWT_SECRET_KEY,
-                algorithms=[settings.JWT_ALGORITHM]
+                settings.SECRET_KEY,
+                algorithms=["HS256"]
             )
             
             user_id = payload.get("sub")
@@ -54,7 +54,7 @@ class UserContextMiddleware:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired"
             )
-        except jwt.JWTError:
+        except jwt.InvalidTokenError:
             return None
         except ValueError:
             return None

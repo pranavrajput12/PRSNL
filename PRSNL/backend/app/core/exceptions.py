@@ -37,3 +37,11 @@ class InternalServerError(HTTPException):
             detail=message,
             headers={"X-Error-Code": "INTERNAL_SERVER_ERROR"}
         )
+
+class AuthenticationError(HTTPException):
+    def __init__(self, message: str = "Authentication failed"):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=message,
+            headers={"X-Error-Code": "AUTHENTICATION_FAILED", "WWW-Authenticate": "Bearer"}
+        )

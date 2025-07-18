@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRSNL Development Login</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #10b981;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .warning {
+            background: #dc2626;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        input {
+            background: #262626;
+            border: 1px solid #404040;
+            color: #e0e0e0;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+        .error {
+            background: #dc2626;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+        .info {
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PRSNL Dev Login</h1>
+        
+        <div class="warning">
+            <strong>⚠️ DEVELOPMENT MODE</strong><br>
+            This is a temporary login for development only. Any email/password will work.
+        </div>
+        
+        <form id="loginForm">
+            <input 
+                type="email" 
+                id="email" 
+                placeholder="Email (any will work)" 
+                value="test@example.com"
+                required
+            >
+            <input 
+                type="password" 
+                id="password" 
+                placeholder="Password (any will work)" 
+                value="password"
+                required
+            >
+            <button type="submit">Login to PRSNL</button>
+        </form>
+        
+        <div id="success" class="success">
+            ✓ Login successful! Redirecting to chat...
+        </div>
+        
+        <div id="error" class="error">
+            ✗ Login failed. Please try again.
+        </div>
+        
+        <div class="info">
+            This login page sets authentication tokens in localStorage for development. It will be replaced with proper authentication before production.
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // Call the development login endpoint
+                const response = await fetch('http://localhost:8000/api/auth/login/prsnl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                
+                const data = await response.json();
+                
+                // Store tokens in localStorage
+                localStorage.setItem('prsnl_auth_token', data.access_token);
+                localStorage.setItem('prsnl_refresh_token', data.refresh_token);
+                localStorage.setItem('prsnl_auth_source', 'prsnl');
+                
+                // Also store the old format for compatibility
+                localStorage.setItem('prsnl_token', data.access_token);
+                
+                // Show success message
+                document.getElementById('success').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                
+                // Redirect to chat after a short delay
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:3004/chat';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('success').style.display = 'none';
+            }
+        });
+        
+        // Check if already logged in
+        const token = localStorage.getItem('prsnl_auth_token');
+        if (token) {
+            document.getElementById('success').textContent = '✓ Already logged in! Redirecting...';
+            document.getElementById('success').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3004/chat';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

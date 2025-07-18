@@ -69,13 +69,13 @@ async def get_timeline(
                         ARRAY[]::TEXT[]
                     ) as tags
                 FROM items i
-                LEFT JOIN content_urls cu ON i.id = cu.content_id
+                LEFT JOIN content_urls cu ON i.id = cu.item_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.status IN ('completed', 'bookmark', 'pending')
                 AND i.user_id = $1
             """
-            params = [user_id]
+            params = [str(user_id)]
             if cursor:
                 try:
                     # The cursor is the created_at timestamp of the last item

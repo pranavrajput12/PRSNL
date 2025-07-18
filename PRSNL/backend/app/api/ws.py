@@ -74,6 +74,12 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
     ai_service = UnifiedAIService()
     
+    # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
+    # For development, use the test user ID if no authentication
+    # This should be replaced with proper WebSocket authentication
+    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
+    logger.warning(f"SECURITY BYPASS: Using hardcoded user_id for WebSocket connection")
+    
     logger.debug(f"Chat connection established for client: {client_id}")
     
     try:
@@ -284,14 +290,17 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                 ts_rank(search_vector, plainto_tsquery('english', $1)) as rank_score
                             FROM items
                             WHERE 
-                                search_vector @@ plainto_tsquery('english', $1)
-                                OR to_tsvector('english', title) @@ plainto_tsquery('english', $1)
-                                OR $1 = ANY(string_to_array(metadata->>'tags', ','))
+                                user_id = $2
+                                AND (
+                                    search_vector @@ plainto_tsquery('english', $1)
+                                    OR to_tsvector('english', title) @@ plainto_tsquery('english', $1)
+                                    OR $1 = ANY(string_to_array(metadata->>'tags', ','))
+                                )
                                 {date_filter_sql}
                             ORDER BY rank_score DESC
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
-                        text_results = await conn.fetch(text_search_query, search_query)
+                        text_results = await conn.fetch(text_search_query, search_query, user_id)
                         relevant_items.extend(text_results)
 
                     if query_embedding is not None:
@@ -307,13 +316,14 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                 metadata->>'category' as category,
                                 1 - (embedding <=> $1::vector) as similarity_score
                             FROM items
-                            WHERE embedding IS NOT NULL
+                            WHERE user_id = $2
+                                AND embedding IS NOT NULL
                                 {date_filter_sql}
                             ORDER BY embedding <=> $1::vector
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
                         # Pass embedding directly - pgvector handles conversion
-                        semantic_results = await conn.fetch(semantic_search_query, query_embedding)
+                        semantic_results = await conn.fetch(semantic_search_query, query_embedding, user_id)
                         
                         # Combine and deduplicate results
                         combined_results = {}
