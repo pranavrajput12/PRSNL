@@ -17,7 +17,7 @@
   let currentProgress = 0;
   let currentStage = 'analyzing';
 
-  const tabs = [
+  const allTabs = [
     { id: 'summary', name: 'Summary', icon: 'file-text' },
     { id: 'learning', name: 'Learning Journey', icon: 'trending-up' },
     { id: 'concepts', name: 'Key Concepts', icon: 'cpu' },
@@ -25,6 +25,41 @@
     { id: 'technical', name: 'Technical Content', icon: 'code' },
     { id: 'actionable', name: 'Actionable Insights', icon: 'target' },
   ];
+
+  // Filter tabs based on available data
+  $: tabs = intelligence ? allTabs.filter(tab => {
+    switch (tab.id) {
+      case 'summary':
+        return intelligence.summary && intelligence.summary.text;
+      case 'learning':
+        return intelligence.learning_journey && intelligence.learning_journey.narrative;
+      case 'concepts':
+        return intelligence.concepts && intelligence.concepts.topics && intelligence.concepts.topics.length > 0;
+      case 'insights':
+        return intelligence.insights && (intelligence.insights.knowledge_gaps?.length > 0 || intelligence.insights.message_insights?.length > 0);
+      case 'technical':
+        return intelligence.technical_content && (
+          intelligence.technical_content.technologies?.length > 0 ||
+          intelligence.technical_content.code_snippets?.length > 0 ||
+          intelligence.technical_content.implementation_patterns?.length > 0 ||
+          intelligence.technical_content.technical_recommendations?.length > 0
+        );
+      case 'actionable':
+        return intelligence.actionable_insights && (
+          intelligence.actionable_insights.best_practices?.length > 0 ||
+          intelligence.actionable_insights.immediate_actions?.length > 0 ||
+          intelligence.actionable_insights.tools_and_resources?.length > 0 ||
+          intelligence.actionable_insights.implementation_steps?.length > 0
+        );
+      default:
+        return false;
+    }
+  }) : [];
+
+  // Ensure activeTab is valid
+  $: if (tabs.length > 0 && !tabs.find(t => t.id === activeTab)) {
+    activeTab = tabs[0].id;
+  }
 
   onMount(async () => {
     await loadIntelligence();
@@ -185,7 +220,11 @@
 </script>
 
 <div class="intelligence-container">
-  {#if (loading && !intelligence) || (intelligence && intelligence.status === 'processing')}
+  {#if loading && !intelligence}
+    <div class="loading-state">
+      <SkeletonLoader type="content" lines={3} />
+    </div>
+  {:else if intelligence && intelligence.status === 'processing'}
     <AIProcessingIndicator
       progress={currentProgress}
       {currentStage}
@@ -350,7 +389,9 @@
                 <h4>Technologies Mentioned</h4>
                 <div class="tech-tags">
                   {#each intelligence.technical_content.technologies as tech}
-                    <span class="tech-tag">{tech}</span>
+                    <span class="tech-tag" title={tech.purpose || tech.specific_use || ''}>
+                      {tech.name || tech}
+                    </span>
                   {/each}
                 </div>
               </div>
@@ -362,7 +403,13 @@
                 <div class="code-snippets">
                   {#each intelligence.technical_content.code_snippets as snippet}
                     <div class="code-snippet">
-                      <pre><code>{snippet}</code></pre>
+                      {#if snippet.context}
+                        <p class="snippet-context">{snippet.context}</p>
+                      {/if}
+                      <pre><code>{snippet.code || snippet}</code></pre>
+                      {#if snippet.language}
+                        <span class="snippet-language">{snippet.language}</span>
+                      {/if}
                     </div>
                   {/each}
                 </div>
@@ -376,7 +423,15 @@
                   {#each intelligence.technical_content.implementation_patterns as pattern}
                     <li>
                       <Icon name="cpu" size={16} />
-                      <span>{pattern}</span>
+                      <div class="pattern-content">
+                        <strong>{pattern.pattern || pattern}</strong>
+                        {#if pattern.purpose}
+                          <p class="pattern-purpose">{pattern.purpose}</p>
+                        {/if}
+                        {#if pattern.implementation}
+                          <p class="pattern-implementation">{pattern.implementation}</p>
+                        {/if}
+                      </div>
                     </li>
                   {/each}
                 </ul>
@@ -390,19 +445,21 @@
                   {#each intelligence.technical_content.technical_recommendations as recommendation}
                     <li>
                       <Icon name="chevron-right" size={16} />
-                      <span>{recommendation}</span>
+                      <div class="recommendation-content">
+                        <strong>{recommendation.recommendation || recommendation}</strong>
+                        {#if recommendation.category}
+                          <span class="recommendation-category">[{recommendation.category}]</span>
+                        {/if}
+                        {#if recommendation.reasoning}
+                          <p class="recommendation-reasoning">{recommendation.reasoning}</p>
+                        {/if}
+                      </div>
                     </li>
                   {/each}
                 </ul>
               </div>
             {/if}
 
-            {#if !intelligence.technical_content.technologies?.length && !intelligence.technical_content.code_snippets?.length && !intelligence.technical_content.implementation_patterns?.length && !intelligence.technical_content.technical_recommendations?.length}
-              <div class="empty-state">
-                <Icon name="code" size={48} />
-                <p>No specific technical content detected in this conversation.</p>
-              </div>
-            {/if}
           </div>
         {/if}
 
@@ -466,12 +523,6 @@
               </div>
             {/if}
 
-            {#if !intelligence.actionable_insights.best_practices?.length && !intelligence.actionable_insights.immediate_actions?.length && !intelligence.actionable_insights.tools_and_resources?.length && !intelligence.actionable_insights.implementation_steps?.length}
-              <div class="empty-state">
-                <Icon name="target" size={48} />
-                <p>No specific actionable insights identified for this conversation.</p>
-              </div>
-            {/if}
           </div>
         {/if}
       </div>
@@ -948,6 +999,61 @@
     color: var(--warning);
     flex-shrink: 0;
     margin-top: 0.125rem;
+  }
+
+  /* Enhanced content styles for complex data structures */
+  .pattern-content,
+  .recommendation-content {
+    flex: 1;
+  }
+
+  .pattern-content strong,
+  .recommendation-content strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+  }
+
+  .pattern-purpose,
+  .pattern-implementation,
+  .recommendation-reasoning {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.813rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .recommendation-category {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.375rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .snippet-context {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+
+  .code-snippet {
+    position: relative;
+  }
+
+  .snippet-language {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
   }
 
   .resources-list li :global(svg) {
