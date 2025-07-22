@@ -23,7 +23,7 @@ class FirecrawlService:
         self.api_key = getattr(settings, 'FIRECRAWL_API_KEY', None)
         self.enabled = bool(self.api_key)
         self.base_url = getattr(settings, 'FIRECRAWL_BASE_URL', 'https://api.firecrawl.dev')
-        self.timeout = 30
+        self.timeout = 60
         
         if not self.enabled:
             logger.warning("Firecrawl service disabled. API key not configured.")
@@ -32,50 +32,53 @@ class FirecrawlService:
     
     async def scrape_url(self, 
                         url: str, 
-                        extract_content: bool = True,
-                        include_markdown: bool = True,
+                        formats: List[str] = None,
                         include_html: bool = False,
-                        include_links: bool = True,
-                        include_images: bool = True,
-                        wait_for: Optional[int] = None,
+                        extract_prompt: Optional[str] = None,
                         headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Scrape a single URL with advanced options
+        Scrape a single URL using Firecrawl v1 API
         
         Args:
             url: URL to scrape
-            extract_content: Extract clean content
-            include_markdown: Include markdown format
+            formats: List of formats to return (markdown, html, json, screenshot)
             include_html: Include raw HTML
-            include_links: Extract links
-            include_images: Extract images
-            wait_for: Milliseconds to wait for JS rendering
+            extract_prompt: Optional prompt for AI extraction
             headers: Custom headers
         
         Returns:
             Scraped content and metadata
         """
         if not self.enabled:
-            return {"error": "Firecrawl service not enabled"}
+            return {"success": False, "error": "Firecrawl service not enabled"}
         
         try:
+            # Default formats
+            if formats is None:
+                formats = ["markdown"]
+                if include_html:
+                    formats.append("html")
+            
             request_data = {
                 "url": url,
-                "extractorOptions": {
-                    "mode": "llm-extraction-from-markdown" if extract_content else "markdown",
-                    "extractionPrompt": "Extract the main content, title, and key information from this webpage."
-                },
-                "pageOptions": {
-                    "includeHtml": include_html,
-                    "includeMarkdown": include_markdown,
-                    "includeLinks": include_links,
-                    "includeImages": include_images,
-                    "waitFor": wait_for or 3000,
-                    "headers": headers or {}
-                }
+                "formats": formats
             }
             
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            # Add extraction prompt if provided
+            if extract_prompt:
+                request_data["extract"] = {
+                    "prompt": extract_prompt
+                }
+                if "extract" not in formats:
+                    formats.append("extract")
+            
+            # Add headers if provided
+            if headers:
+                request_data["headers"] = headers
+            
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout, connect=10.0)
+            ) as client:
                 response = await client.post(
                     f"{self.base_url}/v1/scrape",
                     json=request_data,
@@ -89,18 +92,24 @@ class FirecrawlService:
                 result = response.json()
                 
                 if result.get("success"):
+                    data = result.get("data", {})
+                    metadata = data.get("metadata", {})
+                    
                     return {
                         "success": True,
-                        "content": result.get("data", {}).get("content", ""),
-                        "markdown": result.get("data", {}).get("markdown", ""),
-                        "html": result.get("data", {}).get("html", ""),
-                        "title": result.get("data", {}).get("title", ""),
-                        "description": result.get("data", {}).get("description", ""),
-                        "url": url,
-                        "links": result.get("data", {}).get("links", []),
-                        "images": result.get("data", {}).get("images", []),
-                        "metadata": result.get("data", {}).get("metadata", {}),
-                        "scraped_at": datetime.now().isoformat()
+                        "data": {
+                            "content": data.get("markdown", ""),
+                            "markdown": data.get("markdown", ""),
+                            "html": data.get("html", ""),
+                            "title": metadata.get("title", ""),
+                            "description": metadata.get("description", ""),
+                            "sourceURL": metadata.get("sourceURL", url),
+                            "language": metadata.get("language", "en"),
+                            "statusCode": metadata.get("statusCode", 200),
+                            "images": data.get("images", []),
+                            "metadata": metadata,
+                            "scraped_at": datetime.now().isoformat()
+                        }
                     }
                 else:
                     return {

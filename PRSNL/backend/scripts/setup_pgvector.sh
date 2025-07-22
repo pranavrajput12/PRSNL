@@ -62,15 +62,15 @@ echo "✅ pgvector files installed"
 echo "🗄️  Installing pgvector extension in database..."
 
 # Check if database is running
-if ! pg_isready -h 127.0.0.1 -p 5433 &> /dev/null; then
-    echo "⚠️  PostgreSQL is not running on port 5433. Starting it..."
+if ! pg_isready -h 127.0.0.1 -p 5432 &> /dev/null; then
+    echo "⚠️  PostgreSQL is not running on port 5432. Starting it..."
     brew services start postgresql@16
     sleep 3
 fi
 
 # Create the extension using the postgres system user
 echo "📝 Creating pgvector extension in database..."
-/usr/local/opt/postgresql@16/bin/psql -h 127.0.0.1 -p 5433 -d prsnl <<EOF
+/usr/local/opt/postgresql@16/bin/psql -h 127.0.0.1 -p 5432 -d prsnl <<EOF
 -- First, grant superuser to prsnl temporarily
 ALTER USER prsnl WITH SUPERUSER;
 
@@ -87,4 +87,4 @@ EOF
 echo "✅ pgvector setup complete!"
 echo ""
 echo "🔍 To verify pgvector is working:"
-echo "   psql -h 127.0.0.1 -p 5433 -U prsnl -d prsnl -c 'SELECT * FROM pg_extension WHERE extname = '\''vector'\'';'"
+echo "   psql -h 127.0.0.1 -p 5432 -U prsnl -d prsnl -c 'SELECT * FROM pg_extension WHERE extname = '\''vector'\'';'"

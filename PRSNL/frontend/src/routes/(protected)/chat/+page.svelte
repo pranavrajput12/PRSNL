@@ -19,11 +19,13 @@
   }
 
   interface Citation {
-    text: string;
-    item_id: string;
+    text?: string;
+    item_id?: string;  // Optional since conversations may not have item_id
     title: string;
     url: string;
     permalink?: string;
+    type?: string;
+    format_label?: string;
   }
 
   interface SuggestedItem {
@@ -191,8 +193,15 @@
   }
 
   // Navigate to item
-  function navigateToItem(itemId: string, permalink?: string) {
-    window.location.href = permalink || `/items/${itemId}`;
+  function navigateToItem(itemId?: string, permalink?: string) {
+    // Use permalink if available, otherwise fall back to item ID
+    if (permalink) {
+      window.location.href = permalink;
+    } else if (itemId) {
+      window.location.href = `/items/${itemId}`;
+    } else {
+      console.error('No navigation target available');
+    }
   }
 
   // Scroll to bottom
@@ -297,7 +306,7 @@
   // Voice WebSocket connection
   function connectVoiceWebSocket(): Promise<void> {
     return new Promise((resolve) => {
-      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/api/voice/ws`;
+      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/voice/ws`;
       voiceWs = new WebSocket(wsUrl);
       
       voiceWs.onopen = () => {
@@ -464,9 +473,10 @@
                   <button
                     class="citation-chip"
                     on:click={() => navigateToItem(citation.item_id, citation.permalink)}
+                    title="{citation.format_label || 'Link'}: {citation.title}"
                   >
-                    <Icon name="file-text" size={12} />
-                    {citation.title}
+                    <span class="format-label">{citation.format_label || '📎 Link'}</span>
+                    <span class="citation-title">{citation.title}</span>
                   </button>
                 {/each}
               </div>
@@ -510,16 +520,22 @@
       <div class="input-container">
         <div class="input-wrapper">
           <div class="input-actions-left">
-            {#if !isRecording}
-              <button class="input-action-button" title="Record audio" aria-label="Record audio message" on:click={startRecording}>
-                <Icon name="mic" size={20} />
-              </button>
-            {:else}
-              <button class="input-action-button recording" title="Stop recording" aria-label="Stop recording" on:click={stopRecording}>
-                <Icon name="close" size={20} />
-                <span class="recording-time">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
-              </button>
-            {/if}
+            <button 
+              class="input-action-button voice-button" 
+              class:recording={isRecording}
+              title={isRecording ? "Release to send" : "Hold to speak"} 
+              aria-label={isRecording ? "Recording voice message" : "Hold to record voice message"}
+              on:mousedown={startRecording}
+              on:mouseup={stopRecording}
+              on:mouseleave={stopRecording}
+              on:touchstart|preventDefault={startRecording}
+              on:touchend|preventDefault={stopRecording}
+            >
+              <Icon name="mic" size={20} />
+              {#if isRecording}
+                <span class="recording-indicator"></span>
+              {/if}
+            </button>
             
             <label class="input-action-button" title="Upload image" aria-label="Upload image">
               <Icon name="image" size={20} />
@@ -890,6 +906,19 @@
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  .format-label {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .citation-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .citation-chip:hover {
@@ -1005,18 +1034,56 @@
     border-color: rgba(255, 255, 255, 0.2);
   }
 
-  .input-action-button.recording {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #fca5a5;
-    gap: 0.5rem;
-    width: auto;
-    padding: 0 0.75rem;
+  .input-action-button.voice-button {
+    position: relative;
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #6366f1;
   }
 
-  .recording-time {
-    font-size: 0.75rem;
-    font-family: monospace;
+  .input-action-button.voice-button:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.5);
+  }
+
+  .input-action-button.voice-button:active {
+    transform: scale(0.95);
+  }
+
+  .input-action-button.voice-button.recording {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: #ef4444;
+    color: white;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .recording-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+  }
+
+  @keyframes blink {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
   }
 
   .hidden-input {

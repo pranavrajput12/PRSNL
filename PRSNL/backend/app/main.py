@@ -6,6 +6,19 @@ import socket
 import sys
 import tempfile
 
+# 🔍 ENABLE COMPREHENSIVE DEBUG LOGGING
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="🔍 %(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+# Set specific loggers to DEBUG
+logging.getLogger("app.api.ws").setLevel(logging.DEBUG)
+logging.getLogger("app.middleware.auth").setLevel(logging.DEBUG)
+logging.getLogger("app.services").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+
 import asyncpg
 import httpx
 from fastapi import Depends, FastAPI, Request, Response, status

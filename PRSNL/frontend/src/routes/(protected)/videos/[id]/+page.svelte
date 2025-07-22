@@ -292,7 +292,12 @@
             {:else}
               <div class="empty-state">
                 <Icon name="file-x" size={48} />
-                <p>No transcript available for this video</p>
+                <h4>Transcript Processing</h4>
+                <p>Transcript for this video is being processed. Check back in a few minutes.</p>
+                <button class="btn btn-secondary btn-sm" on:click={loadVideo}>
+                  <Icon name="refresh-cw" />
+                  Refresh
+                </button>
               </div>
             {/if}
           {:else if activeTab === 'summary'}
@@ -327,6 +332,16 @@
                   {/each}
                 </div>
               </div>
+            {:else}
+              <div class="empty-state">
+                <Icon name="book-open" size={48} />
+                <h4>Content Analysis</h4>
+                <p>Detailed analysis including chapters and learning objectives will be available after video processing completes.</p>
+                <button class="btn btn-secondary btn-sm" on:click={loadVideo}>
+                  <Icon name="refresh-cw" />
+                  Refresh
+                </button>
+              </div>
             {/if}
           {:else if activeTab === 'moments'}
             {#if video.key_moments && video.key_moments.length > 0}
@@ -350,7 +365,12 @@
             {:else}
               <div class="empty-state">
                 <Icon name="zap-off" size={48} />
-                <p>No key moments detected</p>
+                <h4>Key Moments</h4>
+                <p>AI will identify important moments and highlights after processing. This helps you quickly navigate to the most valuable parts of the video.</p>
+                <button class="btn btn-secondary btn-sm" on:click={loadVideo}>
+                  <Icon name="refresh-cw" />
+                  Refresh
+                </button>
               </div>
             {/if}
           {/if}
@@ -620,6 +640,16 @@
     text-align: center;
     padding: 3rem;
     color: var(--color-text-muted);
+  }
+  
+  .empty-state h4 {
+    margin: 1rem 0 0.5rem 0;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  
+  .empty-state .btn {
+    margin-top: 1rem;
   }
 
   .section {

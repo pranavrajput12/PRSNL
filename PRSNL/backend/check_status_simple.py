@@ -9,7 +9,7 @@ import requests
 from datetime import datetime
 
 # Database connection
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 
 async def check_users():
     """Check PRSNL database users"""

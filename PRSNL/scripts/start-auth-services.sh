@@ -38,15 +38,15 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if PostgreSQL is running on port 5433
-if ! nc -z localhost 5433 2>/dev/null; then
-    print_error "PostgreSQL is not running on port 5433."
+# Check if PostgreSQL is running on port 5432
+if ! nc -z localhost 5432 2>/dev/null; then
+    print_error "PostgreSQL is not running on port 5432."
     print_warning "Please start your PostgreSQL service first:"
     echo "  /opt/homebrew/bin/brew services start postgresql@16"
     exit 1
 fi
 
-print_success "PostgreSQL is running on port 5433"
+print_success "PostgreSQL is running on port 5432"
 
 # Load environment variables (safely handle values with special characters)
 if [ -f .env ]; then

@@ -19,7 +19,7 @@ FUSIONAUTH_APPLICATION_ID = "e9fdb985-9173-4e01-9d73-ac2d60d1dc8e"  # PRSNL app
 # Database configuration
 DB_CONFIG = {
     'host': 'localhost',
-    'port': 5433,
+    'port': 5432,
     'database': 'prsnl',
     'user': 'pronav'
 }

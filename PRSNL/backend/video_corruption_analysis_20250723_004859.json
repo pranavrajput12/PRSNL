@@ -1,0 +1,65 @@
+{
+  "Video Count by Type and Status": [
+    {
+      "type": "video",
+      "status": "failed",
+      "count": 1
+    },
+    {
+      "type": "video",
+      "status": "processed",
+      "count": 1
+    },
+    {
+      "type": "youtube",
+      "status": "pending",
+      "count": 1
+    }
+  ],
+  "Suspicious Title/URL Mismatches": [
+    {
+      "id": "fa16bacc-359a-454f-8c3a-0ac27cc5d0a3",
+      "title": "Windsurf IDE UPDATE: AI Editor with Autonomous Web Commands",
+      "url": "https://www.youtube.com/watch?v=WDJoiG-apkY",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/WDJoiG-apkY/maxresdefault.jpg",
+      "created_at": "2025-07-22 08:45:39.911483+00:00",
+      "updated_at": "2025-07-22 08:51:06.556809+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    },
+    {
+      "id": "b315ee98-043a-4ebe-a150-4fe993257f3d",
+      "title": "Windsurf IDE: NEW AI Editor - Cursor Alternative That's FREE & LOCAL!",
+      "url": "https://www.youtube.com/watch?v=C_D8V9odBQ8",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/C_D8V9odBQ8/maxresdefault.jpg",
+      "created_at": "2025-07-22 08:45:39.911040+00:00",
+      "updated_at": "2025-07-22 08:51:06.833252+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    }
+  ],
+  "Failed or Broken Video Entries": [
+    {
+      "id": "fa16bacc-359a-454f-8c3a-0ac27cc5d0a3",
+      "title": "Windsurf IDE UPDATE: AI Editor with Autonomous Web Commands",
+      "url": "https://www.youtube.com/watch?v=WDJoiG-apkY",
+      "platform": "youtube",
+      "status": "failed",
+      "type": "video",
+      "created_at": "2025-07-22 08:45:39.911483+00:00",
+      "updated_at": "2025-07-22 08:51:06.556809+00:00",
+      "video_url": null,
+      "thumbnail_url": "https://img.youtube.com/vi/WDJoiG-apkY/maxresdefault.jpg"
+    }
+  ],
+  "Video Corruption Summary": [
+    {
+      "total_video_entries": 3,
+      "completed_videos": 0,
+      "failed_videos": 1,
+      "missing_thumbnails": 0,
+      "missing_platform": 0,
+      "missing_titles": 0
+    }
+  ]
+}

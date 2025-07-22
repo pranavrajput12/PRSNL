@@ -8,7 +8,7 @@ echo "🚀 Initializing PRSNL database..."
 
 # Database configuration
 DB_HOST="127.0.0.1"
-DB_PORT="5433"
+DB_PORT="5432"
 DB_NAME="prsnl"
 DB_USER="prsnl"
 DB_PASS="prsnl123"

@@ -10,7 +10,7 @@ This is your single source of truth for completing tasks properly. Use this simp
 ```
 
 ### ⚠️ CRITICAL ENVIRONMENT INFO - v8.0 WITH DUAL AUTH
-- **Database**: LOCAL PostgreSQL (NOT Docker) - `postgresql://pronav@localhost:5433/prsnl` (ARM64 PostgreSQL 16)
+- **Database**: LOCAL PostgreSQL (NOT Docker) - `postgresql://pronav@localhost:5432/prsnl` (ARM64 PostgreSQL 16)
 - **Container Runtime**: Rancher Desktop (DragonflyDB + Auth services)
 - **Frontend Development Port**: 3004 (Updated from 3003 after Svelte 5 upgrade)
 - **Frontend Container Port**: 3003 (production deployments only)
@@ -402,17 +402,17 @@ echo "=== BACKEND VERIFICATION COMPLETE ==="
 ```bash
 #!/bin/bash
 echo "=== DATABASE TASK COMPLETION VERIFICATION ==="
-echo "1. Database connection (ARM64 PostgreSQL 16 on port 5433):"
-psql -U pronav -p 5433 -d prsnl -c "SELECT version();"
+echo "1. Database connection (ARM64 PostgreSQL 16 on port 5432):"
+psql -U pronav -p 5432 -d prsnl -c "SELECT version();"
 
 echo "2. pgvector extension check:"
-psql -U pronav -p 5433 -d prsnl -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
+psql -U pronav -p 5432 -d prsnl -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
 
 echo "3. Table structure:"
-psql -U pronav -p 5433 -d prsnl -c "\d items"
+psql -U pronav -p 5432 -d prsnl -c "\d items"
 
 echo "4. Data integrity:"
-psql -U pronav -p 5433 -d prsnl -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql -U pronav -p 5432 -d prsnl -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 echo "5. API integration:"
 curl -s http://localhost:8000/api/timeline?limit=1 | jq

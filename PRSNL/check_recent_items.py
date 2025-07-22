@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, timedelta
 
 try:
-    # Connect to the database - ARM64 PostgreSQL on port 5433
+    # Connect to the database - ARM64 PostgreSQL on port 5432
     conn = psycopg2.connect(
         host="localhost",
         database="prsnl",

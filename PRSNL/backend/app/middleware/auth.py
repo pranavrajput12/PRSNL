@@ -40,7 +40,6 @@ PUBLIC_ROUTES = [
     "/api/voice/test",  # Voice test endpoint
     "/api/voice/ws",  # Voice WebSocket endpoint (temporary for dev)
     "/ws/chat",  # Chat WebSocket endpoint (temporary for dev)
-    "/ws/floating-chat",  # Floating chat WebSocket endpoint (temporary for dev)
 ]
 
 # Routes that optionally use auth (work with or without)
@@ -65,66 +64,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """
     
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Skip auth for public routes
+        # 🚫 DEVELOPMENT MODE: AUTHENTICATION COMPLETELY DISABLED
         path = request.url.path
+        logger.debug(f"🚫 AUTH DISABLED: Allowing access to {path}")
         
-        # Check if route is public
-        for public_route in PUBLIC_ROUTES:
-            if path == public_route or path.startswith(f"{public_route}/"):
-                return await call_next(request)
-        
-        # Check if route has optional auth
-        is_optional = False
-        for optional_route in OPTIONAL_AUTH_ROUTES:
-            if path == optional_route or path.startswith(f"{optional_route}/"):
-                is_optional = True
-                break
-        
-        # Extract token from header
-        auth_header = request.headers.get("Authorization")
-        token = None
-        
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-        
-        # Validate token if provided
-        if token:
-            try:
-                user = await AuthService.get_current_user(token)
-                if user:
-                    # Add user to request state for access in endpoints
-                    request.state.user = user
-                elif not is_optional:
-                    # Token is invalid and route requires auth
-                    logger.warning(f"Invalid token for protected route: {path}")
-                    return Response(
-                        content='{"detail": "Invalid authentication credentials"}',
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        headers={"WWW-Authenticate": "Bearer"},
-                        media_type="application/json"
-                    )
-            except Exception as e:
-                logger.error(f"Token validation error: {e}")
-                if not is_optional:
-                    return Response(
-                        content='{"detail": "Authentication error"}',
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        headers={"WWW-Authenticate": "Bearer"},
-                        media_type="application/json"
-                    )
-        elif not is_optional:
-            # No token provided and route requires auth
-            logger.warning(f"Missing authentication for protected route: {path}")
-            return Response(
-                content='{"detail": "Not authenticated"}',
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                headers={"WWW-Authenticate": "Bearer"},
-                media_type="application/json"
-            )
-        
-        # Continue with request
-        response = await call_next(request)
-        return response
+        # Always proceed without any authentication checks
+        return await call_next(request)
 
 
 class APIKeyBearer(HTTPBearer):

@@ -260,7 +260,7 @@ async def main():
         api_url = f"http://localhost:{settings.BACKEND_PORT}"
     except ImportError:
         print("❌ Could not import settings. Using defaults.")
-        database_url = "postgresql://pronav@localhost:5433/prsnl"
+        database_url = "postgresql://pronav@localhost:5432/prsnl"
         api_url = "http://localhost:8000"
     
     # Check if uvloop is available

@@ -2,7 +2,7 @@
 
 ## CRITICAL: Database Configuration
 **WE USE LOCAL POSTGRESQL, NOT DOCKER DATABASE**
-- Database: Local PostgreSQL on port 5433 (ARM64 version)
+- Database: Local PostgreSQL on port 5432 (ARM64 version)
 - User: pronav
 - Database name: prsnl
 - Do NOT use Docker database (it's commented out in docker-compose.yml)
@@ -13,13 +13,13 @@
 ### PostgreSQL Architecture Setup
 - **ALWAYS USE**: `/opt/homebrew/` (ARM64 Homebrew) for PostgreSQL
 - **NEVER USE**: `/usr/local/` (Intel x86_64 Homebrew) for PostgreSQL
-- **Current PostgreSQL**: ARM64 PostgreSQL 16 on port 5433
+- **Current PostgreSQL**: ARM64 PostgreSQL 16 on port 5432
 - **pgvector**: Must be built for ARM64 architecture
 
 ### Common Architecture Issues (AVOID THESE):
 1. **DO NOT** install or use PostgreSQL from `/usr/local/` (Intel Homebrew)
 2. **DO NOT** mix pgvector builds between architectures
-3. **DO NOT** change PostgreSQL port from 5433 to 5432
+3. **DO NOT** change PostgreSQL port from 5432 to 5432
 4. **DO NOT** use `brew` from `/usr/local/bin/brew` - use `/opt/homebrew/bin/brew`
 
 ### Verify Correct Setup:
@@ -28,7 +28,7 @@
 file /opt/homebrew/opt/postgresql@16/bin/postgres  # Should show: arm64
 
 # Check pgvector extension
-/opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5433 -d prsnl -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
+/opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5432 -d prsnl -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
 
 # Check which PostgreSQL is running
 lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
@@ -37,7 +37,7 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 ### If pgvector Breaks Again:
 1. Stop any x86_64 PostgreSQL: `/usr/local/bin/brew services stop postgresql@16`
 2. Start ARM64 PostgreSQL: `/opt/homebrew/bin/brew services start postgresql@16`
-3. Verify database is on port 5433 in `.env` and `config.py`
+3. Verify database is on port 5432 in `.env` and `config.py`
 4. pgvector should already be installed in ARM64 PostgreSQL
 
 ## Container Runtime - Phase 3 Configuration
@@ -50,7 +50,7 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 - Frontend Development: **3004** (Updated from 3003 after Svelte 5 upgrade - container conflict resolved)
 - Frontend Container: **3003** (production deployments only)
 - Backend API: **8000** (includes AI API endpoints)
-- PostgreSQL: **5433** (ARM64 PostgreSQL 16 - NOT 5432!)
+- PostgreSQL: **5432** (ARM64 PostgreSQL 16 - NOT 5432!)
 - DragonflyDB: **6379** (replaced Redis - 25x performance improvement)
 - **NEW**: LibreChat API: `/api/ai/*` endpoints
 
@@ -60,14 +60,14 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 lsof -ti:8000 | xargs kill -9  # Backend
 lsof -ti:3004 | xargs kill -9  # Frontend Dev
 lsof -ti:3003 | xargs kill -9  # Frontend Container
-lsof -ti:5433 | xargs kill -9  # PostgreSQL (ARM64)
+lsof -ti:5432 | xargs kill -9  # PostgreSQL (ARM64)
 ```
 
 ## Running Services - CRITICAL DISTINCTION
 **DEVELOPMENT MODE (WHAT WE USE):**
 - Frontend: Run locally with `cd frontend && npm run dev -- --port 3004` (port 3004)
 - Backend: Run locally with AI integration
-- Database: Local ARM64 PostgreSQL 16 on port 5433
+- Database: Local ARM64 PostgreSQL 16 on port 5432
 - Cache: DragonflyDB in Rancher container
 
 **PRODUCTION/CONTAINER MODE:**
@@ -289,7 +289,7 @@ http POST localhost:8000/api/rag/query query="test"
 1. **Check Context**: `git log -1 --oneline` and `git status`
 2. **Read Session State**: Check `CURRENT_SESSION_STATE.md` for active task
 3. **Review Documentation**: `CRASH_RECOVERY_GUIDE.md` for specific scenarios
-4. **Verify Services**: Backend (8000), Frontend (3004), PostgreSQL (5433)
+4. **Verify Services**: Backend (8000), Frontend (3004), PostgreSQL (5432)
 5. **Resume Work**: Use `@CURRENT_SESSION_STATE.md Resume my last session`
 
 ### Critical Recovery Files

@@ -14,7 +14,7 @@ async def check_user_status(email: str):
     """Check if user exists and their verification status"""
     
     # Get database URL from environment
-    database_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5433/prsnl")
+    database_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5432/prsnl")
     # Fix Railway's postgres:// to postgresql:// for asyncpg
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)

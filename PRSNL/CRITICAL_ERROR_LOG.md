@@ -273,7 +273,7 @@ curl -X POST "http://localhost:8000/api/capture" \
   -d '{"url": "https://example.com", "content_type": "auto", "enable_summarization": true}'
 
 # Check database connectivity
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT COUNT(*) FROM items;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
 
 # View recent errors in logs
 tail -f /path/to/application.log | grep ERROR

@@ -62,7 +62,7 @@ colima start
 ## 📝 Configuration Changes
 
 ### 1. PostgreSQL Port Change
-- **Old**: Port 5433 (previous setup)
+- **Old**: Port 5432 (previous setup)
 - **New**: Port 5432 (standard port)
 - **Files Updated**:
   - `/backend/.env`: DATABASE_URL changed to port 5432
@@ -168,7 +168,7 @@ POST http://localhost:8000/api/auth/login 500 (Internal Server Error)
 
 ### PostgreSQL Port Standardization
 - Using standard port 5432 reduces configuration complexity
-- Previous non-standard port (5433) caused multiple issues
+- Previous non-standard port (5432) caused multiple issues
 - Always check port configuration when services fail to connect
 
 ### Authentication System Complexity

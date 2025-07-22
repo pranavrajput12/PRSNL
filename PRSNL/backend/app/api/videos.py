@@ -25,7 +25,7 @@ router = APIRouter()
 async def stream_video(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Streams a video file by its ID."""
     record = await db_connection.fetchrow(
-        "SELECT file_path FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT file_path FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record or not record['file_path']:
@@ -46,7 +46,7 @@ async def stream_video(video_id: UUID, db_connection: asyncpg.Connection = Depen
 async def get_video_metadata(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Retrieves metadata for a specific video by its ID."""
     record = await db_connection.fetchrow(
-        "SELECT * FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT * FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record:
@@ -75,7 +75,7 @@ async def download_video(video_id: UUID, db_connection: asyncpg.Connection = Dep
     """Downloads a video for offline viewing (only if not already downloaded)."""
     # Check if video exists and get its metadata
     record = await db_connection.fetchrow(
-        "SELECT id, url, metadata FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT id, url, metadata FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record:
@@ -117,7 +117,7 @@ async def get_video_stream_url(video_id: UUID, db_connection: asyncpg.Connection
     logger.info(f"🔵 Getting stream URL for video ID: {video_id}")
     
     record = await db_connection.fetchrow(
-        "SELECT url, video_url, metadata FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT url, video_url, metadata FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record:
@@ -147,8 +147,18 @@ async def get_video_stream_url(video_id: UUID, db_connection: asyncpg.Connection
         }
     
     # Return streaming/embed URL
-    embed_url = video_metadata.get('embed_url') or record['video_url']
+    embed_url = video_metadata.get('embed_url') or record.get('video_url')
     streaming_url = video_metadata.get('streaming_url') or record['url']
+    
+    # Generate YouTube embed URL if this is a YouTube video
+    if not embed_url and streaming_url and 'youtube.com/watch' in streaming_url:
+        # Extract video ID from URL
+        import re
+        video_id_match = re.search(r'v=([A-Za-z0-9_-]+)', streaming_url)
+        if video_id_match:
+            video_id = video_id_match.group(1)
+            embed_url = f"https://www.youtube.com/embed/{video_id}"
+            logger.info(f"🔵 Generated YouTube embed URL: {embed_url}")
     
     logger.info(f"🔵 Final streaming URLs: embed_url={embed_url}, streaming_url={streaming_url}")
     
@@ -170,7 +180,7 @@ async def request_video_transcode(video_id: UUID, target_quality: str, db_connec
     
     # Check if video exists
     record = await db_connection.fetchrow(
-        "SELECT id FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT id FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record:
@@ -192,7 +202,7 @@ async def process_transcode_request(video_id: UUID, target_quality: str):
 async def delete_video(video_id: UUID, db_connection: asyncpg.Connection = Depends(get_db_connection)):
     """Deletes a video and its associated files from storage and database."""
     record = await db_connection.fetchrow(
-        "SELECT file_path, thumbnail_url FROM items WHERE id = $1 AND type = 'video'",
+        "SELECT file_path, thumbnail_url FROM items WHERE id = $1 AND type IN ('video', 'youtube')",
         video_id
     )
     if not record:

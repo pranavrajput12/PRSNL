@@ -25,8 +25,8 @@ class SearchEngine:
         """
         Perform full-text search with filters
         """
-        # Build the WHERE clause
-        where_clauses = ["i.status = 'completed'"]
+        # Build the WHERE clause - include processed and pending items
+        where_clauses = ["i.status IN ('processed', 'pending', 'completed')"]
         params = []
         param_count = 1
         

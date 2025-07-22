@@ -17,10 +17,11 @@ This document consolidates all project status, context, and task assignments. Ot
 
 ---
 
-## 🚀 CURRENT STATE: Phase 3 Complete + Full Authentication System
+## 🚀 CURRENT STATE: Phase 3 Complete + Voice Integration + Full Authentication
 
 ### 🧠 AI Second Brain Architecture Overview
-PRSNL has evolved into an intelligent AI second brain with autonomous multi-agent capabilities and secure authentication:
+PRSNL has evolved into an intelligent AI second brain with autonomous multi-agent capabilities, voice integration, and secure authentication:
+- **🎵 Voice Integration**: Chatterbox TTS with emotion control + Enhanced Whisper STT
 - **🔐 Authentication**: JWT-based auth with email verification and magic links
 - **🤖 AI Services**: Intelligent content analysis and recommendations
 - **💬 LibreChat**: OpenAI-compatible conversational AI integration
@@ -29,6 +30,31 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 - **📱 iOS App**: Native iOS application (PRSNL APP) - *separate codebase*
 - **🔌 Chrome Extension**: Content capture with Neural Chip Module design
 - **⚡ DragonflyDB**: 25x faster than Redis for AI response caching
+
+### 🎉 Version 3.2 Release - Voice Integration (2025-07-22)
+- ✅ **Voice TTS**: Chatterbox integration with emotion control
+  - Multiple emotion states (neutral, happy, sad, angry, excited, calm, friendly)
+  - Speed control (0.5x to 2.0x)
+  - Pitch adjustment (-50 to +50)
+  - TTS abstraction layer supporting multiple backends
+- ✅ **Enhanced STT**: Upgraded Whisper model
+  - Upgraded from 'base' to 'small' model for better accuracy
+  - Improved transcription quality
+  - Better handling of accents and technical terms
+- ✅ **Voice AI Crew**: Specialized voice response system
+  - Voice-specific CrewAI crew for natural conversation
+  - Context-aware emotional responses
+  - Intelligent voice interaction patterns
+- ✅ **Voice Settings**: User preferences management
+  - TTS model selection (Chatterbox, Edge-TTS)
+  - Emotion preferences
+  - Speed and pitch customization
+  - Per-user voice settings storage
+- ✅ **Bug Fixes**: Voice and chat improvements
+  - Fixed SSML tags being spoken in TTS output
+  - Fixed WebSocket authentication issues
+  - Fixed search functionality with missing vectors
+  - Improved error handling for null fields
 
 ### 🎉 Version 3.1 Release - Full Authentication System (2025-07-16)
 - ✅ **JWT Authentication**: Complete token-based authentication system
@@ -126,7 +152,27 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 - ✅ **Future Planning Documentation**: Comprehensive roadmap with authentication priority
 
 ### ✅ COMPLETED FEATURES
-1. **Core Application** (100%)
+1. **Voice Integration** (100%) - NEW (2025-07-22)
+   - ✅ **Text-to-Speech (TTS)**: Chatterbox with emotion control
+     - 7 emotion states: neutral, happy, sad, angry, excited, calm, friendly
+     - Speed control from 0.5x to 2.0x
+     - Pitch adjustment from -50 to +50
+     - TTS abstraction layer for multiple backends
+   - ✅ **Speech-to-Text (STT)**: Enhanced Whisper integration
+     - Upgraded from 'base' to 'small' model
+     - Better accuracy for technical terms
+     - Improved accent handling
+   - ✅ **Voice AI Crew**: Specialized voice agents
+     - Voice-specific CrewAI implementation
+     - Context-aware emotional responses
+     - Natural conversation patterns
+   - ✅ **Voice Settings UI**: User preferences
+     - Model selection interface
+     - Emotion and speed controls
+     - Real-time preview
+     - Per-user settings storage
+
+2. **Core Application** (100%)
    - ✅ **Universal Content Capture** - **Ingest** page
      - All content types: auto, document, video, article, tutorial, image, note, link, development
      - AI summarization toggle per content type
@@ -227,9 +273,10 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 ### 🚧 CURRENT STATUS (Mac Mini M4 Setup - 2025-07-18)
 - **Website**: ✅ Running on http://localhost:3004 (development)
 - **Backend**: ✅ Running locally on port 8000 (not in Docker for better DX)
-- **Database**: ✅ Local PostgreSQL - postgresql://pronav@localhost:5432/prsnl (port changed from 5433)
+- **Database**: ✅ Local PostgreSQL - postgresql://pronav@localhost:5432/prsnl (port changed from 5432)
 - **Cache**: ✅ DragonflyDB in Docker via Colima (25x faster than Redis)
-- **Chat**: ⚠️ NEEDS AUTH CONFIG - WebSocket connection requires user setup
+- **Chat**: ✅ Fixed - WebSocket authentication and search working
+- **Voice**: ✅ Working - TTS with emotions and enhanced STT operational
 - **Search**: ⚠️ NEEDS AUTH CONFIG - Working but requires authentication
 - **Videos**: ✅ Display properly with YouTube embeds and transcripts
 - **API**: ⚠️ 500 errors on auth endpoints - missing pgvector and user configuration
@@ -244,7 +291,7 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 - **Cache Layer**: DragonflyDB (replaced Redis) - 25x performance improvement
 - **HTTP Client**: httpx (standardized) - replaced aiohttp across all services
 - **Rate Limiting**: slowapi only - native Starlette integration
-- **Database**: PostgreSQL 16 (ARM64) - port 5432 (changed from 5433)
+- **Database**: PostgreSQL 16 (ARM64) - port 5432 (changed from 5432)
 - **Container Runtime**: Colima (replaced Rancher Desktop) - lightweight Docker alternative
 - **CI/CD**: GitHub Actions with security scanning and automated deployment
 - **Monitoring**: Sentry for error tracking, OpenTelemetry for observability
@@ -253,7 +300,34 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 
 ## 🔧 RECENT FIXES & IMPROVEMENTS
 
-### Latest Updates (2025-07-18)
+### Latest Updates (2025-07-22)
+
+#### Voice Integration Implementation:
+1. **Chatterbox TTS Integration**
+   - Installed and configured Chatterbox for emotion-aware TTS
+   - Created TTS abstraction layer for backend flexibility
+   - Fixed SSML tag vocalization issues
+   - Status: ✅ COMPLETED
+
+2. **Whisper STT Enhancement**
+   - Upgraded from 'base' to 'small' model
+   - Improved transcription accuracy
+   - Better technical term recognition
+   - Status: ✅ COMPLETED
+
+3. **Voice AI Crew**
+   - Created specialized voice conversation agents
+   - Implemented context-aware responses
+   - Added emotional intelligence to responses
+   - Status: ✅ COMPLETED
+
+4. **Chat WebSocket Fixes**
+   - Fixed authentication by updating PUBLIC_ROUTES
+   - Fixed search by generating missing vectors
+   - Improved null field error handling
+   - Status: ✅ COMPLETED
+
+### Previous Updates (2025-07-18)
 
 #### Mac Mini M4 Migration:
 1. **Storage Cleanup**
@@ -264,7 +338,7 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 2. **Infrastructure Migration**
    - Installed Homebrew, PostgreSQL 16 (ARM64), Colima
    - Replaced Rancher Desktop with Colima for Docker runtime
-   - Updated all port configurations (PostgreSQL: 5433 → 5432)
+   - Updated all port configurations (PostgreSQL: 5432 → 5432)
    - Status: ✅ COMPLETED
 
 3. **Service Configuration**

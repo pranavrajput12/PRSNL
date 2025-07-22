@@ -11,7 +11,7 @@ from uuid import uuid4
 # Database connection
 conn = psycopg2.connect(
     host="localhost",
-    port="5433",
+    port="5432",
     database="prsnl",
     user="prsnl",
     password="prsnl123"

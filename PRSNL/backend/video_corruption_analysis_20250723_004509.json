@@ -1,0 +1,104 @@
+{
+  "Video Count by Type and Status": [
+    {
+      "type": "youtube",
+      "status": "processed",
+      "count": 2
+    },
+    {
+      "type": "video",
+      "status": "failed",
+      "count": 1
+    },
+    {
+      "type": "video",
+      "status": "processed",
+      "count": 1
+    },
+    {
+      "type": "youtube",
+      "status": "pending",
+      "count": 1
+    }
+  ],
+  "Suspicious Title/URL Mismatches": [
+    {
+      "id": "9ef053f0-c9e4-4bfc-82a4-efe8f19cfc6a",
+      "title": "Building AI Applications Tutorial",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "created_at": "2025-07-22 10:21:38.148064+00:00",
+      "updated_at": "2025-07-22 10:21:39.604782+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    },
+    {
+      "id": "370494db-cae0-48c6-83ac-9189cd6853b3",
+      "title": "Building AI Applications Tutorial",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "created_at": "2025-07-22 10:23:48.953955+00:00",
+      "updated_at": "2025-07-22 10:23:52.755557+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    },
+    {
+      "id": "fa16bacc-359a-454f-8c3a-0ac27cc5d0a3",
+      "title": "Windsurf IDE UPDATE: AI Editor with Autonomous Web Commands",
+      "url": "https://www.youtube.com/watch?v=WDJoiG-apkY",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/WDJoiG-apkY/maxresdefault.jpg",
+      "created_at": "2025-07-22 08:45:39.911483+00:00",
+      "updated_at": "2025-07-22 08:51:06.556809+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    },
+    {
+      "id": "fe0f4dd3-c157-4030-b3cd-cd7f46965fed",
+      "title": "Building AI Applications Tutorial",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "created_at": "2025-07-22 10:13:01.628477+00:00",
+      "updated_at": "2025-07-22 10:13:01.628477+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    },
+    {
+      "id": "b315ee98-043a-4ebe-a150-4fe993257f3d",
+      "title": "Windsurf IDE: NEW AI Editor - Cursor Alternative That's FREE & LOCAL!",
+      "url": "https://www.youtube.com/watch?v=C_D8V9odBQ8",
+      "platform": "youtube",
+      "thumbnail_url": "https://img.youtube.com/vi/C_D8V9odBQ8/maxresdefault.jpg",
+      "created_at": "2025-07-22 08:45:39.911040+00:00",
+      "updated_at": "2025-07-22 08:51:06.833252+00:00",
+      "mismatch_type": "Title suggests AI content but URL may not"
+    }
+  ],
+  "Duplicate Videos by URL": [
+    {
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "duplicate_count": 3,
+      "item_ids": "9ef053f0-c9e4-4bfc-82a4-efe8f19cfc6a, 370494db-cae0-48c6-83ac-9189cd6853b3, fe0f4dd3-c157-4030-b3cd-cd7f46965fed",
+      "titles": "Building AI Applications Tutorial | Building AI Applications Tutorial | Building AI Applications Tutorial",
+      "first_created": "2025-07-22 10:13:01.628477+00:00",
+      "last_created": "2025-07-22 10:23:48.953955+00:00"
+    }
+  ],
+  "Duplicate Videos by Title": [
+    {
+      "title": "building ai applications tutorial",
+      "duplicate_count": 3,
+      "item_ids": "9ef053f0-c9e4-4bfc-82a4-efe8f19cfc6a, 370494db-cae0-48c6-83ac-9189cd6853b3, fe0f4dd3-c157-4030-b3cd-cd7f46965fed",
+      "urls": "https://www.youtube.com/watch?v=dQw4w9WgXcQ | https://www.youtube.com/watch?v=dQw4w9WgXcQ | https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
+  ],
+  "Video Corruption Summary": [
+    {
+      "total_video_entries": 5,
+      "completed_videos": 0,
+      "failed_videos": 1,
+      "missing_thumbnails": 0,
+      "missing_platform": 0,
+      "missing_titles": 0
+    }
+  ]
+}

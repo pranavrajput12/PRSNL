@@ -154,7 +154,7 @@ If you forgot which email you used:
    ```
 3. Check PostgreSQL directly:
    ```bash
-   /opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5433 -d fusionauth -c "SELECT email FROM users;"
+   /opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5432 -d fusionauth -c "SELECT email FROM users;"
    ```
 
 ## 💡 Pro Tips

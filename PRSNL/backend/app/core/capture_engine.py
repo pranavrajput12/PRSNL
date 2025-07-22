@@ -9,7 +9,7 @@ from app.db.database import get_db_pool, update_item_embedding
 from app.services.embedding_manager import embedding_manager
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_processor import LLMProcessor
-from app.services.scraper import WebScraper
+from app.services.smart_scraper import SmartScraperService
 from app.utils.content_fingerprint import (
     ContentFingerprintManager,
     generate_content_fingerprint,
@@ -23,7 +23,7 @@ class CaptureEngine:
     """Handles the capture and processing of items"""
     
     def __init__(self):
-        self.scraper = WebScraper()
+        self.scraper = SmartScraperService()
         self.llm_processor = LLMProcessor()
         self.embedding_service = EmbeddingService()
     
@@ -69,8 +69,100 @@ class CaptureEngine:
                     'images': []
                 })()
             elif url:
-                logger.info(f"Scraping URL: {url}")
-                scraped_data = await self.scraper.scrape(url)
+                # Detect YouTube URLs and use specialized processor
+                if "youtube.com" in url or "youtu.be" in url:
+                    logger.info(f"Processing YouTube video: {url}")
+                    try:
+                        from app.services.platforms.youtube import YouTubeProcessor
+                        youtube_processor = YouTubeProcessor()
+                        
+                        # Get video info and transcript
+                        video_info = await youtube_processor.get_info(url)
+                        if video_info:
+                            # Extract transcript if available
+                            transcript_content = ""
+                            key_moments = []
+                            
+                            try:
+                                from app.services.youtube_transcript_service import youtube_transcript_service
+                                
+                                logger.info(f"Extracting transcript for YouTube video: {url}")
+                                transcript_content, key_moments = await youtube_transcript_service.extract_transcript(url)
+                                
+                                if transcript_content:
+                                    logger.info(f"Successfully extracted transcript: {len(transcript_content)} characters, {len(key_moments)} key moments")
+                                else:
+                                    logger.warning(f"No transcript available for video: {url}")
+                                    
+                            except Exception as transcript_error:
+                                logger.error(f"Transcript extraction error: {transcript_error}")
+                                transcript_content = ""
+                                key_moments = []
+                            
+                            # Use transcript as content, or fall back to description
+                            content = transcript_content or video_info.get('description', '') or f"YouTube video: {video_info.get('title', 'Unknown')}"
+                            
+                            scraped_data = type('ScrapedData', (), {
+                                'content': content,
+                                'title': video_info.get('title', ''),
+                                'html': content,
+                                'author': video_info.get('uploader', ''),
+                                'published_date': video_info.get('upload_date'),
+                                'scraped_at': None,
+                                'images': [],
+                                'transcript': transcript_content,  # Store transcript separately
+                                'duration': video_info.get('duration'),
+                                'view_count': video_info.get('view_count'),
+                                'platform': 'youtube',
+                                'key_moments': key_moments  # Store key moments for Visual Cortex
+                            })()
+                            logger.info(f"YouTube processing complete: {video_info.get('title')} ({len(content)} chars)")
+                        else:
+                            logger.error(f"Failed to get YouTube video info for {url}")
+                            raise Exception("Failed to extract YouTube video information")
+                            
+                    except Exception as youtube_error:
+                        logger.error(f"YouTube processing failed: {youtube_error}")
+                        # Fallback to SmartScraper for YouTube URLs as last resort
+                        logger.info(f"Falling back to SmartScraper for: {url}")
+                        scraper_result = await self.scraper.scrape_url(url)
+                        
+                        if scraper_result.get('success') and 'data' in scraper_result:
+                            data = scraper_result['data']
+                            scraped_data = type('ScrapedData', (), {
+                                'content': data.get('content', ''),
+                                'title': data.get('title', ''),
+                                'html': data.get('content', ''),
+                                'author': data.get('author'),
+                                'published_date': data.get('published_date'),
+                                'scraped_at': None,
+                                'images': data.get('images', [])
+                            })()
+                        else:
+                            raise Exception(f"Both YouTube processor and SmartScraper failed for {url}")
+                else:
+                    # Use SmartScraper for non-YouTube URLs
+                    logger.info(f"Scraping URL with SmartScraper: {url}")
+                    scraper_result = await self.scraper.scrape_url(url)
+                    
+                    # Extract data from SmartScraper response format
+                    if scraper_result.get('success') and 'data' in scraper_result:
+                        data = scraper_result['data']
+                        logger.info(f"SmartScraper success with {scraper_result.get('scraper_used', 'unknown')} scraper")
+                    else:
+                        logger.warning(f"SmartScraper failed: {scraper_result.get('error', 'Unknown error')}")
+                        data = {}
+                    
+                    # Convert SmartScraper result to ScrapedData format
+                    scraped_data = type('ScrapedData', (), {
+                        'content': data.get('content', ''),
+                        'title': data.get('title', ''),
+                        'html': data.get('content', ''),  # SmartScraper doesn't provide raw HTML, use content
+                        'author': data.get('author'),
+                        'published_date': data.get('published_date'),
+                        'scraped_at': None,  # SmartScraper doesn't provide this
+                        'images': data.get('images', [])
+                    })()
             else:
                 raise ValueError("Either URL or content must be provided")
             
@@ -138,6 +230,16 @@ class CaptureEngine:
                 "content_fingerprint": content_fingerprint
             })
             
+            # Add YouTube-specific metadata if available
+            if hasattr(scraped_data, 'platform') and scraped_data.platform == 'youtube':
+                metadata.update({
+                    "platform": "youtube",
+                    "duration": getattr(scraped_data, 'duration', None),
+                    "view_count": getattr(scraped_data, 'view_count', None),
+                    "transcript_length": len(getattr(scraped_data, 'transcript', '') or ''),
+                    "key_moments": getattr(scraped_data, 'key_moments', [])
+                })
+            
             # Only include ai_analysis if AI processing actually occurred
             if enable_summarization:
                 metadata["ai_analysis"] = {
@@ -153,27 +255,32 @@ class CaptureEngine:
 
             # Update the item in database
             async with pool.acquire() as conn:
+                # Store transcript separately for video content
+                transcript_content = getattr(scraped_data, 'transcript', '') or ''
+                
                 await conn.execute("""
                     UPDATE items 
                     SET 
-                        title = $2,
-                        summary = $3,
-                        raw_content = $4,
-                        processed_content = $5,
-                        search_vector = to_tsvector('english', $2 || ' ' || COALESCE($3, '') || ' ' || COALESCE($5, '')),
-                        metadata = $6::jsonb,
-                        content_fingerprint = $7,
-                        status = 'completed',
+                        title = $2::text,
+                        summary = $3::text,
+                        raw_content = $4::text,
+                        processed_content = $5::text,
+                        transcription = $6::text,
+                        search_vector = to_tsvector('english', $2::text || ' ' || COALESCE($3::text, '') || ' ' || COALESCE($5::text, '') || ' ' || COALESCE($6::text, '')),
+                        metadata = $7::jsonb,
+                        content_fingerprint = $8::varchar(64),
+                        status = 'completed'::varchar(20),
                         updated_at = NOW()
                     WHERE id = $1
                 """, 
                     item_id,
-                    processed.title or scraped_data.title or "Untitled",
-                    processed.summary,
-                    scraped_data.html,
-                    processed.content,
+                    str(processed.title or scraped_data.title or "Untitled")[:255],  # Limit to 255 chars for varchar column
+                    str(processed.summary) if processed.summary else None,
+                    str(scraped_data.html) if scraped_data.html else None,
+                    str(processed.content) if processed.content else None,
+                    transcript_content,  # Store transcript in transcription field
                     json.dumps(metadata),
-                    content_fingerprint
+                    str(content_fingerprint)[:64] if content_fingerprint else None  # Limit to 64 chars
                 )
                 
                 # Add auto-generated tags

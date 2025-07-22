@@ -18,7 +18,7 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 | **Frontend Dev (SvelteKit)** | **3004** | **FIXED** | Main dev UI | `/PRSNL/frontend/vite.config.ts` |
 | **Frontend Container** | **3003** | FIXED | Production UI | `/PRSNL/docker-compose.yml` |
 | **Backend + AI** | **8000** | FIXED | REST API + AI services | Local process |
-| **PostgreSQL ARM64** | **5433** | **CRITICAL** | Primary database | ARM64 PostgreSQL 16 |
+| **PostgreSQL ARM64** | **5432** | **CRITICAL** | Primary database | ARM64 PostgreSQL 16 |
 | **DragonflyDB** | **6379** | FIXED | Ultra-fast cache | `/PRSNL/docker-compose.yml` |
 
 ### 🤖 Phase 3 AI API Endpoints (Port 8000)
@@ -39,11 +39,11 @@ This document serves as the **SINGLE SOURCE OF TRUTH** for all port allocations 
 
 ## 🚨 Phase 3 Critical Port Changes
 
-### Database Port Change: 5432 → 5433
+### Database Port Change: 5432 → 5432
 - **Old**: PostgreSQL on port 5432 (Intel/x86_64)
-- **New**: PostgreSQL 16 ARM64 on port 5433
+- **New**: PostgreSQL 16 ARM64 on port 5432
 - **Reason**: ARM64 architecture optimization for Apple Silicon
-- **Impact**: All database connections must use port 5433
+- **Impact**: All database connections must use port 5432
 
 ### Cache System Change: Redis → DragonflyDB
 - **Old**: Redis on port 6379
@@ -223,7 +223,7 @@ taskkill /F /PID <PID>
 - 2025-07-10: Updated frontend port from 3002 to 3003 due to container conflict
 - **2025-07-13: PHASE 3 COMPLETE - Major updates:**
   - Frontend development port changed from 3003 to 3004
-  - Database port changed from 5432 to 5433 (ARM64 PostgreSQL 16)
+  - Database port changed from 5432 to 5432 (ARM64 PostgreSQL 16)
   - Redis replaced with DragonflyDB (same port 6379)
   - Added AI API endpoints (`/api/ai/*`)
   - Added LibreChat API endpoints (`/api/ai/*`)

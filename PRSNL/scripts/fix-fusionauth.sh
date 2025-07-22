@@ -8,7 +8,7 @@ docker-compose -f docker-compose.auth.yml stop fusionauth
 
 # Create FusionAuth database if it doesn't exist
 echo "Ensuring FusionAuth database setup..."
-/opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5433 -d prsnl << EOF
+/opt/homebrew/opt/postgresql@16/bin/psql -U pronav -p 5432 -d prsnl << EOF
 -- Ensure FusionAuth schema exists
 CREATE SCHEMA IF NOT EXISTS fusionauth;
 
@@ -33,7 +33,7 @@ docker run -d --rm \
   --name prsnl-fusionauth-temp \
   --network prsnl_prsnl-network \
   -p 9011:9011 \
-  -e DATABASE_URL="jdbc:postgresql://host.docker.internal:5433/prsnl" \
+  -e DATABASE_URL="jdbc:postgresql://host.docker.internal:5432/prsnl" \
   -e DATABASE_ROOT_USERNAME="pronav" \
   -e DATABASE_USERNAME="pronav" \
   -e FUSIONAUTH_APP_MEMORY="256M" \

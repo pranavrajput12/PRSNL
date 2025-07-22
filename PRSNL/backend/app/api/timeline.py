@@ -72,7 +72,7 @@ async def get_timeline(
                 LEFT JOIN content_urls cu ON i.id = cu.item_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
-                WHERE i.status IN ('completed', 'bookmark', 'pending', 'failed')
+                WHERE i.status IN ('completed', 'bookmark', 'pending', 'failed', 'processed')
                 AND i.user_id = $1
             """
             params = [str(current_user.id)]

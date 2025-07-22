@@ -397,9 +397,17 @@
 
       const result = await captureItem(captureRequest);
 
+      // Complete the progress animation
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+      progress = 100;
+      
       addTerminalLine('> MEMORY_TRACE_CAPTURED_SUCCESSFULLY');
       addTerminalLine(`> TRACE_ID: ${result.item_id}`);
       addTerminalLine('> NEURAL_NETWORK_UPDATED');
+      addTerminalLine('> PROGRESS: 100% COMPLETE');
 
       message = 'Memory trace captured successfully!';
       messageType = 'success';
@@ -408,6 +416,9 @@
         type: 'success',
         message: 'Content captured successfully!',
       });
+
+      // Wait briefly to show completion before resetting
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Reset form
       resetForm();

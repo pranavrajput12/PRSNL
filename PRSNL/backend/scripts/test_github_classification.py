@@ -177,7 +177,7 @@ async def test_github_classification():
         from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
         from sqlalchemy.orm import sessionmaker
         
-        DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
+        DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5432/prsnl'
         engine = create_async_engine(DATABASE_URL)
         async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         

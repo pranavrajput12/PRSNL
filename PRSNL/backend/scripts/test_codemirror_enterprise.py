@@ -29,7 +29,7 @@ from rich.panel import Panel
 # Configuration
 BACKEND_URL = "http://localhost:8000"
 WEBSOCKET_URL = "ws://localhost:8000"
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
 console = Console()

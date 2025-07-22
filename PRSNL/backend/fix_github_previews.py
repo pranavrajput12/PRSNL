@@ -18,7 +18,7 @@ async def fix_github_previews():
     """Update existing GitHub items with rich previews"""
     
     # Connect to database
-    conn = await asyncpg.connect("postgresql://pronav@localhost:5433/prsnl")
+    conn = await asyncpg.connect("postgresql://pronav@localhost:5432/prsnl")
     
     try:
         # Get all GitHub items without rich previews

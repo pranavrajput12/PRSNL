@@ -139,8 +139,8 @@ class ChatService:
         try:
             async for conn in get_db_connection():
                 rows = await conn.fetch("""
-                    SELECT role, content, created_at
-                    FROM conversation_messages
+                    SELECT role, content_text as content, created_at
+                    FROM ai_conversation_messages
                     WHERE conversation_id = $1
                     ORDER BY created_at DESC
                     LIMIT $2
@@ -221,17 +221,17 @@ Focus on finding and explaining relevant information from their saved content.""
             async for conn in get_db_connection():
                 # Store user message
                 await conn.execute("""
-                    INSERT INTO conversation_messages 
-                    (conversation_id, user_id, role, content, created_at)
-                    VALUES ($1, $2, 'user', $3, NOW())
-                """, conversation_id, user_id, user_message)
+                    INSERT INTO ai_conversation_messages 
+                    (conversation_id, original_message_id, role, sequence_number, content_text, timestamp, created_at)
+                    VALUES ($1, $2, 'user', 1, $3, NOW(), NOW())
+                """, conversation_id, f"user_{conversation_id}_1", user_message)
                 
                 # Store AI response
                 await conn.execute("""
-                    INSERT INTO conversation_messages 
-                    (conversation_id, user_id, role, content, created_at)
-                    VALUES ($1, $2, 'assistant', $3, NOW())
-                """, conversation_id, user_id, ai_response)
+                    INSERT INTO ai_conversation_messages 
+                    (conversation_id, original_message_id, role, sequence_number, content_text, timestamp, created_at)
+                    VALUES ($1, $2, 'assistant', 2, $3, NOW(), NOW())
+                """, conversation_id, f"assistant_{conversation_id}_2", ai_response)
                 
         except Exception as e:
             logger.error(f"Failed to store conversation turn: {e}")
@@ -241,11 +241,11 @@ Focus on finding and explaining relevant information from their saved content.""
         try:
             async for conn in get_db_connection():
                 conversation_id = await conn.fetchval("""
-                    INSERT INTO conversations 
-                    (user_id, title, created_at, updated_at)
-                    VALUES ($1, $2, NOW(), NOW())
+                    INSERT INTO ai_conversation_imports 
+                    (platform, source_url, extension_id, title, slug, conversation_date, imported_at, message_count, created_at, updated_at)
+                    VALUES ('chat', '', $1, $2, $3, NOW(), NOW(), 0, NOW(), NOW())
                     RETURNING id
-                """, user_id, title or "New Conversation")
+                """, user_id, title or "New Conversation", title.lower().replace(" ", "-") if title else "new-conversation")
                 
                 return str(conversation_id)
                 

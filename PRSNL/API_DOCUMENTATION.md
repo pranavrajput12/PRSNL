@@ -1585,6 +1585,152 @@ curl "http://localhost:8000/api/development/docs?language=python&category=Backen
 curl "http://localhost:8000/api/development/categories"
 ```
 
+### 🎤 Voice Settings - User Preferences
+
+#### GET /api/user/settings
+Get user settings including voice preferences
+
+**Headers:**
+- `Authorization: Bearer {access_token}` (optional with current auth bypasses)
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "test-user",
+  "voice_settings": {
+    "tts_model": "chatterbox",
+    "voice_id": "default",
+    "emotion": "friendly",
+    "speed": 1.0,
+    "pitch": 0,
+    "language": "en"
+  },
+  "ai_settings": {
+    "model_preference": "balanced",
+    "response_style": "detailed",
+    "temperature": 0.7
+  },
+  "ui_preferences": {
+    "theme": "dark",
+    "font_size": "medium",
+    "animations": true
+  },
+  "created_at": "2025-07-22T10:00:00Z",
+  "updated_at": "2025-07-22T15:30:00Z"
+}
+```
+
+#### PUT /api/user/settings
+Update user settings
+
+**Headers:**
+- `Authorization: Bearer {access_token}` (optional with current auth bypasses)
+
+**Request Body:**
+```json
+{
+  "voice_settings": {
+    "tts_model": "chatterbox",
+    "emotion": "excited",
+    "speed": 1.2,
+    "pitch": 10
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Settings updated successfully",
+  "settings": {
+    "voice_settings": {
+      "tts_model": "chatterbox",
+      "emotion": "excited",
+      "speed": 1.2,
+      "pitch": 10
+    }
+  }
+}
+```
+
+### 🗣️ Voice API - Text-to-Speech and Speech-to-Text
+
+#### POST /api/voice/tts
+Convert text to speech with emotion control
+
+**Request Body:**
+```json
+{
+  "text": "Hello! I'm excited to help you today.",
+  "emotion": "excited",
+  "speed": 1.0,
+  "pitch": 0,
+  "model": "chatterbox"
+}
+```
+
+**Emotion Options:**
+- `neutral` - Default, balanced tone
+- `happy` - Upbeat and cheerful
+- `sad` - Subdued and melancholic
+- `angry` - Intense and forceful
+- `excited` - Energetic and enthusiastic
+- `calm` - Soothing and relaxed
+- `friendly` - Warm and welcoming
+
+**Response:** Audio stream (audio/mpeg)
+
+#### POST /api/voice/transcribe
+Transcribe audio to text using enhanced Whisper
+
+**Request Body:** `multipart/form-data`
+- `audio`: Audio file (WAV, MP3, M4A, etc.)
+- `language`: Optional language code (e.g., "en", "es")
+
+**Response:**
+```json
+{
+  "text": "This is the transcribed text from the audio.",
+  "language": "en",
+  "confidence": 0.95,
+  "duration": 3.5
+}
+```
+
+#### GET /api/voice/models
+List available TTS models
+
+**Response:**
+```json
+{
+  "tts_models": [
+    {
+      "id": "chatterbox",
+      "name": "Chatterbox TTS",
+      "description": "Emotion-aware text-to-speech",
+      "supports_emotions": true,
+      "emotions": ["neutral", "happy", "sad", "angry", "excited", "calm", "friendly"]
+    },
+    {
+      "id": "edge-tts",
+      "name": "Microsoft Edge TTS",
+      "description": "High-quality neural voices",
+      "supports_emotions": false,
+      "voices": ["en-US-AriaNeural", "en-US-GuyNeural"]
+    }
+  ],
+  "stt_models": [
+    {
+      "id": "whisper-small",
+      "name": "Whisper Small",
+      "description": "Enhanced accuracy for general speech",
+      "languages": ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko"]
+    }
+  ]
+}
+```
+
 ### 📊 Admin
 
 #### GET /api/storage/metrics

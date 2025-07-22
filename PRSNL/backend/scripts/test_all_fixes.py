@@ -11,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
+DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5432/prsnl'
 
 async def test_all_fixes():
     print("🧪 Testing All PRSNL Fixes")

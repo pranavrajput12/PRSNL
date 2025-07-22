@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.services.slug_generator import SmartSlugGenerator
 
-DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
+DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5432/prsnl'
 
 async def test_integration_fixes():
     """Test all integration fixes with unique URLs."""

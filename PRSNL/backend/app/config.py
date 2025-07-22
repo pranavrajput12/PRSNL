@@ -7,13 +7,18 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Database - Railway provides DATABASE_URL automatically
-    _database_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5433/prsnl")
+    _database_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5432/prsnl")
     # Fix Railway's postgres:// to postgresql:// for asyncpg
     DATABASE_URL: str = _database_url.replace("postgres://", "postgresql://", 1) if _database_url.startswith("postgres://") else _database_url
     
     # API
     API_V1_STR: str = "/api"
     PROJECT_NAME: str = "PRSNL"
+    
+    # 🔍 DEBUG LOGGING - DEVELOPMENT MODE
+    LOG_LEVEL: str = "DEBUG"
+    ENABLE_QUERY_LOGGING: bool = True
+    ENABLE_VERBOSE_LOGGING: bool = True
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [

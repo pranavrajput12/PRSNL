@@ -7,7 +7,7 @@ import psycopg2
 # Database connection
 conn = psycopg2.connect(
     host='127.0.0.1',
-    port=5433,
+    port=5432,
     database='prsnl',
     user='prsnl',
     password='prsnl123'

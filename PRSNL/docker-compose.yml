@@ -74,7 +74,7 @@ services:
     environment:
       # Override with specific PRSNL settings
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
-      RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5433/prsnl
+      RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5432/prsnl
     volumes:
       - ./librechat.yaml:/app/librechat.yaml
       - librechat_uploads:/app/uploads
@@ -118,7 +118,7 @@ services:
   #     COLLECTION_NAME: prsnl_knowledge_base
   #     CHUNK_SIZE: 1500
   #     CHUNK_OVERLAP: 100
-  #     RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5433/prsnl
+  #     RAG_PGVECTOR_CONNECTION_STRING: postgresql://pronav@host.docker.internal:5432/prsnl
   #     EMBEDDINGS_PROVIDER: azure
   #     EMBEDDINGS_MODEL: text-embedding-ada-002
   #     RAG_AZURE_OPENAI_ENDPOINT: https://airops.openai.azure.com

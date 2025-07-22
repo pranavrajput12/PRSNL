@@ -62,7 +62,7 @@ DEFAULT_LOG=true
 LOG_PATH=./logs
 
 # PRSNL Integration
-PRSNL_DB_URL=postgresql://pronav@localhost:5433/prsnl
+PRSNL_DB_URL=postgresql://pronav@localhost:5432/prsnl
 PRSNL_BACKEND_URL=http://localhost:8000
 EOF
         echo -e "${GREEN}✅ Created AutoAgent .env configuration${NC}"
@@ -78,7 +78,7 @@ echo -e "${GREEN}✅ Created logs directory${NC}"
 # Run database migrations
 echo -e "${BLUE}🗄️ Running AutoAgent database migrations...${NC}"
 cd ..
-psql -U pronav -d prsnl -p 5433 -f backend/app/db/migrations/add_autoagent_tables.sql || {
+psql -U pronav -d prsnl -p 5432 -f backend/app/db/migrations/add_autoagent_tables.sql || {
     echo -e "${YELLOW}⚠️ Database migrations may have already been applied${NC}"
 }
 

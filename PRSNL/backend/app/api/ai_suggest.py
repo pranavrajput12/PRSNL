@@ -13,7 +13,7 @@ from pydantic import BaseModel, HttpUrl
 from app.config import settings
 from app.core.exceptions import InternalServerError
 from app.services.ai_router import ai_router, AIProvider, AITask, TaskType
-from app.services.crawl_ai_service import CrawlAIService
+from app.services.jina_reader import JinaReaderService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -116,52 +116,62 @@ async def get_ai_suggestions(request: SuggestionRequest):
     """
     logger.info(f"Received suggestion request for URL: {request.url}")
 
-    # 1. Crawl content from URL using Crawl4AI
+    # 1. Use Jina Reader to scrape content (free, no API key needed)
+    scraped_data = None
+    scrape_error = None
+    
     try:
-        async with CrawlAIService() as crawler:
-            crawl_result = await crawler.crawl_url(str(request.url), extract_content=True)
-            
-            if crawl_result.error:
-                logger.error(f"Crawling failed for {request.url}: {crawl_result.error}")
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Failed to crawl the URL: {crawl_result.error}"
-                )
-                
-            scraped_data = crawl_result  # Use crawl result directly
-            
+        logger.info(f"Scraping {request.url} with Jina Reader for AI suggestions")
+        jina_service = JinaReaderService()
+        result = await jina_service.scrape_url(str(request.url))
+        if result.get("success"):
+            scraped_data = result["data"]
+            logger.info(f"Successfully scraped {request.url} with Jina Reader")
+        else:
+            scrape_error = result.get("error", "Unknown error")
+            logger.error(f"Jina Reader failed for {request.url}: {scrape_error}")
     except Exception as e:
-        logger.error(f"Crawling failed for {request.url}: {e}", exc_info=True)
+        logger.error(f"Jina Reader exception for {request.url}: {e}")
+        scrape_error = str(e)
+    
+    # If scraping failed, return error
+    if not scraped_data:
+        logger.error(f"Failed to scrape {request.url}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to crawl the URL. It might be inaccessible or block crawling."
+            detail=f"Failed to crawl the URL. It might be inaccessible or block crawling. Error: {scrape_error}"
         )
-
-    if not crawl_result.content:
-        logger.error(f"No content extracted from {request.url}.")
+    
+    # Extract content from scraped data
+    content = scraped_data.get("content", "")
+    title = scraped_data.get("title", "")
+    
+    if not content:
+        logger.error(f"No content extracted from {request.url}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to extract meaningful content from the URL. The page might be empty or require JavaScript."
         )
 
-    # 2. Check if AI already analyzed the content (from Crawl4AI)
-    if crawl_result.metadata.get("ai_title") and crawl_result.metadata.get("ai_tags"):
-        # Use pre-analyzed data from Crawl4AI
+    # 2. Check if AI already analyzed the content 
+    metadata = scraped_data.get("metadata", {})
+    if metadata.get("ai_title") and metadata.get("ai_tags"):
+        # Use pre-analyzed data
         return SuggestionResponse(
-            title=crawl_result.metadata["ai_title"][:120],
-            summary=crawl_result.metadata.get("ai_summary", crawl_result.content[:200])[:200],
-            tags=crawl_result.metadata.get("ai_tags", ["uncategorized"])[:10],
-            category=crawl_result.metadata.get("ai_category", "article")
+            title=metadata["ai_title"][:120],
+            summary=metadata.get("ai_summary", content[:200])[:200],
+            tags=metadata.get("ai_tags", ["uncategorized"])[:10],
+            category=metadata.get("ai_category", "article")
         )
     
     # 3. Prepare AI task for additional analysis if needed
-    prompt = _create_llm_prompt(request.url, crawl_result.title, crawl_result.content)
+    prompt = _create_llm_prompt(request.url, title, content)
     
     fallback_response = {
-        "title": crawl_result.title[:100] if crawl_result.title else "Untitled",
-        "summary": crawl_result.content[:200] if crawl_result.content else "No description available",
-        "tags": crawl_result.metadata.get("ai_tags", ["uncategorized"]),
-        "category": crawl_result.metadata.get("ai_category", "article")
+        "title": title[:100] if title else "Untitled",
+        "summary": content[:200] if content else "No description available",
+        "tags": metadata.get("ai_tags", ["uncategorized"]),
+        "category": metadata.get("ai_category", "article")
     }
 
     ai_task = AITask(

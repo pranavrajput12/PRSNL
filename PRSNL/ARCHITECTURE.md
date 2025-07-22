@@ -55,7 +55,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
         ├─────────────────────┬──────────────┬────────────────────┤
         │  PostgreSQL 16      │ DragonflyDB  │   File Storage     │
         │  ARM64 + pgvector   │ (25x Redis)  │ (Videos/Thumbnails)│
-        │  (Port 5433)        │ (Port 6379)  │   (Local/Cloud)    │
+        │  (Port 5432)        │ (Port 6379)  │   (Local/Cloud)    │
         └─────────────────────┴──────────────┴────────────────────┘
 ```
 
@@ -100,7 +100,7 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 
 ### Database (PostgreSQL 16 ARM64) - High-Performance Knowledge Store
 - **Version**: PostgreSQL 16 (ARM64 optimized)
-- **Port**: 5433 (exclusive ARM64 installation)
+- **Port**: 5432 (exclusive ARM64 installation)
 - **Extensions**: pgvector for semantic search and AI embeddings
 - **Key Features**:
   - **AI Context**: Persistent storage for AI context and learning

@@ -122,7 +122,7 @@ Chat: Temporarily disabled message shown
 node tests/phase1-route-tests.cjs
 
 # Database testing
-psql -U pronav -p 5433 -d prsnl -c "SELECT COUNT(*) FROM content_urls;"
+psql -U pronav -p 5432 -d prsnl -c "SELECT COUNT(*) FROM content_urls;"
 
 # Feature testing
 node tests/feature-functionality-test.cjs

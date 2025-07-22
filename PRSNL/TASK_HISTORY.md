@@ -46,6 +46,30 @@ This document consolidates all task tracking, project history, and progress moni
 
 ### ✅ RECENTLY COMPLETED
 
+#### Task VOICE-2025-07-22-001: Voice Integration with TTS and Enhanced Whisper
+**Status**: COMPLETED
+**Started**: 2025-07-22 10:00
+**Completed**: 2025-07-22 16:30
+**Assigned**: Claude
+**Type**: Full Stack (Backend API + Frontend + AI Service)
+**Priority**: P1 (High)
+**Duration**: ~6.5 hours
+**Files Modified**: 
+- Created: backend/app/services/tts_manager.py - TTS abstraction layer supporting multiple backends
+- Created: backend/app/crews/voice_crew.py - Voice-specific CrewAI crew for intelligent responses
+- Created: backend/app/api/user_settings.py - User settings API for voice configuration
+- Created: frontend/src/routes/(protected)/settings/voice/+page.svelte - Voice settings UI
+- Updated: backend/app/services/voice_service.py - Integrated Chatterbox TTS with emotion control
+- Updated: backend/app/middleware/auth.py - Added WebSocket endpoints to PUBLIC_ROUTES
+- Updated: backend/app/api/ws.py - Fixed search functionality with missing vectors
+- Updated: backend/app/config.py - Added voice model configurations
+- Updated: frontend/src/routes/(protected)/chat/+page.svelte - Improved error handling
+**Summary**: Successfully implemented comprehensive voice integration with Chatterbox TTS (emotion control), upgraded Whisper from 'base' to 'small' for better accuracy, created voice-specific CrewAI agents, and fixed chat WebSocket authentication issues. Fixed SSML tags being spoken in TTS output. Also resolved search functionality by generating missing search vectors.
+**Known Issues**:
+- Knowledge base items still need content processing (many have null content)
+- Some conversations may have incomplete data from previous imports
+**Notes**: Voice system fully functional with emotion-aware TTS, improved STT accuracy, and intelligent voice-specific AI responses. Chat now works properly with authentication fixes.
+
 #### Task SETUP-2025-07-18-001: Mac Mini M4 Setup with Colima
 **Status**: COMPLETED
 **Started**: 2025-07-18
@@ -55,14 +79,14 @@ This document consolidates all task tracking, project history, and progress moni
 **Priority**: P0 (Critical)
 **Duration**: ~1 day
 **Files Modified**: 
-- Updated: docker-compose.auth.yml (fixed Keycloak port from 5433 to 5432)
+- Updated: docker-compose.auth.yml (fixed Keycloak port from 5432 to 5432)
 - Updated: backend/.env (DATABASE_URL uses port 5432)
 - Fixed: .env file (removed invalid EOF line)
 **Environment Changes**:
 - **Hardware**: Migrated to Mac Mini M4 (Apple Silicon)
 - **Storage**: Freed ~28GB by cleaning npm cache, Puppeteer cache, old IDEs, Xcode support files
 - **Container Runtime**: Replaced Rancher Desktop with Colima (lightweight Docker alternative)
-- **Database**: PostgreSQL 16 ARM64 on port 5432 (changed from 5433)
+- **Database**: PostgreSQL 16 ARM64 on port 5432 (changed from 5432)
 - **Services**: All services running (Frontend: 3004, Backend: 8000, Keycloak: 8080, FusionAuth: 9011)
 **Summary**: Successfully migrated PRSNL to Mac Mini M4 with Colima as Docker runtime. All services are running but authentication system needs user configuration. Login page returns 500 errors due to missing pgvector extension and incomplete auth setup.
 **Known Issues**:

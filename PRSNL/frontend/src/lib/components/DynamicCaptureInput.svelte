@@ -23,23 +23,33 @@
 
   // Reactive variable for primary field binding without circular dependency
   let primaryFieldValue = '';
+  let isInternalUpdate = false;
 
   // Update primaryFieldValue when url or content changes, but only in one direction
   $: {
-    if (config.primaryField === 'url') {
-      primaryFieldValue = url;
-    } else {
-      primaryFieldValue = content;
+    if (!isInternalUpdate) {
+      if (config.primaryField === 'url') {
+        primaryFieldValue = url;
+      } else {
+        primaryFieldValue = content;
+      }
     }
   }
 
   // Handle changes from the input back to the appropriate variable
   function handlePrimaryFieldChange() {
+    isInternalUpdate = true;
     if (config.primaryField === 'url') {
       url = primaryFieldValue;
     } else {
       content = primaryFieldValue;
     }
+    // Dispatch the change event
+    dispatch('input', { field: config.primaryField, value: primaryFieldValue });
+    // Reset the flag after a microtask
+    Promise.resolve().then(() => {
+      isInternalUpdate = false;
+    });
   }
 
   // Input configuration based on content type
@@ -182,15 +192,7 @@
     }, 600);
   }
 
-  function handleInput(event: Event) {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-    if (config.primaryField === 'url') {
-      url = target.value;
-    } else if (config.primaryField === 'content') {
-      content = target.value;
-    }
-    dispatch('input', { field: config.primaryField, value: target.value });
-  }
+  // Removed handleInput function - now handled by handlePrimaryFieldChange
 
   function handleTagsUpdate(event: CustomEvent) {
     tags = event.detail;
@@ -244,7 +246,6 @@
             class="terminal-input secondary-input"
             placeholder="Or enter URL..."
             disabled={isSubmitting}
-            on:input={handleInput}
           />
         {/if}
       </div>

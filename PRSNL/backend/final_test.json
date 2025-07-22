@@ -1,6 +1,6 @@
 {
   "generated_at": "2025-07-13T02:28:59.722079",
-  "database_url": "localhost:5433/prsnl",
+  "database_url": "localhost:5432/prsnl",
   "issues": {
     "video_url_mismatches": [
       {

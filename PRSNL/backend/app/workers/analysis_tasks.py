@@ -7,7 +7,7 @@ Advanced analysis tasks that can run independently or as part of workflows.
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from uuid import UUID
 
 from app.workers.celery_app import celery_app

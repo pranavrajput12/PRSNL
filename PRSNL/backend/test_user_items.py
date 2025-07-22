@@ -11,7 +11,7 @@ load_dotenv()
 
 async def check_user_items():
     # Get database URL
-    db_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5433/prsnl")
+    db_url = os.getenv("DATABASE_URL", "postgresql://pronav@localhost:5432/prsnl")
     
     # Connect to database
     conn = await asyncpg.connect(db_url)

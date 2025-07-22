@@ -172,7 +172,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     FROM items
                     WHERE url = $1 AND user_id = $2
                     LIMIT 1
-                """, str(capture_request.url), user_id)
+                """, str(capture_request.url), str(user_id))
                 
                 if existing_item:
                     raise InvalidInput(
@@ -299,8 +299,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 video_processor = VideoProcessor()
                 video_info = await video_processor.get_video_info(str(capture_request.url))
                 
-                # Skip validation for Instagram to allow bookmarking
-                if media_info.get('platform') != 'instagram':
+                # Skip validation for Instagram and YouTube to avoid downloading
+                if media_info.get('platform') not in ['instagram', 'youtube']:
                     # Perform video validation before inserting initial record
                     try:
                         await video_processor.validate_video_url(str(capture_request.url))
@@ -456,7 +456,7 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                 capture_request.is_career_related,
                 platform,
                 json.dumps(repository_metadata) if repository_metadata else None,
-                user_id
+                str(user_id)  # Convert UUID to string
             )
             
             logger.info(f"🔍 EXACT SQL QUERY: {sql_query}")
@@ -488,11 +488,17 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             if capture_request.tags:
                 for tag_name in capture_request.tags:
                     # Get or create tag for this user
+                    # First check if tag exists
                     tag_id = await db_connection.fetchval("""
-                        INSERT INTO tags (name, user_id) VALUES ($1, $2)
-                        ON CONFLICT (name, user_id) DO UPDATE SET name = EXCLUDED.name
-                        RETURNING id
-                    """, tag_name.lower(), user_id)
+                        SELECT id FROM tags WHERE name = $1
+                    """, tag_name.lower())
+                    
+                    if not tag_id:
+                        # Create new tag with user_id
+                        tag_id = await db_connection.fetchval("""
+                            INSERT INTO tags (name, user_id) VALUES ($1, $2)
+                            RETURNING id
+                        """, tag_name.lower(), user_id)
                     
                     # Link tag to item
                     await db_connection.execute("""
@@ -692,11 +698,17 @@ Author: {video_info.get('author', 'Unknown')}
             # Add AI-generated tags
             if processed_content.tags:
                 for tag_name in processed_content.tags:
+                    # First check if tag exists
                     tag_id = await conn.fetchval("""
-                        INSERT INTO tags (name) VALUES ($1)
-                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                        RETURNING id
+                        SELECT id FROM tags WHERE name = $1
                     """, tag_name.lower())
+                    
+                    if not tag_id:
+                        # Create new tag
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            RETURNING id
+                        """, tag_name.lower())
                     
                     await conn.execute("""
                         INSERT INTO item_tags (item_id, tag_id) VALUES ($1, $2)
@@ -821,11 +833,17 @@ Full Description:
             if processed_content.tags:
                 for tag_name in processed_content.tags:
                     # Get or create tag
+                    # First check if tag exists
                     tag_id = await conn.fetchval("""
-                        INSERT INTO tags (name) VALUES ($1)
-                        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                        RETURNING id
+                        SELECT id FROM tags WHERE name = $1
                     """, tag_name.lower())
+                    
+                    if not tag_id:
+                        # Create new tag
+                        tag_id = await conn.fetchval("""
+                            INSERT INTO tags (name) VALUES ($1)
+                            RETURNING id
+                        """, tag_name.lower())
                     
                     # Link tag to item
                     await conn.execute("""

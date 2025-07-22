@@ -83,7 +83,7 @@ To actually update the email, modify the script and uncomment the update section
    
    ```sql
    -- Connect to FusionAuth database
-   psql -h localhost -p 5433 -U pronav -d fusionauth
+   psql -h localhost -p 5432 -U pronav -d fusionauth
    
    -- Update admin email
    UPDATE users 

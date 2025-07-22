@@ -23,7 +23,7 @@ from services.preview_service import preview_service
 async def regenerate_github_previews():
     """Regenerate GitHub previews for all existing GitHub entries."""
     
-    conn = await asyncpg.connect('postgresql://pronav@localhost:5433/prsnl')
+    conn = await asyncpg.connect('postgresql://pronav@localhost:5432/prsnl')
     
     try:
         # Find all GitHub entries

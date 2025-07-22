@@ -1,6 +1,7 @@
 # 🚀 PRSNL Complete Quick Reference & Troubleshooting Guide - Phase 3
 
-## 🎯 System Status - Mac Mini M4 Setup (2025-07-18)
+## 🎯 System Status - Mac Mini M4 Setup (2025-07-22)
+- 🎤 **Voice Integration**: ✅ COMPLETED - Chatterbox TTS with emotions, Enhanced Whisper STT
 - 🚨 **Mac Mini M4 Migration**: Services running but auth configuration incomplete
 - ✅ **Hardware**: Mac Mini M4 (Apple Silicon) with Colima Docker runtime
 - ✅ **PHASE 3 COMPLETE**: AI-powered system with intelligent features
@@ -10,7 +11,7 @@
 - ✅ **AI Testing**: Verified 2-5s AI-powered responses
 - ✅ **LibreChat Testing**: Verified 4.0-5.5s chat responses with streaming
 - ✅ **Function Calling**: Azure OpenAI tools API working with 2023-12-01-preview
-- ✅ **ARM64 PostgreSQL 16**: Port 5432 (changed from 5433!) optimized for Apple Silicon
+- ✅ **ARM64 PostgreSQL 16**: Port 5432 (changed from 5432!) optimized for Apple Silicon
 - ✅ **Frontend Development**: Working on port 3004 (upgraded from 3003)
 - ✅ **Frontend Container**: Working on port 3003 (production only)
 - ✅ **Backend + AI**: Working locally on port 8000 (not Docker)
@@ -99,6 +100,47 @@ rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*
 ```
 
 ---
+
+## 🎤 Voice Testing Commands
+
+```bash
+# Test TTS with emotion
+curl -X POST http://localhost:8000/api/voice/tts \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello! I'm excited to help you today.", "emotion": "excited"}' \
+  -o test_output.mp3
+
+# Test voice transcription
+curl -X POST http://localhost:8000/api/voice/transcribe \
+  -F "audio=@test_audio.wav"
+
+# Get voice models
+curl http://localhost:8000/api/voice/models
+
+# Update voice settings
+curl -X PUT http://localhost:8000/api/user/settings \
+  -H "Content-Type: application/json" \
+  -d '{
+    "voice_settings": {
+      "tts_model": "chatterbox",
+      "emotion": "friendly",
+      "speed": 1.0,
+      "pitch": 0
+    }
+  }'
+
+# Get current voice settings
+curl http://localhost:8000/api/user/settings | jq .voice_settings
+
+# Test different emotions
+for emotion in neutral happy sad angry excited calm friendly; do
+  echo "Testing emotion: $emotion"
+  curl -X POST http://localhost:8000/api/voice/tts \
+    -H "Content-Type: application/json" \
+    -d "{\"text\": \"This is a test of the $emotion emotion.\", \"emotion\": \"$emotion\"}" \
+    -o "test_${emotion}.mp3"
+done
+```
 
 ## 🤖 Phase 3 AI Commands
 
@@ -389,7 +431,7 @@ echo "=== READY TO START TASK ==="
 # Check all services
 curl http://localhost:8000/health      # Backend
 curl http://localhost:3004/           # Frontend
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"  # Database
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT version();"  # Database
 ```
 
 ### Test Content Ingest
@@ -408,15 +450,15 @@ curl -X POST "http://localhost:8000/api/capture" \
 ### Check Database Content
 ```bash
 # View all items by type
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT type, COUNT(*) as count FROM items GROUP BY type ORDER BY count DESC;"
 
 # View recent items
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, type, created_at FROM items ORDER BY created_at DESC LIMIT 10;"
 
 # View video metadata
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, metadata->'video_metadata'->'platform' as platform, duration
 FROM items WHERE type = 'video' LIMIT 5;"
 ```
@@ -503,12 +545,12 @@ curl -X DELETE "http://localhost:8000/api/file/{file_id}" | jq
 **Database verification:**
 ```bash
 # Check all captured items
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, content_type, enable_summarization, status, type, has_files 
 FROM items ORDER BY created_at DESC LIMIT 10;"
 
 # Check file processing
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT f.id, f.original_filename, f.processing_status, i.title 
 FROM files f JOIN items i ON f.item_id = i.id ORDER BY f.created_at DESC;"
 ```
@@ -536,16 +578,16 @@ pg_ctl status -D /opt/homebrew/var/postgresql@16
 #### Database Connection Issues
 ```bash
 # Test database connection
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT NOW();"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT NOW();"
 
 # Check if database exists
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "\l"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "\l"
 
 # Create database if missing
 createdb -h 127.0.0.1 -p 5432 -U prsnl prsnl
 
 # Check pgvector extension
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT * FROM pg_extension WHERE extname = 'vector';"
 ```
 
 #### Frontend API Connection Issues
@@ -588,7 +630,7 @@ results = data.items || [];  // NOT data.results
 **Check**:
 ```bash
 # Verify video data in database
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, thumbnail_url, 
        metadata->'video_metadata'->'platform' as platform,
        metadata->'video_metadata'->'embed_url' as embed_url
@@ -748,7 +790,7 @@ User: prsnl
 Password: prsnl123
 Host: 127.0.0.1
 Port: 5432
-Connection: postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl
+Connection: postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl
 ```
 
 ### Video Metadata Structure
@@ -827,7 +869,7 @@ echo "3. Frontend:"
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/
 
 echo "4. Database Content:"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT type, COUNT(*) FROM items GROUP BY type;"
 
 echo "5. Port Usage:"
 lsof -i :8000,3003,5432
@@ -836,14 +878,14 @@ lsof -i :8000,3003,5432
 ### Content Verification
 ```bash
 # Check recent captures
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, type, url, created_at 
 FROM items 
 ORDER BY created_at DESC 
 LIMIT 10;"
 
 # Check video content specifically
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, duration, thumbnail_url,
        metadata->'video_metadata'->'platform' as platform
 FROM items 
@@ -857,7 +899,7 @@ time curl -s http://localhost:8000/api/timeline?limit=10 > /dev/null
 time curl -s http://localhost:8000/api/search?query=test > /dev/null
 
 # Database performance
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del
 FROM pg_stat_user_tables 
 WHERE tablename = 'items';"
@@ -892,9 +934,9 @@ curl http://localhost:3004/
 ### Reset Database (Nuclear Option)
 ```bash
 # CAUTION: This will delete all data
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "DROP DATABASE IF EXISTS prsnl;"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/postgres" -c "CREATE DATABASE prsnl;"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "CREATE EXTENSION vector;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "DROP DATABASE IF EXISTS prsnl;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "CREATE DATABASE prsnl;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "CREATE EXTENSION vector;"
 
 # Then restart backend to recreate tables
 ```

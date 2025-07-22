@@ -255,8 +255,8 @@ This will test:
    - Ensure same SECRET_KEY across instances
 
 4. **Database errors**
-   - Run migration: `psql -U pronav -p 5433 -d prsnl -f app/db/migrations/017_add_user_authentication.sql`
-   - Check PostgreSQL is running on port 5433
+   - Run migration: `psql -U pronav -p 5432 -d prsnl -f app/db/migrations/017_add_user_authentication.sql`
+   - Check PostgreSQL is running on port 5432
    - Verify user tables exist
 
 ## Conclusion

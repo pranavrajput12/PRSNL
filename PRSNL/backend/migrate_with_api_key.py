@@ -13,7 +13,7 @@ from datetime import datetime
 FUSIONAUTH_API_KEY = "fs7t4gH-8k1cuE2uPEJq68uhGR3LFmZZ23Kwjd4Cz4PwejWIVvla3ZJC"  # <-- Replace this!
 
 # Configuration
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 FUSIONAUTH_URL = "http://localhost:9011"
 APPLICATION_ID = "4218d574-603a-48b4-b980-39a0b73e4cff"  # PRSNL app
 

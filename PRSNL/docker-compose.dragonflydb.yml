@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  dragonflydb:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    container_name: prsnl_dragonflydb
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      - DRAGONFLY_CACHE_MODE=true
+    volumes:
+      - dragonflydb_data:/data
+    command: 
+      - dragonfly
+      - --cache_mode=true
+      - --alsologtostderr
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dragonflydb_data:
+    driver: local

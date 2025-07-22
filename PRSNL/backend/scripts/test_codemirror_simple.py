@@ -16,7 +16,7 @@ import asyncpg
 
 # Configuration
 BACKEND_URL = "http://localhost:8000"
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 
 class SimpleCodeMirrorTest:
     """Simple test suite for CodeMirror system."""

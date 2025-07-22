@@ -8,7 +8,7 @@ from datetime import datetime
 import pytz
 
 # Database connection string (adjust credentials as needed)
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 
 async def check_verification_status():
     """Check the verification token status for the user"""

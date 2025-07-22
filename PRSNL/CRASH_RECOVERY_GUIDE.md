@@ -41,8 +41,8 @@ npm run dev -- --port 3004
 
 ### Database Recovery
 ```bash
-# Check PostgreSQL status (ARM64 on port 5433)
-psql -U pronav -p 5433 -d prsnl -c "SELECT version();"
+# Check PostgreSQL status (ARM64 on port 5432)
+psql -U pronav -p 5432 -d prsnl -c "SELECT version();"
 
 # If needed, restart PostgreSQL
 /opt/homebrew/bin/brew services restart postgresql@16
@@ -80,9 +80,9 @@ docker-compose restart dragonflydb
 4. Restart dev server
 
 ### Scenario 4: Database Connection Failed
-1. Verify PostgreSQL is running on port 5433
+1. Verify PostgreSQL is running on port 5432
 2. Check pgvector extension is installed
-3. Test connection: `psql -U pronav -p 5433 -d prsnl`
+3. Test connection: `psql -U pronav -p 5432 -d prsnl`
 4. Review .env file for correct settings
 
 ## CodeMirror Specific Recovery
@@ -109,7 +109,7 @@ curl http://localhost:8000/api/persistence/status/[job_id]
 ### Critical Environment Variables
 ```bash
 # Database
-DATABASE_URL=postgresql://pronav@localhost:5433/prsnl
+DATABASE_URL=postgresql://pronav@localhost:5432/prsnl
 
 # AI Services
 AZURE_OPENAI_API_KEY=[your-key]
@@ -146,7 +146,7 @@ echo "2. Frontend Status:"
 curl -s -o /dev/null -w "Status: %{http_code}\n" http://localhost:3004/
 
 echo "3. Database Connection:"
-psql -U pronav -p 5433 -d prsnl -c "SELECT COUNT(*) FROM github_repos;"
+psql -U pronav -p 5432 -d prsnl -c "SELECT COUNT(*) FROM github_repos;"
 
 echo "4. AI Services:"
 curl -s http://localhost:8000/api/ai/health

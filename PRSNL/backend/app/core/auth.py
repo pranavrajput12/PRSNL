@@ -42,6 +42,15 @@ async def get_current_user(
         )
     
     token = credentials.credentials
+    
+    # Development bypass for frontend dev-bypass-token
+    if token == "dev-bypass-token":
+        return User(
+            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
+            email="test@example.com",
+            name="Test User"
+        )
+    
     user_response = await AuthService.get_current_user(token)
     
     if not user_response:

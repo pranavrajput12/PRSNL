@@ -261,7 +261,7 @@ echo "**Files Modified**: [list files]" >> /PRSNL/TASK_HISTORY.md
 ### Port Allocation (NEVER CHANGE)
 - **Frontend**: Port 3002 (Windsurf must use this)
 - **Backend**: Port 8000 (Claude/Gemini coordinate)
-- **Database**: Port 5433 (PostgreSQL 16)
+- **Database**: Port 5432 (PostgreSQL 16)
 - **Redis**: Port 6379 (if needed)
 
 ### Architecture Notes
@@ -277,8 +277,8 @@ Database: prsnl
 User: prsnl
 Password: prsnl123
 Host: 127.0.0.1
-Port: 5433
-Connection: postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl
+Port: 5432
+Connection: postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl
 ```
 
 ### Essential Commands
@@ -299,7 +299,22 @@ curl http://localhost:3002/
 
 ---
 
-## 🤖 AI Services Architecture - Phase 4
+## 🤖 AI Services Architecture - Phase 4 + Voice Integration
+
+### Voice Integration Status - NEW (2025-07-22)
+- ✅ **Chatterbox TTS**: Emotion-aware text-to-speech with 7 emotion states
+- ✅ **Enhanced Whisper STT**: Upgraded from 'base' to 'small' model for better accuracy
+- ✅ **Voice AI Crew**: Specialized CrewAI agents for voice interactions
+- ✅ **TTS Abstraction Layer**: Support for multiple TTS backends (Chatterbox, Edge-TTS)
+- ✅ **Voice Settings API**: User preferences management for voice configuration
+- ✅ **Chat WebSocket Fix**: Authentication and search functionality restored
+
+### Voice Crew Architecture
+The system includes specialized voice agents:
+- **Voice Response Agent**: Natural conversation flow and emotional intelligence
+- **Context Analyzer**: Understands conversation context for appropriate responses
+- **Emotion Mapper**: Maps conversation tone to appropriate TTS emotions
+- **Voice Coordinator**: Orchestrates voice interactions across agents
 
 ### AI Service Status
 - ✅ **LangGraph Workflows**: State-based AI content processing with quality loops
@@ -430,7 +445,15 @@ python3 scripts/backup_database.py
 
 ## 🎯 Current System Status
 
-### Recent Major Work (2025-07-09)
+### Recent Major Work (2025-07-22)
+- **Voice Integration**: Complete TTS/STT system with emotion control
+- **Chatterbox TTS**: Integrated with 7 emotion states and voice customization
+- **Whisper Enhancement**: Upgraded to 'small' model for improved accuracy
+- **Voice AI Crew**: Created specialized agents for voice interactions
+- **Chat Fixes**: Resolved WebSocket authentication and search issues
+- **Voice Settings**: Added comprehensive user preferences UI and API
+
+### Previous Major Work (2025-07-09)
 - **Web Scraping System**: Fixed meta-tag extraction, eliminated "Untitled" errors
 - **Backend APIs**: Updated capture, import, worker APIs for new scraper
 - **Content Processing**: Now focuses on og:title, meta description extraction

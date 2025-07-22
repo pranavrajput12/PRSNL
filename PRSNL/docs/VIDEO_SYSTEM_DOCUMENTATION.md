@@ -284,7 +284,7 @@ MAX_VIDEO_SIZE=500MB
 ### Database Configuration
 ```python
 # PostgreSQL connection
-DATABASE_URL=postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl
+DATABASE_URL=postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl
 
 # JSONB settings
 JSONB_METADATA_EXTRACTION=true
@@ -343,7 +343,7 @@ curl -X POST "http://localhost:8000/api/videos/{id}/download"
 ### Debug Commands
 ```bash
 # Check video metadata
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "
 SELECT id, title, metadata->'video_metadata'->'platform' as platform
 FROM items WHERE type = 'video';"
 

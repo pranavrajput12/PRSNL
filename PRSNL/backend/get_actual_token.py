@@ -6,7 +6,7 @@ import asyncio
 import asyncpg
 
 # Database connection string
-DATABASE_URL = "postgresql://pronav@localhost:5433/prsnl"
+DATABASE_URL = "postgresql://pronav@localhost:5432/prsnl"
 
 async def get_actual_token():
     """Get the actual token from the database"""

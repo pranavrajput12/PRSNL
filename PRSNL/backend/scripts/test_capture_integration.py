@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.db.models import Item
 from app.services.slug_generator import SmartSlugGenerator
 
-DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5433/prsnl'
+DATABASE_URL = 'postgresql+asyncpg://pronav@localhost:5432/prsnl'
 
 async def test_capture_integration():
     print("🧪 Testing PRSNL Capture Integration Logic")

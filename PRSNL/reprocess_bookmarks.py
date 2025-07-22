@@ -27,13 +27,13 @@ async def reprocess_failed_bookmarks():
     capture_engine = CaptureEngine()
     
     try:
-        # Get all failed bookmarks
+        # Get all bookmarks that need processing
         failed_items = await conn.fetch("""
             SELECT id, url, title, metadata
             FROM items 
             WHERE user_id = 'e03c9686-09b0-4a06-b236-d0839ac7f5df'
             AND type = 'bookmark'
-            AND (status = 'failed' OR status = 'completed')
+            AND (status = 'pending' OR raw_content IS NULL OR processed_content IS NULL)
             ORDER BY created_at DESC
         """)
         
@@ -92,12 +92,11 @@ async def reprocess_failed_bookmarks():
                         )
                     WHERE id = $1
                 """, item['id'], json.dumps(str(e)))
-    
-    print(f"\n=== Reprocessing Complete ===")
-    print(f"Success: {success_count}")
-    print(f"Failed: {fail_count}")
-    print(f"Total: {len(failed_items)}")
-
+        
+        print(f"\n=== Reprocessing Complete ===")
+        print(f"Success: {success_count}")
+        print(f"Failed: {fail_count}")
+        print(f"Total: {len(failed_items)}")
 
     finally:
         await conn.close()

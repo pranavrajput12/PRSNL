@@ -16,6 +16,7 @@ import numpy as np
 from app.db.database import get_db_pool
 from app.services.unified_ai_service import unified_ai_service
 from app.services.multimodal_embedding_service import multimodal_embedding_service
+from app.services.embedding_service import embedding_service
 from app.utils.fingerprint import calculate_content_fingerprint
 
 logger = logging.getLogger(__name__)
@@ -507,6 +508,103 @@ class EmbeddingManager:
             "unchanged": unchanged,
             "failed": failed
         }
+    
+    async def search_similar_items(
+        self,
+        query: str,
+        user_id: str,
+        limit: int = 5,
+        threshold: float = 0.7
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for similar items using text-based search with conversation support.
+        This method is used by ChatService for finding relevant context.
+        
+        Args:
+            query: Text query to search for
+            user_id: User ID to filter results (currently not implemented)
+            limit: Maximum number of results
+            threshold: Minimum similarity threshold (unused in text search)
+            
+        Returns:
+            List of similar items with similarity scores
+        """
+        try:
+            import asyncpg
+            # Use direct connection since pool initialization is complex
+            conn = await asyncpg.connect('postgresql://pronav@localhost:5432/prsnl')
+            
+            try:
+                # Search both items and conversation data using text-based search
+                results = await conn.fetch("""
+                    WITH item_results AS (
+                        SELECT 
+                            i.id,
+                            i.title,
+                            i.url,
+                            i.summary,
+                            COALESCE(i.processed_content, i.summary, '') as content,
+                            COALESCE(
+                                ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL),
+                                ARRAY[]::TEXT[]
+                            ) as tags,
+                            i.type as content_type,
+                            i.created_at,
+                            ts_rank(to_tsvector('english', COALESCE(i.title, '') || ' ' || COALESCE(i.summary, '') || ' ' || COALESCE(i.processed_content, '')), plainto_tsquery('english', $1)) as similarity,
+                            'item' as source_type
+                        FROM items i
+                        LEFT JOIN item_tags it ON i.id = it.item_id
+                        LEFT JOIN tags t ON it.tag_id = t.id
+                        WHERE to_tsvector('english', COALESCE(i.title, '') || ' ' || COALESCE(i.summary, '') || ' ' || COALESCE(i.processed_content, '')) @@ plainto_tsquery('english', $1)
+                        GROUP BY i.id, i.title, i.url, i.summary, i.processed_content, i.type, i.created_at
+                    ),
+                    conversation_results AS (
+                        SELECT 
+                            c.id,
+                            c.title,
+                            c.source_url as url,
+                            c.summary,
+                            LEFT(COALESCE(c.summary, ''), 500) as content,
+                            c.key_topics as tags,
+                            'conversation' as content_type,
+                            c.created_at,
+                            ts_rank(to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.summary, '') || ' ' || array_to_string(COALESCE(c.key_topics, ARRAY[]::text[]), ' ')), plainto_tsquery('english', $1)) as similarity,
+                            'conversation' as source_type
+                        FROM ai_conversation_imports c
+                        WHERE to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.summary, '') || ' ' || array_to_string(COALESCE(c.key_topics, ARRAY[]::text[]), ' ')) @@ plainto_tsquery('english', $1)
+                    )
+                    SELECT * FROM (
+                        SELECT * FROM item_results
+                        UNION ALL
+                        SELECT * FROM conversation_results
+                    ) combined_results
+                    ORDER BY similarity DESC
+                    LIMIT $2
+                """, query, limit)
+                
+                return [
+                    {
+                        "id": str(row['id']),
+                        "title": row['title'],
+                        "url": row['url'],
+                        "content": row['content'] or row['summary'] or "",
+                        "summary": row['summary'],
+                        "tags": row['tags'] if row['tags'] else [],
+                        "content_type": row['content_type'],
+                        "created_at": row['created_at'].isoformat() if row['created_at'] else None,
+                        "similarity": float(row['similarity']) if row['similarity'] else 0.0,
+                        "source_type": row['source_type'],
+                        "relevance": float(row['similarity']) if row['similarity'] else 0.0
+                    }
+                    for row in results
+                ]
+                
+            finally:
+                await conn.close()
+                
+        except Exception as e:
+            logger.error(f"Error in search_similar_items: {e}")
+            return []
 
 
 # Create singleton instance

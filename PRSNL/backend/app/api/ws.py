@@ -11,11 +11,41 @@ from app.core.websocket_manager import manager
 from app.db.database import get_db_pool
 from app.services.llm_processor import LLMProcessor
 from app.services.unified_ai_service import UnifiedAIService
-from app.services.floating_chat_service import FloatingChatService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Enable debug logging for chat
+
+def diversify_search_results(results, max_results=20):
+    """
+    Diversify search results to show different content types
+    Ensures we don't show only one type of content (e.g., all websites)
+    """
+    if not results:
+        return results
+    
+    # Group by content type and source type
+    type_groups = {}
+    for item in results:
+        content_type = item.get('source_type', 'unknown')
+        item_type = item.get('type', 'unknown') 
+        
+        # Use more specific grouping
+        group_key = f"{content_type}_{item_type}"
+        if group_key not in type_groups:
+            type_groups[group_key] = []
+        type_groups[group_key].append(item)
+    
+    # Select diverse results - max 5 per type group
+    diversified = []
+    for group_key, group_items in type_groups.items():
+        # Sort by score within each group and take top 5
+        group_items.sort(key=lambda x: x.get('rank_score', 0), reverse=True)
+        diversified.extend(group_items[:5])
+    
+    # Sort final results by score and limit
+    diversified.sort(key=lambda x: x.get('rank_score', 0), reverse=True)
+    return diversified[:max_results]
 
 @router.websocket("/ws/ai/stream/{client_id}")
 async def ai_stream(websocket: WebSocket, client_id: str):
@@ -75,13 +105,9 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
     ai_service = UnifiedAIService()
     
-    # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
-    # For development, use the test user ID if no authentication
-    # This should be replaced with proper WebSocket authentication
-    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
-    logger.warning(f"SECURITY BYPASS: Using hardcoded user_id for WebSocket connection")
+    # NO AUTHENTICATION - DEVELOPMENT MODE ONLY
+    logger.debug(f"Chat connection established for client: {client_id} - NO AUTH MODE")
     
-    logger.debug(f"Chat connection established for client: {client_id}")
     
     try:
         # Send initial connection success message
@@ -105,7 +131,9 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 })
                 continue
             
-            logger.debug(f"Received message from {client_id}: {message}")
+            logger.debug(f"🔍 RECEIVED MESSAGE from {client_id}: '{message}'")
+            logger.debug(f"📝 Conversation history items: {len(conversation_history)}")
+            logger.debug(f"🎯 Context data: {context}")
             
             # Check for common greetings and conversational patterns
             greetings = ['hi', 'hello', 'hey', 'hii', 'hiii', 'hiiii', 'good morning', 'good afternoon', 'good evening', 'greetings', 'howdy', 'sup', "what's up", 'yo']
@@ -226,8 +254,10 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                     search_query = 'bookmark'
                     logger.debug(f"Detected bookmark query, using type search")
                 
-                # Filter out common question words and short words
-                filtered_words = [word for word in words if word not in question_words and len(word) > 2]
+                # Filter out common question words but keep important short words
+                # Allow important technical terms even if short (ai, ml, js, py, etc.)
+                important_short_words = ['ai', 'ml', 'js', 'py', 'go', 'r', 'c', 'qt', 'ui', 'ux', 'db', 'os', 'vm', 'cd', 'ci', 'cd', 'qa', 'hr', 'pr', 'id', 'ip', 'tv', 'vr', 'ar', 'iot', 'api', 'sql', 'css', 'xml', 'rss', 'cms', 'seo', 'roi', 'kpi', 'crm', 'erp', 'etl', 'aws', 'gcp']
+                filtered_words = [word for word in words if word not in question_words and (len(word) > 2 or word.lower() in important_short_words)]
                 
                 # Basic query expansion (can be expanded with a more comprehensive synonym list)
                 expanded_keywords = set(filtered_words)
@@ -263,12 +293,18 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                         message = message_lower.replace(keyword, "").strip()
                         break # Only apply one date filter
                 
-                # Create search query from keywords
-                search_query = ' '.join(keywords) if keywords else message
-                logger.debug(f"Original message: {message}")
-                logger.debug(f"Search query: {search_query}")
-                logger.debug(f"Date filter SQL: {date_filter_sql}")
-                logger.debug(f"Using user_id: {user_id} for knowledge base search")
+                # Create search query from keywords - use first meaningful keyword
+                if keywords:
+                    # Use the most specific/shortest keyword for better matching
+                    # Sort by length and take the shortest (usually most specific)
+                    search_query = min(keywords, key=len) if keywords else keywords[0]
+                else:
+                    search_query = message
+                logger.debug(f"🔍 SEARCH PROCESSING:")
+                logger.debug(f"  📄 Original message: '{message}'")
+                logger.debug(f"  🔎 Final search query: '{search_query}'")
+                logger.debug(f"  📅 Date filter SQL: '{date_filter_sql}'")
+                logger.debug(f"  🚫 NO USER FILTERING - SEARCHING ALL DATA")
                 
                 # Search for relevant content from the knowledge base
                 pool = await get_db_pool()
@@ -283,38 +319,81 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                             logger.warning(f"Could not generate embedding for search query: {e}")
 
                     # Perform hybrid search: full-text search + semantic search
-                    # Combine results and re-rank
+                    # Include both items and conversations
                     relevant_items = []
                     if search_query:
-                        # Full-text search
-                        text_search_query = """
-                            SELECT 
-                                id, title, 
-                                COALESCE(processed_content, raw_content) as content, 
-                                url, 
-                                metadata->>'tags' as tags,
-                                created_at, 
-                                summary,
-                                metadata->>'category' as category,
-                                ts_rank(search_vector, plainto_tsquery('english', $1)) as rank_score
-                            FROM items
-                            WHERE 
-                                user_id = $2
-                                AND (
-                                    search_vector @@ plainto_tsquery('english', $1)
-                                    OR to_tsvector('english', title) @@ plainto_tsquery('english', $1)
-                                    OR $1 = ANY(string_to_array(metadata->>'tags', ','))
+                        # Combined search for items and conversations
+                        combined_search_query = """
+                            WITH item_results AS (
+                                SELECT 
+                                    id, title, 
+                                    type,  -- Added type field
+                                    COALESCE(processed_content, raw_content) as content, 
+                                    url, 
+                                    metadata->>'tags' as tags,
+                                    created_at, 
+                                    summary,
+                                    metadata->>'category' as category,
+                                    CASE 
+                                        WHEN search_vector IS NOT NULL THEN ts_rank(search_vector, plainto_tsquery('english', $1))
+                                        ELSE 0.1
+                                    END as rank_score,
+                                    'item' as source_type,
+                                    NULL as platform,
+                                    NULL as slug
+                                FROM items
+                                WHERE (
+                                    (search_vector IS NOT NULL AND search_vector @@ plainto_tsquery('english', $1))
+                                    OR to_tsvector('english', COALESCE(title, '')) @@ plainto_tsquery('english', $1)
+                                    OR to_tsvector('english', COALESCE(raw_content, '')) @@ plainto_tsquery('english', $1)
+                                    OR $1 = ANY(string_to_array(COALESCE(metadata->>'tags', ''), ','))
                                     OR type = $1  -- Search by type (e.g., 'bookmark')
+                                    OR title ILIKE '%' || $1 || '%'  -- Simple text match
+                                    OR raw_content ILIKE '%' || $1 || '%'  -- Content text match
                                 )
                                 {date_filter_sql}
+                            ),
+                            conversation_results AS (
+                                SELECT 
+                                    id, title,
+                                    'conversation' as type,  -- Added type field for conversations
+                                    COALESCE(summary, '') as content,
+                                    source_url as url,
+                                    array_to_string(COALESCE(key_topics, ARRAY[]::text[]), ',') as tags,
+                                    created_at,
+                                    summary,
+                                    'conversation' as category,
+                                    ts_rank(to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(summary, '') || ' ' || array_to_string(COALESCE(key_topics, ARRAY[]::text[]), ' ')), plainto_tsquery('english', $1)) as rank_score,
+                                    'conversation' as source_type,
+                                    platform,
+                                    slug
+                                FROM ai_conversation_imports
+                                WHERE to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(summary, '') || ' ' || array_to_string(COALESCE(key_topics, ARRAY[]::text[]), ' ')) @@ plainto_tsquery('english', $1)
+                                    {date_filter_sql}
+                            )
+                            SELECT * FROM (
+                                SELECT * FROM item_results
+                                UNION ALL
+                                SELECT * FROM conversation_results
+                            ) combined_results
                             ORDER BY rank_score DESC
-                            LIMIT 10
+                            LIMIT 20
                         """.format(date_filter_sql=date_filter_sql)
-                        text_results = await conn.fetch(text_search_query, search_query, user_id)
-                        logger.debug(f"Text search found {len(text_results)} results for query: {search_query}")
+                        logger.debug(f"🔍 EXECUTING COMBINED SEARCH SQL:")
+                        logger.debug(f"📝 Query: {combined_search_query[:200]}...")
+                        logger.debug(f"🔎 Search term: '{search_query}'")
+                        
+                        text_results = await conn.fetch(combined_search_query, search_query)
+                        
+                        logger.debug(f"✅ COMBINED SEARCH RESULTS:")
+                        logger.debug(f"  📊 Total results found: {len(text_results)}")
+                        for i, result in enumerate(text_results[:5]):  # Log first 5 results
+                            logger.debug(f"  📄 Result {i+1}: '{result.get('title', 'NO TITLE')}' (type: {result.get('type', 'unknown')}, source: {result.get('source_type', 'unknown')})")
+                        
                         relevant_items.extend(text_results)
 
-                    if query_embedding is not None:
+                    # TEMPORARY: Disable semantic search to prioritize conversation text search
+                    if False and query_embedding is not None:
                         # Semantic search - match the query structure from database.py
                         semantic_search_query = """
                             SELECT 
@@ -327,14 +406,13 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                 metadata->>'category' as category,
                                 1 - (embedding <=> $1::vector) as similarity_score
                             FROM items
-                            WHERE user_id = $2
-                                AND embedding IS NOT NULL
+                            WHERE embedding IS NOT NULL
                                 {date_filter_sql}
                             ORDER BY embedding <=> $1::vector
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
                         # Pass embedding directly - pgvector handles conversion
-                        semantic_results = await conn.fetch(semantic_search_query, query_embedding, user_id)
+                        semantic_results = await conn.fetch(semantic_search_query, query_embedding)
                         
                         # Combine and deduplicate results
                         combined_results = {}
@@ -346,33 +424,47 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                 # Update score if a better one is found
                                 combined_results[row['id']]['score'] += row.get('rank_score', 0) + row.get('similarity_score', 0)
                         
-                        # Sort by combined score and take top 5
-                        relevant_items = sorted(combined_results.values(), key=lambda x: x['score'], reverse=True)[:5]
+                        # Sort by combined score and take top 8 with diversity
+                        relevant_items = sorted(combined_results.values(), key=lambda x: x['score'], reverse=True)[:8]
                     else:
-                        # If no embedding, just use text search results (already limited to 5)
-                        relevant_items = relevant_items[:5]
+                        # Apply content type diversity - show different types of content
+                        relevant_items = diversify_search_results(relevant_items[:30], max_results=20)  # Get more results first, then diversify
                     
-                    logger.debug(f"Found {len(relevant_items)} relevant items")
+                    logger.debug(f"🎯 FINAL RESULTS SUMMARY:")
+                    logger.debug(f"  📊 Total relevant items: {len(relevant_items)}")
+                    logger.debug(f"  🔍 Search query was: '{search_query}'")
                 
                 # Build context from search results
                 context_items_formatted = []
                 for item in relevant_items:
                     # Parse tags from string
-                    tags = item['tags'].split(',') if item['tags'] else []
+                    tags = item.get('tags', '').split(',') if item.get('tags') else []
+                    
+                    # Get content safely
+                    content = item.get('content', '')
+                    if not content:
+                        content = item.get('title', '') + ' ' + item.get('url', '')
                     
                     # Generate a brief summary of the item relevant to the query
-                    item_summary = await ai_service.generate_summary(
-                        content=item['content'],
-                        summary_type="brief",
-                        context={'query': message} # Provide query as context for summary
-                    )
+                    if content:
+                        try:
+                            item_summary = await ai_service.generate_summary(
+                                content=content,
+                                summary_type="brief",
+                                context={'query': message} # Provide query as context for summary
+                            )
+                        except Exception as e:
+                            logger.warning(f"Failed to generate summary: {e}")
+                            item_summary = content[:200] + "..." if len(content) > 200 else content
+                    else:
+                        item_summary = "No content available"
 
                     context_items_formatted.append(
-                        f"Source Title: {item['title']}\n"
-                        f"Source URL: {item['url']}\n"
+                        f"Source Title: {item.get('title', 'Untitled')}\n"
+                        f"Source URL: {item.get('url', 'No URL')}\n"
                         f"Summary: {item_summary}\n"
-                        f"Category: {item['category']}\n"
-                        f"Tags: {tags}\n"
+                        f"Category: {item.get('category', 'Uncategorized')}\n"
+                        f"Tags: {', '.join(tags) if tags else 'No tags'}\n"
                         f"---"
                     )
                 
@@ -385,6 +477,11 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 If the information is not in the provided context, say so clearly.
                 Always cite the sources you're using from the knowledge base.
                 Be helpful, concise, and accurate."""
+                
+                # If no relevant items found, adjust the prompt
+                if not relevant_items:
+                    logger.debug(f"No relevant items found for query: {message}")
+                    knowledge_base_context = "No relevant items found in the knowledge base for this query."
                 
                 # Add page context if available
                 page_context_prompt = ""
@@ -429,8 +526,62 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 
                 # Send completion message with citations
                 # Don't send the message content again - frontend already has it from chunks
-                citations = [{"title": item["title"], "url": item["url"]} 
-                           for item in relevant_items if item["url"]]
+                citations = []
+                for item in relevant_items:
+                    if item.get("source_type") == "conversation":
+                        # Build conversation URL: /conversations/{platform}/{slug}
+                        platform = item.get("platform", "")
+                        slug = item.get("slug", "")
+                        if platform and slug:
+                            conversation_url = f"/conversations/{platform}/{slug}"
+                            citations.append({
+                                "title": item.get("title", "Untitled"),
+                                "url": conversation_url,
+                                "item_id": str(item.get("id", "")),
+                                "permalink": conversation_url,
+                                "type": "conversation",
+                                "format_label": "💬 Conversation"
+                            })
+                    else:
+                        # Regular items - determine URL based on type
+                        item_id = str(item.get("id", ""))
+                        item_type = item.get("type", "")
+                        
+                        # Generate type-specific internal URL
+                        if item_type == "video":
+                            internal_url = f"/videos/{item_id}"
+                        elif item_type == "development":
+                            # Only actual development projects go to Code Cortex
+                            # Articles about development still go to items
+                            internal_url = f"/code-cortex/links/{item_id}"
+                        elif item_type == "conversation":
+                            # This should have been handled above, but just in case
+                            internal_url = f"/items/{item_id}"
+                        else:
+                            # Default for articles, bookmarks, etc. - go to timeline single item page
+                            internal_url = f"/items/{item_id}"
+                        
+                        # Determine format label based on type
+                        format_label = ""
+                        if item_type == "video":
+                            format_label = "🎥 Video"
+                        elif item_type == "development":
+                            format_label = "💻 Code"
+                        elif item_type == "bookmark":
+                            format_label = "🔖 Bookmark"
+                        elif item_type == "article":
+                            format_label = "📄 Article"
+                        else:
+                            format_label = "📎 Link"
+                        
+                        citations.append({
+                            "title": item.get("title", "Untitled"),
+                            "url": item.get("url", ""),  # Original external URL
+                            "item_id": item_id,
+                            "permalink": internal_url,  # Internal navigation URL
+                            "type": item_type,
+                            "format_label": format_label
+                        })
                 
                 await websocket.send_json({
                     "type": "complete",
@@ -459,98 +610,3 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
         manager.disconnect(client_id)
 
 
-@router.websocket("/ws/floating-chat/{client_id}")
-async def floating_chat(websocket: WebSocket, client_id: str):
-    """
-    Floating chat endpoint using CrewAI for intelligent responses.
-    Optimized for quick, contextual assistance.
-    """
-    await manager.connect(websocket, client_id)
-    floating_chat_service = FloatingChatService()
-    
-    # SECURITY BYPASS - REMOVE BEFORE PRODUCTION
-    # For development, use the test user ID if no authentication
-    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Using the test user ID
-    logger.warning(f"SECURITY BYPASS: Using hardcoded user_id for FloatingChat WebSocket connection")
-    
-    logger.debug(f"Floating chat connection established for client: {client_id}")
-    
-    try:
-        # Send initial connection success message
-        await websocket.send_json({
-            "type": "connection",
-            "status": "connected",
-            "message": "Connected to PRSNL floating chat assistant"
-        })
-        
-        while True:
-            # Receive message from client
-            data = await websocket.receive_json()
-            message = data.get("message", "")
-            page_context = data.get("context", {}).get("page", {})
-            crew_type = data.get("crew_type", "simple")  # Default to fast simple crew
-            
-            if not message:
-                await websocket.send_json({
-                    "type": "error",
-                    "message": "No message provided"
-                })
-                continue
-            
-            logger.debug(f"Received floating chat message from {client_id}: {message}")
-            logger.debug(f"Page context: {page_context}")
-            
-            # Send typing indicator
-            await websocket.send_json({
-                "type": "status",
-                "message": "Thinking..."
-            })
-            
-            try:
-                # Use CrewAI service for intelligent response
-                result = await floating_chat_service.get_contextual_response(
-                    message=message,
-                    page_context=page_context,
-                    user_id=user_id,
-                    crew_type=crew_type,
-                    max_knowledge_items=3  # Limit for speed
-                )
-                
-                # Stream the response character by character for real-time feel
-                response = result["response"]
-                for char in response:
-                    await websocket.send_json({
-                        "type": "chunk",
-                        "content": char
-                    })
-                    await asyncio.sleep(0.02)  # Small delay for streaming effect
-                
-                # Send completion with metadata
-                await websocket.send_json({
-                    "type": "complete",
-                    "citations": result.get("citations", []),
-                    "context_count": result.get("knowledge_items_used", 0),
-                    "crew_type": result.get("crew_type", crew_type),
-                    "response_time": result.get("response_time_seconds", 0),
-                    "metadata": result.get("metadata", {})
-                })
-                
-                logger.debug(f"Completed floating chat response for {client_id} using {result.get('crew_type')} crew")
-                
-            except Exception as e:
-                logger.error(f"Error processing floating chat message: {e}", exc_info=True)
-                await websocket.send_json({
-                    "type": "error",
-                    "message": f"Sorry, I encountered an error processing your request: {str(e)}"
-                })
-    
-    except WebSocketDisconnect:
-        manager.disconnect(client_id)
-        logger.info(f"Client {client_id} disconnected from floating chat")
-    except Exception as e:
-        logger.error(f"Error in floating chat for {client_id}: {e}", exc_info=True)
-        await websocket.send_json({
-            "type": "error",
-            "message": f"Connection error: {str(e)}"
-        })
-        manager.disconnect(client_id)

@@ -178,13 +178,13 @@ $: if ($isAuthenticated) {
 ### Debug Commands
 ```bash
 # Check sessions in database
-psql -U pronav -p 5433 -d prsnl -c "SELECT * FROM user_sessions ORDER BY created_at DESC LIMIT 5;"
+psql -U pronav -p 5432 -d prsnl -c "SELECT * FROM user_sessions ORDER BY created_at DESC LIMIT 5;"
 
 # Monitor auth logs
 tail -f backend/backend.log | grep -E "(auth|token|session)"
 
 # Clear all sessions for a user
-psql -U pronav -p 5433 -d prsnl -c "UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = 'user-uuid';"
+psql -U pronav -p 5432 -d prsnl -c "UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = 'user-uuid';"
 ```
 
 ## Future Enhancements

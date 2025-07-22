@@ -31,7 +31,7 @@ This is your single source of truth for starting tasks properly. Use these promp
 - **Backend Port**: 8000
 - **Keycloak Port**: 8080 (Enterprise SSO)
 - **FusionAuth Port**: 9011 (User Management)
-- **PostgreSQL**: 5433 (ARM64 for M1/M2 Macs)
+- **PostgreSQL**: 5432 (ARM64 for M1/M2 Macs)
 - **DragonflyDB**: 6379 (25x faster than Redis)
 - **DO NOT**: Use docker commands, start Docker Desktop, or suggest Docker rebuilds
 
@@ -101,7 +101,7 @@ When you tag this file, the AI will:
 # Check for conflicts:
 - Review "IN PROGRESS" tasks in TASK_HISTORY.md
 - Verify no file locks in AI_COORDINATION_COMPLETE.md
-- Check port availability: lsof -i :3004,8000,5433,8080,9011,6379
+- Check port availability: lsof -i :3004,8000,5432,8080,9011,6379
 - Ensure no other AI is working on same files
 - Verify auth services: docker ps | grep -E "keycloak|fusionauth"
 ```
@@ -171,8 +171,8 @@ pytest -v                          # Run tests
 
 **Sanity Checks Required**:
 ```bash
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT version();"
-psql "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl" -c "SELECT COUNT(*) FROM items;"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT version();"
+psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "SELECT COUNT(*) FROM items;"
 ```
 
 **Example Tasks**:
@@ -305,7 +305,7 @@ echo "1. Check active tasks:"
 grep -A 2 "IN PROGRESS" TASK_HISTORY.md
 
 echo "2. Check port availability:"
-lsof -i :3002,8000,5433
+lsof -i :3002,8000,5432
 
 echo "3. Check service health:"
 curl -s http://localhost:8000/health | jq .status

@@ -17,7 +17,7 @@ import httpx
 
 # Test configuration
 API_BASE_URL = "http://localhost:8000/api"
-DATABASE_URL = "postgresql://prsnl:prsnl123@127.0.0.1:5433/prsnl"
+DATABASE_URL = "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl"
 
 class CaptureTestSuite:
     def __init__(self):

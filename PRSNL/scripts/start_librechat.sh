@@ -94,10 +94,10 @@ fi
 
 # Ensure PostgreSQL is running (local database)
 echo -e "${BLUE}🔍 Checking PostgreSQL connection...${NC}"
-if ! pg_isready -h localhost -p 5433 -U pronav > /dev/null 2>&1; then
-    echo -e "${RED}❌ PostgreSQL is not running on localhost:5433${NC}"
+if ! pg_isready -h localhost -p 5432 -U pronav > /dev/null 2>&1; then
+    echo -e "${RED}❌ PostgreSQL is not running on localhost:5432${NC}"
     echo "Please start your local PostgreSQL instance and try again."
-    echo "Expected connection: postgresql://pronav@localhost:5433/prsnl"
+    echo "Expected connection: postgresql://pronav@localhost:5432/prsnl"
     exit 1
 fi
 echo -e "${GREEN}✅ PostgreSQL is running${NC}"

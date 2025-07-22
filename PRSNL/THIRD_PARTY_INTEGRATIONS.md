@@ -335,13 +335,13 @@ result = await cache_service.get("key")
 
 #### ✅ Integration Status: **COMPLETE** (Apple Silicon Optimized)
 - **Purpose**: Primary database with vector search capabilities
-- **Port**: 5433 (ARM64 optimized, not 5432!)
+- **Port**: 5432 (ARM64 optimized, not 5432!)
 - **Extensions**: pgvector for AI embeddings
 
 #### Configuration
 ```python
 # Database connection
-DATABASE_URL=postgresql://pronav@localhost:5433/prsnl
+DATABASE_URL=postgresql://pronav@localhost:5432/prsnl
 ```
 
 #### Key Features
@@ -470,7 +470,7 @@ GET /api/ai/models
 #### Core Configuration
 ```bash
 # Database (ARM64 PostgreSQL 16)
-DATABASE_URL=postgresql://pronav@localhost:5433/prsnl
+DATABASE_URL=postgresql://pronav@localhost:5432/prsnl
 
 # Azure OpenAI (Dual-Model Strategy)
 AZURE_OPENAI_API_KEY=your-key
@@ -666,7 +666,7 @@ docker logs prsnl_redis
 ### Performance Issues
 1. **High Response Times**: Check rate limiting, increase cache TTL
 2. **Memory Usage**: Monitor DragonflyDB and OpenCLIP model loading
-3. **Database Slowness**: Verify ARM64 PostgreSQL on port 5433
+3. **Database Slowness**: Verify ARM64 PostgreSQL on port 5432
 4. **API Timeouts**: Adjust timeout settings for external services
 
 ---

@@ -25,7 +25,8 @@ def reprocess_bookmarks():
     
     for bookmark in bookmarks:
         # Check if it has real content (not just placeholder)
-        if bookmark.get('summary', '').startswith('Saved bookmark for'):
+        summary = bookmark.get('summary') or ''
+        if not summary or summary.startswith('Saved bookmark for') or bookmark.get('status') == 'pending':
             print(f"\nReprocessing: {bookmark['title'][:60]}...")
             
             # Call the capture endpoint

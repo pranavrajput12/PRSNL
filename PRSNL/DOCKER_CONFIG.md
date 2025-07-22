@@ -80,7 +80,7 @@ psql -U pronav prsnl < backup_file.sql
 - Consider using requirements.minimal.txt for faster builds
 
 ### Port conflicts
-- Database: 5433 (local PostgreSQL ARM64)
+- Database: 5432 (local PostgreSQL ARM64)
 - DragonflyDB: 6379 (Docker)
 - Backend: 8000 (local or Docker)
 - Frontend: 3004 (local development)

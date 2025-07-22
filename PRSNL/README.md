@@ -103,7 +103,7 @@ cp backend/.env.example backend/.env
 # Required configurations:
 # - AZURE_OPENAI_API_KEY
 # - AZURE_OPENAI_ENDPOINT
-# - DATABASE_URL (postgresql://user@localhost:5433/prsnl)
+# - DATABASE_URL (postgresql://user@localhost:5432/prsnl)
 ```
 
 ### **4. Start Services**

@@ -130,7 +130,7 @@ validators==0.35.0
 
 1. **Check database**:
    ```bash
-   psql -U pronav -p 5433 -d prsnl -c "SELECT COUNT(*) FROM content_urls;"
+   psql -U pronav -p 5432 -d prsnl -c "SELECT COUNT(*) FROM content_urls;"
    ```
 
 2. **Test slug generation**:
