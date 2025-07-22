@@ -12,6 +12,13 @@
   let ws: StreamingWebSocket | null = null;
   let currentStreamingMessage: FloatingChatMessage | null = null;
   let quickActions: string[] = [];
+  
+  // Voice state
+  let isRecording = false;
+  let voiceWs: WebSocket | null = null;
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+  let stream: MediaStream | null = null;
 
   $: isOpen = $floatingChatStore.isOpen;
   $: messages = $floatingChatStore.messages;
@@ -139,6 +146,124 @@
       floatingChatActions.close();
     }
   }
+  
+  // Voice recording functions
+  async function startRecording() {
+    try {
+      // Request microphone permission
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Connect to voice WebSocket if not connected
+      if (!voiceWs || voiceWs.readyState !== WebSocket.OPEN) {
+        connectVoiceWebSocket();
+      }
+      
+      // Start recording
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Send audio to voice WebSocket
+        if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            voiceWs!.send(reader.result as ArrayBuffer);
+            voiceWs!.send(JSON.stringify({ type: 'end_recording' }));
+          };
+          reader.readAsArrayBuffer(audioBlob);
+        }
+        
+        // Clean up
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      };
+      
+      mediaRecorder.start(100); // Collect data every 100ms
+      isRecording = true;
+      
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      floatingChatActions.addMessage({
+        type: 'assistant',
+        content: 'Unable to access microphone. Please check your permissions.'
+      });
+    }
+  }
+  
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      isRecording = false;
+    }
+  }
+  
+  function connectVoiceWebSocket() {
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/api/voice/ws`;
+    voiceWs = new WebSocket(wsUrl);
+    
+    voiceWs.onopen = () => {
+      console.log('[FloatingChat] Voice WebSocket connected');
+    };
+    
+    voiceWs.onmessage = async (event) => {
+      if (typeof event.data === 'string') {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'transcription') {
+          // Add user message with transcription
+          floatingChatActions.addMessage({
+            type: 'user',
+            content: data.data.user_text
+          });
+          
+          // Add AI response
+          floatingChatActions.addMessage({
+            type: 'assistant',
+            content: data.data.personalized_text
+          });
+          
+          scrollToBottom();
+        }
+        
+        if (data.type === 'audio_response' && data.data) {
+          // Play audio response
+          playAudioResponse(data.data);
+        }
+      }
+    };
+    
+    voiceWs.onerror = (error) => {
+      console.error('[FloatingChat] Voice WebSocket error:', error);
+    };
+  }
+  
+  async function playAudioResponse(base64Data: string) {
+    try {
+      const audioContext = new AudioContext();
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.start();
+    } catch (error) {
+      console.error('Failed to play audio:', error);
+    }
+  }
 
   onMount(() => {
     connectWebSocket();
@@ -148,6 +273,15 @@
   onDestroy(() => {
     if (ws) {
       ws.close();
+    }
+    if (voiceWs) {
+      voiceWs.close();
+    }
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
     document.removeEventListener('keydown', handleGlobalKeyPress);
   });
@@ -248,8 +382,20 @@
         placeholder="Ask about this page..."
         bind:value={inputMessage}
         on:keypress={handleKeyPress}
-        disabled={isLoading}
+        disabled={isLoading || isRecording}
       />
+      <button
+        class="voice-button"
+        class:recording={isRecording}
+        on:mousedown={startRecording}
+        on:mouseup={stopRecording}
+        on:mouseleave={stopRecording}
+        on:touchstart|preventDefault={startRecording}
+        on:touchend|preventDefault={stopRecording}
+        title={isRecording ? 'Recording...' : 'Hold to record'}
+      >
+        <Icon name={isRecording ? 'mic' : 'mic-off'} size={16} />
+      </button>
       <button
         class="send-button"
         on:click={() => sendMessage()}
@@ -510,6 +656,43 @@
   .send-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  
+  .voice-button {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .voice-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+  
+  .voice-button.recording {
+    background: #ef4444;
+    border-color: #ef4444;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
   }
 
   /* Scrollbar */

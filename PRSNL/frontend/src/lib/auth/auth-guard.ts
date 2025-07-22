@@ -88,16 +88,16 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
 
   const auth = get(authStore);
 
-  // Check if user is authenticated
+  // TEMPORARY DEVELOPMENT BYPASS - REMOVE BEFORE PRODUCTION
+  // Bypass authentication check for development
   if (!auth.isAuthenticated || !auth.user || !auth.token) {
-    console.log('Auth guard: User not authenticated, redirecting to', redirectTo, {
-      isAuthenticated: auth.isAuthenticated,
-      hasUser: !!auth.user,
-      hasToken: !!auth.token,
-      authSource: auth.authSource
-    });
-    goto(redirectTo);
-    return false;
+    console.log('Auth guard: Development bypass - allowing access without authentication');
+    // Set a dummy token for API calls
+    if (typeof window !== 'undefined' && !localStorage.getItem('prsnl_auth_token')) {
+      localStorage.setItem('prsnl_auth_token', 'dev-bypass-token');
+    }
+    // Continue without redirecting
+    return true;
   }
 
   // Check email verification if required

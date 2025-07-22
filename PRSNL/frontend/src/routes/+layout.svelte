@@ -11,6 +11,7 @@
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import { currentUser, isAuthenticated, authActions } from '$lib/stores/unified-auth';
   import FloatingChat from '$lib/components/FloatingChat.svelte';
+  import VoiceChat from '$lib/components/VoiceChat.svelte';
   
   export let data;
 
@@ -2102,3 +2103,6 @@
 
 <!-- Floating Chat - Available on all pages -->
 <FloatingChat />
+
+<!-- Voice Chat with Cortex - Available on all pages -->
+<VoiceChat position="bottom-left" size="medium" />

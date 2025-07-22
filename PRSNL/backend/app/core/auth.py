@@ -36,7 +36,7 @@ async def get_current_user(
         # For backward compatibility during migration, return test user if no auth
         # TODO: Remove this after frontend is updated
         return User(
-            id="00000000-0000-0000-0000-000000000001",
+            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
             email="test@example.com",
             name="Test User"
         )
@@ -48,7 +48,7 @@ async def get_current_user(
         # For development/migration period, return test user on invalid token
         # TODO: Remove this after frontend auth is fully implemented
         return User(
-            id="00000000-0000-0000-0000-000000000001",
+            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
             email="test@example.com",
             name="Test User"
         )
@@ -85,7 +85,7 @@ async def get_current_user_ws(websocket, token: Optional[str] = None) -> Optiona
         # For backward compatibility during migration
         # TODO: Remove this after frontend is updated
         return User(
-            id="00000000-0000-0000-0000-000000000001",
+            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
             email="test@example.com",
             name="Test User"
         )
@@ -128,7 +128,7 @@ async def get_test_user() -> User:
     This should only be used in non-authenticated endpoints during migration
     """
     return User(
-        id="00000000-0000-0000-0000-000000000001",
+        id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
         email="admin@prsnl.local",
         name="Admin User",
         is_verified=True
@@ -141,3 +141,18 @@ async def get_current_user_id(
     """Get current authenticated user ID from JWT token"""
     user = await get_current_user(credentials)
     return str(user.id)
+
+
+async def get_current_user_ws_optional(websocket=None, token: Optional[str] = None) -> Optional[str]:
+    """
+    WebSocket auth function - returns user ID if authenticated, None otherwise
+    This is for endpoints that work with or without authentication
+    """
+    if not token:
+        return None
+    
+    try:
+        user = await get_current_user_ws(websocket, token)
+        return str(user.id) if user else None
+    except:
+        return None

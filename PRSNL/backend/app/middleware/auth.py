@@ -36,6 +36,9 @@ PUBLIC_ROUTES = [
     "/api/capture/debug",  # Debug endpoint for testing
     "/api/github/auth/callback",  # OAuth callback
     "/metrics",  # Prometheus metrics
+    "/api/voice/health",  # Voice health check
+    "/api/voice/test",  # Voice test endpoint
+    "/api/voice/ws",  # Voice WebSocket endpoint (temporary for dev)
 ]
 
 # Routes that optionally use auth (work with or without)

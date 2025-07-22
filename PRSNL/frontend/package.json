@@ -67,7 +67,9 @@
     "marked": "^16.0.0",
     "monaco-editor": "^0.52.2",
     "path-to-regexp": "^8.2.0",
+    "recordrtc": "^5.6.2",
     "shadcn-svelte": "^1.0.6",
+    "simple-peer": "^9.11.1",
     "tailwind-merge": "^3.3.1",
     "three": "^0.178.0"
   }

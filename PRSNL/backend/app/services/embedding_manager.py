@@ -55,7 +55,7 @@ class EmbeddingManager:
             logger.warning(f"No content provided for item {item_id}")
             return None
         
-        model_name = model_name or self.default_model
+        model_name = model_name or self.default_text_model
         model_version = model_version or self.default_version
         
         try:
@@ -453,7 +453,7 @@ class EmbeddingManager:
         unchanged = 0
         failed = 0
         
-        model_name = model_name or self.default_model
+        model_name = model_name or self.default_text_model
         
         async with pool.acquire() as conn:
             # Get all items

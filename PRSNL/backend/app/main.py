@@ -248,6 +248,8 @@ from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import websocket_enhanced  # Enhanced WebSocket with FastAPI 0.116.1 improvements
 from app.api import enhanced_processing  # Enhanced processing with new package features
+from app.api import voice  # Voice chat with Cortex personality
+from app.api import user_settings  # User settings API
 # from app.api import crew_api  # Crew.ai autonomous agent system - temporarily disabled
 from app.api import (
     admin,
@@ -357,6 +359,8 @@ app.include_router(librechat_bridge.router)  # LibreChat integration bridge
 app.include_router(ws.router)
 app.include_router(websocket_enhanced.router)  # Enhanced WebSocket with FastAPI 0.116.1 improvements
 app.include_router(enhanced_processing.router)  # Enhanced processing with updated package features
+app.include_router(voice.router, prefix=settings.API_V1_STR)  # Voice chat with Cortex personality
+app.include_router(user_settings.router, prefix=settings.API_V1_STR)  # User settings API
 
 # V2 API endpoints with improved standards
 app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])
@@ -365,6 +369,11 @@ app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])
 media_path = os.path.abspath(settings.MEDIA_DIR)
 if os.path.exists(media_path):
     app.mount("/media", StaticFiles(directory=media_path), name="media")
+
+# Mount static files
+static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # Mount test files
 app_path = os.path.dirname(os.path.abspath(__file__))

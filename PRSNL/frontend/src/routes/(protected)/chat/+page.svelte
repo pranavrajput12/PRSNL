@@ -56,6 +56,7 @@
   let mediaRecorder: MediaRecorder | null = null;
   let audioChunks: Blob[] = [];
   let recordingInterval: NodeJS.Timeout | null = null;
+  let voiceWs: WebSocket | null = null;
 
   // Load suggested questions
   async function loadSuggestedQuestions() {
@@ -222,8 +223,21 @@
       
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        // TODO: Send audio to backend for transcription
-        console.log('Audio recorded:', audioBlob);
+        
+        // Connect to voice WebSocket if not connected
+        if (!voiceWs || voiceWs.readyState !== WebSocket.OPEN) {
+          await connectVoiceWebSocket();
+        }
+        
+        // Send audio to voice WebSocket
+        if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            voiceWs!.send(reader.result as ArrayBuffer);
+            voiceWs!.send(JSON.stringify({ type: 'end_recording' }));
+          };
+          reader.readAsArrayBuffer(audioBlob);
+        }
       };
       
       mediaRecorder.start();
@@ -235,7 +249,14 @@
       }, 1000);
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      alert('Unable to access microphone. Please check your permissions.');
+      if (error.name === 'NotAllowedError') {
+        // User denied permission or it was blocked
+        alert('Microphone permission is required for voice recording. Please click "Allow" when prompted by your browser.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No microphone found. Please connect a microphone and try again.');
+      } else {
+        alert('Unable to access microphone. Please check your permissions.');
+      }
     }
   }
 
@@ -273,6 +294,71 @@
     }
   }
 
+  // Voice WebSocket connection
+  function connectVoiceWebSocket(): Promise<void> {
+    return new Promise((resolve) => {
+      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8000/api/voice/ws`;
+      voiceWs = new WebSocket(wsUrl);
+      
+      voiceWs.onopen = () => {
+        console.log('[Chat] Voice WebSocket connected');
+        resolve();
+      };
+      
+      voiceWs.onmessage = async (event) => {
+        if (typeof event.data === 'string') {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'transcription') {
+            // Add user message with transcription
+            messages = [...messages, {
+              type: 'user',
+              content: data.data.user_text,
+              timestamp: new Date()
+            }];
+            
+            // Add AI response
+            messages = [...messages, {
+              type: 'assistant',
+              content: data.data.personalized_text,
+              timestamp: new Date()
+            }];
+            
+            scrollToBottom();
+          }
+          
+          if (data.type === 'audio_response' && data.data) {
+            // Play audio response
+            await playAudioResponse(data.data);
+          }
+        }
+      };
+      
+      voiceWs.onerror = (error) => {
+        console.error('[Chat] Voice WebSocket error:', error);
+      };
+    });
+  }
+  
+  async function playAudioResponse(base64Data: string) {
+    try {
+      const audioContext = new AudioContext();
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.start();
+    } catch (error) {
+      console.error('Failed to play audio:', error);
+    }
+  }
+
   onMount(() => {
     loadSuggestedQuestions();
     connectWebSocket();
@@ -288,6 +374,10 @@
     if (ws) {
       ws.close();
     }
+    if (voiceWs) {
+      voiceWs.close();
+    }
+    stopRecording();
   });
 </script>
 
@@ -421,24 +511,24 @@
         <div class="input-wrapper">
           <div class="input-actions-left">
             {#if !isRecording}
-              <button class="input-action-button" title="Record audio" on:click={startRecording}>
-                <Icon name="message-circle" size={20} />
+              <button class="input-action-button" title="Record audio" aria-label="Record audio message" on:click={startRecording}>
+                <Icon name="mic" size={20} />
               </button>
             {:else}
-              <button class="input-action-button recording" title="Stop recording" on:click={stopRecording}>
+              <button class="input-action-button recording" title="Stop recording" aria-label="Stop recording" on:click={stopRecording}>
                 <Icon name="close" size={20} />
                 <span class="recording-time">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
               </button>
             {/if}
             
-            <label class="input-action-button" title="Upload image">
+            <label class="input-action-button" title="Upload image" aria-label="Upload image">
               <Icon name="image" size={20} />
-              <input type="file" accept="image/*" on:change={handleImageUpload} class="hidden-input" />
+              <input type="file" accept="image/*" on:change={handleImageUpload} class="hidden-input" aria-label="Choose image file" />
             </label>
             
-            <label class="input-action-button" title="Attach file">
+            <label class="input-action-button" title="Attach file" aria-label="Upload document">
               <Icon name="file-text" size={20} />
-              <input type="file" accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.json" on:change={handleFileUpload} class="hidden-input" />
+              <input type="file" accept=".pdf,.doc,.docx,.txt,.md,.js,.ts,.py,.json" on:change={handleFileUpload} class="hidden-input" aria-label="Choose document file" />
             </label>
           </div>
 
@@ -463,6 +553,8 @@
               on:click={() => sendMessage()}
               disabled={!inputMessage.trim() || isLoading}
               class:pulse={inputMessage.trim() && !isLoading}
+              aria-label="Send message"
+              title="Send message"
             >
               <Icon name="send" size={20} />
             </button>

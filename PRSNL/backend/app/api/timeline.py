@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from app.core.exceptions import InternalServerError
 from app.db.database import get_db_pool
-from app.middleware.user_context import require_user_id
+from app.core.auth import get_current_user, User
 
 router = APIRouter()
 
@@ -39,7 +39,7 @@ async def get_timeline(
     limit: int = Query(20, ge=1, le=100),
     cursor: Optional[str] = None,
     page: Optional[int] = Query(None, description="Page number (for backward compatibility)"),
-    user_id: UUID = Depends(require_user_id)
+    current_user: User = Depends(get_current_user)
 ):
     """Retrieve a chronological list of captured items using cursor-based pagination."""
     try:
@@ -72,10 +72,10 @@ async def get_timeline(
                 LEFT JOIN content_urls cu ON i.id = cu.item_id
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
-                WHERE i.status IN ('completed', 'bookmark', 'pending')
+                WHERE i.status IN ('completed', 'bookmark', 'pending', 'failed')
                 AND i.user_id = $1
             """
-            params = [str(user_id)]
+            params = [str(current_user.id)]
             if cursor:
                 try:
                     # The cursor is the created_at timestamp of the last item

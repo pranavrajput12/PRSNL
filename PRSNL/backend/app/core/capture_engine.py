@@ -139,7 +139,7 @@ class CaptureEngine:
             })
             
             # Only include ai_analysis if AI processing actually occurred
-            if enable_summarization and content_type != "link":
+            if enable_summarization:
                 metadata["ai_analysis"] = {
                     "summary": processed.summary,
                     "tags": processed.tags,

@@ -220,6 +220,12 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 # Extract meaningful words and perform basic query expansion
                 words = [word.lower().strip('?,.') for word in message.split() if word.strip('?,.')]
                 
+                # Special handling for bookmark queries
+                if any(word in message_lower for word in ['bookmark', 'bookmarks', 'saved', 'links']):
+                    # For bookmark queries, search by type
+                    search_query = 'bookmark'
+                    logger.debug(f"Detected bookmark query, using type search")
+                
                 # Filter out common question words and short words
                 filtered_words = [word for word in words if word not in question_words and len(word) > 2]
                 
@@ -297,12 +303,14 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                                     search_vector @@ plainto_tsquery('english', $1)
                                     OR to_tsvector('english', title) @@ plainto_tsquery('english', $1)
                                     OR $1 = ANY(string_to_array(metadata->>'tags', ','))
+                                    OR type = $1  -- Search by type (e.g., 'bookmark')
                                 )
                                 {date_filter_sql}
                             ORDER BY rank_score DESC
                             LIMIT 10
                         """.format(date_filter_sql=date_filter_sql)
                         text_results = await conn.fetch(text_search_query, search_query, user_id)
+                        logger.debug(f"Text search found {len(text_results)} results for query: {search_query}")
                         relevant_items.extend(text_results)
 
                     if query_embedding is not None:
@@ -368,6 +376,7 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                     )
                 
                 knowledge_base_context = "\n".join(context_items_formatted)
+                
 
                 # Generate response using AI with context
                 system_prompt = """You are PRSNL, a personal knowledge base assistant. 

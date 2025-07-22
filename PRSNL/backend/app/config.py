@@ -97,6 +97,14 @@ class Settings(BaseSettings):
     # OpenCLIP Vision
     OPENCLIP_MODEL: str = "ViT-B-32"
     OPENCLIP_PRETRAINED: str = "openai"
+    
+    # Voice Settings
+    VOICE_TTS_ENGINE: str = os.getenv("VOICE_TTS_ENGINE", "chatterbox")  # chatterbox, edge-tts
+    VOICE_STT_MODEL: str = os.getenv("VOICE_STT_MODEL", "small")  # tiny, base, small, medium, large
+    VOICE_USE_CREWAI: bool = os.getenv("VOICE_USE_CREWAI", "true").lower() == "true"
+    VOICE_ENABLE_STREAMING: bool = os.getenv("VOICE_ENABLE_STREAMING", "false").lower() == "true"
+    VOICE_DEFAULT_GENDER: str = os.getenv("VOICE_DEFAULT_GENDER", "female")  # male, female
+    VOICE_EMOTION_STRENGTH: float = float(os.getenv("VOICE_EMOTION_STRENGTH", "1.0"))
     RATE_LIMITING_ENABLED: bool = True
     
     # Service Port Configuration (Exclusive Port Ownership)
@@ -124,6 +132,12 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     EMAIL_FROM_ADDRESS: str = os.getenv("EMAIL_FROM_ADDRESS", "noreply@prsnl.ai")
     EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "PRSNL")
+    
+    # Voice Chat Configuration
+    WHISPER_MODEL_SIZE: str = os.getenv("WHISPER_MODEL_SIZE", "small")  # tiny, base, small, medium, large
+    VOICE_DEFAULT_GENDER: str = os.getenv("VOICE_DEFAULT_GENDER", "female")
+    VOICE_MAX_RECORDING_DURATION: int = int(os.getenv("VOICE_MAX_RECORDING_DURATION", "60"))  # seconds
+    VOICE_ENABLE_ANALYTICS: bool = os.getenv("VOICE_ENABLE_ANALYTICS", "true").lower() == "true"
     
     class Config:
         env_file = ".env"

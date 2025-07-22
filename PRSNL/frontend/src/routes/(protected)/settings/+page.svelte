@@ -19,6 +19,7 @@
     { id: 'appearance', name: 'Appearance', icon: 'sparkles' },
     { id: 'shortcuts', name: 'Shortcuts', icon: 'info' },
     { id: 'capture', name: 'Capture', icon: 'capture' },
+    { id: 'voice', name: 'Voice', icon: 'mic' },
     { id: 'data', name: 'Data', icon: 'link' },
   ];
 
@@ -228,6 +229,19 @@
                 <span class="toggle-slider"></span>
                 Auto-capture from browser extension
               </label>
+            </div>
+          </div>
+        {:else if activeSection === 'voice'}
+          <div class="settings-section">
+            <h2>Voice Settings</h2>
+            <p class="section-description">Configure voice recognition and speech synthesis</p>
+            
+            <div class="voice-redirect">
+              <p>Voice settings have moved to a dedicated page for better control.</p>
+              <a href="/settings/voice" class="btn-red">
+                <Icon name="mic" size="small" />
+                Go to Voice Settings
+              </a>
             </div>
           </div>
         {:else if activeSection === 'data'}
@@ -538,6 +552,22 @@
     margin-top: 3rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border);
+  }
+
+  .voice-redirect {
+    background: var(--bg-tertiary);
+    padding: 2rem;
+    border-radius: var(--radius);
+    text-align: center;
+  }
+
+  .voice-redirect p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+  }
+
+  .voice-redirect a {
+    text-decoration: none;
   }
 
   @media (max-width: 768px) {

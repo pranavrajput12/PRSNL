@@ -82,13 +82,13 @@
         formData.append('file', file);
         formData.append('auto_fetch', autoFetch.toString());
         formData.append('use_ai_categorization', useAiCategorization.toString());
-        endpoint = `${API_BASE_URL}/api/import/bookmarks`;
+        endpoint = `${API_BASE_URL}/import/bookmarks`;
       } else if (importType === 'json') {
         formData.append('file', file);
-        endpoint = `${API_BASE_URL}/api/import/json`;
+        endpoint = `${API_BASE_URL}/import/json`;
       } else if (importType === 'notes') {
         files.forEach((f) => formData.append('files', f));
-        endpoint = `${API_BASE_URL}/api/import/notes`;
+        endpoint = `${API_BASE_URL}/import/notes`;
       }
 
       // Add authorization header if token exists

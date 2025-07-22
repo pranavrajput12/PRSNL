@@ -150,6 +150,7 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
    - **Model not found**: Ensure prsnl-gpt-4 deployment exists in Azure OpenAI
    - **Python cache issues**: Clear with `find . -name "*.pyc" -delete && find . -name "__pycache__" -exec rm -rf {} +`
    - **AI not responding**: Check AI service status with endpoints
+   - **LangGraph module errors**: Install `pip3 install langgraph-checkpoint-sqlite` (required for SqliteSaver)
 5. **LibreChat Issues**:
    - **No response**: Verify model deployment gpt-4.1-mini exists
    - **Slow responses**: Check if using correct model (should be fast)
@@ -157,6 +158,10 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 6. **DragonflyDB Issues**:
    - **Connection errors**: Restart with `docker-compose restart dragonflydb`
    - **Performance issues**: Check Rancher Desktop memory allocation
+7. **Service Startup Issues**:
+   - **Backend fails to start**: Check for missing Python packages, especially `langgraph-checkpoint-sqlite`
+   - **Frontend crashes silently**: Run in foreground first to see errors, then use `nohup` for background
+   - **Port already in use**: Use `lsof -ti:PORT | xargs kill -9` before starting services
 
 ## Git Workflow
 - Current branch: main
@@ -245,6 +250,10 @@ http POST localhost:8000/api/rag/query query="test"
   - **Re-enable**: Uncomment lines 183-189 in `+layout.svelte` when ready
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **FIX: LangGraph Dependencies (2025-07-19)** - Resolved backend startup issues
+  - **Issue**: Missing `langgraph-checkpoint-sqlite` package for SqliteSaver
+  - **Solution**: Install with `pip3 install langgraph-checkpoint-sqlite`
+  - **Impact**: Backend now starts successfully with all AI features operational
 - **NEW: Codebase Cleanup (2025-07-15)** - Major build & code quality tools optimization
   - **Build Tools**: Removed tsup, jscodeshift, ts-morph (76 packages total)
   - **Code Quality**: Consolidated ESLint/Prettier configs

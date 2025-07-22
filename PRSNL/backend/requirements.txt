@@ -54,6 +54,14 @@ pydocstyle==6.3.0
 # Voice Recognition (Offline)
 vosk==0.3.44
 pywhispercpp>=1.2.0  # whisper.cpp Python bindings
+openai-whisper>=20231106  # OpenAI Whisper for better accuracy
+
+# Voice Enhancement & TTS
+chatterbox-tts>=0.1.2  # Modern TTS with emotion control (using latest available)
+edge-tts>=6.1.0  # Edge TTS (keeping as fallback)
+RealtimeSTT>=0.1.15  # Real-time streaming STT
+webrtcvad>=2.0.10  # Voice Activity Detection
+# speechbrain>=0.5.16  # Speech enhancement (commented - large dependency)
 
 # AI Validation & Quality
 guardrails-ai>=0.4.0
