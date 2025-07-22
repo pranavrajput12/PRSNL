@@ -24,7 +24,8 @@
       // Filter for video items only - check both type and item_type for compatibility
       videos = data.items.filter((item) => {
         const itemType = item.type || item.item_type || item.itemType;
-        return itemType === 'video';
+        // Include both 'video' and 'youtube' types
+        return itemType === 'video' || itemType === 'youtube';
       });
     } catch (error) {
       console.error('Error loading videos:', error);
@@ -69,8 +70,6 @@
     return videos.filter((video) => {
       // Platform filter
       if (selectedPlatform !== 'all' && video.platform !== selectedPlatform) return false;
-      // Category filter
-      if (selectedCategory !== 'all' && video.category !== selectedCategory) return false;
       // Search filter
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
@@ -196,6 +195,10 @@
         <option value="documentary">DOCS</option>
         <option value="other">OTHER</option>
       </select>
+      <a href="/capture" class="matrix-button upload-btn">
+        <Icon name="upload" />
+        UPLOAD
+      </a>
     </div>
   </div>
 
@@ -218,9 +221,9 @@
         {#each filterVideos() as video, index}
           <div class="matrix-cell">
             <div class="video-display">
-              {#if video.thumbnailUrl || video.thumbnail_url}
+              {#if video.thumbnail_url}
                 <img
-                  src={video.thumbnailUrl || video.thumbnail_url}
+                  src={video.thumbnail_url}
                   alt={video.title}
                   class="video-thumbnail"
                 />
@@ -233,7 +236,7 @@
               <div class="video-overlay">
                 <button
                   class="play-command"
-                  on:click={() => (window.location.href = video.permalink || `/videos/${video.id}`)}
+                  on:click={() => (window.location.href = `/videos/${video.id}`)}
                 >
                   EXECUTE
                 </button>
@@ -264,7 +267,7 @@
                 <div class="metric">
                   <div class="metric-value">
                     {Math.floor(
-                      (Date.now() - new Date(video.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+                      (Date.now() - new Date(video.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24)
                     )}d
                   </div>
                   <div class="metric-label">Age</div>
@@ -467,6 +470,23 @@
     border-color: #dc143c;
     color: #dc143c;
     background: rgba(220, 20, 60, 0.1);
+  }
+  
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    background: rgba(220, 20, 60, 0.1);
+    border: 1px solid #dc143c;
+    color: #dc143c;
+    transition: all 0.3s ease;
+  }
+  
+  .upload-btn:hover {
+    background: rgba(220, 20, 60, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
   }
 
   .terminal-search {

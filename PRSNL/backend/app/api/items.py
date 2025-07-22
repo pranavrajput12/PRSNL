@@ -30,7 +30,7 @@ async def get_item_detail(item_id: UUID):
     try:
         pool = await get_db_pool()
         async with pool.acquire() as conn:
-            # Get item with tags
+            # Get item with tags including video-specific fields
             query = """
                 SELECT 
                     i.id,
@@ -41,8 +41,9 @@ async def get_item_detail(item_id: UUID):
                     i.type as type,
                     i.created_at,
                     i.updated_at,
+                    i.transcription,
                     COALESCE(i.thumbnail_url, i.metadata->'video_metadata'->>'thumbnail', i.metadata->>'thumbnail_url') as thumbnail_url,
-                    COALESCE(i.metadata->'video_metadata'->>'platform', i.metadata->>'platform') as platform,
+                    COALESCE(i.metadata->'video_metadata'->>'platform', i.metadata->>'platform', i.platform) as platform,
                     COALESCE(i.duration, (i.metadata->'video_metadata'->'video_info'->>'duration')::int, (i.metadata->>'duration')::int) as duration,
                     i.metadata->>'file_path' as file_path,
                     i.metadata,
@@ -59,7 +60,7 @@ async def get_item_detail(item_id: UUID):
                 LEFT JOIN item_tags it ON i.id = it.item_id
                 LEFT JOIN tags t ON it.tag_id = t.id
                 WHERE i.id = $1
-                GROUP BY i.id, cu.slug, cu.category
+                GROUP BY i.id, cu.slug, cu.category, i.transcription, i.platform, i.duration
             """
             
             row = await conn.fetchrow(query, item_id)
@@ -80,6 +81,16 @@ async def get_item_detail(item_id: UUID):
             if thumbnail_url and thumbnail_url.startswith("/app/media/"):
                 thumbnail_url = thumbnail_url.replace("/app/media/", "/media/")
             
+            # Parse metadata for video-specific data
+            metadata = row["metadata"] if isinstance(row.get("metadata"), dict) else (json.loads(row["metadata"]) if row.get("metadata") else {})
+            video_metadata = metadata.get('video_metadata', {})
+            
+            # Extract video-specific fields from metadata
+            learning_objectives = metadata.get('learning_objectives') or video_metadata.get('learning_objectives', [])
+            chapters = metadata.get('chapters') or video_metadata.get('chapters', [])
+            key_moments = metadata.get('key_moments') or video_metadata.get('key_moments', [])
+            key_topics = metadata.get('key_topics') or video_metadata.get('key_topics', [])
+            
             result = {
                 "id": str(row["id"]),
                 "title": row["title"],
@@ -97,7 +108,15 @@ async def get_item_detail(item_id: UUID):
                 "platform": row["platform"],
                 "duration": row["duration"],
                 "file_path": row["file_path"],
-                "metadata": row["metadata"] if isinstance(row.get("metadata"), dict) else (json.loads(row["metadata"]) if row.get("metadata") else {}),
+                "transcription": row["transcription"],
+                "transcript": row["transcription"],  # Alias for frontend compatibility
+                "has_transcript": bool(row["transcription"]),  # Boolean flag for frontend
+                # Video-specific fields from metadata
+                "learning_objectives": learning_objectives,
+                "chapters": chapters,
+                "key_moments": key_moments,
+                "key_topics": key_topics,
+                "metadata": metadata,
                 "permalink": row["permalink"]
             }
             

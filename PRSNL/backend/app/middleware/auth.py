@@ -52,6 +52,9 @@ OPTIONAL_AUTH_ROUTES = [
     "/api/conversations",  # Neural Echo conversations
     "/api/conversation_groups",  # Conversation groups
     "/api/suggest-questions",  # Chat suggested questions
+    "/api/videos",  # Video endpoints (temporary for dev)
+    "/api/video-streaming",  # Video streaming endpoints (temporary for dev)
+    "/api/items",  # Item endpoints (temporary for dev)
 ]
 
 

@@ -22,6 +22,10 @@
         return '.pdf,.doc,.docx,.txt,.rtf,.odt';
       case 'image':
         return '.jpg,.jpeg,.png,.gif,.bmp,.svg,.webp';
+      case 'video':
+        return '.mp4,.avi,.mov,.mkv,.webm,.flv,.wmv,.m4v';
+      case 'audio':
+        return '.mp3,.wav,.flac,.aac,.ogg,.wma,.m4a';
       default:
         return '*/*';
     }
@@ -148,6 +152,10 @@
             Supported: PDF, DOC, DOCX, TXT, RTF, ODT
           {:else if contentType === 'image'}
             Supported: JPG, PNG, GIF, BMP, SVG, WEBP
+          {:else if contentType === 'video'}
+            Supported: MP4, AVI, MOV, MKV, WEBM, FLV, WMV, M4V
+          {:else if contentType === 'audio'}
+            Supported: MP3, WAV, FLAC, AAC, OGG, WMA, M4A
           {:else}
             Any file type supported
           {/if}

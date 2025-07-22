@@ -39,6 +39,8 @@ class DocumentProcessor:
         self.supported_types = {
             'document': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.csv', '.epub', '.zip'],
             'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff'],
+            'video': ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v'],
+            'audio': ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a'],
             'text': ['.txt', '.md', '.rtf', '.xml', '.json'],
             'office': ['.doc', '.docx', '.odt', '.pptx', '.xlsx', '.xls'],
             'pdf': ['.pdf'],
@@ -190,6 +192,8 @@ class DocumentProcessor:
         directories = [
             self.storage_root / "documents",
             self.storage_root / "images", 
+            self.storage_root / "videos",
+            self.storage_root / "audio",
             self.storage_root / "extracted_text",
             self.storage_root / "thumbnails",
             self.storage_root / "temp"
@@ -250,6 +254,10 @@ class DocumentProcessor:
         # Base directory based on category
         if category == 'image':
             base_dir = self.storage_root / "images" / date_dir
+        elif category == 'video':
+            base_dir = self.storage_root / "videos" / date_dir
+        elif category == 'audio':
+            base_dir = self.storage_root / "audio" / date_dir
         else:
             base_dir = self.storage_root / "documents" / date_dir
         
@@ -278,10 +286,12 @@ class DocumentProcessor:
         # Extract content based on file type
         extracted_content = await self._extract_content(file_content, file_info, filename)
         
-        # Generate thumbnail for images
+        # Generate thumbnail for images and videos
         thumbnail_path = None
         if file_info['category'] == 'image':
             thumbnail_path = await self._generate_thumbnail(file_content, item_id, file_hash)
+        elif file_info['category'] == 'video':
+            thumbnail_path = await self._generate_video_thumbnail(file_path, item_id)
         
         # Save extracted text
         text_file_path = None
@@ -693,6 +703,44 @@ class DocumentProcessor:
         
         return text_file_path
     
+    async def _generate_video_thumbnail(self, video_path: Path, item_id: UUID) -> Optional[Path]:
+        """Generate thumbnail from video file using ffmpeg"""
+        try:
+            thumbnail_dir = self.storage_root / "thumbnails" / str(item_id)
+            thumbnail_dir.mkdir(parents=True, exist_ok=True)
+            
+            thumbnail_path = thumbnail_dir / "thumbnail.jpg"
+            
+            # Use ffmpeg to extract frame at 5% of duration
+            ffmpeg_cmd = [
+                "/opt/homebrew/bin/ffmpeg",
+                "-ss", "00:00:05",  # Seek to 5 seconds
+                "-i", str(video_path),
+                "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
+                "-vframes", "1",
+                "-q:v", "2",  # High quality
+                "-y",  # Overwrite existing
+                str(thumbnail_path)
+            ]
+            
+            proc = await asyncio.create_subprocess_exec(
+                *ffmpeg_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await proc.communicate()
+            
+            if proc.returncode == 0:
+                logger.info(f"Generated video thumbnail: {thumbnail_path}")
+                return thumbnail_path
+            else:
+                logger.error(f"ffmpeg failed to generate thumbnail: {stderr.decode()}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to generate video thumbnail: {e}")
+            return None
+
     async def get_file_content(self, file_path: str) -> Optional[bytes]:
         """Retrieve file content from storage"""
         try:
