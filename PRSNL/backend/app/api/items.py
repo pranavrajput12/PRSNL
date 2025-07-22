@@ -13,7 +13,7 @@ from app.services.cache import cache_service, CacheKeys
 
 router = APIRouter()
 
-@router.get("/items/{item_id}", response_model=Item)
+@router.get("/items/{item_id}")
 async def get_item_detail(item_id: UUID):
     """Retrieve details of a specific item by ID."""
     import logging
@@ -82,21 +82,73 @@ async def get_item_detail(item_id: UUID):
                 thumbnail_url = thumbnail_url.replace("/app/media/", "/media/")
             
             # Parse metadata for video-specific data
-            metadata = row["metadata"] if isinstance(row.get("metadata"), dict) else (json.loads(row["metadata"]) if row.get("metadata") else {})
+            metadata = {}
+            if row.get("metadata"):
+                if isinstance(row["metadata"], dict):
+                    metadata = row["metadata"]
+                elif isinstance(row["metadata"], str):
+                    try:
+                        metadata = json.loads(row["metadata"])
+                    except:
+                        logger.warning(f"Failed to parse metadata for item {item_id}")
+                        metadata = {}
+            
             video_metadata = metadata.get('video_metadata', {})
             
-            # Extract video-specific fields from metadata
+            # Extract video-specific fields from metadata and AI analysis
+            ai_analysis = metadata.get('ai_analysis', {})
+            
+            logger.info(f"🔍 Parsed metadata has keys: {list(metadata.keys())}")
+            logger.info(f"🔍 AI analysis has keys: {list(ai_analysis.keys())}")
+            
+            # Get key_moments from metadata (if available from transcript extraction)
+            key_moments = metadata.get('key_moments', [])
+            
+            # Get learning objectives from metadata or generate from AI key points
             learning_objectives = metadata.get('learning_objectives') or video_metadata.get('learning_objectives', [])
+            if not learning_objectives and ai_analysis.get('key_points'):
+                # Convert key points to learning objectives
+                learning_objectives = [f"Understand {point.lower()}" for point in ai_analysis.get('key_points', [])]
+            
             chapters = metadata.get('chapters') or video_metadata.get('chapters', [])
-            key_moments = metadata.get('key_moments') or video_metadata.get('key_moments', [])
-            key_topics = metadata.get('key_topics') or video_metadata.get('key_topics', [])
+            
+            # If no key_moments from transcript, generate from AI key_points
+            if not key_moments and ai_analysis.get('key_points'):
+                # Convert AI key points to key moments format
+                key_moments = [
+                    {
+                        "timestamp": f"{i:02d}:00",  # Placeholder timestamps
+                        "description": point,
+                        "text": point
+                    }
+                    for i, point in enumerate(ai_analysis.get('key_points', []))
+                ]
+            
+            # Get topics from AI analysis tags
+            key_topics = metadata.get('key_topics') or ai_analysis.get('tags', [])
+            
+            # If no chapters but we have key_moments, convert them to chapters
+            if not chapters and key_moments:
+                chapters = [
+                    {
+                        "timestamp": moment.get("timestamp", "00:00"),
+                        "title": f"Chapter {i+1}: Key Insight",
+                        "description": moment.get("description", moment.get("text", ""))
+                    }
+                    for i, moment in enumerate(key_moments)
+                ]
+            
+            # Use AI summary if main summary is empty
+            summary = row["summary"]
+            if not summary and ai_analysis.get('summary'):
+                summary = ai_analysis.get('summary')
             
             result = {
                 "id": str(row["id"]),
                 "title": row["title"],
                 "url": row["url"],
                 "content": row["content"],
-                "summary": row["summary"],
+                "summary": summary,
                 "type": row["type"],
                 "created_at": row["created_at"].isoformat(),
                 "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
@@ -124,6 +176,7 @@ async def get_item_detail(item_id: UUID):
             await cache_service.set(cache_key, result, settings.CACHE_TTL_ITEM)
             
             logger.info(f"🟢 Final result for {item_id}: platform={result.get('platform')}, thumbnail_url={result.get('thumbnail_url')}, duration={result.get('duration')}")
+            logger.info(f"🟢 Result has transcript: {bool(result.get('transcript'))}, has_transcript: {result.get('has_transcript')}, key_moments count: {len(result.get('key_moments', []))}")
             
             return result
     except ItemNotFound:

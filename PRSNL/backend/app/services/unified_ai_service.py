@@ -253,9 +253,19 @@ Provide analysis in this exact JSON format:
             
             logger.debug(f"AI response: {response}")
             
+            # Parse the JSON response
+            try:
+                parsed_response = json.loads(response) if isinstance(response, str) else response
+                logger.debug(f"Parsed AI response: {parsed_response}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse AI response as JSON: {e}")
+                logger.error(f"Raw response: {response}")
+                # Return fallback response
+                return await ai_validation_service.validate_content_analysis(None)
+            
             # Validate the AI output
             try:
-                validated_response = await ai_validation_service.validate_content_analysis(response)
+                validated_response = await ai_validation_service.validate_content_analysis(parsed_response)
                 logger.debug(f"Validated response: {validated_response}")
                 return validated_response
             except Exception as validation_error:

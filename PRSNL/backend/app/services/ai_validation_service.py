@@ -29,13 +29,21 @@ class AIValidationService:
         # Basic validation - can be extended
         if not response:
             return False
-            
-        # Check for content
+        
+        # For content analysis responses, check for title OR summary OR content
+        title = response.get('title', '')
+        summary = response.get('summary', '')
         content = response.get('content', response.get('text', ''))
-        if not content or len(content.strip()) == 0:
-            return False
+        
+        # Valid if we have any meaningful content
+        if title and len(title.strip()) > 0:
+            return True
+        if summary and len(summary.strip()) > 0:
+            return True
+        if content and len(content.strip()) > 0:
+            return True
             
-        return True
+        return False
     
     async def validate_content(self, content: str, content_type: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -107,8 +115,27 @@ class AIValidationService:
                 "error": "Analysis service temporarily unavailable"
             }
         
-        # Validate the response using existing validation
-        if not self.validate_response(response):
+        # Handle string response (convert to dict or return fallback)
+        if isinstance(response, str):
+            logger.warning(f"AI returned string instead of JSON: {response[:100]}...")
+            try:
+                import json
+                response = json.loads(response)
+                logger.info("Successfully parsed string response as JSON")
+            except json.JSONDecodeError:
+                logger.error("Failed to parse string response as JSON, returning fallback")
+                return {
+                    "title": "Content Analysis Error",
+                    "summary": response[:200] if len(response) > 50 else "Unable to process AI response.",
+                    "key_points": [],
+                    "tags": [],
+                    "entities": [],
+                    "insights": [],
+                    "error": "AI returned non-JSON response"
+                }
+        
+        # Validate the response using existing validation (now guaranteed to be dict)
+        if not await self.validate_response(response):
             # Return fallback if validation fails
             return {
                 "title": "Content Analysis Error",
