@@ -268,6 +268,7 @@ async def chat_with_knowledge_base(websocket: WebSocket, client_id: str):
                 logger.debug(f"Original message: {message}")
                 logger.debug(f"Search query: {search_query}")
                 logger.debug(f"Date filter SQL: {date_filter_sql}")
+                logger.debug(f"Using user_id: {user_id} for knowledge base search")
                 
                 # Search for relevant content from the knowledge base
                 pool = await get_db_pool()

@@ -39,6 +39,8 @@ PUBLIC_ROUTES = [
     "/api/voice/health",  # Voice health check
     "/api/voice/test",  # Voice test endpoint
     "/api/voice/ws",  # Voice WebSocket endpoint (temporary for dev)
+    "/ws/chat",  # Chat WebSocket endpoint (temporary for dev)
+    "/ws/floating-chat",  # Floating chat WebSocket endpoint (temporary for dev)
 ]
 
 # Routes that optionally use auth (work with or without)

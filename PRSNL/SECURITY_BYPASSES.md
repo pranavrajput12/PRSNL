@@ -28,6 +28,12 @@
 - **Issue**: Added `/api/voice/ws` to public routes to bypass auth for voice chat
 - **Fix**: Implement proper WebSocket authentication for voice endpoint
 
+### 5. Chat WebSocket Endpoints Bypass (Added 2025-07-22)
+**File**: `backend/app/middleware/auth.py`
+- **Lines**: 42-43 (PUBLIC_ROUTES)
+- **Issue**: Added `/ws/chat` and `/ws/floating-chat` to public routes to bypass auth for chat WebSocket connections
+- **Fix**: Implement proper WebSocket authentication for chat endpoints
+
 ## Summary
 These bypasses were added to allow development to continue while the authentication system is being implemented. They create serious security vulnerabilities and must be removed before any public deployment.
 
