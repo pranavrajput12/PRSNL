@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+from langfuse import observe
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -98,6 +99,7 @@ async def list_models(
     )
 
 @router.post("/chat/completions")
+@observe(name="librechat_chat_completions")
 async def chat_completions(
     request: ChatCompletionRequest,
     x_prsnl_integration: Optional[str] = Header(None, alias="X-PRSNL-Integration"),
@@ -156,6 +158,7 @@ async def chat_completions(
         logger.error(f"Chat completion error: {e}")
         raise HTTPException(status_code=500, detail=f"Chat completion failed: {str(e)}")
 
+@observe(name="enhance_query_with_knowledge_base")
 async def enhance_query_with_knowledge_base(
     query: str, 
     conversation_history: List[Dict[str, str]],
@@ -376,6 +379,7 @@ If you need more specific information, you can suggest targeted searches using t
             model=settings.AZURE_OPENAI_LIBRECHAT_DEPLOYMENT
         )
 
+@observe(name="stream_chat_response")
 async def stream_chat_response(response: str, request: ChatCompletionRequest):
     """
     Stream chat response in OpenAI-compatible format.

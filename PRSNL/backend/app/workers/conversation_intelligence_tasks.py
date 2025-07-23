@@ -12,12 +12,14 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from uuid import UUID
 
+from langfuse import observe
 from celery import group, chord
 from app.workers.celery_app import celery_app
 from app.workers.retry_strategies import IntelligentRetryTask, apply_retry_strategy
 from app.db.database import get_db_connection
 from app.services.unified_ai_service import UnifiedAIService
 from app.services.conversation_intelligence import ConversationIntelligenceAgent
+from app.services.realtime_progress_service import send_task_progress
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ def process_conversation_distributed(self, conversation_id: str, user_id: str, o
         loop.close()
 
 
+@observe(name="worker_process_conversation_distributed")
 async def _process_conversation_distributed_async(task_id: str, conversation_id: str, user_id: str, options: Dict[str, Any]):
     """Async implementation of distributed conversation processing"""
     
@@ -138,6 +141,7 @@ def technical_content_extraction_task(self, conversation_id: str, messages: List
         loop.close()
 
 
+@observe(name="worker_technical_extraction")
 async def _technical_extraction_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Technical content extraction implementation"""
     
@@ -192,6 +196,7 @@ def learning_journey_analysis_task(self, conversation_id: str, messages: List[Di
         loop.close()
 
 
+@observe(name="worker_learning_analysis")
 async def _learning_analysis_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Learning progression analysis implementation"""
     
@@ -244,6 +249,7 @@ def actionable_insights_extraction_task(self, conversation_id: str, messages: Li
         loop.close()
 
 
+@observe(name="worker_insights_extraction")
 async def _insights_extraction_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Actionable insights extraction implementation"""
     
@@ -297,6 +303,7 @@ def knowledge_gap_identification_task(self, conversation_id: str, messages: List
         loop.close()
 
 
+@observe(name="worker_gap_identification")
 async def _gap_identification_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Knowledge gap identification implementation"""
     
@@ -350,6 +357,7 @@ def contextual_analysis_task(self, conversation_id: str, conversation: Dict[str,
         loop.close()
 
 
+@observe(name="worker_contextual_analysis")
 async def _contextual_analysis_async(task_id: str, conversation_id: str, conversation: Dict[str, Any], messages: List[Dict[str, Any]]):
     """Contextual analysis implementation"""
     
@@ -403,6 +411,7 @@ def pattern_recognition_task(self, conversation_id: str, messages: List[Dict[str
         loop.close()
 
 
+@observe(name="worker_pattern_recognition")
 async def _pattern_recognition_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Pattern recognition implementation"""
     
@@ -455,6 +464,7 @@ def sentiment_progression_task(self, conversation_id: str, messages: List[Dict[s
         loop.close()
 
 
+@observe(name="worker_sentiment_progression")
 async def _sentiment_progression_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Sentiment progression analysis implementation"""
     
@@ -507,6 +517,7 @@ def topic_evolution_task(self, conversation_id: str, messages: List[Dict[str, An
         loop.close()
 
 
+@observe(name="worker_topic_evolution")
 async def _topic_evolution_async(task_id: str, conversation_id: str, messages: List[Dict[str, Any]]):
     """Topic evolution analysis implementation"""
     
@@ -565,6 +576,7 @@ def conversation_synthesis_task(self, agent_results: List[Dict[str, Any]], conve
         loop.close()
 
 
+@observe(name="worker_conversation_synthesis")
 async def _conversation_synthesis_async(task_id: str, agent_results: List[Dict[str, Any]], conversation_id: str, user_id: str, options: Dict[str, Any]):
     """Intelligent conversation synthesis implementation"""
     
@@ -668,7 +680,16 @@ async def _send_progress_update(
                 total_value, message
             )
             
-        # TODO: Send WebSocket update for real-time progress
+        # Send WebSocket update for real-time progress
+        await send_task_progress(
+            task_id=task_id,
+            progress_type=progress_type,
+            current_value=current_value,
+            total_value=total_value,
+            message=message,
+            entity_id=entity_id,
+            metadata={"task_type": "conversation_intelligence"}
+        )
         logger.info(f"Progress update: {task_id} - {progress_type} - {current_value}/{total_value} - {message}")
         
     except Exception as e:

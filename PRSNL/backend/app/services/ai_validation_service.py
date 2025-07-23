@@ -160,6 +160,91 @@ class AIValidationService:
         }
         
         return validated_response
+    
+    async def validate_tags(self, response: str) -> list:
+        """
+        Validate and parse tags from AI response
+        
+        Args:
+            response: AI response string (potentially JSON)
+            
+        Returns:
+            List of validated tags
+        """
+        try:
+            import json
+            
+            # Try to parse as JSON
+            if isinstance(response, str):
+                parsed = json.loads(response)
+            else:
+                parsed = response
+            
+            # Extract tags from different possible formats
+            tags = []
+            if isinstance(parsed, dict):
+                tags = parsed.get("tags", [])
+            elif isinstance(parsed, list):
+                tags = parsed
+            
+            # Validate and clean tags
+            validated_tags = []
+            for tag in tags:
+                if isinstance(tag, str) and len(tag.strip()) > 0:
+                    clean_tag = tag.strip().lower()
+                    if len(clean_tag) <= 50 and clean_tag not in validated_tags:
+                        validated_tags.append(clean_tag)
+                elif isinstance(tag, dict) and "name" in tag:
+                    clean_tag = tag["name"].strip().lower()
+                    if len(clean_tag) <= 50 and clean_tag not in validated_tags:
+                        validated_tags.append(clean_tag)
+            
+            return validated_tags[:10]  # Limit to 10 tags
+            
+        except Exception as e:
+            logger.error(f"Tag validation failed: {e}")
+            return ["general", "content"]  # Fallback tags
+    
+    async def validate_summary(self, response: str) -> dict:
+        """
+        Validate and parse summary from AI response
+        
+        Args:
+            response: AI response string (potentially JSON)
+            
+        Returns:
+            Dictionary with validated summary
+        """
+        try:
+            import json
+            
+            # Try to parse as JSON
+            if isinstance(response, str):
+                parsed = json.loads(response)
+            else:
+                parsed = response
+            
+            if isinstance(parsed, dict):
+                return {
+                    "brief": parsed.get("brief", "Summary not available"),
+                    "detailed": parsed.get("detailed", ""),
+                    "key_takeaways": parsed.get("key_takeaways", [])
+                }
+            else:
+                # If not a dict, treat as plain text summary
+                return {
+                    "brief": str(parsed)[:200] if str(parsed) else "Summary not available",
+                    "detailed": "",
+                    "key_takeaways": []
+                }
+                
+        except Exception as e:
+            logger.error(f"Summary validation failed: {e}")
+            return {
+                "brief": "Summary processing failed",
+                "detailed": "",
+                "key_takeaways": []
+            }
 
 
 # Singleton instance

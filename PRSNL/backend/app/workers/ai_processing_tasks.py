@@ -12,11 +12,14 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from uuid import UUID
 
+from langfuse import observe
+
 from app.workers.celery_app import celery_app
 from app.db.database import get_db_connection
 from app.services.unified_ai_service import UnifiedAIService
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_processor import LLMProcessor
+from app.services.realtime_progress_service import send_task_progress
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,7 @@ def analyze_content_task(self, content_id: str, content: str, options: Dict[str,
         loop.close()
 
 
+@observe(name="worker_analyze_content")
 async def _analyze_content_async(task_id: str, content_id: str, content: str, options: Dict[str, Any]):
     """Async implementation of content analysis"""
     
@@ -167,6 +171,7 @@ def generate_embeddings_batch_task(self, items: List[Dict[str, Any]], cache_pref
         loop.close()
 
 
+@observe(name="worker_generate_embeddings_batch")
 async def _generate_embeddings_batch_async(task_id: str, items: List[Dict[str, Any]], cache_prefix: str):
     """Async implementation of batch embedding generation"""
     
@@ -269,6 +274,7 @@ def process_with_llm_task(self, content: str, prompt_type: str, options: Dict[st
         loop.close()
 
 
+@observe(name="worker_process_with_llm")
 async def _process_with_llm_async(task_id: str, content: str, prompt_type: str, options: Dict[str, Any]):
     """Async implementation of LLM processing"""
     
@@ -344,6 +350,7 @@ def smart_categorization_task(self, content_items: List[Dict[str, Any]]):
         loop.close()
 
 
+@observe(name="worker_smart_categorization")
 async def _smart_categorization_async(task_id: str, content_items: List[Dict[str, Any]]):
     """Async implementation of smart categorization"""
     
@@ -424,7 +431,16 @@ async def _send_progress_update(
                 total_value, message
             )
             
-        # TODO: Send WebSocket update for real-time progress
+        # Send WebSocket update for real-time progress
+        await send_task_progress(
+            task_id=task_id,
+            progress_type=progress_type,
+            current_value=current_value,
+            total_value=total_value,
+            message=message,
+            entity_id=entity_id,
+            metadata={"task_type": "ai_processing"}
+        )
         logger.info(f"Progress update: {task_id} - {progress_type} - {current_value}/{total_value} - {message}")
         
     except Exception as e:

@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
 
+from langfuse import observe
 from app.services.ai_service import AIService
 from app.services.embedding_manager import EmbeddingManager
 from app.db.database import get_db_connection
@@ -23,6 +24,7 @@ class ChatService:
         self.embedding_manager = EmbeddingManager()
         self.conversation_cache = {}
         
+    @observe(name="process_chat_message")
     async def process_message(
         self, 
         message: str, 
@@ -94,6 +96,7 @@ class ChatService:
                 "timestamp": datetime.utcnow().isoformat()
             }
     
+    @observe(name="get_relevant_context")
     async def _get_relevant_context(self, message: str, user_id: str) -> Dict[str, Any]:
         """Get relevant context from user's knowledge base"""
         try:

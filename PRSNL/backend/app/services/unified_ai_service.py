@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from openai import AsyncAzureOpenAI
+from langfuse import observe
 
 from app.config import settings
 from app.services.ai_validation_service import ai_validation_service
@@ -64,6 +65,7 @@ class UnifiedAIService:
         self.embedding_deployment = settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT  # text-embedding-ada-002
         self.embedding_available = bool(self.embedding_deployment and settings.AZURE_OPENAI_API_KEY)
         
+    @observe(name="generate_embeddings")
     async def generate_embeddings(self, texts: List[str], cache_key_prefix: str = "emb") -> List[List[float]]:
         """Generate embeddings for multiple texts with caching"""
         if not self.embedding_available:
@@ -116,6 +118,7 @@ class UnifiedAIService:
         
         return embeddings
     
+    @observe(name="ai_complete")
     async def complete(
         self,
         prompt: str,
@@ -150,6 +153,7 @@ class UnifiedAIService:
             logger.error(f"Azure OpenAI completion error: {e}")
             raise
     
+    @observe(name="analyze_content")
     async def analyze_content(
         self,
         content: str,
@@ -304,6 +308,7 @@ Provide analysis in this exact JSON format:
         
         return sorted(duplicates, key=lambda x: x["similarity"], reverse=True)
     
+    @observe(name="generate_tags")
     async def generate_tags(
         self, 
         content: str, 
@@ -367,6 +372,7 @@ Respond in JSON format:
             logger.error(f"Tag generation failed: {e}")
             return ["general", "content"]
     
+    @observe(name="generate_summary")
     async def generate_summary(
         self,
         content: str,
@@ -507,6 +513,7 @@ Provide analysis in JSON format:
         
         return json.loads(response)
     
+    @observe(name="generate_insights")
     async def generate_insights(
         self,
         items_data: List[Dict[str, Any]],
@@ -762,6 +769,7 @@ Create a structured learning path in JSON format:
         }
         return type_mapping.get(content_type.lower()) if content_type else None
     
+    @observe(name="stream_chat_response")
     async def stream_chat_response(
         self,
         system_prompt: str,

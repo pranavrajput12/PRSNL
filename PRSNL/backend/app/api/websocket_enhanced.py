@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from langfuse import observe
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel
 
@@ -181,6 +182,7 @@ async def enhanced_progress_websocket(websocket: WebSocket, task_id: str):
             ws_metrics.track_error()
 
 @router.websocket("/ws/enhanced/chat/{client_id}")
+@observe(name="websocket_enhanced_knowledge_chat")
 async def enhanced_knowledge_chat(websocket: WebSocket, client_id: str):
     """
     Enhanced knowledge base chat with FastAPI 0.116.1 improvements

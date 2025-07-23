@@ -11,6 +11,7 @@ import os
 from typing import Optional
 
 import httpx
+from langfuse import observe
 
 from app.config import settings
 
@@ -27,6 +28,7 @@ class TranscriptionService:
             self.enabled = False
             logger.warning("Azure OpenAI not configured - transcription service will be disabled")
 
+    @observe(name="transcribe_audio_azure")
     async def transcribe_audio(self, audio_file_path: str) -> Optional[str]:
         """Transcribes an audio file using Azure OpenAI Whisper."""
         if not self.enabled:

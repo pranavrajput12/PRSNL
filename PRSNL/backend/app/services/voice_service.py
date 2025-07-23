@@ -16,13 +16,13 @@ FFMPEG_PATH = '/opt/homebrew/bin/ffmpeg'
 if os.path.exists(FFMPEG_PATH):
     os.environ['PATH'] = f"/opt/homebrew/bin:{os.environ.get('PATH', '')}"
     os.environ['FFMPEG_BINARY'] = FFMPEG_PATH
-    print(f"✅ ffmpeg found at: {FFMPEG_PATH}")
+    # Note: ffmpeg found at expected location (logged at debug level only)
 else:
     # Try to find ffmpeg in system PATH
     ffmpeg_in_path = shutil.which('ffmpeg')
     if ffmpeg_in_path:
         os.environ['FFMPEG_BINARY'] = ffmpeg_in_path
-        print(f"✅ ffmpeg found in PATH at: {ffmpeg_in_path}")
+        # Note: ffmpeg found in PATH (logged at debug level only)
     else:
         raise RuntimeError(
             "ffmpeg not found. Please install ffmpeg:\n"
@@ -40,6 +40,7 @@ from typing import Optional, Dict, Any
 import random
 import json
 
+from langfuse import observe
 from app.services.ai_service import AIService
 from app.services.chat_service import ChatService
 from app.services.tts_manager import get_tts_manager
@@ -214,6 +215,7 @@ class VoiceService:
         
         logger.info("Voice service initialized with Cortex personality and CrewAI")
         
+    @observe(name="process_voice_message")
     async def process_voice_message(self, audio_data: bytes, user_id: str) -> Dict[str, Any]:
         """Complete voice chat pipeline"""
         
@@ -302,6 +304,7 @@ class VoiceService:
             if os.path.exists(audio_path):
                 os.unlink(audio_path)
     
+    @observe(name="speech_to_text_whisper")
     async def speech_to_text(self, audio_path: str) -> str:
         """Convert speech to text using Whisper"""
         try:
@@ -337,6 +340,7 @@ class VoiceService:
             logger.error(f"FFMPEG_BINARY: {os.environ.get('FFMPEG_BINARY', 'Not set')}")
             raise
     
+    @observe(name="process_text_message_voice")
     async def process_text_message(self, text: str, user_id: str) -> Dict[str, Any]:
         """Process text message and generate AI response with Cortex personality"""
         try:
@@ -401,6 +405,7 @@ class VoiceService:
             logger.error(f"Error processing text message: {e}")
             raise
     
+    @observe(name="text_to_speech")
     async def text_to_speech(self, text: str, context: Dict[str, Any] = None) -> bytes:
         """Convert text to speech using modern TTS with Cortex personality"""
         try:

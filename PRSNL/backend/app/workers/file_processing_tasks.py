@@ -14,11 +14,14 @@ from typing import Dict, Any, List, Optional
 from uuid import UUID
 from pathlib import Path
 
+from langfuse import observe
+
 from app.workers.celery_app import celery_app
 from app.db.database import get_db_connection
 from app.services.document_processor import DocumentProcessor
 from app.services.file_ai_processor import FileAIProcessor
 from app.services.unified_ai_service import UnifiedAIService
+from app.services.realtime_progress_service import send_task_progress
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +62,7 @@ def process_document_task(self, file_id: str, file_path: str, options: Dict[str,
         loop.close()
 
 
+@observe(name="worker_process_document")
 async def _process_document_async(task_id: str, file_id: str, file_path: str, options: Dict[str, Any]):
     """Async implementation of document processing"""
     
@@ -214,6 +218,7 @@ def extract_text_from_pdf_task(self, file_id: str, file_path: str, options: Dict
         loop.close()
 
 
+@observe(name="worker_extract_text_from_pdf")
 async def _extract_text_from_pdf_async(task_id: str, file_id: str, file_path: str, options: Dict[str, Any]):
     """Async implementation of PDF text extraction"""
     
@@ -290,6 +295,7 @@ def analyze_file_with_ai_task(self, file_id: str, content: str, file_type: str, 
         loop.close()
 
 
+@observe(name="worker_analyze_file_with_ai")
 async def _analyze_file_with_ai_async(task_id: str, file_id: str, content: str, file_type: str, metadata: Dict[str, Any]):
     """Async implementation of file AI analysis"""
     
@@ -402,6 +408,7 @@ def batch_process_files_task(self, file_batch: List[Dict[str, Any]], processing_
         loop.close()
 
 
+@observe(name="worker_batch_process_files")
 async def _batch_process_files_async(task_id: str, file_batch: List[Dict[str, Any]], processing_options: Dict[str, Any]):
     """Async implementation of batch file processing"""
     
@@ -492,7 +499,16 @@ async def _send_progress_update(
                 total_value, message
             )
             
-        # TODO: Send WebSocket update for real-time progress
+        # Send WebSocket update for real-time progress
+        await send_task_progress(
+            task_id=task_id,
+            progress_type=progress_type,
+            current_value=current_value,
+            total_value=total_value,
+            message=message,
+            entity_id=entity_id,
+            metadata={"task_type": "file_processing"}
+        )
         logger.info(f"Progress update: {task_id} - {progress_type} - {current_value}/{total_value} - {message}")
         
     except Exception as e:
