@@ -15,10 +15,11 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api"
     PROJECT_NAME: str = "PRSNL"
     
-    # 🔍 DEBUG LOGGING - DEVELOPMENT MODE
-    LOG_LEVEL: str = "DEBUG"
-    ENABLE_QUERY_LOGGING: bool = True
-    ENABLE_VERBOSE_LOGGING: bool = True
+    # Environment-based debug configuration
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO" if os.getenv("ENVIRONMENT") == "production" else "DEBUG")
+    ENABLE_QUERY_LOGGING: bool = os.getenv("ENABLE_QUERY_LOGGING", "false" if os.getenv("ENVIRONMENT") == "production" else "true").lower() == "true"
+    ENABLE_VERBOSE_LOGGING: bool = os.getenv("ENABLE_VERBOSE_LOGGING", "false" if os.getenv("ENVIRONMENT") == "production" else "true").lower() == "true"
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
@@ -83,11 +84,11 @@ class Settings(BaseSettings):
     CACHE_TTL_ITEM: int = 1800  # 30 minutes for items
     
     # Additional settings from .env
-    ENVIRONMENT: str = "development"
+# Environment setting moved to top of configuration
     PRSNL_API_KEY: Optional[str] = None
     GITHUB_TOKEN: Optional[str] = None
     
-    # Security
+    # Security - CRITICAL: Change default in production!
     ENCRYPTION_KEY: str = os.getenv("ENCRYPTION_KEY", "default-encryption-key-change-in-production")
     
     # GitHub OAuth
@@ -104,7 +105,7 @@ class Settings(BaseSettings):
     OPENCLIP_PRETRAINED: str = "openai"
     
     # Voice Settings
-    VOICE_TTS_ENGINE: str = os.getenv("VOICE_TTS_ENGINE", "chatterbox")  # chatterbox, edge-tts
+    VOICE_TTS_ENGINE: str = os.getenv("VOICE_TTS_ENGINE", "piper")  # piper, chatterbox, edge-tts
     VOICE_STT_MODEL: str = os.getenv("VOICE_STT_MODEL", "small")  # tiny, base, small, medium, large
     VOICE_USE_CREWAI: bool = os.getenv("VOICE_USE_CREWAI", "true").lower() == "true"
     VOICE_ENABLE_STREAMING: bool = os.getenv("VOICE_ENABLE_STREAMING", "false").lower() == "true"
@@ -130,7 +131,7 @@ class Settings(BaseSettings):
     # Version tracking
     VERSION: str = os.getenv("VERSION", "2.3.0")
     
-    # Authentication
+    # Authentication - CRITICAL: Change default in production!
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production-to-a-secure-random-value")
     
     # Email Configuration (Resend)
@@ -144,9 +145,68 @@ class Settings(BaseSettings):
     VOICE_MAX_RECORDING_DURATION: int = int(os.getenv("VOICE_MAX_RECORDING_DURATION", "60"))  # seconds
     VOICE_ENABLE_ANALYTICS: bool = os.getenv("VOICE_ENABLE_ANALYTICS", "true").lower() == "true"
     
+    # Langfuse Configuration
+    LANGFUSE_PUBLIC_KEY: str = os.getenv("LANGFUSE_PUBLIC_KEY", "")
+    LANGFUSE_SECRET_KEY: str = os.getenv("LANGFUSE_SECRET_KEY", "")
+    LANGFUSE_HOST: str = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    LANGFUSE_ENABLED: bool = os.getenv("LANGFUSE_ENABLED", "true").lower() == "true"
+    LANGFUSE_SAMPLE_RATE: float = float(os.getenv("LANGFUSE_SAMPLE_RATE", "1.0"))  # 1.0 = 100% sampling
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+    
+    def __post_init__(self):
+        """Validate security configuration after initialization"""
+        self._validate_security_keys()
+    
+    def _validate_security_keys(self):
+        """Validate that security keys are not using insecure defaults"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Known insecure defaults
+        insecure_defaults = {
+            "SECRET_KEY": "change-me-in-production-to-a-secure-random-value",
+            "ENCRYPTION_KEY": "default-encryption-key-change-in-production"
+        }
+        
+        critical_warnings = []
+        
+        # Check SECRET_KEY
+        if self.SECRET_KEY == insecure_defaults["SECRET_KEY"]:
+            critical_warnings.append("SECRET_KEY is using insecure default value")
+        elif len(self.SECRET_KEY) < 32:
+            critical_warnings.append("SECRET_KEY is too short (minimum 32 characters)")
+        
+        # Check ENCRYPTION_KEY  
+        if self.ENCRYPTION_KEY == insecure_defaults["ENCRYPTION_KEY"]:
+            critical_warnings.append("ENCRYPTION_KEY is using insecure default value")
+        elif len(self.ENCRYPTION_KEY) < 32:
+            critical_warnings.append("ENCRYPTION_KEY is too short (minimum 32 characters)")
+        
+        # Log critical security warnings
+        if critical_warnings:
+            logger.critical("🚨 CRITICAL SECURITY VULNERABILITIES DETECTED!")
+            logger.critical("=" * 70)
+            for warning in critical_warnings:
+                logger.critical(f"❌ {warning}")
+            logger.critical("")
+            logger.critical("🔥 IMMEDIATE ACTION REQUIRED:")
+            logger.critical("1. Generate secure keys:")
+            logger.critical("   python -m app.utils.security_keys --generate-env")
+            logger.critical("2. Update your .env file with generated keys")
+            logger.critical("3. Restart the application")
+            logger.critical("4. NEVER use default keys in production!")
+            logger.critical("=" * 70)
+            
+            # In development, just warn. In production, this should fail fast.
+            if self.ENVIRONMENT == "production":
+                raise ValueError("Production deployment with insecure default keys is prohibited!")
+        else:
+            logger.info("✅ Security key validation passed")
 
 
 settings = Settings()
+# Trigger security validation
+settings.__post_init__()

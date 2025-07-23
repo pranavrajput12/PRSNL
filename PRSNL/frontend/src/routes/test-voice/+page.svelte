@@ -135,8 +135,8 @@
           'Authorization': 'Bearer test-token-for-voice-debug'
         },
         body: JSON.stringify({
-          query: selectedQuery,
-          limit: 3
+          question: selectedQuery,  // Fixed: was "query"
+          top_k: 3                  // Fixed: was "limit"
         })
       });
       
@@ -505,28 +505,53 @@
     </div>
   </div>
 
-  <!-- Transcription Display -->
-  {#if currentTranscription || finalTranscription || lastAiResponse}
-    <div class="transcription-panel">
-      <h3>💬 Conversation</h3>
-      
-      {#if currentTranscription}
-        <div class="current-status">{currentTranscription}</div>
-      {/if}
-      
-      {#if finalTranscription}
-        <div class="conversation-item user">
-          <strong>You:</strong> "{finalTranscription}"
+  <!-- Live Transcription Display -->
+  <div class="transcription-panel">
+    <h3>💬 Live Transcription & Conversation</h3>
+    
+    <!-- Real-time speech indicator -->
+    {#if isRecording}
+      <div class="live-speech-indicator">
+        <div class="speech-waveform">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
         </div>
-      {/if}
-      
-      {#if lastAiResponse}
-        <div class="conversation-item ai">
-          <strong>Cortex:</strong> "{lastAiResponse}"
-        </div>
-      {/if}
-    </div>
-  {/if}
+        <span class="recording-text">🎤 Listening... Speak now!</span>
+      </div>
+    {/if}
+    
+    <!-- Current status (processing, thinking, etc.) -->
+    {#if currentTranscription}
+      <div class="current-status">{currentTranscription}</div>
+    {/if}
+    
+    <!-- Final conversation history -->
+    {#if finalTranscription}
+      <div class="conversation-item user">
+        <div class="speaker-label">👤 You</div>
+        <div class="message-content">"{finalTranscription}"</div>
+        <div class="message-time">{new Date().toLocaleTimeString()}</div>
+      </div>
+    {/if}
+    
+    {#if lastAiResponse}
+      <div class="conversation-item ai">
+        <div class="speaker-label">🧠 Cortex</div>
+        <div class="message-content">"{lastAiResponse}"</div>
+        <div class="message-time">{new Date().toLocaleTimeString()}</div>
+      </div>
+    {/if}
+    
+    {#if !isRecording && !finalTranscription && !lastAiResponse}
+      <div class="empty-state">
+        <p>🎙️ Press and hold "Hold to Record" to start voice conversation</p>
+        <p>💡 Ask questions about PRSNL features and get knowledge-based responses!</p>
+      </div>
+    {/if}
+  </div>
 
   <!-- Instructions -->
   <div class="instructions">
@@ -750,6 +775,7 @@
     padding: 20px;
     margin: 20px 0;
     border: 2px solid #4a9eff;
+    min-height: 200px;
   }
 
   .transcription-panel h3 {
@@ -757,17 +783,63 @@
     color: #4a9eff;
   }
 
+  .live-speech-indicator {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #ff4444;
+    margin-bottom: 15px;
+  }
+
+  .speech-waveform {
+    display: flex;
+    gap: 3px;
+    align-items: end;
+  }
+
+  .wave-bar {
+    width: 4px;
+    background: #ff4444;
+    border-radius: 2px;
+    animation: waveform 1.5s infinite ease-in-out;
+  }
+
+  .wave-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+  .wave-bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { height: 25px; animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { height: 35px; animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { height: 20px; animation-delay: 0.4s; }
+
+  @keyframes waveform {
+    0%, 100% { transform: scaleY(0.5); opacity: 0.7; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+
+  .recording-text {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff6666;
+  }
+
   .current-status {
     font-size: 18px;
     color: #ffaa44;
     margin: 10px 0;
     font-style: italic;
+    text-align: center;
+    padding: 10px;
+    background: rgba(255, 170, 68, 0.1);
+    border-radius: 5px;
   }
 
   .conversation-item {
     margin: 15px 0;
-    padding: 12px;
+    padding: 15px;
     border-radius: 8px;
+    position: relative;
   }
 
   .conversation-item.user {
@@ -778,6 +850,36 @@
   .conversation-item.ai {
     background: rgba(68, 255, 68, 0.1);
     border-left: 4px solid #44ff44;
+  }
+
+  .speaker-label {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .message-content {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .message-time {
+    font-size: 12px;
+    opacity: 0.6;
+    text-align: right;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    opacity: 0.7;
+  }
+
+  .empty-state p {
+    margin: 10px 0;
+    font-size: 16px;
   }
 
   .instructions ol, .instructions ul {

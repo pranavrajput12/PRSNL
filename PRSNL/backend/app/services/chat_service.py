@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
 
-from langfuse import observe
+# from langfuse import observe  # Temporarily disabled due to get_tracer error
 from app.services.ai_service import AIService
 from app.services.embedding_manager import EmbeddingManager
 from app.db.database import get_db_connection
@@ -24,7 +24,7 @@ class ChatService:
         self.embedding_manager = EmbeddingManager()
         self.conversation_cache = {}
         
-    @observe(name="process_chat_message")
+    # @observe(name="process_chat_message")
     async def process_message(
         self, 
         message: str, 
@@ -96,10 +96,12 @@ class ChatService:
                 "timestamp": datetime.utcnow().isoformat()
             }
     
-    @observe(name="get_relevant_context")
+    # @observe(name="get_relevant_context")
     async def _get_relevant_context(self, message: str, user_id: str) -> Dict[str, Any]:
         """Get relevant context from user's knowledge base"""
         try:
+            logger.info(f"Searching for context with query: '{message}' for user: {user_id}")
+            
             # Search for relevant items using embeddings
             search_results = await self.embedding_manager.search_similar_items(
                 query=message,
@@ -107,6 +109,8 @@ class ChatService:
                 limit=5,
                 threshold=0.7
             )
+            
+            logger.info(f"Found {len(search_results) if search_results else 0} search results")
             
             context = {
                 "items": [],

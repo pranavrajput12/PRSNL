@@ -293,7 +293,7 @@ class EdgeTTSBackend(TTSBackend):
 class TTSManager:
     """Manages multiple TTS backends with fallback support"""
     
-    def __init__(self, primary_backend: str = "chatterbox"):
+    def __init__(self, primary_backend: str = "piper"):
         self.backends = {}
         self.primary_backend = primary_backend
         self._initialize_backends()

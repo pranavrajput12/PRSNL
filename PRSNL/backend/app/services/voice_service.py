@@ -41,11 +41,11 @@ from typing import Optional, Dict, Any
 import random
 import json
 
-from langfuse import observe
+# from langfuse import observe  # Temporarily disabled due to get_tracer error
 from app.services.ai_service import AIService
 from app.services.chat_service import ChatService
 from app.services.tts_manager import get_tts_manager
-from app.crews.voice_crew import VoiceCrew, VoiceSimpleCrew
+# from app.crews.voice_crew import VoiceCrew, VoiceSimpleCrew  # Temporarily disabled due to OpenTelemetry conflicts
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -240,10 +240,10 @@ class VoiceService:
         self.tts_manager = TTSManager(primary_backend=settings.VOICE_TTS_ENGINE)
         logger.info(f"TTS Manager initialized with primary backend: {settings.VOICE_TTS_ENGINE}")
         
-        # Initialize voice crew for enhanced responses
-        self.voice_crew = VoiceCrew()
-        self.simple_crew = VoiceSimpleCrew()
-        self.use_crew = settings.VOICE_USE_CREWAI  # Use config setting
+        # Initialize voice crew for enhanced responses - temporarily disabled
+        # self.voice_crew = VoiceCrew()
+        # self.simple_crew = VoiceSimpleCrew()
+        self.use_crew = False  # Disabled due to OpenTelemetry conflicts
         
         # Voice settings
         self.voice_gender = settings.VOICE_DEFAULT_GENDER
@@ -251,7 +251,7 @@ class VoiceService:
         
         logger.info("Voice service initialized with Cortex personality and CrewAI")
         
-    @observe(name="process_voice_message")
+    # @observe(name="process_voice_message")
     async def process_voice_message(self, audio_data: bytes, user_id: str) -> Dict[str, Any]:
         """Complete voice chat pipeline"""
         
@@ -271,42 +271,13 @@ class VoiceService:
             # 3. Get AI response - use CrewAI or chat service
             logger.info("Getting AI response...")
             
-            if self.use_crew and len(user_text) > 10:  # Use crew for non-trivial inputs
-                try:
-                    # Use voice crew for enhanced responses
-                    crew_response = await self.voice_crew.process_voice_input(
-                        user_input=user_text,
-                        user_id=user_id,
-                        conversation_history=self.personality.conversation_history[-5:],
-                        current_mood=self.personality.conversation_history[-1]["mood"] if self.personality.conversation_history else "primary"
-                    )
-                    
-                    chat_response = {
-                        "content": crew_response["response"],
-                        "emotion": crew_response.get("emotion", "neutral")
-                    }
-                    
-                    # Use crew's emotion suggestion
-                    context = self.personality.detect_context(user_text, chat_response["content"])
-                    context["suggested_emotion"] = crew_response.get("emotion", "neutral")
-                    
-                except Exception as e:
-                    logger.warning(f"CrewAI processing failed, falling back: {e}")
-                    # Fallback to regular chat service
-                    chat_response = await self.chat_service.process_message(
-                        message=user_text,
-                        user_id=user_id,
-                        context_type="voice"
-                    )
-                    context = self.personality.detect_context(user_text, chat_response["content"])
-            else:
-                # Use regular chat service for simple queries
-                chat_response = await self.chat_service.process_message(
-                    message=user_text,
-                    user_id=user_id,
-                    context_type="voice"
-                )
-                context = self.personality.detect_context(user_text, chat_response["content"])
+            # Always use regular chat service (CrewAI disabled)
+            chat_response = await self.chat_service.process_message(
+                message=user_text,
+                user_id=user_id,
+                context_type="voice"
+            )
+            context = self.personality.detect_context(user_text, chat_response["content"])
             
             # 4. Add personality
             personalized_response = self.personality.add_personality(
@@ -340,7 +311,7 @@ class VoiceService:
             if os.path.exists(audio_path):
                 os.unlink(audio_path)
     
-    @observe(name="speech_to_text_faster_whisper")
+    # @observe(name="speech_to_text_faster_whisper")
     async def speech_to_text(self, audio_path: str) -> str:
         """Convert speech to text using faster-whisper (memory-optimized)"""
         try:
@@ -409,72 +380,50 @@ class VoiceService:
             logger.error(f"Model type: {type(self.whisper_model)}")
             raise
     
-    @observe(name="process_text_message_voice")
+    # @observe(name="process_text_message_voice")
     async def process_text_message(self, text: str, user_id: str) -> Dict[str, Any]:
         """Process text message and generate AI response with Cortex personality"""
         try:
             # Get AI response - use CrewAI or chat service
             logger.info(f"Processing text message: {text[:50]}...")
             
-            if self.use_crew and len(text) > 10:  # Use crew for non-trivial inputs
-                try:
-                    # Use voice crew for enhanced responses
-                    crew_response = await self.voice_crew.process_voice_input(
-                        user_input=text,
-                        user_id=user_id,
-                        conversation_history=self.personality.conversation_history[-5:],
-                        current_mood=self.personality.conversation_history[-1]["mood"] if self.personality.conversation_history else "primary"
-                    )
-                    
-                    chat_response = {
-                        "content": crew_response["response"],
-                        "emotion": crew_response.get("emotion", "neutral")
-                    }
-                    ai_text = crew_response["response"]
-                    
-                except Exception as e:
-                    logger.warning(f"CrewAI processing failed, falling back to simple response: {e}")
-                    crew_response = await self.simple_crew.process_voice_input(
-                        user_input=text,
-                        user_id=user_id
-                    )
-                    
-                    chat_response = {
-                        "content": crew_response["response"],
-                        "emotion": crew_response.get("emotion", "neutral")
-                    }
-                    ai_text = crew_response["response"]
-            else:
-                # For short inputs, use direct chat service
-                chat_service = ChatService()
-                ai_response = await chat_service.generate_response(text, user_id)
-                chat_response = {"content": ai_response, "emotion": "neutral"}
-                ai_text = ai_response
+            # Always use direct chat service (CrewAI disabled)
+            from app.services.chat_service import ChatService
+            chat_service = ChatService(self.ai_service)
             
-            # Apply Cortex personality
-            mood = self.personality.analyze_mood(text)
-            personalized_response = self.personality.personalize_response(
-                ai_text, 
-                mood=mood,
-                emotion=chat_response.get("emotion", "neutral")
+            # Process message with voice context
+            chat_response = await chat_service.process_message(
+                message=text,
+                user_id=user_id,
+                context_type="voice"
             )
             
+            ai_text = chat_response["content"]
+            
+            # Apply Cortex personality using detect_context
+            context = self.personality.detect_context(text, ai_text)
+            personalized_text = self.personality.add_personality(ai_text, context)
+            
             # Update conversation history
-            self.personality.update_conversation(text, personalized_response["text"], mood)
+            self.personality.conversation_history.append({
+                "user": text,
+                "cortex": ai_text,
+                "mood": context["mood"]
+            })
             
             return {
                 "user_text": text,
                 "ai_text": ai_text,
-                "personalized_text": personalized_response["text"],
-                "mood": mood,
-                "emotion": chat_response.get("emotion", "neutral")
+                "personalized_text": personalized_text,
+                "mood": context["mood"],
+                "emotion": "neutral"
             }
             
         except Exception as e:
             logger.error(f"Error processing text message: {e}")
             raise
     
-    @observe(name="text_to_speech")
+    # @observe(name="text_to_speech")
     async def text_to_speech(self, text: str, context: Dict[str, Any] = None) -> bytes:
         """Convert text to speech using modern TTS with Cortex personality"""
         try:
@@ -519,17 +468,25 @@ class VoiceService:
                     emotion_strength=emotion_strength
                 )
             else:
-                # Fallback to Edge-TTS with voice selection
-                logger.info("Using Edge-TTS fallback")
+                # Use non-emotion TTS with enhanced voice selection and rate control
+                backend = self.tts_manager.primary_backend
+                logger.info(f"Using {backend} TTS with natural voice settings")
+                
                 voice = self._select_voice(mood)
                 voice_settings = self.personality.get_voice_settings(mood)
                 
+                # Add speaking rate for more natural speech (slower = more natural)
+                speech_rate = 0.85  # Slightly slower than default for better clarity
+                if mood == "explaining":
+                    speech_rate = 0.75  # Even slower for explanations
+                elif mood == "exciting" or mood == "discovering":
+                    speech_rate = 0.95  # Slightly faster for excitement
+                
                 audio_data = await self.tts_manager.synthesize(
                     text=clean_text,
-                    backend="edge-tts",
+                    backend=backend,
                     voice=voice,
-                    rate=voice_settings.get("rate", "-5%"),
-                    pitch=voice_settings.get("pitch", "+2Hz")
+                    rate=speech_rate
                 )
             
             return audio_data

@@ -105,40 +105,48 @@
   }
   
   async function handleWebSocketMessage(data: any) {
+    console.log('[VoiceChat] Received message:', data.type, data);
+    
     switch (data.type) {
       case 'chunk_received':
         // Audio chunk acknowledgment
+        console.log('[VoiceChat] Audio chunk received:', data.size, 'bytes');
         break;
         
       case 'processing':
         cortexMood = 'thinking';
+        isProcessing = true;
         break;
         
       case 'transcription':
         // Add user message to transcript
         transcriptHistory = [...transcriptHistory, {
           type: 'user',
-          text: data.text,
+          text: data.data.user_text,
           timestamp: new Date()
         }];
-        showTranscript = true;
-        break;
         
-      case 'ai_response':
-        // Add Cortex response to transcript
+        // Add Cortex response to transcript with knowledge context indicator
+        const aiText = data.data.personalized_text;
+        const hasKnowledge = data.data.ai_text !== data.data.user_text;
+        const contextIndicator = hasKnowledge ? '🧠 ' : '';
+        
         transcriptHistory = [...transcriptHistory, {
           type: 'cortex',
-          text: data.personalized_text || data.text,
-          mood: data.mood,
+          text: contextIndicator + aiText,
+          mood: data.data.mood,
           timestamp: new Date()
         }];
         
-        // Update mood
-        if (data.mood === 'discovering' || data.mood === 'encouraging') {
+        // Update mood based on response
+        if (data.data.mood === 'discovering' || data.data.mood === 'encouraging') {
           cortexMood = 'excited';
         } else {
           cortexMood = 'speaking';
         }
+        
+        showTranscript = true;
+        isProcessing = false;
         break;
         
       case 'audio_response':
@@ -147,6 +155,7 @@
           const audioData = base64ToArrayBuffer(data.data);
           await playAudioResponse(audioData);
         }
+        cortexMood = 'idle'; // Reset mood after audio plays
         break;
         
       case 'error':
@@ -154,6 +163,13 @@
         addNotification({ type: 'error', message: data.message || 'Voice processing error' });
         isProcessing = false;
         break;
+        
+      case 'pong':
+        // WebSocket keepalive response
+        break;
+        
+      default:
+        console.log('[VoiceChat] Unknown message type:', data.type);
     }
   }
   

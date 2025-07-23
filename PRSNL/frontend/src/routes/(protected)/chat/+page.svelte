@@ -317,28 +317,75 @@
       voiceWs.onmessage = async (event) => {
         if (typeof event.data === 'string') {
           const data = JSON.parse(event.data);
+          console.log('[Voice] Received message:', data.type, data);
           
-          if (data.type === 'transcription') {
-            // Add user message with transcription
-            messages = [...messages, {
-              type: 'user',
-              content: data.data.user_text,
-              timestamp: new Date()
-            }];
-            
-            // Add AI response
-            messages = [...messages, {
-              type: 'assistant',
-              content: data.data.personalized_text,
-              timestamp: new Date()
-            }];
-            
-            scrollToBottom();
-          }
-          
-          if (data.type === 'audio_response' && data.data) {
-            // Play audio response
-            await playAudioResponse(data.data);
+          switch (data.type) {
+            case 'chunk_received':
+              // Audio chunk acknowledgment - could add visual feedback here
+              console.log('[Voice] Audio chunk received:', data.size, 'bytes');
+              break;
+              
+            case 'processing':
+              // Show processing indicator
+              console.log('[Voice] Processing audio:', data.status);
+              // Add a temporary processing message
+              messages = [...messages, {
+                id: `processing-${Date.now()}`,
+                type: 'assistant',
+                content: '🤔 Cortex is thinking...',
+                timestamp: new Date(),
+                isStreaming: true
+              }];
+              scrollToBottom();
+              break;
+              
+            case 'transcription':
+              // Remove any processing messages
+              messages = messages.filter(m => !m.isStreaming);
+              
+              // Add user message with transcription
+              messages = [...messages, {
+                id: `user-${Date.now()}`,
+                type: 'user',
+                content: data.data.user_text,
+                timestamp: new Date()
+              }];
+              
+              // Add AI response with knowledge context indicator
+              const aiContent = data.data.personalized_text;
+              const hasKnowledge = data.data.ai_text !== data.data.user_text; // Simple check for knowledge usage
+              const contextIndicator = hasKnowledge ? '🧠 ' : '';
+              
+              messages = [...messages, {
+                id: `assistant-${Date.now()}`,
+                type: 'assistant',
+                content: contextIndicator + aiContent,
+                timestamp: new Date()
+              }];
+              
+              scrollToBottom();
+              break;
+              
+            case 'audio_response':
+              if (data.data) {
+                console.log('[Voice] Playing audio response');
+                await playAudioResponse(data.data);
+              }
+              break;
+              
+            case 'error':
+              console.error('[Voice] Error:', data.message);
+              // Remove any processing messages
+              messages = messages.filter(m => !m.isStreaming);
+              // Could add error message to chat
+              break;
+              
+            case 'pong':
+              console.log('[Voice] WebSocket keepalive');
+              break;
+              
+            default:
+              console.log('[Voice] Unknown message type:', data.type);
           }
         }
       };
