@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from langfuse import observe
+from app.core.langfuse_client import langfuse_client
+
 logger = logging.getLogger(__name__)
 
 class AIProvider(Enum):
@@ -43,10 +46,9 @@ class AIRouter:
     
     def __init__(self):
         self.provider = AIProvider.AZURE_OPENAI
-        self.usage_stats = {"requests": 0, "tokens": 0, "errors": 0, "total_cost": 0.0}
+        # Usage tracking now handled by Langfuse
         self.provider_config = ProviderConfig(
             name=AIProvider.AZURE_OPENAI,
-            cost_per_1k_tokens=0.03,  # GPT-4 pricing
             max_tokens_per_request=8192,
             supports_streaming=True,
             supports_vision=True,
@@ -54,13 +56,16 @@ class AIRouter:
             avg_response_time_ms=500
         )
     
+    @observe(name="route_task_production")
     def route_task(self, task: AITask) -> AIProvider:
         """
         Route task - always returns Azure OpenAI in production
         """
         logger.info(f"Routing {task.type.value} task to {self.provider.value}")
+        # Task metadata will be tracked automatically by Langfuse
         return self.provider
     
+    @observe(name="execute_with_fallback")
     async def execute_with_fallback(self, task: AITask, execute_fn) -> Any:
         """
         Execute task with Azure OpenAI - no fallback for consistency

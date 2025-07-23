@@ -11,14 +11,16 @@ from datetime import datetime
 from uuid import uuid4
 
 from crewai import Agent, Crew, Task, Process
+from langfuse import observe
 
 from app.config import settings
 from app.db.database import get_db_pool
 from app.services.job_persistence_service import JobPersistenceService
-from app.services.agent_monitoring_service import AgentMonitoringService
 from app.crews.base_crew import CrewFactory
 from app.agents.base_agent import AgentFactory
 from app.crews.autonomous_crew import autonomous_manager, WorkflowPriority
+from app.core.langfuse_client import langfuse_client
+from app.core.langfuse_crewai import create_langfuse_callbacks
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +29,9 @@ class CrewService:
     """Main service for managing Crew.ai operations"""
     
     def __init__(self):
-        self.monitoring_service = AgentMonitoringService()
         self.active_crews: Dict[str, Crew] = {}
         
+    @observe(name="execute_crew")
     async def execute_crew(
         self,
         crew_type: str,
@@ -41,6 +43,16 @@ class CrewService:
         try:
             # Create crew
             crew_instance = CrewFactory.create_crew(crew_type)
+            
+            # Add Langfuse callbacks if enabled
+            if settings.LANGFUSE_ENABLED:
+                session_id = f"crew_{crew_type}_{uuid4()}"
+                langfuse_callbacks = create_langfuse_callbacks(
+                    session_id=session_id,
+                    user_id=user_id
+                )
+                # Note: CrewAI callback integration would need to be added to crew_instance
+                # This is a placeholder for the actual integration
             
             # Create job
             job_id = await crew_instance.create_job(
@@ -91,13 +103,7 @@ class CrewService:
             # Get the actual crew
             crew = crew_instance.crew()
             
-            # Monitor execution start
-            await self.monitoring_service.record_agent_execution(
-                agent_id=f"crew_{crew_instance.__class__.__name__}",
-                execution_id=job_id,
-                input_data=inputs,
-                status="started"
-            )
+            # Langfuse tracking happens via decorators and callbacks
             
             # Execute crew with inputs
             # Crew.ai expects inputs to match task placeholders
@@ -109,12 +115,7 @@ class CrewService:
             # Complete job
             await crew_instance.complete_job(processed_result)
             
-            # Monitor execution completion
-            await self.monitoring_service.update_execution_status(
-                execution_id=job_id,
-                status="completed",
-                output_data=processed_result
-            )
+            # Execution completion tracked by Langfuse
             
             # Clean up
             self.active_crews.pop(job_id, None)
@@ -130,12 +131,7 @@ class CrewService:
                 error_details={"type": type(e).__name__}
             )
             
-            # Monitor failure
-            await self.monitoring_service.update_execution_status(
-                execution_id=job_id,
-                status="failed",
-                error_message=str(e)
-            )
+            # Failure tracked by Langfuse
             
             # Clean up
             self.active_crews.pop(job_id, None)

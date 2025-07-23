@@ -9,10 +9,13 @@ import logging
 import time
 from typing import Any, Dict, List, Literal, Optional
 
+from langfuse import observe
+
 from app.config import settings
 from app.services.ai_router_types import (
     AIProvider, TaskType, AITask, ProviderConfig, RoutingDecision
 )
+from app.core.langfuse_client import langfuse_client
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +24,7 @@ class AIRouter:
     
     def __init__(self):
         self.providers = self._initialize_providers()
-        self.usage_stats = {provider: {"requests": 0, "tokens": 0, "errors": 0} 
-                           for provider in AIProvider}
+        # Usage tracking now handled by Langfuse
         self.provider_health = {provider: True for provider in AIProvider}
         self.enhanced_ai_router = None
         self._init_enhanced_router()
@@ -44,7 +46,6 @@ class AIRouter:
         return {
             AIProvider.AZURE_OPENAI: ProviderConfig(
                 name=AIProvider.AZURE_OPENAI,
-                cost_per_1k_tokens=0.03,  # GPT-4.1 pricing
                 max_tokens_per_request=8192,
                 supports_streaming=True,
                 supports_vision=True,  # Confirmed: GPT-4.1 supports vision
@@ -53,7 +54,6 @@ class AIRouter:
             ),
             AIProvider.FALLBACK: ProviderConfig(
                 name=AIProvider.FALLBACK,
-                cost_per_1k_tokens=0.0,
                 max_tokens_per_request=1000,
                 supports_streaming=False,
                 supports_vision=False,
@@ -62,6 +62,7 @@ class AIRouter:
             )
         }
     
+    @observe(name="route_task")
     async def route_task(self, task: AITask) -> AIProvider:
         """
         Route task to the best provider based on:
@@ -113,11 +114,11 @@ class AIRouter:
         config = self.providers[provider]
         score = 0.0
         
-        # Cost factor (lower cost = higher score)
-        if config.cost_per_1k_tokens == 0:
-            score += 30  # Prefer free providers
+        # Provider preference scoring (Langfuse tracks actual costs)
+        if provider == AIProvider.FALLBACK:
+            score += 5  # Lower score for fallback
         else:
-            score += 10 / config.cost_per_1k_tokens
+            score += 30  # Prefer primary providers
             
         # Performance factor (faster = higher score)
         score += 1000 / config.avg_response_time_ms * 10
@@ -129,10 +130,7 @@ class AIRouter:
         if task.priority >= 8 and provider == AIProvider.AZURE_OPENAI:
             score += 20  # Use premium provider for high priority
             
-        # Load balancing factor
-        usage = self.usage_stats[provider]["requests"]
-        if usage > 0:
-            score -= min(usage / 100, 10)  # Penalize overused providers
+        # Langfuse tracks usage patterns for load balancing insights
             
         return score
     
@@ -172,10 +170,10 @@ class AIRouter:
                 last_error = e
                 self._update_stats(provider, success=False)
                 
-                # Mark provider as unhealthy if too many failures
-                if self.usage_stats[provider]["errors"] > 5:
-                    self.provider_health[provider] = False
-                    asyncio.create_task(self._health_check(provider))
+                # Mark provider as unhealthy if failed
+                # Langfuse tracks error patterns
+                self.provider_health[provider] = False
+                asyncio.create_task(self._health_check(provider))
                     
         # All providers failed
         raise last_error or Exception("All AI providers failed")
@@ -202,15 +200,9 @@ class AIRouter:
     
     def _update_stats(self, provider: AIProvider, success: bool, 
                      response_time: float = 0, tokens: int = 0):
-        """Update provider usage statistics"""
-        stats = self.usage_stats[provider]
-        stats["requests"] += 1
-        stats["tokens"] += tokens
-        
-        if not success:
-            stats["errors"] += 1
-        else:
-            # Update average response time
+        """Update provider statistics - usage tracking handled by Langfuse"""
+        if success and response_time > 0:
+            # Update average response time for routing decisions
             config = self.providers[provider]
             current_avg = config.avg_response_time_ms
             new_avg = (current_avg * 0.9 + response_time * 1000 * 0.1)
@@ -226,29 +218,16 @@ class AIRouter:
         logger.info(f"Provider {provider.value} marked as healthy again")
     
     def get_usage_report(self) -> Dict[str, Any]:
-        """Get detailed usage report for cost tracking"""
-        report = {
-            "total_requests": sum(stats["requests"] for stats in self.usage_stats.values()),
-            "total_tokens": sum(stats["tokens"] for stats in self.usage_stats.values()),
-            "estimated_cost": 0.0,
-            "provider_breakdown": {}
-        }
-        
-        for provider, stats in self.usage_stats.items():
-            config = self.providers[provider]
-            cost = (stats["tokens"] / 1000) * config.cost_per_1k_tokens
-            report["estimated_cost"] += cost
-            
-            report["provider_breakdown"][provider.value] = {
-                "requests": stats["requests"],
-                "tokens": stats["tokens"],
-                "errors": stats["errors"],
-                "cost": cost,
-                "avg_response_time_ms": config.avg_response_time_ms,
-                "health": self.provider_health[provider]
+        """Get usage report - now handled by Langfuse"""
+        # Langfuse provides comprehensive usage tracking and cost analysis
+        return {
+            "message": "Usage tracking is now handled by Langfuse",
+            "langfuse_url": settings.LANGFUSE_HOST,
+            "provider_health": {
+                provider.value: health 
+                for provider, health in self.provider_health.items()
             }
-            
-        return report
+        }
     
     async def stream_task(self, task: AITask):
         """Stream AI response in chunks for real-time display"""
@@ -280,23 +259,17 @@ class AIRouter:
             yield f"Error: {str(e)}"
     
     def recommend_optimization(self) -> List[str]:
-        """Provide optimization recommendations based on usage"""
-        recommendations = []
+        """Provide optimization recommendations - enhanced by Langfuse insights"""
+        recommendations = [
+            "Visit Langfuse dashboard for detailed usage analytics and cost optimization insights",
+            f"Dashboard URL: {settings.LANGFUSE_HOST}"
+        ]
         
-        # Check if we're over-relying on expensive providers
-        azure_usage = self.usage_stats[AIProvider.AZURE_OPENAI]["requests"]
-        total_usage = sum(stats["requests"] for stats in self.usage_stats.values())
-        
-        if total_usage > 0 and azure_usage / total_usage > 0.8:
-            recommendations.append(
-                "High Azure OpenAI usage detected. Consider implementing caching to reduce costs"
-            )
-            
-        # Check error rates
-        for provider, stats in self.usage_stats.items():
-            if stats["requests"] > 10 and stats["errors"] / stats["requests"] > 0.1:
+        # Check provider health
+        for provider, is_healthy in self.provider_health.items():
+            if not is_healthy:
                 recommendations.append(
-                    f"{provider.value} has high error rate. Check configuration."
+                    f"{provider.value} is currently unhealthy. Check configuration."
                 )
         
         # Add enhanced routing recommendations if available

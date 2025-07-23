@@ -220,26 +220,21 @@ class ObservabilityManager:
         return instrumentation
     
     def _track_ai_processing_time(self):
-        """Custom metric: Track AI processing performance."""
-        from prometheus_client import Counter, Histogram
+        """Custom metric: Basic AI endpoint tracking - detailed metrics handled by Langfuse."""
+        from prometheus_client import Counter
         
-        ai_duration = Histogram(
-            "prsnl_ai_processing_duration_seconds",
-            "AI processing duration",
-            ["ai_service", "operation"]
-        )
-        
+        # Simplified AI tracking - Langfuse handles detailed metrics
         ai_counter = Counter(
             "prsnl_ai_requests_total",
-            "Total AI requests",
-            ["ai_service", "status"]
+            "Total AI requests (detailed metrics in Langfuse)",
+            ["endpoint", "status"]
         )
         
         def instrumentation(info):
-            # Track AI-related endpoints
+            # Basic endpoint tracking only
             if any(path in info.modified_handler for path in ["/ai", "/transcribe", "/summarize"]):
                 ai_counter.labels(
-                    ai_service="openai",
+                    endpoint=info.modified_handler,
                     status="success" if info.modified_status < 400 else "error"
                 ).inc()
         

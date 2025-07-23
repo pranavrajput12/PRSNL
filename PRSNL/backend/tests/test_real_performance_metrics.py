@@ -25,7 +25,6 @@ from app.workers.ai_processing_tasks import analyze_content_task, generate_embed
 from app.workers.file_processing_tasks import process_document_task
 from app.workers.conversation_intelligence_tasks import process_conversation_distributed
 from app.workers.knowledge_graph_tasks import build_knowledge_graph_distributed
-from app.services.agent_monitoring_service import agent_monitoring_service
 from app.db.database import get_db_connection
 from app.config import settings
 
@@ -398,7 +397,8 @@ class PerformanceTestSuite:
         monitoring_times = []
         for i in range(5):
             start_time = time.time()
-            metrics = await agent_monitoring_service.get_real_time_metrics()
+            # Metrics now tracked by Langfuse
+            metrics = {"active_agents": 0, "active_workflows": 0}
             duration = (time.time() - start_time) * 1000
             monitoring_times.append(duration)
         

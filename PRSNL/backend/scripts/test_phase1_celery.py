@@ -229,7 +229,9 @@ class Phase1CeleryTester:
         
         try:
             # Create a test audio file path (simulated)
-            test_audio_path = "/tmp/test_audio.wav"  # Would be actual file in real scenario
+            import tempfile
+            import os
+            test_audio_path = os.path.join(tempfile.gettempdir(), "test_audio.wav")  # Secure temp directory
             
             # Test audio transcription
             audio_transcription_data = {

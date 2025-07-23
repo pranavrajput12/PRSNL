@@ -353,14 +353,14 @@ class AuthService:
             return True
     
     @classmethod
-    async def create_password_reset_token(cls, reset_data: PasswordResetRequest) -> str:
+    async def create_password_reset_token(cls, email: str) -> str:
         """Create a password reset token"""
         pool = await get_db_pool()
         async with pool.acquire() as db:
             # Check if user exists
             user = await db.fetchrow(
                 "SELECT * FROM users WHERE email = $1",
-                reset_data.email
+                email
             )
             
             if not user:

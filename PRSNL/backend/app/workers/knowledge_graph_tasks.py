@@ -18,6 +18,7 @@ from app.workers.retry_strategies import IntelligentRetryTask
 from app.db.database import get_db_connection
 from app.services.unified_ai_service import UnifiedAIService
 from app.services.embedding_manager import embedding_manager
+from app.services.realtime_progress_service import send_task_progress
 
 logger = logging.getLogger(__name__)
 
@@ -537,7 +538,16 @@ async def _send_progress_update(
                 total_value, message
             )
             
-        # TODO: Send WebSocket update for real-time progress
+        # Send WebSocket update for real-time progress
+        await send_task_progress(
+            task_id=task_id,
+            progress_type=progress_type,
+            current_value=current_value,
+            total_value=total_value,
+            message=message,
+            entity_id=entity_id,
+            metadata={"task_type": "knowledge_graph"}
+        )
         logger.info(f"Progress update: {task_id} - {progress_type} - {current_value}/{total_value} - {message}")
         
     except Exception as e:

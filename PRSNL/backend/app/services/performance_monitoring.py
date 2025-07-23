@@ -122,7 +122,10 @@ class PerformanceMonitor:
     @staticmethod
     def profile_ai_operation(model: str, operation: str = "inference"):
         """
-        Decorator for profiling AI/ML operations with model-specific metrics
+        Decorator for profiling AI/ML operations - detailed AI metrics now handled by Langfuse
+        
+        This decorator now focuses on general performance monitoring while Langfuse
+        handles AI-specific metrics like token usage, cost tracking, and model performance.
         """
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
@@ -136,15 +139,8 @@ class PerformanceMonitor:
                         "ai.provider": "azure_openai"
                     }
                 ) as transaction:
-                    # Track token usage if available
+                    # AI-specific metrics (tokens, costs, etc.) are tracked by Langfuse
                     result = await func(*args, **kwargs)
-                    
-                    # Extract token metrics if present
-                    if hasattr(result, "usage"):
-                        set_measurement("ai.tokens.prompt", result.usage.prompt_tokens, "token")
-                        set_measurement("ai.tokens.completion", result.usage.completion_tokens, "token")
-                        set_measurement("ai.tokens.total", result.usage.total_tokens, "token")
-                    
                     return result
             
             return async_wrapper

@@ -290,10 +290,18 @@ def optimize_database():
         optimization_results = []
         
         # Vacuum and analyze main tables
+        # Use a whitelist of valid table names to prevent SQL injection
+        valid_tables = {'items', 'conversations', 'bookmarks', 'embeddings', 'tags', 'item_tags'}
         tables_to_optimize = ['items', 'conversations', 'bookmarks']
         
         for table in tables_to_optimize:
+            if table not in valid_tables:
+                logger.error(f"Invalid table name for optimization: {table}")
+                optimization_results.append(f"Skipped invalid table: {table}")
+                continue
+                
             try:
+                # Table name is validated against whitelist, safe to use in query
                 cursor.execute(f"VACUUM ANALYZE {table}")
                 optimization_results.append(f"Optimized table: {table}")
             except Exception as e:

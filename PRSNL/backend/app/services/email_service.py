@@ -252,6 +252,103 @@ class EmailService:
             return {"success": False, "message": "An error occurred"}
     
     @classmethod
+    async def send_password_reset_email(cls, user_id: UUID, email: str, name: str) -> bool:
+        """Send password reset email with secure reset link"""
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Get the password reset token (should be created before calling this method)
+                token_info = await db.fetchrow("""
+                    SELECT token, expires_at 
+                    FROM password_resets 
+                    WHERE user_id = $1 AND used_at IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """, user_id)
+                
+                if not token_info:
+                    logger.error(f"No password reset token found for user {user_id}")
+                    return False
+                
+                # Get email template
+                template = await db.fetchrow("""
+                    SELECT subject, html_template, text_template 
+                    FROM email_templates 
+                    WHERE name = 'password_reset' AND is_active = true
+                """)
+                
+                if not template:
+                    logger.error("Password reset template not found")
+                    return False
+                
+                # Build reset link
+                reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?token={token_info['token']}"
+                
+                # Render templates
+                html_template = Template(template["html_template"])
+                text_template = Template(template["text_template"])
+                
+                html = html_template.render(
+                    user_name=name,
+                    reset_link=reset_link
+                )
+                text = text_template.render(
+                    user_name=name,
+                    reset_link=reset_link
+                )
+                
+                # Get email config
+                config = EMAIL_CONFIG[EmailType.PASSWORD_RESET]
+                
+                # Send email
+                message_id = await cls.send_email(
+                    to=email,
+                    subject=template["subject"],
+                    html=html,
+                    text=text,
+                    from_email=config["from"],
+                    from_name=config["from_name"]
+                )
+                
+                if message_id:
+                    # Log successful email
+                    await cls._log_email(
+                        db=db,
+                        user_id=user_id,
+                        email_to=email,
+                        email_type="password_reset",
+                        template_name="password_reset",
+                        subject=template["subject"],
+                        status="sent",
+                        provider_message_id=message_id,
+                        metadata={
+                            "token": token_info["token"][:8] + "...", 
+                            "expires_at": token_info["expires_at"].isoformat()
+                        }
+                    )
+                    
+                    logger.info(f"Password reset email sent successfully to {email}")
+                    return True
+                
+                # Log failed email
+                await cls._log_email(
+                    db=db,
+                    user_id=user_id,
+                    email_to=email,
+                    email_type="password_reset",
+                    template_name="password_reset",
+                    subject=template["subject"],
+                    status="failed",
+                    metadata={"token": token_info["token"][:8] + "..."}
+                )
+                
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {e}")
+            return False
+    
+    @classmethod
     async def send_welcome_email(cls, user_id: UUID, email: str, name: str) -> bool:
         """Send welcome email after successful verification"""
         try:

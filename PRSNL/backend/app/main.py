@@ -6,18 +6,31 @@ import socket
 import sys
 import tempfile
 
-# 🔍 ENABLE COMPREHENSIVE DEBUG LOGGING
+# Environment-aware logging configuration
+from app.config import settings
+
+# Configure logging based on environment
+log_level = getattr(logging, settings.LOG_LEVEL.upper())
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s" if settings.ENVIRONMENT == "production" else "🔍 %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="🔍 %(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=log_level,
+    format=log_format,
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-# Set specific loggers to DEBUG
-logging.getLogger("app.api.ws").setLevel(logging.DEBUG)
-logging.getLogger("app.middleware.auth").setLevel(logging.DEBUG)
-logging.getLogger("app.services").setLevel(logging.DEBUG)
-logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+# Set specific loggers based on environment
+if settings.ENABLE_VERBOSE_LOGGING:
+    logging.getLogger("app.api.ws").setLevel(logging.DEBUG)
+    logging.getLogger("app.middleware.auth").setLevel(logging.DEBUG)
+    logging.getLogger("app.services").setLevel(logging.DEBUG)
+    logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+else:
+    # Production logging levels
+    logging.getLogger("app.api.ws").setLevel(logging.WARNING)
+    logging.getLogger("app.middleware.auth").setLevel(logging.INFO)
+    logging.getLogger("app.services").setLevel(logging.INFO)
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 import asyncpg
 import httpx
@@ -49,24 +62,20 @@ from app.core.sentry import init_sentry
 from app.services.performance_monitoring import PerformanceMonitor
 
 # Configure comprehensive logging with secure temp file
-# Create secure temporary directory for logs
-temp_dir = tempfile.mkdtemp(prefix='prsnl_logs_')
-log_file = os.path.join(temp_dir, 'prsnl_debug.log')
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(log_file)
-    ]
-)
-
-# Set specific loggers to DEBUG
-logging.getLogger("app.api.ws").setLevel(logging.DEBUG)
-logging.getLogger("app.services.unified_ai_service").setLevel(logging.DEBUG)
-logging.getLogger("app.db.database").setLevel(logging.DEBUG)
-logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+# Environment-aware file logging (only in development)
+if settings.ENABLE_VERBOSE_LOGGING and settings.ENVIRONMENT != "production":
+    temp_dir = tempfile.mkdtemp(prefix='prsnl_logs_')
+    log_file = os.path.join(temp_dir, 'prsnl_debug.log')
+    
+    # Add file handler for development debugging
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logging.getLogger().addHandler(file_handler)
+    
+    # Additional debug loggers for development
+    logging.getLogger("app.services.unified_ai_service").setLevel(logging.DEBUG)
+    logging.getLogger("app.db.database").setLevel(logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -182,17 +191,18 @@ async def startup_event():
     worker_task = asyncio.create_task(listen_for_notifications(settings.DATABASE_URL))
     logger.info("Worker started in background.")
 
-    # STEP 2: Dump all registered routes to debug routing issue (controlled by env var)
-    if os.getenv("DEBUG_ROUTES", "false").lower() == "true":
-        logger.warning("🚀 === ALL REGISTERED ROUTES ===")
-        for route in app.routes:
-            if hasattr(route, 'path') and hasattr(route, 'methods'):
-                logger.warning(f"🚀 ROUTE: {route.path} METHODS: {getattr(route, 'methods', 'N/A')}")
-            elif hasattr(route, 'path_regex'):
-                logger.warning(f"🚀 ROUTE: {route.path_regex.pattern} METHODS: {getattr(route, 'methods', 'N/A')}")
-            else:
-                logger.warning(f"🚀 ROUTE: {route} TYPE: {type(route)}")
-        logger.warning("🚀 === END ROUTES ===")
+    # STEP 2: Debug route dumping (only in development)
+    if settings.ENABLE_VERBOSE_LOGGING and settings.ENVIRONMENT != "production":
+        if os.getenv("DEBUG_ROUTES", "false").lower() == "true":
+            logger.debug("=== ALL REGISTERED ROUTES ===")
+            for route in app.routes:
+                if hasattr(route, 'path') and hasattr(route, 'methods'):
+                    logger.debug(f"ROUTE: {route.path} METHODS: {getattr(route, 'methods', 'N/A')}")
+                elif hasattr(route, 'path_regex'):
+                    logger.debug(f"ROUTE: {route.path_regex.pattern} METHODS: {getattr(route, 'methods', 'N/A')}")
+                else:
+                    logger.debug(f"ROUTE: {route} TYPE: {type(route)}")
+            logger.debug("=== END ROUTES ===")
 
     # Schedule periodic cleanup tasks
     storage_manager = StorageManager()
@@ -257,13 +267,17 @@ from app.api import task_monitoring  # Enterprise task monitoring for Celery
 from app.api import package_intelligence  # Package dependency intelligence
 from app.api import background_processing  # Phase 1 Celery background processing
 from app.api import knowledge_graph_api  # Phase 2 Knowledge Graph API
-from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API
+# from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API - temporarily disabled
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import websocket_enhanced  # Enhanced WebSocket with FastAPI 0.116.1 improvements
-from app.api import enhanced_processing  # Enhanced processing with new package features
+# from app.api import enhanced_processing  # Enhanced processing with new package features - temporarily disabled due to OpenTelemetry conflicts
 from app.api import voice  # Voice chat with Cortex personality
 from app.api import user_settings  # User settings API
 # from app.api import crew_api  # Crew.ai autonomous agent system - temporarily disabled
+# Phase 5: Advanced AI Features
+from app.api import multimodal_ai  # Multi-modal AI processing (Vision + Text + Voice)
+# from app.api import advanced_code_api  # Advanced code intelligence - temporarily disabled due to missing bandit
+# from app.api import natural_language_api  # Natural language system control - temporarily disabled due to bandit dependency
 from app.api import (
     admin,
     ai,
@@ -284,7 +298,7 @@ from app.api import (
     file_upload,
     firecrawl,
     health,
-    import_data,
+    # import_data,  # Temporarily disabled due to CrewAI OpenTelemetry conflicts
     insights,
     items,
     questions,
@@ -301,14 +315,17 @@ from app.api import (
 )
 from app.api.v2 import items as v2_items
 
-# STEP 3: Debug capture router inclusion
-logger.warning(f"🔍 ABOUT TO INCLUDE CAPTURE ROUTER: {capture.router}")
-logger.warning(f"🔍 CAPTURE ROUTER ROUTES: {[r.path for r in capture.router.routes]}")
-logger.warning(f"🔍 API_V1_STR: {settings.API_V1_STR}")
+# STEP 3: Include routers with optional debug logging
+if settings.ENABLE_VERBOSE_LOGGING:
+    logger.debug(f"Including capture router: {capture.router}")
+    logger.debug(f"Capture router routes: {[r.path for r in capture.router.routes]}")
+    logger.debug(f"API_V1_STR: {settings.API_V1_STR}")
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])  # Authentication endpoints at /api/auth
 app.include_router(capture.router, prefix=settings.API_V1_STR)
-logger.warning("🔍 CAPTURE ROUTER INCLUDED")
+
+if settings.ENABLE_VERBOSE_LOGGING:
+    logger.debug("Capture router included successfully")
 app.include_router(search.router, prefix=settings.API_V1_STR)
 app.include_router(timeline.router, prefix=settings.API_V1_STR)
 app.include_router(items.router, prefix=settings.API_V1_STR)
@@ -328,7 +345,7 @@ app.include_router(duplicates.router, prefix=settings.API_V1_STR)
 app.include_router(summarization.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
-app.include_router(import_data.router, prefix=settings.API_V1_STR)
+# app.include_router(import_data.router, prefix=settings.API_V1_STR)  # Temporarily disabled
 app.include_router(conversations.router, prefix=settings.API_V1_STR)  # Neural Echo - AI chat conversations
 app.include_router(conversation_intelligence.router, prefix=settings.API_V1_STR)  # AI-powered analysis
 app.include_router(conversation_groups.router, prefix=settings.API_V1_STR)  # Conversation groups endpoint
@@ -364,16 +381,21 @@ app.include_router(task_monitoring.router)  # Enterprise task monitoring for Cel
 app.include_router(package_intelligence.router)  # Package dependency intelligence
 app.include_router(background_processing.router)  # Phase 1 Celery background processing
 app.include_router(knowledge_graph_api.router)  # Phase 2 Knowledge Graph API
-app.include_router(agent_monitoring_api.router)  # Phase 2 Agent Monitoring API
+# app.include_router(agent_monitoring_api.router)  # Phase 2 Agent Monitoring API - temporarily disabled
 app.include_router(github.router)  # GitHub OAuth and repository sync
 # app.include_router(crew_api.router)  # Crew.ai autonomous agent system - temporarily disabled
 app.include_router(content_urls.router)  # No prefix, includes /api in router
 app.include_router(librechat_bridge.router)  # LibreChat integration bridge
 app.include_router(ws.router)
 app.include_router(websocket_enhanced.router)  # Enhanced WebSocket with FastAPI 0.116.1 improvements
-app.include_router(enhanced_processing.router)  # Enhanced processing with updated package features
+# app.include_router(enhanced_processing.router)  # Enhanced processing with updated package features - temporarily disabled
 app.include_router(voice.router, prefix=settings.API_V1_STR)  # Voice chat with Cortex personality
 app.include_router(user_settings.router, prefix=settings.API_V1_STR)  # User settings API
+
+# Phase 5: Advanced AI Features - Multi-modal Processing & Intelligence
+app.include_router(multimodal_ai.router)  # Multi-modal AI processing (includes /api/multimodal prefix)
+# app.include_router(advanced_code_api.router)  # Advanced code intelligence (includes /api/code prefix) - temporarily disabled
+# app.include_router(natural_language_api.router)  # Natural language system control (includes /api/nl prefix) - temporarily disabled
 
 # V2 API endpoints with improved standards
 app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])

@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from uuid import UUID
+from dataclasses import asdict
 
 from app.config import settings
 from app.db.database import get_db_pool, get_db_connection
@@ -413,30 +414,50 @@ class CodeMirrorService:
     async def process_cli_results(
         self, analysis_id: str, user_id: str, results: Dict[str, Any]
     ):
-        """Process results from CLI tool upload"""
+        """
+        Process comprehensive results from CLI tool analysis.
         
-        # Extract patterns from CLI analysis
-        for pattern in results.get('patterns', []):
-            await self._store_pattern(user_id, {
-                'signature': pattern['signature'],
-                'type': pattern['type'],
-                'description': pattern.get('description'),
-                'code_snippet': pattern.get('code'),
-                'language': pattern.get('language')
-            })
+        Handles outputs from GitAnalysisService, SecurityScanService, 
+        CodeSearchService, and FileWatchService integration.
+        """
         
-        # Generate insights from CLI findings
-        for finding in results.get('findings', []):
-            await self._create_insight(
-                analysis_id=analysis_id,
-                insight_type=finding['type'],
-                title=finding['title'],
-                description=finding['description'],
-                recommendation=finding.get('recommendation', ''),
-                severity=finding.get('severity', 'medium'),
-                generated_by="cli_tool",
-                confidence=finding.get('confidence', 0.7)
-            )
+        try:
+            # Import our CLI services
+            from app.services.git_analysis_service import GitAnalysisResult
+            from app.services.security_scan_service import SecurityScanResult
+            from app.services.code_search_service import CodeSearchResult
+            from app.services.file_watch_service import AnalysisRequest
+            
+            logger.info(f"Processing CLI results for analysis {analysis_id}")
+            
+            # Process different types of CLI results
+            if 'git_analysis' in results:
+                await self._process_git_analysis_results(analysis_id, results['git_analysis'])
+            
+            if 'security_scan' in results:
+                await self._process_security_scan_results(analysis_id, results['security_scan'])
+            
+            if 'code_search' in results:
+                await self._process_code_search_results(analysis_id, results['code_search'])
+            
+            if 'file_events' in results:
+                await self._process_file_events(analysis_id, results['file_events'])
+                
+            # Legacy pattern processing for backward compatibility
+            if 'patterns' in results:
+                await self._process_legacy_patterns(user_id, results['patterns'])
+            
+            if 'findings' in results:
+                await self._process_legacy_findings(analysis_id, results['findings'])
+            
+            # Update analysis record with CLI integration status
+            await self._update_cli_integration_status(analysis_id, results)
+            
+            logger.info(f"Successfully processed CLI results for analysis {analysis_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to process CLI results for analysis {analysis_id}: {e}")
+            raise
     
     # Helper methods
     async def _create_analysis_record(
@@ -1218,6 +1239,466 @@ class CodeMirrorService:
         }
         
         return enhanced_result
+    
+    # CLI Results Processing Methods
+    
+    async def _process_git_analysis_results(self, analysis_id: str, git_result: Dict[str, Any]):
+        """Process GitAnalysisService results and store in database"""
+        
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Store git analysis results
+                await db.execute("""
+                    INSERT INTO codemirror_git_analyses (
+                        analysis_id, repository_url, total_commits, total_authors,
+                        repository_age_days, primary_language, commits_by_hour,
+                        commits_by_day, commits_by_month, top_authors,
+                        author_collaboration, most_changed_files, file_extensions,
+                        hotspot_files, average_commit_size, merge_frequency,
+                        branch_patterns, release_patterns, commit_message_quality,
+                        refactoring_patterns, technical_debt_indicators
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                """, 
+                    UUID(analysis_id),
+                    git_result.get('repository_url', ''),
+                    git_result.get('total_commits', 0),
+                    git_result.get('total_authors', 0),
+                    git_result.get('repository_age_days', 0),
+                    git_result.get('primary_language', 'Unknown'),
+                    json.dumps(git_result.get('commits_by_hour', {})),
+                    json.dumps(git_result.get('commits_by_day', {})),
+                    json.dumps(git_result.get('commits_by_month', {})),
+                    json.dumps([asdict(author) for author in git_result.get('top_authors', [])]),
+                    json.dumps(git_result.get('author_collaboration', {})),
+                    json.dumps(git_result.get('most_changed_files', [])),
+                    json.dumps(git_result.get('file_extensions', {})),
+                    json.dumps(git_result.get('hotspot_files', [])),
+                    git_result.get('average_commit_size', 0.0),
+                    git_result.get('merge_frequency', 0.0),
+                    json.dumps(git_result.get('branch_patterns', {})),
+                    json.dumps(git_result.get('release_patterns', [])),
+                    json.dumps(git_result.get('commit_message_quality', {})),
+                    json.dumps(git_result.get('refactoring_patterns', [])),
+                    json.dumps(git_result.get('technical_debt_indicators', []))
+                )
+                
+                # Generate insights from git analysis
+                await self._generate_git_insights(analysis_id, git_result)
+                
+                logger.info(f"Stored git analysis results for analysis {analysis_id}")
+                
+        except Exception as e:
+            logger.error(f"Failed to process git analysis results: {e}")
+            raise
+    
+    async def _process_security_scan_results(self, analysis_id: str, security_result: Dict[str, Any]):
+        """Process SecurityScanService results and store in database"""
+        
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Store security scan results
+                scan_id = await db.fetchval("""
+                    INSERT INTO codemirror_security_scans (
+                        analysis_id, repository_path, scan_duration_seconds,
+                        total_findings, files_scanned, rules_executed,
+                        overall_security_score, owasp_compliance_score,
+                        findings_by_severity, owasp_categories, cwe_categories,
+                        high_risk_files, security_hotspots, common_vulnerabilities
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    RETURNING id
+                """, 
+                    UUID(analysis_id),
+                    security_result.get('repository_path', ''),
+                    security_result.get('scan_duration_seconds', 0.0),
+                    security_result.get('total_findings', 0),
+                    security_result.get('files_scanned', 0),
+                    security_result.get('rules_executed', 0),
+                    security_result.get('overall_security_score', 0.0),
+                    security_result.get('owasp_compliance_score', 0.0),
+                    json.dumps(security_result.get('findings_by_severity', {})),
+                    json.dumps(security_result.get('owasp_categories', {})),
+                    json.dumps(security_result.get('cwe_categories', {})),
+                    json.dumps(security_result.get('high_risk_files', [])),
+                    json.dumps(security_result.get('security_hotspots', [])),
+                    json.dumps(security_result.get('common_vulnerabilities', []))
+                )
+                
+                # Store individual security findings
+                findings = security_result.get('findings', [])
+                for finding in findings:
+                    await db.execute("""
+                        INSERT INTO codemirror_security_findings (
+                            security_scan_id, rule_id, severity, message,
+                            file_path, line_number, column_number,
+                            code_snippet, fix_suggestion, owasp_category,
+                            cwe_id, confidence
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    """,
+                        scan_id,
+                        finding.get('rule_id', ''),
+                        finding.get('severity', 'medium'),
+                        finding.get('message', ''),
+                        finding.get('file_path', ''),
+                        finding.get('line_number', 0),
+                        finding.get('column_number'),
+                        finding.get('code_snippet', ''),
+                        finding.get('fix_suggestion'),
+                        finding.get('owasp_category'),
+                        finding.get('cwe_id'),
+                        finding.get('confidence', 'medium')
+                    )
+                
+                # Generate insights from security analysis
+                await self._generate_security_insights(analysis_id, security_result)
+                
+                logger.info(f"Stored security scan results for analysis {analysis_id} ({len(findings)} findings)")
+                
+        except Exception as e:
+            logger.error(f"Failed to process security scan results: {e}")
+            raise
+    
+    async def _process_code_search_results(self, analysis_id: str, search_result: Dict[str, Any]):
+        """Process CodeSearchService results and store in database"""
+        
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Store code search results
+                search_id = await db.fetchval("""
+                    INSERT INTO codemirror_code_searches (
+                        analysis_id, repository_path, search_duration_seconds,
+                        total_matches, languages_analyzed, matches_by_pattern,
+                        identified_patterns, architecture_insights, consistency_violations,
+                        pattern_diversity_score, consistency_score, maintainability_score,
+                        language_patterns, framework_usage
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    RETURNING id
+                """,
+                    UUID(analysis_id),
+                    search_result.get('repository_path', ''),
+                    search_result.get('search_duration_seconds', 0.0),
+                    search_result.get('total_matches', 0),
+                    json.dumps(search_result.get('languages_analyzed', [])),
+                    json.dumps(search_result.get('matches_by_pattern', {})),
+                    json.dumps([asdict(pattern) for pattern in search_result.get('identified_patterns', [])]),
+                    json.dumps(search_result.get('architecture_insights', {})),
+                    json.dumps(search_result.get('consistency_violations', [])),
+                    search_result.get('pattern_diversity_score', 0.0),
+                    search_result.get('consistency_score', 0.0),
+                    search_result.get('maintainability_score', 0.0),
+                    json.dumps(search_result.get('language_patterns', {})),
+                    json.dumps(search_result.get('framework_usage', {}))
+                )
+                
+                # Store individual code matches
+                matches = search_result.get('all_matches', [])
+                for match in matches:
+                    await db.execute("""
+                        INSERT INTO codemirror_code_matches (
+                            code_search_id, pattern_name, file_path,
+                            line_number, column_number, matched_text,
+                            context_before, context_after, confidence_score
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    """,
+                        search_id,
+                        match.get('pattern_name', ''),
+                        match.get('file_path', ''),
+                        match.get('line_number', 0),
+                        match.get('column_number', 0),
+                        match.get('matched_text', ''),
+                        match.get('context_before', ''),
+                        match.get('context_after', ''),
+                        match.get('confidence_score', 0.5)
+                    )
+                
+                # Store refactoring opportunities
+                opportunities = search_result.get('refactoring_opportunities', [])
+                for opportunity in opportunities:
+                    await db.execute("""
+                        INSERT INTO codemirror_refactoring_opportunities (
+                            code_search_id, title, description, pattern_type,
+                            file_path, line_start, line_end, current_code,
+                            suggested_code, benefits, effort_estimate, risk_level
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    """,
+                        search_id,
+                        opportunity.get('title', ''),
+                        opportunity.get('description', ''),
+                        opportunity.get('pattern_type', ''),
+                        opportunity.get('file_path', ''),
+                        opportunity.get('line_range', [0, 0])[0],
+                        opportunity.get('line_range', [0, 0])[1],
+                        opportunity.get('current_code', ''),
+                        opportunity.get('suggested_code', ''),
+                        json.dumps(opportunity.get('benefits', [])),
+                        opportunity.get('effort_estimate', 'medium'),
+                        opportunity.get('risk_level', 'medium')
+                    )
+                
+                # Generate insights from code search analysis
+                await self._generate_code_search_insights(analysis_id, search_result)
+                
+                logger.info(f"Stored code search results for analysis {analysis_id} ({len(matches)} matches, {len(opportunities)} opportunities)")
+                
+        except Exception as e:
+            logger.error(f"Failed to process code search results: {e}")
+            raise
+    
+    async def _process_file_events(self, analysis_id: str, file_events: List[Dict[str, Any]]):
+        """Process file watch events and store in database"""
+        
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Store file events
+                for event in file_events:
+                    await db.execute("""
+                        INSERT INTO codemirror_file_events (
+                            repository_path, event_type, file_path,
+                            file_size, file_extension, is_source_file,
+                            batch_id, event_timestamp
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    """,
+                        event.get('repository_path', ''),
+                        event.get('event_type', 'modified'),
+                        event.get('file_path', ''),
+                        event.get('file_size'),
+                        event.get('file_extension', ''),
+                        event.get('is_source_file', False),
+                        event.get('batch_id'),
+                        datetime.fromisoformat(event.get('timestamp', datetime.utcnow().isoformat()))
+                    )
+                
+                logger.info(f"Stored {len(file_events)} file events for analysis {analysis_id}")
+                
+        except Exception as e:
+            logger.error(f"Failed to process file events: {e}")
+            raise
+    
+    async def _process_legacy_patterns(self, user_id: str, patterns: List[Dict[str, Any]]):
+        """Process legacy pattern format for backward compatibility"""
+        
+        for pattern in patterns:
+            await self._store_pattern(user_id, {
+                'signature': pattern['signature'],
+                'type': pattern['type'],
+                'description': pattern.get('description'),
+                'code_snippet': pattern.get('code'),
+                'language': pattern.get('language')
+            })
+    
+    async def _process_legacy_findings(self, analysis_id: str, findings: List[Dict[str, Any]]):
+        """Process legacy findings format for backward compatibility"""
+        
+        for finding in findings:
+            await self._create_insight(
+                analysis_id=analysis_id,
+                insight_type=finding['type'],
+                title=finding['title'],
+                description=finding['description'],
+                recommendation=finding.get('recommendation', ''),
+                severity=finding.get('severity', 'medium'),
+                generated_by="cli_tool",
+                confidence=finding.get('confidence', 0.7)
+            )
+    
+    async def _update_cli_integration_status(self, analysis_id: str, results: Dict[str, Any]):
+        """Update analysis record with CLI integration status"""
+        
+        try:
+            pool = await get_db_pool()
+            async with pool.acquire() as db:
+                # Determine which CLI tools were used
+                cli_tools_used = []
+                if 'git_analysis' in results:
+                    cli_tools_used.append('git')
+                if 'security_scan' in results:
+                    cli_tools_used.append('semgrep')
+                if 'code_search' in results:
+                    cli_tools_used.append('comby')
+                if 'file_events' in results:
+                    cli_tools_used.append('watchdog')
+                
+                # Update analysis record
+                await db.execute("""
+                    UPDATE codemirror_analyses 
+                    SET cli_tools_used = $1,
+                        cli_analysis_version = '2.0',
+                        has_git_analysis = $2,
+                        has_security_scan = $3,
+                        has_code_search = $4,
+                        file_watch_triggered = $5,
+                        updated_at = NOW()
+                    WHERE id = $6
+                """,
+                    json.dumps(cli_tools_used),
+                    'git_analysis' in results,
+                    'security_scan' in results,
+                    'code_search' in results,
+                    'file_events' in results,
+                    UUID(analysis_id)
+                )
+                
+                logger.info(f"Updated CLI integration status for analysis {analysis_id}")
+                
+        except Exception as e:
+            logger.error(f"Failed to update CLI integration status: {e}")
+            raise
+    
+    async def _generate_git_insights(self, analysis_id: str, git_result: Dict[str, Any]):
+        """Generate insights from git analysis results"""
+        
+        try:
+            # Technical debt indicators
+            debt_indicators = git_result.get('technical_debt_indicators', [])
+            if len(debt_indicators) > 5:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="code_quality",
+                    title="High Technical Debt Detected",
+                    description=f"Found {len(debt_indicators)} commits indicating technical debt patterns.",
+                    recommendation="Review TODO/FIXME items and prioritize refactoring of temporary solutions.",
+                    severity="medium",
+                    generated_by="git_analysis_service",
+                    confidence=0.8
+                )
+            
+            # Development velocity insights
+            total_commits = git_result.get('total_commits', 0)
+            repo_age_days = git_result.get('repository_age_days', 1)
+            if total_commits > 0 and repo_age_days > 0:
+                commits_per_day = total_commits / repo_age_days
+                if commits_per_day > 5:
+                    await self._create_insight(
+                        analysis_id=analysis_id,
+                        insight_type="development_velocity",
+                        title="High Development Activity",
+                        description=f"Repository shows high activity with {commits_per_day:.1f} commits per day.",
+                        recommendation="Ensure proper code review processes and maintain code quality standards.",
+                        severity="low",
+                        generated_by="git_analysis_service",
+                        confidence=0.7
+                    )
+            
+            # Author collaboration insights
+            author_collaboration = git_result.get('author_collaboration', {})
+            if len(author_collaboration) > 10:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="team_collaboration",
+                    title="Strong Team Collaboration",
+                    description=f"Repository shows good collaboration patterns with {len(author_collaboration)} active collaborators.",
+                    recommendation="Continue fostering collaborative development practices and knowledge sharing.",
+                    severity="low",
+                    generated_by="git_analysis_service",
+                    confidence=0.6
+                )
+                
+        except Exception as e:
+            logger.error(f"Failed to generate git insights: {e}")
+    
+    async def _generate_security_insights(self, analysis_id: str, security_result: Dict[str, Any]):
+        """Generate insights from security scan results"""
+        
+        try:
+            total_findings = security_result.get('total_findings', 0)
+            security_score = security_result.get('overall_security_score', 100)
+            
+            # Critical security issues
+            findings_by_severity = security_result.get('findings_by_severity', {})
+            critical_findings = findings_by_severity.get('critical', 0)
+            high_findings = findings_by_severity.get('high', 0)
+            
+            if critical_findings > 0:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="security_vulnerability",
+                    title="Critical Security Vulnerabilities Found",
+                    description=f"Found {critical_findings} critical security issues that require immediate attention.",
+                    recommendation="Address critical vulnerabilities immediately. Review security practices and implement secure coding guidelines.",
+                    severity="critical",
+                    generated_by="security_scan_service",
+                    confidence=0.9
+                )
+            elif high_findings > 0:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="security_vulnerability",
+                    title="High Priority Security Issues",
+                    description=f"Found {high_findings} high-severity security issues.",
+                    recommendation="Schedule remediation of high-priority security issues. Consider security code review.",
+                    severity="high",
+                    generated_by="security_scan_service",
+                    confidence=0.8
+                )
+            elif security_score > 80:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="security_assessment",
+                    title="Good Security Posture",
+                    description=f"Repository shows good security practices with a score of {security_score:.1f}/100.",
+                    recommendation="Continue following security best practices and regular vulnerability assessments.",
+                    severity="low",
+                    generated_by="security_scan_service",
+                    confidence=0.7
+                )
+                
+        except Exception as e:
+            logger.error(f"Failed to generate security insights: {e}")
+    
+    async def _generate_code_search_insights(self, analysis_id: str, search_result: Dict[str, Any]):
+        """Generate insights from code search results"""
+        
+        try:
+            maintainability_score = search_result.get('maintainability_score', 50)
+            consistency_score = search_result.get('consistency_score', 50)
+            refactoring_opportunities = search_result.get('refactoring_opportunities', [])
+            
+            # Maintainability insights
+            if maintainability_score < 60:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="code_quality",
+                    title="Low Maintainability Score",
+                    description=f"Code maintainability score is {maintainability_score:.1f}/100, indicating potential maintenance challenges.",
+                    recommendation="Focus on refactoring complex functions, reducing code duplication, and improving code organization.",
+                    severity="medium",
+                    generated_by="code_search_service",
+                    confidence=0.8
+                )
+            
+            # Consistency insights
+            if consistency_score < 70:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="code_quality",
+                    title="Code Consistency Issues",
+                    description=f"Code consistency score is {consistency_score:.1f}/100, indicating inconsistent patterns.",
+                    recommendation="Establish and enforce coding standards. Consider using automated formatting tools.",
+                    severity="medium",
+                    generated_by="code_search_service",
+                    confidence=0.7
+                )
+            
+            # Refactoring opportunities
+            high_impact_refactorings = [opp for opp in refactoring_opportunities 
+                                      if opp.get('effort_estimate') == 'low' and opp.get('risk_level') == 'low']
+            if len(high_impact_refactorings) > 5:
+                await self._create_insight(
+                    analysis_id=analysis_id,
+                    insight_type="refactoring_opportunity",
+                    title="High-Impact Refactoring Opportunities",
+                    description=f"Found {len(high_impact_refactorings)} low-effort, low-risk refactoring opportunities.",
+                    recommendation="Prioritize these refactoring opportunities to improve code quality with minimal risk.",
+                    severity="low",
+                    generated_by="code_search_service",
+                    confidence=0.8
+                )
+                
+        except Exception as e:
+            logger.error(f"Failed to generate code search insights: {e}")
 
 
 # Create singleton instance

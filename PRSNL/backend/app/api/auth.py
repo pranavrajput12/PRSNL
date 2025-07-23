@@ -16,7 +16,7 @@ from app.services.auth_service import auth_service, AuthService
 from app.services.email_service import EmailService
 from app.models.auth import (
     UserRegister, UserLogin, UserResponse, 
-    RefreshTokenRequest, PasswordResetRequest, EmailVerificationRequest
+    RefreshTokenRequest, PasswordResetRequest, PasswordResetConfirm, EmailVerificationRequest
 )
 import logging
 
@@ -142,7 +142,7 @@ async def get_me(user: User = Depends(get_current_user)):
     async with pool.acquire() as db:
         user_data = await db.fetchrow(
             "SELECT * FROM users WHERE id = $1",
-            UUID(user.id)
+            user.id if isinstance(user.id, UUID) else UUID(user.id)
         )
         
         if not user_data:
@@ -210,20 +210,25 @@ async def forgot_password(email: EmailStr):
         )
         
         if user:
-            await EmailService.send_password_reset_email(
-                user_id=user["id"],
-                email=email,
-                name=f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or email
-            )
+            # Create password reset token
+            token = await auth_service.create_password_reset_token(email)
+            
+            if token:
+                # Send password reset email
+                await EmailService.send_password_reset_email(
+                    user_id=user["id"],
+                    email=email,
+                    name=f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or email
+                )
     
     return {"message": "If the email exists, a password reset link has been sent"}
 
 
 @router.post("/reset-password")
-async def reset_password(request: PasswordResetRequest):
+async def reset_password(request: PasswordResetConfirm):
     """Reset password using token"""
     try:
-        await auth_service.reset_password(request)
+        await auth_service.reset_password(request.token, request.new_password)
         return {"message": "Password reset successfully"}
     except ValueError as e:
         raise HTTPException(

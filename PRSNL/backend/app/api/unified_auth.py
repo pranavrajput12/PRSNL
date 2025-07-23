@@ -105,7 +105,7 @@ async def signup_with_prsnl(request: SignupRequest):
             )
             
     except Exception as e:
-        print(f"Signup error: {e}")
+        logger.error(f"Signup error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create user account"
@@ -166,7 +166,7 @@ async def login_with_prsnl(request: LoginRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Login error: {e}")
+        logger.error(f"Login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login failed"
@@ -241,7 +241,7 @@ async def verify_token(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Token verification error: {e}")
+        logger.error(f"Token verification error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token verification failed"
@@ -321,7 +321,7 @@ async def refresh_token(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Token refresh error: {e}")
+        logger.error(f"Token refresh error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Token refresh failed"
@@ -397,7 +397,7 @@ async def fusionauth_callback(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"FusionAuth callback error: {e}")
+        logger.error(f"FusionAuth callback error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="FusionAuth callback failed"

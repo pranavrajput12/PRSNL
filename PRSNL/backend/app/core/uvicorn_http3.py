@@ -242,7 +242,7 @@ class HTTP3Client:
             # Create HTTP/3 client
             async with httpx.AsyncClient(
                 http2=True,
-                verify=False,  # For self-signed certs
+                verify=True,  # Always verify SSL certificates for security
                 timeout=30.0
             ) as client:
                 # Test basic connection

@@ -39,10 +39,10 @@ async def search_items(
     cache_key = cache_service.make_key(CacheKeys.SEARCH, query, limit=limit, offset=offset)
     cached = await cache_service.get(cache_key)
     if cached:
-        print(f"DEBUG: Returning cached response for key: {cache_key}")
+        logger.debug(f"Returning cached response for key: {cache_key}")
         return cached
     else:
-        print(f"DEBUG: No cache found for key: {cache_key}")
+        logger.debug(f"No cache found for key: {cache_key}")
     
     try:
         # Start timing
@@ -56,7 +56,7 @@ async def search_items(
         execution_time_ms = int((time.time() - start_time) * 1000)
         
         # Frontend expects SearchResponse format with results array
-        print(f"DEBUG: Found {len(results)} results from search engine")
+        logger.debug(f"Found {len(results)} results from search engine")
         response = {
             "results": [
                 {
@@ -76,7 +76,7 @@ async def search_items(
         # Cache the result
         await cache_service.set(cache_key, response, settings.CACHE_TTL_SEARCH)
         
-        print(f"DEBUG: Returning response with keys: {list(response.keys())}")
+        logger.debug(f"Returning response with keys: {list(response.keys())}")
         return response
     except Exception as e:
         raise InternalServerError(f"Failed to perform search: {e}")

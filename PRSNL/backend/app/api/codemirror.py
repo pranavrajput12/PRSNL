@@ -575,12 +575,38 @@ async def update_insight_status(
             raise HTTPException(status_code=403, detail="Access denied")
         
         # Update status
-        timestamp_field = f"{status}_at"
-        await db.execute(f"""
-            UPDATE codemirror_insights
-            SET status = $1, {timestamp_field} = NOW()
-            WHERE id = $2
-        """, status, UUID(insight_id))
+        # Use parameterized query to prevent SQL injection
+        valid_status_fields = {
+            'approved': 'approved_at',
+            'rejected': 'rejected_at',
+            'implemented': 'implemented_at'
+        }
+        
+        if status not in valid_status_fields:
+            raise HTTPException(status_code=400, detail="Invalid status")
+            
+        timestamp_field = valid_status_fields[status]
+        
+        if timestamp_field == 'approved_at':
+            query = """
+                UPDATE codemirror_insights
+                SET status = $1, approved_at = NOW()
+                WHERE id = $2
+            """
+        elif timestamp_field == 'rejected_at':
+            query = """
+                UPDATE codemirror_insights
+                SET status = $1, rejected_at = NOW()
+                WHERE id = $2
+            """
+        elif timestamp_field == 'implemented_at':
+            query = """
+                UPDATE codemirror_insights
+                SET status = $1, implemented_at = NOW()
+                WHERE id = $2
+            """
+        
+        await db.execute(query, status, UUID(insight_id))
         
         return {"message": f"Insight {status} successfully"}
 

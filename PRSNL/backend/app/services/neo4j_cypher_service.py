@@ -501,8 +501,9 @@ class Neo4jCypherService:
         import hashlib
         import json
         
-        query_hash = hashlib.md5(query.encode()).hexdigest()
-        params_hash = hashlib.md5(json.dumps(parameters or {}, sort_keys=True).encode()).hexdigest()
+        # Use SHA-256 instead of MD5 for better security
+        query_hash = hashlib.sha256(query.encode()).hexdigest()
+        params_hash = hashlib.sha256(json.dumps(parameters or {}, sort_keys=True).encode()).hexdigest()
         
         return f"{query_hash}_{params_hash}"
     

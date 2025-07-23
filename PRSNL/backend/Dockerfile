@@ -70,5 +70,12 @@ RUN mkdir -p /app/uploads
 # Expose port
 EXPOSE 8000
 
-# Command to run the application with uvloop optimization
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --loop uvloop"]
+# Set production environment variables
+ENV ENVIRONMENT=production
+ENV LOG_LEVEL=INFO
+ENV ENABLE_QUERY_LOGGING=false
+ENV ENABLE_VERBOSE_LOGGING=false
+ENV DEBUG_ROUTES=false
+
+# Command to run the application with production settings and uvloop optimization
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info --no-access-log --loop uvloop"]

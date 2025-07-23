@@ -54,20 +54,19 @@ def _is_repository_url(url: str) -> bool:
 @router.get("/capture/debug") 
 async def debug_capture():
     """Debug endpoint to test if routes work"""
-    print("🚨 DEBUG ROUTE CALLED")
-    logger.info("🔍 DEBUG ROUTE CALLED")
+    logger.debug("Debug route called")
     return {"status": "debug_route_works", "message": "Route is accessible"}
 
 @router.post("/capture/test")
 async def test_capture():
     """Simple test route to verify routing works"""
-    print("🚨 TEST CAPTURE ROUTE CALLED")
+    logger.debug("Test capture route called")
     return {"status": "test_works", "message": "Test route is working"}
 
 @router.post("/capture/ping")
 async def ping_capture():
     """Minimal smoke test with direct DB insert"""
-    print("🚨 PING CAPTURE ROUTE CALLED")
+    logger.debug("Ping capture route called")
     pool = await get_db_pool()
     async with pool.acquire() as conn:
         try:
@@ -122,9 +121,7 @@ from app.services.cache import CacheKeys, invalidate_cache
 @capture_throttle_limiter
 async def capture_item(request: Request, capture_request: CaptureRequest, background_tasks: BackgroundTasks, user_id: UUID = Depends(require_user_id)):
     """Capture a new item (web page, note, file, etc.)."""
-    print(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force print
-    logger.error(f"🚨 CAPTURE FUNCTION CALLED: {capture_request.url}")  # Force error level
-    logger.info(f"🔍 CAPTURE API DEBUG: Starting capture for URL: {capture_request.url}")
+    logger.info(f"Starting capture for URL: {capture_request.url}")
     
     # Use the same database connection method as timeline API
     pool = await get_db_pool()

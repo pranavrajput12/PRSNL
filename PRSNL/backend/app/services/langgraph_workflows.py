@@ -43,8 +43,13 @@ class PersistentWorkflowManager:
     Supports crash recovery and state persistence
     """
     
-    def __init__(self, checkpoint_dir: str = "/tmp/prsnl_checkpoints"):
+    def __init__(self, checkpoint_dir: str = None):
         """Initialize with checkpoint storage"""
+        if checkpoint_dir is None:
+            import tempfile
+            import os
+            # Use secure temporary directory instead of hardcoded /tmp
+            checkpoint_dir = os.path.join(tempfile.gettempdir(), 'prsnl_checkpoints')
         self.checkpoint_dir = checkpoint_dir
         self.checkpointer = SqliteSaver.from_conn_string(f"sqlite:///{checkpoint_dir}/workflows.db")
         

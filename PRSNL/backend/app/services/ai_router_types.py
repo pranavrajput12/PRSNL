@@ -39,7 +39,6 @@ class AITask:
 @dataclass
 class ProviderConfig:
     name: AIProvider
-    cost_per_1k_tokens: float
     max_tokens_per_request: int
     supports_streaming: bool
     supports_vision: bool

@@ -1,0 +1,7 @@
+# Test files and temporary data
+*.mp3
+test_voice_*.mp3
+knowledge_test_*.mp3
+dump.rdb
+security_scan_results.json
+/frontend/test-results/
