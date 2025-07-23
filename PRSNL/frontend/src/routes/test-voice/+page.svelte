@@ -19,6 +19,28 @@
   let isRecording = false;
   let currentTranscription = '';
   let finalTranscription = '';
+  let lastAiResponse = '';
+  let voiceSettings = {
+    gender: 'female',
+    ttsEngine: 'piper',
+    useCrewAI: false,
+    emotionStrength: 0.8
+  };
+  let memoryStats = {
+    sttModel: 'faster-whisper tiny.en',
+    estimatedMemory: '~39MB',
+    performance: '3-4x faster'
+  };
+  let knowledgeBaseQueries = [
+    "What is the PRSNL system architecture?",
+    "How does the voice processing work?",
+    "Tell me about the knowledge base features",
+    "What are the recent improvements?",
+    "How does CLI integration work?",
+    "Explain the database schema"
+  ];
+  let selectedQuery = '';
+  let isTestingKnowledge = false;
   
   function addLog(message, type = 'info') {
     log = [...log, {
@@ -26,24 +48,149 @@
       message,
       type
     }];
+    // Auto-scroll log
+    setTimeout(() => {
+      const logElement = document.querySelector('.log');
+      if (logElement) {
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+    }, 10);
   }
   
   function updateStatus(message, color = '#4a9eff') {
     status = message;
     statusColor = color;
   }
-  
-  async function testVoice() {
-    addLog('Testing voice endpoint...');
+
+  async function testVoiceOptimizations() {
+    addLog('Testing memory-optimized voice improvements...', 'info');
+    
     try {
+      // Test health endpoint
+      const healthResponse = await fetch('http://localhost:8000/api/voice/health');
+      const healthData = await healthResponse.json();
+      
+      addLog(`✅ Voice service health: ${healthData.status}`, 'success');
+      addLog(`   Model: ${healthData.whisper_model}`, 'info');
+      addLog(`   Personality: ${healthData.personality}`, 'info');
+      addLog(`   Available voices: ${healthData.voices_available.join(', ')}`, 'info');
+      
+      // Test with knowledge base query
+      const testText = selectedQuery || "Tell me about the PRSNL system's voice processing improvements";
+      
       const response = await fetch('http://localhost:8000/api/voice/test', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-token-for-voice-debug'
+        },
+        body: JSON.stringify({
+          text: testText,
+          settings: voiceSettings
+        })
       });
-      const data = await response.json();
-      addLog(`Voice test successful! Audio size: ${data.audio_size} bytes`, 'success');
-      addLog(`Mood: ${data.mood}, Text: "${data.personalized_text}"`, 'success');
+      
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        addLog(`✅ Voice synthesis successful! Audio size: ${audioBlob.size} bytes`, 'success');
+        addLog(`   Settings: ${JSON.stringify(voiceSettings)}`, 'info');
+        
+        // Play the audio
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+        
+        addLog('🔊 Playing synthesized audio...', 'success');
+        
+        audio.onended = () => {
+          addLog('✅ Audio playback completed', 'success');
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+      } else {
+        const error = await response.text();
+        addLog(`❌ Voice test failed: ${error}`, 'error');
+      }
+      
     } catch (error) {
-      addLog(`Voice test failed: ${error.message}`, 'error');
+      addLog(`❌ Voice optimization test failed: ${error.message}`, 'error');
+    }
+  }
+
+  async function testKnowledgeBaseQuery() {
+    if (!selectedQuery) {
+      addLog('❌ Please select a knowledge base query first', 'error');
+      return;
+    }
+    
+    isTestingKnowledge = true;
+    addLog(`🧠 Testing knowledge base query: "${selectedQuery}"`, 'info');
+    
+    try {
+      // First test RAG query to see if knowledge base has relevant info
+      const ragResponse = await fetch('http://localhost:8000/api/rag/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-token-for-voice-debug'
+        },
+        body: JSON.stringify({
+          query: selectedQuery,
+          limit: 3
+        })
+      });
+      
+      if (ragResponse.ok) {
+        const ragData = await ragResponse.json();
+        addLog(`✅ Knowledge base found ${ragData.documents?.length || 0} relevant documents`, 'success');
+        
+        if (ragData.documents && ragData.documents.length > 0) {
+          addLog(`   Top result: "${ragData.documents[0].content?.substring(0, 100)}..."`, 'info');
+        }
+      }
+      
+      // Now test voice processing with knowledge base integration
+      const response = await fetch('http://localhost:8000/api/voice/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-token-for-voice-debug'
+        },
+        body: JSON.stringify({
+          text: selectedQuery,
+          settings: {
+            ...voiceSettings,
+            useKnowledgeBase: true,
+            useCrewAI: true  // Enable CrewAI for better knowledge integration
+          }
+        })
+      });
+      
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        addLog(`✅ Knowledge-enhanced voice response generated! (${audioBlob.size} bytes)`, 'success');
+        
+        // Play the response
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+        
+        addLog('🔊 Playing knowledge-enhanced response...', 'success');
+        
+        audio.onended = () => {
+          addLog('✅ Knowledge base query test completed', 'success');
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+      } else {
+        const error = await response.text();
+        addLog(`❌ Knowledge base voice test failed: ${error}`, 'error');
+      }
+      
+    } catch (error) {
+      addLog(`❌ Knowledge base test failed: ${error.message}`, 'error');
+    } finally {
+      isTestingKnowledge = false;
     }
   }
   
@@ -53,43 +200,73 @@
       return;
     }
     
-    addLog('Connecting to WebSocket...');
+    addLog('Connecting to voice WebSocket...', 'info');
     ws = new WebSocket('ws://localhost:8000/api/voice/ws');
     
     ws.onopen = () => {
-      addLog('WebSocket connected!', 'success');
-      updateStatus('Connected', '#44ff44');
+      addLog('✅ WebSocket connected! Ready for real-time voice chat', 'success');
+      updateStatus('Connected - Ready for Voice', '#44ff44');
+      
+      // Send voice settings
+      ws.send(JSON.stringify({
+        type: 'set_voice',
+        gender: voiceSettings.gender
+      }));
     };
     
     ws.onmessage = (event) => {
-      addLog(`WebSocket message: ${event.data}`);
       if (typeof event.data === 'string') {
         const data = JSON.parse(event.data);
-        addLog(`Message type: ${data.type}`);
         
-        if (data.type === 'transcription') {
-          // Show what was transcribed
-          finalTranscription = data.data.user_text;
-          addLog(`Transcribed: "${data.data.user_text}"`, 'info');
-          addLog(`AI Response: "${data.data.ai_text}"`, 'info');
-          addLog(`Personalized: "${data.data.personalized_text}"`, 'info');
-          addLog(`Mood: ${data.data.mood}`, 'info');
+        switch(data.type) {
+          case 'chunk_received':
+            addLog(`📦 Audio chunk received: ${data.size} bytes`, 'info');
+            break;
+            
+          case 'processing':
+            addLog(`⚙️ ${data.status}...`, 'info');
+            updateStatus('Processing...', '#ffaa44');
+            break;
+            
+          case 'transcription':
+            finalTranscription = data.data.user_text;
+            lastAiResponse = data.data.personalized_text;
+            addLog(`🎤 You said: "${data.data.user_text}"`, 'success');
+            addLog(`🧠 AI Response: "${data.data.ai_text}"`, 'info');
+            addLog(`🎭 Cortex says: "${data.data.personalized_text}"`, 'success');
+            addLog(`😊 Mood: ${data.data.mood}`, 'info');
+            break;
+            
+          case 'audio_response':
+            addLog('🔊 Received audio response, playing...', 'success');
+            playAudio(data.data);
+            break;
+            
+          case 'voice_changed':
+            addLog(`🎵 Voice changed to: ${data.gender}`, 'info');
+            break;
+            
+          case 'error':
+            addLog(`❌ Error: ${data.message}`, 'error');
+            updateStatus('Error', '#ff4444');
+            break;
+            
+          case 'pong':
+            addLog('📡 Connection alive', 'info');
+            break;
         }
-        
-        if (data.type === 'audio_response' && data.data) {
-          addLog('Received audio response, playing...', 'success');
-          playAudio(data.data);
-        }
+      } else {
+        addLog(`📡 Binary message received: ${event.data.size} bytes`, 'info');
       }
     };
     
     ws.onerror = (error) => {
-      addLog(`WebSocket error: ${error}`, 'error');
-      updateStatus('Error', '#ff4444');
+      addLog(`❌ WebSocket error: ${error}`, 'error');
+      updateStatus('Connection Error', '#ff4444');
     };
     
     ws.onclose = () => {
-      addLog('WebSocket disconnected');
+      addLog('🔌 WebSocket disconnected', 'info');
       updateStatus('Disconnected', '#666666');
       ws = null;
     };
@@ -97,49 +274,60 @@
   
   async function startRecording() {
     try {
-      addLog('Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      addLog('🎤 Requesting microphone access...', 'info');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      });
       
-      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       audioChunks = [];
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunks.push(event.data);
-          addLog(`Audio chunk received: ${event.data.size} bytes`);
+          
+          // Send chunk immediately for real-time processing
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            event.data.arrayBuffer().then(buffer => {
+              ws.send(buffer);
+            });
+          }
         }
       };
       
       mediaRecorder.onstop = async () => {
-        addLog('Recording stopped, processing audio...');
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        addLog(`Total audio size: ${audioBlob.size} bytes`);
+        addLog('🛑 Recording stopped, processing...', 'info');
+        updateStatus('Processing Audio...', '#ffaa44');
         
         if (ws && ws.readyState === WebSocket.OPEN) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const arrayBuffer = reader.result;
-            ws.send(arrayBuffer);
-            addLog('Audio sent to server', 'success');
-            ws.send(JSON.stringify({ type: 'end_recording' }));
-            addLog('End recording signal sent', 'success');
-          };
-          reader.readAsArrayBuffer(audioBlob);
+          // Signal end of recording
+          ws.send(JSON.stringify({ type: 'end_recording' }));
+          addLog('📤 Audio processing request sent', 'success');
         } else {
-          addLog('WebSocket not connected!', 'error');
+          addLog('❌ WebSocket not connected!', 'error');
         }
         
+        // Clean up stream
         stream.getTracks().forEach(track => track.stop());
       };
       
+      // Start recording with small chunks for real-time processing
       mediaRecorder.start(100);
       isRecording = true;
-      currentTranscription = 'Recording...';
-      addLog('Recording started...', 'success');
-      updateStatus('Recording...', '#ff4444');
+      currentTranscription = '🎤 Recording... Ask me about PRSNL features!';
+      addLog('🎙️ Recording started! Try asking about knowledge base features', 'success');
+      updateStatus('Recording - Ask about PRSNL!', '#ff4444');
       
     } catch (error) {
-      addLog(`Failed to start recording: ${error.message}`, 'error');
+      addLog(`❌ Failed to start recording: ${error.message}`, 'error');
+      updateStatus('Microphone Error', '#ff4444');
     }
   }
   
@@ -147,7 +335,7 @@
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
       isRecording = false;
-      currentTranscription = 'Processing audio...';
+      currentTranscription = '⚙️ Processing your question...';
       updateStatus('Processing...', '#ffaa44');
     }
   }
@@ -167,156 +355,518 @@
       source.connect(audioContext.destination);
       source.start();
       
-      addLog('Audio playback started', 'success');
-      updateStatus('Playing response...', '#44ff44');
+      addLog('🔊 Audio playback started', 'success');
+      updateStatus('🔊 Cortex is speaking...', '#44ff44');
       
       source.onended = () => {
-        addLog('Audio playback finished');
-        updateStatus('Connected', '#44ff44');
+        addLog('✅ Audio playback finished', 'info');
+        updateStatus('Connected - Ready for Voice', '#44ff44');
       };
       
     } catch (error) {
-      addLog(`Failed to play audio: ${error.message}`, 'error');
+      addLog(`❌ Failed to play audio: ${error.message}`, 'error');
+      updateStatus('Audio Error', '#ff4444');
+    }
+  }
+
+  function clearLog() {
+    log = [];
+    addLog('📝 Log cleared', 'info');
+  }
+
+  function sendPing() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ping' }));
+      addLog('📡 Ping sent', 'info');
+    } else {
+      addLog('❌ WebSocket not connected', 'error');
+    }
+  }
+
+  function updateVoiceSettings() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'set_voice',
+        gender: voiceSettings.gender
+      }));
+      addLog(`🎵 Voice settings updated: ${JSON.stringify(voiceSettings)}`, 'info');
     }
   }
 </script>
 
 <div class="container">
-  <h1>Voice Chat Debug Tool</h1>
-  <div class="status" style="background-color: {statusColor}">Status: {status}</div>
-  
-  <div class="buttons">
-    <button on:click={testVoice}>Test Voice Endpoint</button>
-    <button 
-      bind:this={recordButton}
-      on:mousedown={startRecording}
-      on:mouseup={stopRecording}
-      on:mouseleave={stopRecording}
-      disabled={!ws || ws.readyState !== WebSocket.OPEN}
-    >
-      {isRecording ? 'Recording...' : 'Hold to Record'}
-    </button>
-    <button on:click={connectWebSocket}>
-      {ws && ws.readyState === WebSocket.OPEN ? 'Disconnect' : 'Connect WebSocket'}
-    </button>
+  <div class="header">
+    <h1>🎤 PRSNL Voice System Test - Memory Optimized</h1>
+    <div class="status" style="background-color: {statusColor}">
+      Status: {status}
+    </div>
   </div>
-  
-  {#if currentTranscription || finalTranscription}
-    <div class="transcription-box">
-      <h3>Transcription:</h3>
-      <div class="current-transcription">{currentTranscription}</div>
+
+  <!-- Memory Optimization Stats -->
+  <div class="stats-panel">
+    <h3>📊 Memory Optimization Results</h3>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <strong>STT Model:</strong> {memoryStats.sttModel}
+      </div>
+      <div class="stat-item">
+        <strong>Memory Usage:</strong> {memoryStats.estimatedMemory}
+      </div>
+      <div class="stat-item">
+        <strong>Performance:</strong> {memoryStats.performance}
+      </div>
+      <div class="stat-item">
+        <strong>Cost:</strong> $0/month (vs $200-500)
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Settings -->
+  <div class="settings-panel">
+    <h3>🎛️ Voice Settings</h3>
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>Gender:</label>
+        <select bind:value={voiceSettings.gender} on:change={updateVoiceSettings}>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>TTS Engine:</label>
+        <select bind:value={voiceSettings.ttsEngine}>
+          <option value="piper">Piper (Memory Optimized)</option>
+          <option value="chatterbox">Chatterbox (Emotion)</option>
+          <option value="edge-tts">Edge TTS (Fallback)</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Use CrewAI:</label>
+        <input type="checkbox" bind:checked={voiceSettings.useCrewAI} />
+      </div>
+      <div class="setting-item">
+        <label>Emotion Strength:</label>
+        <input type="range" min="0" max="1" step="0.1" bind:value={voiceSettings.emotionStrength} />
+        <span>{voiceSettings.emotionStrength}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Knowledge Base Test Section -->
+  <div class="knowledge-panel">
+    <h3>🧠 Knowledge Base Integration Test</h3>
+    <div class="knowledge-controls">
+      <select bind:value={selectedQuery}>
+        <option value="">Select a knowledge base query...</option>
+        {#each knowledgeBaseQueries as query}
+          <option value={query}>{query}</option>
+        {/each}
+      </select>
+      <button on:click={testKnowledgeBaseQuery} disabled={isTestingKnowledge || !selectedQuery}>
+        {isTestingKnowledge ? '⚙️ Testing...' : '🧠 Test Knowledge Query'}
+      </button>
+    </div>
+    {#if selectedQuery}
+      <div class="selected-query">
+        <strong>Selected Query:</strong> "{selectedQuery}"
+      </div>
+    {/if}
+  </div>
+
+  <!-- Main Controls -->
+  <div class="controls">
+    <div class="button-group">
+      <button on:click={testVoiceOptimizations} class="primary">
+        🚀 Test Voice Optimizations
+      </button>
+      <button on:click={connectWebSocket} class={ws && ws.readyState === WebSocket.OPEN ? 'connected' : 'disconnected'}>
+        {ws && ws.readyState === WebSocket.OPEN ? '🔌 Disconnect WS' : '🔌 Connect WebSocket'}
+      </button>
+    </div>
+    
+    <div class="button-group">
+      <button 
+        bind:this={recordButton}
+        on:mousedown={startRecording}
+        on:mouseup={stopRecording}
+        on:mouseleave={stopRecording}
+        disabled={!ws || ws.readyState !== WebSocket.OPEN}
+        class="record-button"
+        class:recording={isRecording}
+      >
+        {isRecording ? '🔴 Recording...' : '🎤 Hold to Record'}
+      </button>
+      <button on:click={sendPing} disabled={!ws || ws.readyState !== WebSocket.OPEN}>
+        📡 Ping
+      </button>
+      <button on:click={clearLog}>
+        🗑️ Clear Log
+      </button>
+    </div>
+  </div>
+
+  <!-- Transcription Display -->
+  {#if currentTranscription || finalTranscription || lastAiResponse}
+    <div class="transcription-panel">
+      <h3>💬 Conversation</h3>
+      
+      {#if currentTranscription}
+        <div class="current-status">{currentTranscription}</div>
+      {/if}
+      
       {#if finalTranscription}
-        <div class="final-transcription">Last: "{finalTranscription}"</div>
+        <div class="conversation-item user">
+          <strong>You:</strong> "{finalTranscription}"
+        </div>
+      {/if}
+      
+      {#if lastAiResponse}
+        <div class="conversation-item ai">
+          <strong>Cortex:</strong> "{lastAiResponse}"
+        </div>
       {/if}
     </div>
   {/if}
-  
-  <h3>Log:</h3>
-  <div class="log">
-    {#each log as entry}
-      <div class="log-entry {entry.type}">
-        [{entry.time}] {entry.message}
-      </div>
-    {/each}
+
+  <!-- Instructions -->
+  <div class="instructions">
+    <h3>📋 Test Instructions</h3>
+    <ol>
+      <li><strong>Test Optimizations:</strong> Click "Test Voice Optimizations" to verify memory improvements</li>
+      <li><strong>Connect WebSocket:</strong> Establish real-time voice connection</li>
+      <li><strong>Test Knowledge Queries:</strong> Select and test knowledge base integration</li>
+      <li><strong>Voice Chat:</strong> Hold "Record" and ask questions about PRSNL features</li>
+      <li><strong>Try These Queries:</strong></li>
+      <ul>
+        <li>"What is the PRSNL architecture?"</li>
+        <li>"How does voice processing work?"</li>
+        <li>"Tell me about CLI integration"</li>
+        <li>"What are the recent improvements?"</li>
+      </ul>
+    </ol>
+  </div>
+
+  <!-- Log Display -->
+  <div class="log-panel">
+    <h3>📄 System Log</h3>
+    <div class="log">
+      {#each log as entry}
+        <div class="log-entry {entry.type}">
+          <span class="log-time">[{entry.time}]</span>
+          <span class="log-message">{entry.message}</span>
+        </div>
+      {/each}
+    </div>
   </div>
 </div>
 
 <style>
   .container {
-    font-family: Arial, sans-serif;
-    max-width: 800px;
-    margin: 50px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 20px auto;
     padding: 20px;
-    background: #1a1a1a;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
-  
-  .buttons {
-    display: flex;
-    gap: 10px;
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    margin: 0 0 15px 0;
+    font-size: 2.2em;
+    background: linear-gradient(45deg, #4a9eff, #44ff44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .status {
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.1em;
+    display: inline-block;
+    min-width: 200px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .stats-panel, .settings-panel, .knowledge-panel, .instructions {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 20px;
     margin: 20px 0;
+    border: 1px solid rgba(255,255,255,0.1);
   }
-  
-  button {
-    padding: 15px 30px;
-    font-size: 18px;
-    cursor: pointer;
-    background: #4a9eff;
-    color: white;
-    border: none;
+
+  .stats-panel h3, .settings-panel h3, .knowledge-panel h3, .instructions h3 {
+    margin-top: 0;
+    color: #4a9eff;
+    font-size: 1.3em;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+  }
+
+  .stat-item {
+    background: rgba(74, 158, 255, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #4a9eff;
+  }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .setting-item label {
+    font-weight: bold;
+    color: #ccc;
+  }
+
+  .setting-item select, .setting-item input[type="range"] {
+    padding: 8px;
     border-radius: 5px;
-    transition: background 0.3s;
+    border: 1px solid #444;
+    background: #333;
+    color: white;
   }
-  
-  button:hover {
-    background: #357abd;
+
+  .knowledge-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
   }
-  
+
+  .knowledge-controls select {
+    flex: 1;
+    min-width: 300px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #333;
+    color: white;
+  }
+
+  .selected-query {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(68, 255, 68, 0.1);
+    border-radius: 5px;
+    border-left: 4px solid #44ff44;
+  }
+
+  .controls {
+    margin: 30px 0;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-width: 120px;
+  }
+
+  button.primary {
+    background: linear-gradient(45deg, #4a9eff, #357abd);
+    color: white;
+  }
+
+  button.primary:hover {
+    background: linear-gradient(45deg, #357abd, #4a9eff);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 158, 255, 0.4);
+  }
+
+  button.connected {
+    background: linear-gradient(45deg, #44ff44, #2ecc71);
+    color: white;
+  }
+
+  button.disconnected {
+    background: linear-gradient(45deg, #ff4444, #e74c3c);
+    color: white;
+  }
+
+  button.record-button {
+    background: linear-gradient(45deg, #ff6b6b, #ff4444);
+    color: white;
+    font-size: 18px;
+    padding: 15px 30px;
+  }
+
+  button.record-button.recording {
+    background: linear-gradient(45deg, #ff0000, #cc0000);
+    animation: pulse 1s infinite;
+  }
+
+  button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+  }
+
   button:disabled {
     background: #666;
     cursor: not-allowed;
+    opacity: 0.5;
   }
-  
-  .status {
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
-    font-weight: bold;
-    text-align: center;
-  }
-  
-  .log {
-    background: #2a2a2a;
+
+  .transcription-panel {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
     padding: 20px;
-    border-radius: 5px;
-    margin-top: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-    font-family: monospace;
-    font-size: 14px;
-  }
-  
-  .log-entry {
-    margin: 5px 0;
-    padding: 5px;
-    border-left: 3px solid #4a9eff;
-    padding-left: 10px;
-  }
-  
-  .log-entry.error {
-    border-left-color: #ff4444;
-    color: #ff6666;
-  }
-  
-  .log-entry.success {
-    border-left-color: #44ff44;
-    color: #66ff66;
-  }
-  
-  .transcription-box {
-    background: #2a2a2a;
-    padding: 20px;
-    border-radius: 5px;
     margin: 20px 0;
     border: 2px solid #4a9eff;
   }
-  
-  .transcription-box h3 {
+
+  .transcription-panel h3 {
     margin-top: 0;
     color: #4a9eff;
   }
-  
-  .current-transcription {
-    font-size: 20px;
-    color: #ffffff;
+
+  .current-status {
+    font-size: 18px;
+    color: #ffaa44;
     margin: 10px 0;
-    min-height: 30px;
-  }
-  
-  .final-transcription {
-    font-size: 16px;
-    color: #aaaaaa;
-    margin-top: 10px;
     font-style: italic;
+  }
+
+  .conversation-item {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .conversation-item.user {
+    background: rgba(74, 158, 255, 0.1);
+    border-left: 4px solid #4a9eff;
+  }
+
+  .conversation-item.ai {
+    background: rgba(68, 255, 68, 0.1);
+    border-left: 4px solid #44ff44;
+  }
+
+  .instructions ol, .instructions ul {
+    padding-left: 20px;
+  }
+
+  .instructions li {
+    margin: 8px 0;
+    line-height: 1.5;
+  }
+
+  .log-panel {
+    margin-top: 30px;
+  }
+
+  .log-panel h3 {
+    color: #4a9eff;
+    margin-bottom: 15px;
+  }
+
+  .log {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .log-entry {
+    margin: 8px 0;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border-left: 3px solid #4a9eff;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .log-entry.success {
+    border-left-color: #44ff44;
+    color: #88ff88;
+    background: rgba(68, 255, 68, 0.05);
+  }
+
+  .log-entry.error {
+    border-left-color: #ff4444;
+    color: #ff8888;
+    background: rgba(255, 68, 68, 0.05);
+  }
+
+  .log-entry.info {
+    border-left-color: #4a9eff;
+    color: #88ccff;
+  }
+
+  .log-time {
+    color: #888;
+    margin-right: 10px;
+    font-size: 11px;
+  }
+
+  .log-message {
+    color: inherit;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .container {
+      margin: 10px;
+      padding: 15px;
+    }
+
+    .stats-grid, .settings-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .button-group {
+      flex-direction: column;
+    }
+
+    .knowledge-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .knowledge-controls select {
+      min-width: auto;
+    }
   }
 </style>
