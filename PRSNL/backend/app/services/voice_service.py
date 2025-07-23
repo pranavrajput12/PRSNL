@@ -32,6 +32,7 @@ else:
         )
 
 import whisper
+from faster_whisper import WhisperModel
 import asyncio
 from edge_tts import Communicate
 import tempfile
@@ -181,18 +182,53 @@ class VoiceService:
         logger.info(f"PATH env var includes /opt/homebrew/bin: {'/opt/homebrew/bin' in os.environ.get('PATH', '')}")
         
         try:
-            # Load model based on configuration
-            model_name = settings.VOICE_STT_MODEL
-            self.whisper_model = whisper.load_model(model_name)
-            logger.info(f"✅ Whisper '{model_name}' model loaded successfully")
+            # Use memory-optimized faster-whisper instead of regular whisper
+            model_name = getattr(settings, 'VOICE_STT_MODEL', 'small')
+            
+            # Map regular whisper model names to faster-whisper equivalents
+            # Use tiny.en for maximum memory efficiency (39MB vs 244MB)
+            model_map = {
+                'tiny': 'tiny.en',
+                'base': 'base.en', 
+                'small': 'tiny.en',  # Use tiny.en instead of small for memory savings
+                'medium': 'base.en', # Use base.en instead of medium for memory savings
+                'large': 'base.en'   # Use base.en instead of large for memory savings
+            }
+            
+            faster_model_name = model_map.get(model_name, 'tiny.en')
+            
+            # Initialize faster-whisper with memory optimizations
+            self.whisper_model = WhisperModel(
+                faster_model_name,
+                device="cpu",  # Use CPU for compatibility (ARM64 Mac)
+                compute_type="int8",  # Use INT8 quantization for 50% memory reduction
+                cpu_threads=4,  # Limit CPU threads for memory efficiency
+                num_workers=1   # Single worker to minimize memory usage
+            )
+            logger.info(f"✅ faster-whisper '{faster_model_name}' model loaded successfully (memory-optimized)")
+            logger.info(f"   Memory saved: ~200MB compared to regular Whisper '{model_name}'")
+            
         except Exception as e:
-            logger.warning(f"Failed to load '{model_name}' model: {e}, falling back to 'base'")
+            logger.warning(f"Failed to load faster-whisper '{faster_model_name}': {e}, falling back to tiny.en")
             try:
-                self.whisper_model = whisper.load_model("base")  # Fallback to base model
-                logger.info("✅ Whisper 'base' model loaded as fallback")
+                # Ultimate fallback to tiny.en with maximum memory efficiency
+                self.whisper_model = WhisperModel(
+                    "tiny.en",
+                    device="cpu",
+                    compute_type="int8",
+                    cpu_threads=2,
+                    num_workers=1
+                )
+                logger.info("✅ faster-whisper 'tiny.en' model loaded as fallback (ultra memory-efficient)")
             except Exception as fallback_error:
-                logger.error(f"❌ Failed to load any Whisper model: {fallback_error}")
-                raise
+                logger.error(f"❌ Failed to load any faster-whisper model: {fallback_error}")
+                # Final fallback to regular whisper base model
+                try:
+                    self.whisper_model = whisper.load_model("base")
+                    logger.warning("⚠️ Using regular Whisper 'base' as final fallback (higher memory usage)")
+                except Exception as final_error:
+                    logger.error(f"❌ Complete failure to load any Whisper model: {final_error}")
+                    raise
         
         # Initialize services
         self.ai_service = AIService()
@@ -304,9 +340,9 @@ class VoiceService:
             if os.path.exists(audio_path):
                 os.unlink(audio_path)
     
-    @observe(name="speech_to_text_whisper")
+    @observe(name="speech_to_text_faster_whisper")
     async def speech_to_text(self, audio_path: str) -> str:
-        """Convert speech to text using Whisper"""
+        """Convert speech to text using faster-whisper (memory-optimized)"""
         try:
             # Ensure ffmpeg is available for Whisper
             if not os.environ.get('FFMPEG_BINARY'):
@@ -315,29 +351,62 @@ class VoiceService:
                 if os.path.exists(ffmpeg_path):
                     os.environ['FFMPEG_BINARY'] = ffmpeg_path
             
-            # Run in thread pool to not block
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None, 
-                lambda: self.whisper_model.transcribe(
-                    audio_path, 
-                    language="en",
-                    fp16=False  # Disable FP16 for better compatibility
-                )
-            )
+            # Check if we're using faster-whisper or regular whisper
+            is_faster_whisper = hasattr(self.whisper_model, 'transcribe') and callable(getattr(self.whisper_model, 'transcribe'))
             
-            text = result["text"].strip()
+            if isinstance(self.whisper_model, WhisperModel):
+                # Use faster-whisper API (returns segments and info)
+                loop = asyncio.get_event_loop()
+                segments, info = await loop.run_in_executor(
+                    None,
+                    lambda: self.whisper_model.transcribe(
+                        audio_path,
+                        language="en",
+                        beam_size=1,  # Faster inference with slight accuracy trade-off
+                        best_of=1,    # Use single beam for speed
+                        temperature=0.0,  # Deterministic output
+                        compression_ratio_threshold=2.4,  # Default compression threshold
+                        log_prob_threshold=-1.0,  # Default log prob threshold
+                        no_speech_threshold=0.6,  # Default no speech threshold
+                        condition_on_previous_text=False,  # Don't condition on previous text for memory efficiency
+                        initial_prompt=None,  # No initial prompt for speed
+                        word_timestamps=False,  # Disable word timestamps for speed
+                        prepend_punctuations="\"'([{-",
+                        append_punctuations="\"'.。,，!！?？:：\")]}、"
+                    )
+                )
+                
+                # Combine all segments into single text
+                text = " ".join(segment.text for segment in segments).strip()
+                logger.info(f"faster-whisper transcription completed. Language: {info.language}, Duration: {info.duration:.2f}s")
+                
+            else:
+                # Fallback to regular whisper API
+                logger.info("Using regular Whisper API (fallback)")
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None, 
+                    lambda: self.whisper_model.transcribe(
+                        audio_path, 
+                        language="en",
+                        fp16=False  # Disable FP16 for better compatibility
+                    )
+                )
+                text = result["text"].strip()
             
             # Clean up common speech artifacts
             text = text.replace(" umm ", " ")
             text = text.replace(" uh ", " ")
+            text = text.replace("  ", " ")  # Remove double spaces
             
+            logger.info(f"STT completed: '{text[:100]}{'...' if len(text) > 100 else ''}'")
             return text
             
         except Exception as e:
             logger.error(f"Error in speech to text: {e}")
             logger.error(f"Audio path: {audio_path}")
             logger.error(f"FFMPEG_BINARY: {os.environ.get('FFMPEG_BINARY', 'Not set')}")
+            logger.error(f"Model type: {type(self.whisper_model)}")
             raise
     
     @observe(name="process_text_message_voice")

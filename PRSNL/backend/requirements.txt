@@ -52,14 +52,16 @@ pre-commit==3.6.0
 bandit==1.7.5
 pydocstyle==6.3.0
 
-# Voice Recognition (Offline)
+# Voice Recognition (Offline) - Memory Optimized
 vosk==0.3.44
 pywhispercpp>=1.2.0  # whisper.cpp Python bindings
 openai-whisper>=20231106  # OpenAI Whisper for better accuracy
+faster-whisper>=1.1.0  # Memory-efficient Whisper implementation (20-244MB saved)
 
-# Voice Enhancement & TTS
+# Voice Enhancement & TTS - Memory Optimized
 chatterbox-tts>=0.1.2  # Modern TTS with emotion control (using latest available)
 edge-tts>=6.1.0  # Edge TTS (keeping as fallback)
+piper-tts>=1.2.0  # Lightweight neural TTS (50MB vs 500MB, 80ms latency)
 RealtimeSTT>=0.1.15  # Real-time streaming STT
 webrtcvad>=2.0.10  # Voice Activity Detection
 # speechbrain>=0.5.16  # Speech enhancement (commented - large dependency)

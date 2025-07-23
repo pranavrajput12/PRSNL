@@ -108,6 +108,128 @@ class ChatterboxTTSBackend(TTSBackend):
         return True
 
 
+class PiperTTSBackend(TTSBackend):
+    """Piper TTS - Lightweight neural TTS (memory-optimized)"""
+    
+    def __init__(self):
+        self.initialized = False
+        self.voices = {
+            "female": {
+                "primary": "en_US-amy-low",     # Lightweight female voice
+                "thoughtful": "en_US-amy-medium", # Better quality female
+                "excited": "en_US-kathleen-low"   # Alternative female voice
+            },
+            "male": {
+                "primary": "en_US-ryan-low",    # Lightweight male voice  
+                "thoughtful": "en_US-ryan-medium", # Better quality male
+                "excited": "en_US-danny-low"    # Alternative male voice
+            }
+        }
+        self._initialize()
+    
+    def _initialize(self):
+        """Lazy initialization of Piper TTS"""
+        try:
+            # Try different import patterns for piper-tts
+            try:
+                import piper_tts as piper
+            except ImportError:
+                import piper
+            
+            self.piper = piper
+            self.initialized = True
+            logger.info("Piper TTS initialized successfully (memory-optimized)")
+        except ImportError:
+            logger.warning("Piper TTS not available, install with: pip install piper-tts")
+        except Exception as e:
+            logger.error(f"Failed to initialize Piper TTS: {e}")
+    
+    async def synthesize(
+        self, 
+        text: str, 
+        voice: str = "en_US-amy-low",
+        rate: float = 1.0,
+        **kwargs
+    ) -> bytes:
+        """Synthesize speech using Piper TTS (lightweight)"""
+        if not self.initialized:
+            logger.warning("Piper TTS not initialized, falling back to Edge-TTS")
+            raise RuntimeError("Piper TTS not initialized")
+        
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                # Run piper in thread pool to avoid blocking
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None,
+                    lambda: self._synthesize_sync(text, voice, tmp.name, rate)
+                )
+                
+                with open(tmp.name, 'rb') as f:
+                    audio_data = f.read()
+                
+                os.unlink(tmp.name)
+                return audio_data
+                
+        except Exception as e:
+            logger.error(f"Piper TTS synthesis failed: {e}")
+            raise
+    
+    def _synthesize_sync(self, text: str, voice: str, output_path: str, rate: float):
+        """Synchronous Piper synthesis"""
+        try:
+            # Use piper CLI-style interface for maximum compatibility
+            import subprocess
+            
+            # Piper command: echo "text" | piper --model voice --output_file output.wav
+            cmd = [
+                'python', '-m', 'piper',
+                '--model', voice,
+                '--output_file', output_path
+            ]
+            
+            # Add rate control if supported
+            if rate != 1.0:
+                cmd.extend(['--length_scale', str(1.0 / rate)])  # Inverse for piper
+            
+            # Run piper with text input
+            process = subprocess.run(
+                cmd,
+                input=text,
+                text=True,
+                capture_output=True,
+                check=True,
+                timeout=30  # 30 second timeout
+            )
+            
+            logger.info(f"Piper TTS completed successfully for voice: {voice}")
+            
+        except subprocess.TimeoutExpired:
+            logger.error("Piper TTS synthesis timed out")
+            raise
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Piper TTS command failed: {e.stderr}")
+            raise
+        except Exception as e:
+            logger.error(f"Piper TTS synthesis error: {e}")
+            raise
+    
+    def get_available_voices(self) -> List[Dict[str, str]]:
+        """Get available Piper voices"""
+        voices = []
+        for gender, voice_dict in self.voices.items():
+            for mood, voice_id in voice_dict.items():
+                voices.append({
+                    "id": voice_id,
+                    "name": f"Piper {gender.title()} - {mood.title()} (Light)",
+                    "gender": gender
+                })
+        return voices
+    
+    def supports_emotion(self) -> bool:
+        return False  # Piper doesn't have direct emotion control but has voice variations
+
+
 class EdgeTTSBackend(TTSBackend):
     """Edge-TTS backend (fallback)"""
     
@@ -178,6 +300,12 @@ class TTSManager:
     
     def _initialize_backends(self):
         """Initialize available TTS backends"""
+        # Try to initialize Piper TTS first (memory-optimized)
+        try:
+            self.backends["piper"] = PiperTTSBackend()
+        except Exception as e:
+            logger.warning(f"Piper TTS backend unavailable: {e}")
+        
         # Try to initialize Chatterbox
         try:
             self.backends["chatterbox"] = ChatterboxTTSBackend()
@@ -191,9 +319,15 @@ class TTSManager:
         if not self.backends:
             raise RuntimeError("No TTS backends available")
         
-        # Adjust primary backend if not available
+        # Adjust primary backend if not available - prefer memory-efficient options
         if self.primary_backend not in self.backends:
-            self.primary_backend = list(self.backends.keys())[0]
+            # Priority order: piper -> chatterbox -> edge-tts
+            if "piper" in self.backends:
+                self.primary_backend = "piper"
+            elif "chatterbox" in self.backends:
+                self.primary_backend = "chatterbox"
+            else:
+                self.primary_backend = "edge-tts"
             logger.info(f"Primary TTS backend set to: {self.primary_backend}")
     
     async def synthesize(
