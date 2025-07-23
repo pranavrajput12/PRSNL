@@ -14,6 +14,7 @@ import io
 
 from app.core.auth import get_current_user_ws_optional
 from app.services.voice_service import get_voice_service
+from app.services.realtime_stt_service import get_realtime_stt_service
 from app.db.database import get_db_connection
 from app.core.auth import verify_token
 
@@ -207,6 +208,159 @@ async def log_voice_interaction(user_id: str, result: Dict[str, Any]):
         # Don't fail if logging fails
         logger.warning(f"Failed to log voice interaction: {e}")
 
+
+@router.websocket("/ws/streaming")
+async def voice_streaming_websocket(
+    websocket: WebSocket,
+    user_id: Optional[str] = Depends(get_current_user_ws_optional)
+):
+    """
+    WebSocket endpoint for real-time streaming speech-to-text
+    
+    Protocol:
+    - Server sends {"type": "partial", "text": "...", "is_final": false} for partial transcriptions
+    - Server sends {"type": "final", "text": "...", "is_final": true} for final transcriptions
+    - Client sends {"type": "start"} to start streaming
+    - Client sends {"type": "stop"} to stop streaming
+    - Client sends {"type": "process", "text": "..."} to process final text with AI
+    """
+    
+    # Use anonymous ID if not authenticated
+    if not user_id:
+        user_id = f"anonymous_{id(websocket)}"
+    
+    await websocket.accept()
+    realtime_stt = get_realtime_stt_service()
+    voice_service = get_voice_service()
+    
+    # Track streaming state
+    is_streaming = False
+    accumulated_text = []
+    
+    async def on_transcription(text_data: Dict[str, Any]):
+        """Handle transcription updates"""
+        try:
+            await websocket.send_json(text_data)
+            
+            # Accumulate final transcriptions
+            if text_data.get("is_final"):
+                accumulated_text.append(text_data["text"])
+        except Exception as e:
+            logger.error(f"Error sending transcription: {e}")
+    
+    async def on_error(error: str):
+        """Handle streaming errors"""
+        await websocket.send_json({
+            "type": "error",
+            "message": error
+        })
+    
+    try:
+        while True:
+            message = await websocket.receive_json()
+            msg_type = message.get("type")
+            
+            if msg_type == "start":
+                if not is_streaming:
+                    is_streaming = True
+                    accumulated_text.clear()
+                    
+                    # Start streaming in background
+                    asyncio.create_task(
+                        realtime_stt.start_streaming(
+                            on_text=on_transcription,
+                            on_error=on_error
+                        )
+                    )
+                    
+                    await websocket.send_json({
+                        "type": "streaming_started",
+                        "status": "active"
+                    })
+                else:
+                    await websocket.send_json({
+                        "type": "info",
+                        "message": "Streaming already active"
+                    })
+                    
+            elif msg_type == "stop":
+                if is_streaming:
+                    is_streaming = False
+                    realtime_stt.stop_streaming()
+                    
+                    await websocket.send_json({
+                        "type": "streaming_stopped",
+                        "status": "inactive",
+                        "accumulated_text": " ".join(accumulated_text)
+                    })
+                    
+            elif msg_type == "process":
+                # Process the accumulated or provided text with AI
+                text_to_process = message.get("text") or " ".join(accumulated_text)
+                
+                if text_to_process:
+                    await websocket.send_json({
+                        "type": "processing",
+                        "status": "generating_response"
+                    })
+                    
+                    try:
+                        # Process with voice service for Cortex personality
+                        result = await voice_service.process_text_message(
+                            text_to_process,
+                            user_id
+                        )
+                        
+                        # Send AI response
+                        await websocket.send_json({
+                            "type": "ai_response",
+                            "data": {
+                                "user_text": text_to_process,
+                                "ai_text": result["ai_text"],
+                                "personalized_text": result["personalized_text"],
+                                "mood": result["mood"]
+                            }
+                        })
+                        
+                        # Generate and send audio if requested
+                        if message.get("include_audio", True):
+                            audio_data = await voice_service.text_to_speech(
+                                result["personalized_text"]
+                            )
+                            
+                            await websocket.send_json({
+                                "type": "audio_response",
+                                "format": "mp3",
+                                "data": base64.b64encode(audio_data).decode()
+                            })
+                            
+                    except Exception as e:
+                        logger.error(f"Error processing text: {e}")
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "Failed to process text"
+                        })
+                        
+            elif msg_type == "set_language":
+                language = message.get("language", "en")
+                realtime_stt.set_language(language)
+                await websocket.send_json({
+                    "type": "language_changed",
+                    "language": language
+                })
+                
+            elif msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+                
+    except WebSocketDisconnect:
+        logger.info(f"Streaming WebSocket disconnected for user: {user_id}")
+        if is_streaming:
+            realtime_stt.stop_streaming()
+    except Exception as e:
+        logger.error(f"Streaming WebSocket error: {e}")
+        if is_streaming:
+            realtime_stt.stop_streaming()
+        
 
 @router.get("/health")
 async def voice_health_check():

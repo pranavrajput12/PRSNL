@@ -33,23 +33,15 @@ async def get_current_user(
     Get current authenticated user from JWT token
     """
     if not credentials:
-        # For backward compatibility during migration, return test user if no auth
-        # TODO: Remove this after frontend is updated
-        return User(
-            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-            email="test@example.com",
-            name="Test User"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
     token = credentials.credentials
     
-    # Development bypass for frontend dev-bypass-token
-    if token == "dev-bypass-token":
-        return User(
-            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-            email="test@example.com",
-            name="Test User"
-        )
+    # Token validation - no bypasses allowed
     
     user_response = await AuthService.get_current_user(token)
     
@@ -91,13 +83,7 @@ async def get_current_user_ws(websocket, token: Optional[str] = None) -> Optiona
     WebSocket auth function - validates JWT token from WebSocket
     """
     if not token:
-        # For backward compatibility during migration
-        # TODO: Remove this after frontend is updated
-        return User(
-            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-            email="test@example.com",
-            name="Test User"
-        )
+        return None
     
     user_response = await AuthService.get_current_user(token)
     
@@ -130,18 +116,7 @@ async def verify_token(token: str) -> Optional[dict]:
     }
 
 
-# For backward compatibility
-async def get_test_user() -> User:
-    """
-    Get test user for development/migration purposes
-    This should only be used in non-authenticated endpoints during migration
-    """
-    return User(
-        id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-        email="admin@prsnl.local",
-        name="Admin User",
-        is_verified=True
-    )
+# Test user function removed - authentication is now required
 
 
 async def get_current_user_id(

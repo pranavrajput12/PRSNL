@@ -12,7 +12,12 @@ from pydantic import BaseModel, EmailStr
 from app.core.auth import User, get_current_user, get_current_user_optional
 from app.core.exceptions import AuthenticationError, InvalidInput
 from app.db.database import get_db_pool
-from app.services.auth_service import auth_service
+from app.services.auth_service import auth_service, AuthService
+from app.services.email_service import EmailService
+from app.models.auth import (
+    UserRegister, UserLogin, UserResponse, 
+    RefreshTokenRequest, PasswordResetRequest, EmailVerificationRequest
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,65 +63,65 @@ class RefreshTokenRequest(BaseModel):
 @router.post("/login")
 async def login(request: PRSNLLoginRequest):
     """Login endpoint for email/password authentication"""
-    # DEVELOPMENT BYPASS: Accept any email/password for now
-    # This matches the security bypass pattern documented in SECURITY_BYPASSES.md
-    logger.warning("SECURITY BYPASS: Accepting any login credentials for development")
+    # Authenticate user
+    user_data = await auth_service.authenticate_user(UserLogin(
+        email=request.email,
+        password=request.password
+    ))
     
-    # Generate development tokens using the existing auth service
-    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Test user ID
-    access_token = auth_service.create_access_token({"sub": user_id})
-    refresh_token = auth_service.create_refresh_token({"sub": user_id})
+    if not user_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    # Create tokens
+    access_token, refresh_token = await auth_service.create_tokens(str(user_data["id"]))
     
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
         "user": {
-            "id": user_id,
-            "email": request.email,
-            "name": "Test User",
-            "is_verified": True
+            "id": str(user_data["id"]),
+            "email": user_data["email"],
+            "name": f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip() or user_data["email"],
+            "is_verified": user_data["is_verified"]
         }
     }
 
 
 @router.post("/register", response_model=UserResponse)
 async def register(request: PRSNLRegisterRequest):
-    """Register a new user with PRSNL - DEVELOPMENT BYPASS"""
-    # For development, just return a test user
-    logger.warning("SECURITY BYPASS: Registration always succeeds with test user")
-    return UserResponse(
-        id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-        email=request.email,
-        name=request.name or "Test User",
-        created_at=datetime.utcnow(),
-        is_verified=True
-    )
+    """Register a new user with PRSNL"""
+    try:
+        # Parse name into first and last
+        name_parts = (request.name or "").split(" ", 1) if request.name else ["", ""]
+        first_name = name_parts[0] or ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        # Register user
+        user = await auth_service.register_user(UserRegister(
+            email=request.email,
+            password=request.password,
+            first_name=first_name,
+            last_name=last_name,
+            user_type="standard"
+        ))
+        
+        return user
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.post("/login/prsnl")
 async def login_prsnl(request: PRSNLLoginRequest):
     """Login with PRSNL credentials"""
-    # DEVELOPMENT BYPASS: Accept any email/password for now
-    # This matches the security bypass pattern documented in SECURITY_BYPASSES.md
-    logger.warning("SECURITY BYPASS: Accepting any login credentials for development")
-    
-    # Generate development tokens using the existing auth service
-    user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"  # Test user ID
-    access_token = auth_service.create_access_token({"sub": user_id})
-    refresh_token = auth_service.create_refresh_token({"sub": user_id})
-    
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user_id,
-            "email": request.email,
-            "name": "Test User",
-            "is_verified": True
-        }
-    }
+    # Use the same logic as the main login endpoint
+    return await login(request)
 
 
 @router.post("/logout")
@@ -130,29 +135,28 @@ async def logout(user: User = Depends(get_current_user)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(request: Request):
+async def get_me(user: User = Depends(get_current_user)):
     """Get current authenticated user info"""
-    # DEVELOPMENT BYPASS: Return test user for any request
-    # This aligns with the security bypasses documented
-    logger.warning("SECURITY BYPASS: Returning test user for /api/auth/me")
-    
-    # Check if there's a token in the Authorization header
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        # Token is present, return test user
-        return UserResponse(
-            id="e03c9686-09b0-4a06-b236-d0839ac7f5df",
-            email="test@example.com",
-            name="Test User",
-            created_at=datetime.utcnow(),
-            is_verified=True
+    # Get full user data from database
+    pool = await get_db_pool()
+    async with pool.acquire() as db:
+        user_data = await db.fetchrow(
+            "SELECT * FROM users WHERE id = $1",
+            UUID(user.id)
         )
-    else:
-        # No token, return 401
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
+        
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return UserResponse(
+            id=str(user_data["id"]),
+            email=user_data["email"],
+            name=f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip() or user_data["email"],
+            created_at=user_data["created_at"],
+            is_verified=user_data["is_verified"]
         )
 
 
@@ -160,16 +164,10 @@ async def get_me(request: Request):
 async def refresh_token(request: RefreshTokenRequest):
     """Refresh access token using refresh token"""
     try:
-        # For development, always return new tokens
-        user_id = "e03c9686-09b0-4a06-b236-d0839ac7f5df"
-        access_token = auth_service.create_access_token({"sub": user_id})
-        refresh_token = auth_service.create_refresh_token({"sub": user_id})
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
-    except AuthenticationError as e:
+        # Use the auth service to refresh token
+        token_response = await auth_service.refresh_access_token(request)
+        return token_response
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
@@ -177,28 +175,58 @@ async def refresh_token(request: RefreshTokenRequest):
 
 
 @router.post("/verify-email")
-async def verify_email(token: str, user: User = Depends(get_current_user)):
-    """Verify user's email address - DEVELOPMENT BYPASS"""
-    logger.warning("SECURITY BYPASS: Email verification always succeeds")
-    return {"message": "Email verified successfully"}
+async def verify_email(request: EmailVerificationRequest):
+    """Verify user's email address"""
+    try:
+        await auth_service.verify_email(request)
+        return {"message": "Email verified successfully"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.post("/resend-verification")
 async def resend_verification(user: User = Depends(get_current_user)):
-    """Resend email verification link - DEVELOPMENT BYPASS"""
-    logger.warning("SECURITY BYPASS: Verification email not actually sent")
+    """Resend email verification link"""
+    await EmailService.send_verification_email(
+        user_id=UUID(user.id),
+        email=user.email,
+        name=user.name
+    )
     return {"message": "Verification email sent"}
 
 
 @router.post("/forgot-password")
 async def forgot_password(email: EmailStr):
-    """Request password reset email - DEVELOPMENT BYPASS"""
-    logger.warning("SECURITY BYPASS: Password reset email not actually sent")
+    """Request password reset email"""
+    # Always return success to prevent email enumeration
+    pool = await get_db_pool()
+    async with pool.acquire() as db:
+        user = await db.fetchrow(
+            "SELECT id, first_name, last_name FROM users WHERE email = $1",
+            email
+        )
+        
+        if user:
+            await EmailService.send_password_reset_email(
+                user_id=user["id"],
+                email=email,
+                name=f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or email
+            )
+    
     return {"message": "If the email exists, a password reset link has been sent"}
 
 
 @router.post("/reset-password")
-async def reset_password(token: str, new_password: str):
-    """Reset password using token - DEVELOPMENT BYPASS"""
-    logger.warning("SECURITY BYPASS: Password reset always succeeds")
-    return {"message": "Password reset successfully"}
+async def reset_password(request: PasswordResetRequest):
+    """Reset password using token"""
+    try:
+        await auth_service.reset_password(request)
+        return {"message": "Password reset successfully"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

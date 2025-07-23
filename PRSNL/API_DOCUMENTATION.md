@@ -1153,28 +1153,35 @@ Capture a new item (article, video, note)
   "url": "https://example.com",
   "title": "Optional title",
   "content": "Optional content for notes",
-  "content_type": "auto|document|video|article|tutorial|image|note|link",
+  "content_type": "auto|document|video|article|tutorial|image|note|link|development",
   "enable_summarization": true,
-  "tags": ["tag1", "tag2"]
+  "tags": ["optional", "tags"],
+  "programming_language": "python",  // For development content
+  "project_category": "backend",     // For development content
+  "difficulty_level": 2,             // 1-5 for development content
+  "is_career_related": false
 }
 ```
 
 **Response:**
 ```json
 {
+  "id": "uuid",
+  "status": "pending",
   "message": "Item capture initiated",
-  "item_id": "uuid",
-  "item_type": "article|video|document|note",
-  "processing_status": "pending|completed"
+  "duplicate_info": null
 }
 ```
 
 **Notes:**
 - Either `url` or `content` must be provided
 - Videos are automatically detected and processed asynchronously
-- Supported video platforms: Instagram, YouTube, Twitter, TikTok
+- Supported video platforms: Instagram, YouTube, Twitter, TikTok (YouTube videos won't be downloaded to save resources)
 - AI summarization can be enabled/disabled per content type
-- All content types supported: auto, document, video, article, tutorial, image, note, link
+- All content types supported: auto, document, video, article, tutorial, image, note, link, development
+- Tags are globally unique in the system (not per-user)
+- Development content supports additional fields: programming_language, project_category, difficulty_level
+- Authentication bypass active in development mode (default user: 00000000-0000-0000-0000-000000000001)
 
 ### 📁 File Upload
 

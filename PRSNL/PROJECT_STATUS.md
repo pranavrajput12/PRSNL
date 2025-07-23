@@ -48,6 +48,20 @@ PRSNL has evolved into an intelligent AI second brain with autonomous multi-agen
 - ✅ **Voice Settings**: User preferences management
   - TTS model selection (Chatterbox, Edge-TTS)
   - Emotion preferences
+
+### 🔧 Recent Fixes - Capture System (2025-07-23)
+- ✅ **Authentication Bypass**: Added development mode bypass for easier testing
+  - Default development user created (00000000-0000-0000-0000-000000000001)
+  - Middleware updated to return default user in dev mode
+- ✅ **Tag Constraints**: Fixed ON CONFLICT errors with global unique tags
+  - Changed from INSERT ON CONFLICT to SELECT then INSERT pattern
+  - Tags are now properly linked to items
+- ✅ **Frontend Issues**: Fixed URL duplication and progress animation
+  - Resolved circular update loop in DynamicCaptureInput component
+  - Progress bar now completes to 100% on successful capture
+- ✅ **Port Configuration**: Permanently fixed 5433 vs 5432 confusion
+  - Created script to update all instances throughout codebase
+  - PostgreSQL consistently on port 5432 (ARM64 version)
   - Speed and pitch customization
   - Per-user voice settings storage
 - ✅ **Bug Fixes**: Voice and chat improvements

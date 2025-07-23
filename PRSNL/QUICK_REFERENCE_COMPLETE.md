@@ -490,6 +490,19 @@ curl -X POST "http://localhost:8000/api/capture" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com", "content_type": "auto", "enable_summarization": true, "tags": ["test"]}'
 
+# Test with development content
+curl -X POST "http://localhost:8000/api/capture" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://github.com/user/repo",
+    "content_type": "development",
+    "enable_summarization": true,
+    "tags": ["github", "opensource"],
+    "programming_language": "python",
+    "project_category": "backend",
+    "difficulty_level": 3
+  }'
+
 # Test 2: URL with link content type + AI OFF  
 curl -X POST "http://localhost:8000/api/capture" \
   -H "Content-Type: application/json" \
@@ -939,6 +952,45 @@ psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/postgres" -c "CREATE DATABASE p
 psql "postgresql://prsnl:prsnl123@127.0.0.1:5432/prsnl" -c "CREATE EXTENSION vector;"
 
 # Then restart backend to recreate tables
+```
+
+---
+
+## 🔧 Capture System Troubleshooting
+
+### Common Capture Issues and Fixes
+
+**1. Tag Constraint Errors (ON CONFLICT)**
+```bash
+# Check tag uniqueness
+psql -U pronav -d prsnl -c "SELECT name, COUNT(*) FROM tags GROUP BY name HAVING COUNT(*) > 1;"
+
+# Tags are globally unique, not per-user
+# Fixed by using SELECT then INSERT pattern instead of ON CONFLICT
+```
+
+**2. Authentication Errors in Development**
+```bash
+# Development bypass is active - default user created
+# User ID: 00000000-0000-0000-0000-000000000001
+# Check if user exists:
+psql -U pronav -d prsnl -c "SELECT * FROM users WHERE id = '00000000-0000-0000-0000-000000000001';"
+```
+
+**3. Progress Bar Stuck at 90-92%**
+```bash
+# Fixed in frontend - progress now completes to 100%
+# Check worker is processing:
+ps aux | grep -E "(worker|celery)" | grep -v grep
+```
+
+**4. Port 5433 vs 5432 Confusion**
+```bash
+# Run the fix script to permanently resolve:
+./fix_port_5433.sh
+
+# Verify PostgreSQL is on 5432:
+psql -U pronav -p 5432 -d prsnl -c "SELECT version();"
 ```
 
 ---

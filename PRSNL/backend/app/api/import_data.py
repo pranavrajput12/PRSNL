@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 
 from app.core.capture_engine import CaptureEngine
@@ -240,7 +240,12 @@ async def import_bookmarks(
         categorization_agent = BookmarkCategorizationAgent()
         
         # Use authenticated user ID
-        user_id = str(current_user.id) if current_user else "e03c9686-09b0-4a06-b236-d0839ac7f5df"
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        user_id = str(current_user.id)
         
         # Collect bookmark data for batch processing
         bookmark_data = []

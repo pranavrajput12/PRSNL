@@ -337,9 +337,77 @@ class VoiceService:
             logger.error(f"FFMPEG_BINARY: {os.environ.get('FFMPEG_BINARY', 'Not set')}")
             raise
     
-    async def text_to_speech(self, text: str, context: Dict[str, Any]) -> bytes:
+    async def process_text_message(self, text: str, user_id: str) -> Dict[str, Any]:
+        """Process text message and generate AI response with Cortex personality"""
+        try:
+            # Get AI response - use CrewAI or chat service
+            logger.info(f"Processing text message: {text[:50]}...")
+            
+            if self.use_crew and len(text) > 10:  # Use crew for non-trivial inputs
+                try:
+                    # Use voice crew for enhanced responses
+                    crew_response = await self.voice_crew.process_voice_input(
+                        user_input=text,
+                        user_id=user_id,
+                        conversation_history=self.personality.conversation_history[-5:],
+                        current_mood=self.personality.conversation_history[-1]["mood"] if self.personality.conversation_history else "primary"
+                    )
+                    
+                    chat_response = {
+                        "content": crew_response["response"],
+                        "emotion": crew_response.get("emotion", "neutral")
+                    }
+                    ai_text = crew_response["response"]
+                    
+                except Exception as e:
+                    logger.warning(f"CrewAI processing failed, falling back to simple response: {e}")
+                    crew_response = await self.simple_crew.process_voice_input(
+                        user_input=text,
+                        user_id=user_id
+                    )
+                    
+                    chat_response = {
+                        "content": crew_response["response"],
+                        "emotion": crew_response.get("emotion", "neutral")
+                    }
+                    ai_text = crew_response["response"]
+            else:
+                # For short inputs, use direct chat service
+                chat_service = ChatService()
+                ai_response = await chat_service.generate_response(text, user_id)
+                chat_response = {"content": ai_response, "emotion": "neutral"}
+                ai_text = ai_response
+            
+            # Apply Cortex personality
+            mood = self.personality.analyze_mood(text)
+            personalized_response = self.personality.personalize_response(
+                ai_text, 
+                mood=mood,
+                emotion=chat_response.get("emotion", "neutral")
+            )
+            
+            # Update conversation history
+            self.personality.update_conversation(text, personalized_response["text"], mood)
+            
+            return {
+                "user_text": text,
+                "ai_text": ai_text,
+                "personalized_text": personalized_response["text"],
+                "mood": mood,
+                "emotion": chat_response.get("emotion", "neutral")
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing text message: {e}")
+            raise
+    
+    async def text_to_speech(self, text: str, context: Dict[str, Any] = None) -> bytes:
         """Convert text to speech using modern TTS with Cortex personality"""
         try:
+            # Handle optional context
+            if context is None:
+                context = {}
+            
             # Select voice based on mood
             mood = context.get("mood", "primary")
             

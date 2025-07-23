@@ -38,8 +38,7 @@ PUBLIC_ROUTES = [
     "/metrics",  # Prometheus metrics
     "/api/voice/health",  # Voice health check
     "/api/voice/test",  # Voice test endpoint
-    "/api/voice/ws",  # Voice WebSocket endpoint (temporary for dev)
-    "/ws/chat",  # Chat WebSocket endpoint (temporary for dev)
+    # WebSocket endpoints removed - they now require authentication
 ]
 
 # Routes that optionally use auth (work with or without)
