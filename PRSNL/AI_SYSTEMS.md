@@ -112,14 +112,53 @@ PRSNL has evolved into an advanced AI-powered second brain with multi-modal capa
 
 ---
 
-## 🗣️ Voice Integration Architecture
+## 🗣️ Voice Integration Architecture - Enhanced with Knowledge Base
 
-### Voice Technology Stack
-- **Text-to-Speech**: Chatterbox TTS with emotional intelligence
-- **Speech-to-Text**: Enhanced Whisper model (upgraded to 'small')
-- **Real-time Streaming**: RealtimeSTT with WebSocket integration
-- **Emotional Intelligence**: 7-state emotion system with context mapping
-- **Voice AI Crew**: Specialized agents for voice interactions
+### Voice Technology Stack (Updated 2025-07-23)
+- **Primary TTS Engine**: Piper TTS for superior natural voice quality
+- **TTS Manager**: Multi-backend abstraction (Piper, Chatterbox, Edge-TTS) with automatic fallback
+- **Speech-to-Text**: Memory-optimized faster-whisper (tiny.en) for efficiency
+- **Knowledge Base Integration**: Voice responses leverage PRSNL documentation instead of generic responses
+- **Real-time Communication**: WebSocket voice streaming with live transcription display
+- **Cortex Personality**: Mood-based voice responses with emotional intelligence
+- **Speech Rate Control**: Dynamic speed adjustment (0.75-0.95x) based on conversation context
+
+### Knowledge Base Integration
+```python
+# Voice API with Knowledge Base Integration
+async def process_voice_message(audio_data: bytes, user_id: str):
+    # 1. Speech to Text
+    user_text = await voice_service.speech_to_text(audio_path)
+    
+    # 2. Process through chat service for knowledge base access
+    chat_response = await chat_service.process_message(
+        message=user_text,
+        user_id=user_id,
+        context_type="voice"
+    )
+    
+    # 3. Apply Cortex personality based on context
+    context = personality.detect_context(user_text, chat_response["content"])
+    personalized_response = personality.add_personality(
+        chat_response["content"], 
+        context
+    )
+    
+    # 4. Generate natural speech with mood-based rate control
+    audio_response = await voice_service.text_to_speech(
+        personalized_response, 
+        context
+    )
+    
+    return {
+        "user_text": user_text,
+        "ai_text": chat_response["content"],
+        "personalized_text": personalized_response,
+        "audio_data": audio_response,
+        "mood": context["mood"],
+        "knowledge_context": chat_response.get("context", {})
+    }
+```
 
 ### Emotional Intelligence System
 
@@ -146,36 +185,111 @@ emotion_mapping = {
 }
 ```
 
-### TTS Integration Architecture
+### Enhanced TTS Integration Architecture
 ```python
-# Abstract TTS Backend System
-class TTSBackend(ABC):
-    @abstractmethod
-    async def generate_speech(self, text: str, **kwargs) -> bytes:
-        pass
+# Multi-Backend TTS Manager with Piper Primary
+class TTSManager:
+    def __init__(self, primary_backend: str = "piper"):
+        self.backends = {}
+        self.primary_backend = primary_backend
+        self._initialize_backends()
+    
+    def _initialize_backends(self):
+        # Piper TTS - Primary for natural voice quality
+        try:
+            self.backends["piper"] = PiperTTSBackend()
+        except Exception as e:
+            logger.warning(f"Piper TTS unavailable: {e}")
+        
+        # Chatterbox TTS - Emotion-aware
+        try:
+            self.backends["chatterbox"] = ChatterboxTTSBackend()
+        except Exception as e:
+            logger.warning(f"Chatterbox TTS unavailable: {e}")
+        
+        # Edge-TTS - Always available fallback
+        self.backends["edge-tts"] = EdgeTTSBackend()
+    
+    async def synthesize(self, text: str, backend: str = None, **kwargs) -> bytes:
+        backend_name = backend or self.primary_backend
+        
+        # Try primary backend first
+        if backend_name in self.backends:
+            try:
+                return await self.backends[backend_name].synthesize(text, **kwargs)
+            except Exception as e:
+                logger.error(f"Primary backend {backend_name} failed: {e}")
+        
+        # Fallback to other backends
+        for name, backend_obj in self.backends.items():
+            if name != backend_name:
+                try:
+                    logger.info(f"Falling back to {name} TTS")
+                    return await backend_obj.synthesize(text, **kwargs)
+                except Exception as e:
+                    logger.error(f"Fallback backend {name} failed: {e}")
+        
+        raise RuntimeError("All TTS backends failed")
 
-# Chatterbox Implementation with Emotion Control
-class ChatterboxTTS(TTSBackend):
+# Piper TTS Backend - Primary for Natural Voice
+class PiperTTSBackend(TTSBackend):
     def __init__(self):
-        self.model = ChatTTS()
-        self.emotion_seeds = {
-            "neutral": 42, "happy": 123, "sad": 789,
-            "angry": 456, "excited": 321, "calm": 654, "friendly": 987
+        self.voices = {
+            "female": {
+                "primary": "en_US-amy-low",
+                "thoughtful": "en_US-amy-medium", 
+                "excited": "en_US-kathleen-low"
+            },
+            "male": {
+                "primary": "en_US-ryan-low",
+                "thoughtful": "en_US-ryan-medium",
+                "excited": "en_US-danny-low"
+            }
         }
     
-    async def generate_speech(self, text: str, emotion: str = "friendly", 
-                            speed: float = 1.0, pitch: int = 0) -> bytes:
-        seed = self.emotion_seeds.get(emotion, 42)
-        return await self._generate_with_params(text, seed, speed, pitch)
+    async def synthesize(self, text: str, voice: str = "en_US-amy-low", 
+                        rate: float = 1.0, **kwargs) -> bytes:
+        # Piper TTS synthesis with speech rate control
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            await self._synthesize_piper(text, voice, tmp.name, rate)
+            with open(tmp.name, 'rb') as f:
+                audio_data = f.read()
+            os.unlink(tmp.name)
+            return audio_data
+```
 
-# TTS Manager for Backend Selection
-class TTSManager:
-    def get_backend(self, model: str) -> TTSBackend:
-        backends = {
-            "chatterbox": ChatterboxTTS(),
-            "edge-tts": EdgeTTS()
+### Cortex Personality System
+```python
+class CortexPersonality:
+    """Enhanced voice personality with mood-based speech control"""
+    
+    def detect_context(self, user_message: str, ai_response: str) -> Dict[str, Any]:
+        context = {
+            "mood": "primary",
+            "should_add_personality": True,
+            "complexity": len(ai_response.split()) > 50
         }
-        return backends.get(model, ChatterboxTTS())
+        
+        # Detect mood based on content
+        lower_response = ai_response.lower()
+        if any(word in lower_response for word in ["discovered", "found", "interesting"]):
+            context["mood"] = "discovering"
+        elif any(word in lower_response for word in ["let me explain", "here's how"]):
+            context["mood"] = "explaining"
+        elif any(word in lower_response for word in ["great", "excellent", "well done"]):
+            context["mood"] = "encouraging"
+        
+        return context
+    
+    def get_voice_settings(self, mood: str) -> Dict[str, str]:
+        """Get voice settings for mood-based speech rate control"""
+        settings = {
+            "discovering": {"rate": "+5%", "pitch": "+5Hz"},
+            "explaining": {"rate": "-5%", "pitch": "+0Hz"},
+            "encouraging": {"rate": "+0%", "pitch": "+3Hz"},
+            "primary": {"rate": "-5%", "pitch": "+2Hz"}
+        }
+        return settings.get(mood, settings["primary"])
 ```
 
 ### Voice Settings Management

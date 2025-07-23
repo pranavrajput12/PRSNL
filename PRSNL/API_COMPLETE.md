@@ -250,44 +250,118 @@ Update user profile
 
 ---
 
-## 🎤 Voice Integration API - Advanced Features
+## 🎤 Voice Integration API - Enhanced with Knowledge Base (v8.2)
 
-### Voice Settings Management
+### Knowledge Base Integrated Voice System
 
-#### GET /api/user/settings
-Get user voice settings
+PRSNL's voice system has been enhanced with knowledge base integration, providing intelligent responses that leverage the system's documentation and user content instead of generic responses.
 
-**Headers:** `Authorization: Bearer {access_token}`
+### Core Voice API Endpoints
+
+#### GET /api/voice/health
+Voice service health check
+
+**Headers:** None required (public endpoint)
 
 **Response (200):**
 ```json
 {
-  "voice_settings": {
-    "tts_model": "chatterbox",
-    "emotion": "friendly",
-    "speed": 1.0,
-    "pitch": 0,
-    "language": "en"
-  }
+  "status": "healthy",
+  "whisper_model": "loaded",
+  "personality": "Cortex",
+  "voices_available": ["female", "male"],
+  "tts_engine": "piper",
+  "knowledge_base": "integrated"
 }
 ```
 
-#### PUT /api/user/settings
-Update voice settings
+#### POST /api/voice/test
+Test voice processing with knowledge base integration
 
-**Headers:** `Authorization: Bearer {access_token}`
+**Headers:** `Authorization: Bearer {access_token}` (optional for testing)
 
 **Request Body:**
 ```json
 {
-  "voice_settings": {
-    "tts_model": "chatterbox",
-    "emotion": "excited",
-    "speed": 1.2,
-    "pitch": 5
+  "text": "Tell me about the PRSNL voice system features",
+  "settings": {
+    "gender": "female",
+    "ttsEngine": "piper",
+    "useCrewAI": true,
+    "emotionStrength": 0.8
   }
 }
 ```
+
+**Response:** Binary audio content (MP3/WAV) with knowledge-enhanced response
+
+#### WebSocket /api/voice/ws
+Real-time voice communication with knowledge base integration
+
+**Connection:** `ws://localhost:8000/api/voice/ws`
+
+**Authentication:** WebSocket authentication via token
+
+**Supported Message Types:**
+- `start_recording` - Begin voice recording
+- `end_recording` - Stop recording and process
+- `set_voice` - Change voice settings
+- `ping` - Connection keepalive
+
+**Response Types:**
+- `transcription` - Speech-to-text result with knowledge-enhanced AI response
+- `audio_response` - Generated speech audio (base64)
+- `processing` - Status updates during processing
+- `voice_changed` - Voice setting confirmation
+- `error` - Error messages
+
+### Enhanced TTS System
+
+#### Current TTS Architecture (Updated 2025-07-23)
+- **Primary Engine**: Piper TTS for superior natural voice quality
+- **Fallback Engines**: Chatterbox TTS (emotion-aware), Edge-TTS (reliable fallback)
+- **Voice Settings**: Gender selection, mood-based speech rate control
+- **Quality Features**: Speech rate optimization (0.75-0.95x based on context)
+
+### Live Transcription System
+
+The voice system includes real-time transcription display with enhanced user experience:
+
+#### Features:
+- **Animated Waveform**: Visual feedback during voice recording
+- **Live Transcription**: Real-time display of speech-to-text conversion
+- **Conversation History**: Persistent conversation display with speaker labels
+- **Knowledge Indicators**: Visual markers (🧠) when knowledge base is used
+- **Status Updates**: Real-time processing status and error handling
+
+#### WebSocket Voice Message Format:
+```json
+{
+  "type": "transcription",
+  "data": {
+    "user_text": "What are the PRSNL voice features?",
+    "ai_text": "PRSNL includes advanced voice capabilities including...",
+    "personalized_text": "Hey! Cortex here. PRSNL includes some amazing voice features...",
+    "mood": "explaining",
+    "context": {
+      "knowledge_used": true,
+      "sources": ["voice_documentation", "system_architecture"]
+    }
+  }
+}
+```
+
+### Voice Testing Interface
+
+Access the enhanced voice testing interface at:
+**URL**: `http://localhost:3004/test-voice`
+
+#### Test Page Features:
+- **Knowledge Base Queries**: Pre-configured questions about PRSNL features
+- **Live Transcription Display**: Real-time conversation visualization
+- **Voice Settings Control**: Gender, TTS engine, emotion strength configuration
+- **System Health Monitoring**: Voice service status and diagnostics
+- **WebSocket Connection Management**: Real-time connection status
 
 ### Text-to-Speech Services
 

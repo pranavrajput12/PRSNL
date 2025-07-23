@@ -260,37 +260,110 @@ psql -U pronav -d prsnl -c "SELECT 1;"
 
 ---
 
-## 🎤 Voice Integration Commands
+## 🎤 Enhanced Voice Integration Commands (v8.2)
 
-### Test Voice Features
+### Voice Service Health Check
 ```bash
-# Test TTS with emotion
-curl -X POST http://localhost:8000/api/voice/tts \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Hello! I'm excited to help you today.", "emotion": "excited"}' \
-  -o test_output.mp3
+# Check voice service status and configuration
+curl http://localhost:8000/api/voice/health
 
-# Test voice transcription
-curl -X POST http://localhost:8000/api/voice/transcribe \
-  -F "audio=@test_audio.wav"
-
-# Test RealtimeSTT streaming
-python backend/test_realtime_stt.py
-
-# Update voice settings
-curl -X PUT http://localhost:8000/api/user/settings \
-  -H "Content-Type: application/json" \
-  -d '{"voice_settings": {"emotion": "friendly", "speed": 1.0}}'
+# Should return: {"status": "healthy", "tts_engine": "piper", "knowledge_base": "integrated"}
 ```
 
-### Available Emotions
-1. **neutral** - Default, balanced tone
-2. **happy** - Upbeat and cheerful  
-3. **sad** - Subdued and melancholic
-4. **angry** - Intense and forceful
-5. **excited** - Energetic and enthusiastic
-6. **calm** - Soothing and relaxed
-7. **friendly** - Warm and welcoming
+### Knowledge-Enhanced Voice Testing
+```bash
+# Test voice with knowledge base integration (primary endpoint)
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Tell me about the PRSNL voice system features",
+    "settings": {
+      "gender": "female",
+      "ttsEngine": "piper",
+      "useCrewAI": true,
+      "emotionStrength": 0.8
+    }
+  }' \
+  -o knowledge_voice_response.mp3
+
+# Test with different knowledge queries
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{"text": "How does the voice integration work with the knowledge base?"}' \
+  -o knowledge_test.mp3
+```
+
+### Voice Testing Interface
+```bash
+# Access enhanced voice testing page with live transcription
+open http://localhost:3004/test-voice
+
+# Features available:
+# - Knowledge base query testing
+# - Live transcription with animated waveforms
+# - Voice settings configuration
+# - Real-time WebSocket voice communication
+# - Conversation history with speaker labels
+```
+
+### WebSocket Voice Communication
+```bash
+# Connect to voice WebSocket for real-time interaction
+# URL: ws://localhost:8000/api/voice/ws
+
+# Example JavaScript WebSocket usage:
+# const ws = new WebSocket('ws://localhost:8000/api/voice/ws');
+# ws.send(JSON.stringify({type: 'start_recording'}));
+# ws.send(audio_blob); // Send audio data
+# ws.send(JSON.stringify({type: 'end_recording'}));
+```
+
+### TTS System Testing
+```bash
+# Test Piper TTS (primary engine) - superior quality
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Testing Piper TTS quality", "settings": {"ttsEngine": "piper"}}' \
+  -o piper_test.mp3
+
+# Test with different speech rates based on mood
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Let me explain this slowly", "settings": {"mood": "explaining"}}' \
+  -o explaining_voice.mp3
+```
+
+### Voice System Features
+1. **Knowledge Base Integration**: Voice responses use PRSNL documentation
+2. **Piper TTS Primary**: Superior natural voice quality
+3. **Multi-Backend TTS**: Automatic fallback (Piper → Chatterbox → Edge-TTS)
+4. **Speech Rate Control**: Mood-based speed adjustment (0.75-0.95x)
+5. **Live Transcription**: Real-time display with animated waveforms
+6. **Cortex Personality**: Mood-based voice responses with emotional intelligence
+7. **Cross-Platform**: Works across entire application, not just test pages
+
+### Voice Troubleshooting
+```bash
+# Check if voice service is running
+curl -f http://localhost:8000/api/voice/health || echo "Voice service not responding"
+
+# Test basic voice functionality
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Voice test"}' \
+  -o voice_test.mp3 && echo "Voice test successful"
+
+# Check WebSocket connectivity
+# Open browser console at http://localhost:3004/test-voice
+# Look for "WebSocket connected!" message
+
+# Verify knowledge base integration
+curl -X POST http://localhost:8000/api/voice/test \
+  -H "Content-Type: application/json" \
+  -d '{"text": "What is PRSNL?"}' \
+  -o knowledge_check.mp3
+# Response should include knowledge-based information, not generic response
+```
 
 ---
 
