@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
 
-# from langfuse import observe  # Temporarily disabled due to get_tracer error
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.services.ai_service import AIService
 from app.services.embedding_manager import EmbeddingManager
 from app.db.database import get_db_connection

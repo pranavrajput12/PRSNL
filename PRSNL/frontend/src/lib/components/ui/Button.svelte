@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { autoId } from '$lib/actions/autoId';
+  
   export let variant: 'primary' | 'secondary' | 'outline' = 'primary';
   export let size: 'sm' | 'md' | 'lg' = 'md';
   export let disabled = false;
@@ -27,6 +29,7 @@
     {disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
     {$$props.class || ''}
   "
+  use:autoId={{type: "button", component: "Button", suffix: variant}}
   on:click
 >
   <slot />

@@ -15,8 +15,7 @@ from uuid import UUID, uuid4
 
 from celery import group, chain, chord
 from celery.result import AsyncResult
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.workers.celery_app import celery_app
 from app.db.database import get_db_connection
 from app.services.codemirror_service import codemirror_service

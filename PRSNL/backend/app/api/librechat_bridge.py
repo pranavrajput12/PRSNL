@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from langfuse import observe
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field

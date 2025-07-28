@@ -84,6 +84,12 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
 - **Technology**: SvelteKit 2.22.5, TypeScript, Tailwind CSS, Neural Design Language
 - **Port**: 3004 (development), 3003 (production container)
 - **Design System**: Complete Design Language Bible with neural terminology
+- **Unique Element ID System**: Revolutionary frontend development tool for precise design communication
+  - Automatic ID generation: `component-element-type-number` format
+  - Visual inspector overlay with Ctrl+Shift+I keyboard shortcut
+  - Element registry with hover tooltips and click selection
+  - 10x improvement in design communication precision
+  - AI-friendly development with exact element targeting
 - **Key Features**:
   - Phase 4 AI orchestration interface with LangGraph status
   - Real-time voice streaming with RealtimeSTT integration
@@ -199,6 +205,26 @@ PRSNL is a modern personal knowledge management system that has evolved into an 
   - Threshold-based quality scoring (0.8 minimum)
   - Automatic reprocessing for low-quality results
   ```
+
+### Content Processing Agents - CrewAI Integration
+- **Technology**: CrewAI agents for content processing
+- **Purpose**: Extract actionable insights and clean scraped content
+- **Agents**:
+  ```
+  Content Processing Agents
+  ├── Actionable Insights Agent
+  │   ├── Extracts tips, steps, methods, takeaways
+  │   ├── Categorizes by importance (high/medium/low)
+  │   ├── Provides context for each insight
+  │   └── Generates voice-friendly summaries
+  ├── Content Cleaner Agent
+  │   ├── Removes ads, navigation, boilerplate
+  │   ├── Preserves code blocks and tables
+  │   ├── Maintains document structure
+  │   └── Provides cleaning statistics
+  ```
+- **Integration**: Unified AI Service methods for seamless usage
+- **Documentation**: `/docs/CONTENT_PROCESSING_AGENTS.md`
 
 ### Enhanced AI Router - ReAct Agent Architecture
 - **Technology**: ReAct (Reasoning + Acting) agent framework

@@ -11,8 +11,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from crewai import Agent, Crew, Task, Process
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.config import settings
 from app.db.database import get_db_pool
 from app.services.job_persistence_service import JobPersistenceService

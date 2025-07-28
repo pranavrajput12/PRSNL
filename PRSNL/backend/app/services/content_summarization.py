@@ -67,11 +67,20 @@ class ContentSummarizationService:
                 if content_to_summarize:
                     full_content += f"Content: {content_to_summarize[:3000]}\n"  # Limit content length
             
-                # Use unified AI service for summarization
-                summary = await self.ai_service.generate_summary(
-                    content=full_content,
-                    summary_type=summary_type
-                )
+                # Use unified AI service for summarization based on type
+                if summary_type == "brief":
+                    # Use actionable summary for brief type
+                    summary = await self.ai_service.generate_actionable_summary(
+                        content=full_content,
+                        content_type=item.get('type'),
+                        max_length=300
+                    )
+                else:
+                    # Use regular summary for other types
+                    summary = await self.ai_service.generate_summary(
+                        content=full_content,
+                        summary_type=summary_type
+                    )
                 
                 # Update item with new summary if brief type
                 if summary_type == "brief" and summary:
@@ -180,8 +189,20 @@ class ContentSummarizationService:
                     timeframe=period
                 )
                 
-                # Get executive summary
+                # Get executive summary with actionable focus
                 ai_summary = insights.get('summary', '')
+                
+                # Extract actionable insights from all items for the digest
+                all_content = "\n\n".join([
+                    f"{item['title']}: {item.get('summary', '')}"
+                    for item in items[:10]
+                ])
+                
+                actionable_insights = await self.ai_service.extract_actionable_insights(
+                    content=all_content,
+                    content_type="digest",
+                    title=f"{period_label} Digest"
+                )
             
             # Generate statistics
             stats = {
@@ -202,6 +223,7 @@ class ContentSummarizationService:
                 "item_count": len(items),
                 "digest": digest_content,
                 "executive_summary": ai_summary,
+                "actionable_insights": actionable_insights,
                 "statistics": stats,
                 "categories": {k: [dict(item) for item in v] for k, v in categories.items()},
                 "timestamp": now

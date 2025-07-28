@@ -16,6 +16,7 @@
   import DynamicCaptureInput from '$lib/components/DynamicCaptureInput.svelte';
   import RepositoryCodePreview from '$lib/components/RepositoryCodePreview.svelte';
   import { contentTypes, getTypeIcon } from '$lib/stores/contentTypes';
+  import { autoId } from '$lib/actions/autoId';
 
   // Form fields and state
   let url = '';
@@ -26,6 +27,7 @@
   let isSubmitting = false;
   let message = '';
   let messageType = '';
+  let aiSuggestionsApplied = false;
   let error: Error | null = null;
 
   // Development-specific fields
@@ -66,6 +68,8 @@
   // Content type selector
   let contentType = 'auto'; // auto or any dynamic type from backend
   let availableTypes: ContentTypeDefinition[] = [];
+  let showTypeDropdown = false;
+  let detectedTypeName = 'Auto-detecting...';
 
   // File upload state
   let uploadedFiles = [];
@@ -80,6 +84,76 @@
   };
   let terminalLines: string[] = [];
   let isAnalyzing = false;
+
+  // Helper function to get display name for content type
+  function getContentTypeDisplayName(type: string): string {
+    const typeObj = availableTypes.find(t => t.type === type);
+    return typeObj?.description || type.charAt(0).toUpperCase() + type.slice(1);
+  }
+
+  // Helper function to get icon for content type
+  function getContentTypeIcon(typeName: string): string {
+    const iconMap: Record<string, string> = {
+      'document': '📄',
+      'video': '🎥',
+      'article': '📰',
+      'tutorial': '🎓',
+      'recipe': '🍳',
+      'image': '🖼️',
+      'note': '📝',
+      'link': '🔗',
+      'audio': '🎵',
+      'code': '💻',
+      'development': '⚡',
+      'github_repo': '📦',
+      'github_issue': '🐛',
+      'github_pr': '🔀',
+      'gitlab': '🦊',
+      'bitbucket': '🪣',
+      'pdf': '📑',
+      'text': '📃',
+      'website': '🌐',
+      'youtube': '▶️'
+    };
+    return iconMap[typeName] || '📋';
+  }
+
+  // Group content types by category
+  function groupContentTypes(types: ContentTypeDefinition[]): Record<string, ContentTypeDefinition[]> {
+    const groups: Record<string, ContentTypeDefinition[]> = {
+      'Development': [],
+      'Documents': [],
+      'Media': [],
+      'Lifestyle': [],
+      'Web': []
+    };
+
+    types.forEach(type => {
+      if (type.type.includes('github') || type.type.includes('gitlab') || 
+          type.type.includes('bitbucket') || type.type === 'code' || 
+          type.type === 'development') {
+        groups['Development'].push(type);
+      } else if (type.type === 'pdf' || type.type === 'article' || 
+                 type.type === 'tutorial' || type.type === 'note' || 
+                 type.type === 'text' || type.type === 'document') {
+        groups['Documents'].push(type);
+      } else if (type.type === 'video' || type.type === 'audio' || 
+                 type.type === 'image' || type.type === 'youtube') {
+        groups['Media'].push(type);
+      } else if (type.type === 'recipe') {
+        groups['Lifestyle'].push(type);
+      } else {
+        groups['Web'].push(type);
+      }
+    });
+
+    // Remove empty groups
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) delete groups[key];
+    });
+
+    return groups;
+  }
 
   // Watch for URL changes to detect video URLs and get AI suggestions
   $: {
@@ -96,10 +170,20 @@
     }
   }
 
+  // Update detected type name when content type changes
+  $: {
+    if (contentType === 'auto') {
+      detectedTypeName = 'Auto-detecting...';
+    } else {
+      detectedTypeName = getContentTypeDisplayName(contentType);
+    }
+  }
+
   onMount(() => {
     urlInput?.focus();
     loadRecentTags();
     window.addEventListener('paste', handlePaste);
+    window.addEventListener('click', handleClickOutside);
     setupDragAndDrop();
 
     // Initialize content types
@@ -115,6 +199,7 @@
 
     return () => {
       window.removeEventListener('paste', handlePaste);
+      window.removeEventListener('click', handleClickOutside);
       if (progressInterval) clearInterval(progressInterval);
     };
   });
@@ -176,6 +261,11 @@
       repositoryPlatform = 'Bitbucket';
       contentType = 'development';
       addTerminalLine(`> REPOSITORY DETECTED: ${repositoryPlatform.toUpperCase()}`);
+    } else if (urlToCheck.startsWith('http://') || urlToCheck.startsWith('https://')) {
+      // Default to 'link' for regular websites
+      contentType = 'link';
+      addTerminalLine(`> WEB LINK DETECTED`);
+      addTerminalLine(`> CONTENT_TYPE: LINK_SELECTED`);
     }
 
     if (urlToCheck) {
@@ -218,29 +308,54 @@
       isLoadingSuggestions = true;
       isAnalyzing = true;
       addTerminalLine('> AI_ANALYSIS: INITIATED');
-
+      
+      console.log('Loading AI suggestions for URL:', urlToAnalyze);
       const suggestions = await getAISuggestions(urlToAnalyze);
+      console.log('AI suggestions received:', suggestions);
 
-      if (suggestions.title && !title) {
+      // Always update fields if we have AI suggestions
+      if (suggestions.title) {
         title = suggestions.title;
         addTerminalLine(`> TITLE_EXTRACTED: ${suggestions.title.substring(0, 30)}...`);
+        console.log('Title updated to:', title);
       }
 
-      if (suggestions.summary && !highlight) {
+      if (suggestions.summary) {
         highlight = suggestions.summary;
         addTerminalLine(`> SUMMARY_EXTRACTED: ${suggestions.summary.substring(0, 50)}...`);
+        console.log('Highlight updated to:', highlight);
       }
 
-      if (suggestions.tags && suggestions.tags.length > 0 && tags.length === 0) {
+      if (suggestions.tags && suggestions.tags.length > 0) {
         tags = suggestions.tags.slice(0, 5);
         addTerminalLine(`> TAGS_GENERATED: ${suggestions.tags.join(', ')}`);
+        console.log('Tags updated to:', tags);
       }
 
+      // Mark that AI suggestions have been applied
+      if (suggestions.title || suggestions.summary || (suggestions.tags && suggestions.tags.length > 0)) {
+        aiSuggestionsApplied = true;
+      }
       addTerminalLine('> AI_ANALYSIS: COMPLETE');
     } catch (err) {
       console.error('AI suggestions failed:', err);
-      suggestionsError = 'AI analysis failed';
-      addTerminalLine('> AI_ANALYSIS: FAILED');
+      // Provide more specific error messages
+      if (err instanceof Error) {
+        if (err.message.includes('404')) {
+          suggestionsError = 'AI suggestions endpoint not found. Please check if the backend is running.';
+        } else if (err.message.includes('401') || err.message.includes('403')) {
+          suggestionsError = 'Authentication error. Please log in again.';
+        } else if (err.message.includes('500')) {
+          suggestionsError = 'Server error. AI service may be temporarily unavailable.';
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          suggestionsError = 'Network error. Please check your connection.';
+        } else {
+          suggestionsError = `AI analysis failed: ${err.message}`;
+        }
+      } else {
+        suggestionsError = 'AI analysis failed. Please try again.';
+      }
+      addTerminalLine(`> AI_ANALYSIS: FAILED - ${suggestionsError}`);
     } finally {
       isLoadingSuggestions = false;
       isAnalyzing = false;
@@ -347,9 +462,22 @@
 
   function selectContentType(type: string): void {
     contentType = type;
+    showTypeDropdown = false;
     updateStepStatus(2, 'completed');
     updateStepStatus(3, 'active');
     addTerminalLine(`> CONTENT_TYPE_SELECTED: ${type.toUpperCase()}`);
+  }
+
+  function toggleTypeDropdown(): void {
+    showTypeDropdown = !showTypeDropdown;
+  }
+
+  // Close dropdown when clicking outside
+  function handleClickOutside(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (showTypeDropdown && !target.closest('.content-type-selector')) {
+      showTypeDropdown = false;
+    }
   }
 
   function toggleAISummarization(): void {
@@ -481,34 +609,34 @@
   />
 </svelte:head>
 
-<div class="neural-terminal-page">
+<div class="neural-terminal-page" use:autoId={"page"}>
   <!-- Neural motherboard background -->
-  <div class="neural-motherboard-bg">
-    <div class="pcb-traces"></div>
-    <div class="circuit-nodes">
-      <div class="node node-1"></div>
-      <div class="node node-2"></div>
-      <div class="node node-3"></div>
-      <div class="node node-4"></div>
+  <div class="neural-motherboard-bg" use:autoId={"background"}>
+    <div class="pcb-traces" use:autoId={"pcb-traces"}></div>
+    <div class="circuit-nodes" use:autoId={"circuit-nodes"}>
+      <div class="node node-1" use:autoId={"node-1"}></div>
+      <div class="node node-2" use:autoId={"node-2"}></div>
+      <div class="node node-3" use:autoId={"node-3"}></div>
+      <div class="node node-4" use:autoId={"node-4"}></div>
     </div>
   </div>
 
-  <div class="terminal-container">
-    <div class="terminal-header">
-      <div class="terminal-title">
+  <div class="terminal-container" use:autoId={"terminal-container"}>
+    <div class="terminal-header" use:autoId={"terminal-header"}>
+      <div class="terminal-title" use:autoId={"terminal-title"}>
         <Icon name="brain" size="small" color="#00ff64" />
         NEURAL PROCESSING TERMINAL v3.0
       </div>
-      <div class="terminal-controls">
-        <div class="control-dot minimize"></div>
-        <div class="control-dot maximize"></div>
-        <div class="control-dot close"></div>
+      <div class="terminal-controls" use:autoId={"terminal-controls"}>
+        <div class="control-dot minimize" use:autoId={"control-minimize"}></div>
+        <div class="control-dot maximize" use:autoId={"control-maximize"}></div>
+        <div class="control-dot close" use:autoId={"control-close"}></div>
       </div>
     </div>
 
-    <div class="terminal-body">
+    <div class="terminal-body" use:autoId={"terminal-body"}>
       <!-- System Status -->
-      <div class="system-status">
+      <div class="system-status" use:autoId={"system-status"}>
         <div class="status-line">
           > NEURAL PATHWAYS: <span class="status-online">ONLINE</span>
         </div>
@@ -521,25 +649,26 @@
       </div>
 
       <!-- Terminal Output -->
-      <div class="terminal-output">
-        {#each terminalLines as line}
-          <div class="terminal-line">{line}</div>
+      <div class="terminal-output" use:autoId={"terminal-output"}>
+        {#each terminalLines as line, i}
+          <div class="terminal-line" use:autoId={`terminal-line-${i}`}>{line}</div>
         {/each}
-        <div class="terminal-line current">
+        <div class="terminal-line current" use:autoId={"terminal-line-current"}>
           > Ready for neural interface command...<span class="cursor">_</span>
         </div>
       </div>
 
       <!-- Processing Steps -->
-      <form on:submit|preventDefault={handleSubmit} class="processing-steps">
+      <form on:submit|preventDefault={handleSubmit} class="processing-steps" use:autoId={"processing-form"}>
         <!-- Step 1: Input Source Detection -->
         <div
           class="step-section"
           class:active={currentStep === 1}
           class:completed={stepStatus[1] === 'completed'}
+          use:autoId={{type: "step-1-section", component: "capture"}}
         >
-          <div class="step-header">
-            <div class="step-indicator">
+          <div class="step-header" use:autoId={"step-1-header"}>
+            <div class="step-indicator" use:autoId={"step-1-indicator"}>
               {#if stepStatus[1] === 'completed'}
                 <Icon name="check" size="small" color="#00ff64" />
               {:else if stepStatus[1] === 'processing'}
@@ -601,9 +730,10 @@
           class="step-section"
           class:active={currentStep === 2}
           class:completed={stepStatus[2] === 'completed'}
+          use:autoId={{type: "step-2-section", component: "capture"}}
         >
-          <div class="step-header">
-            <div class="step-indicator">
+          <div class="step-header" use:autoId={"step-2-header"}>
+            <div class="step-indicator" use:autoId={"step-2-indicator"}>
               {#if stepStatus[2] === 'completed'}
                 <Icon name="check" size="small" color="#00ff64" />
               {:else}
@@ -614,45 +744,63 @@
           </div>
 
           <div class="step-content">
-            <div class="content-type-grid">
-              <!-- Auto option always available -->
-              <button
-                type="button"
-                class="content-type-option"
-                class:active={contentType === 'auto'}
-                on:click={() => selectContentType('auto')}
-                disabled={isSubmitting}
-              >
-                <span class="option-icon">🤖</span>
-                <span class="option-label">AUTO</span>
-              </button>
-
-              <!-- Dynamic content types from backend -->
-              {#each availableTypes as type}
+            <div class="content-type-selector">
+              <!-- Auto-detect display -->
+              <div class="auto-detect-display">
+                <span class="detect-icon">🤖</span>
+                <span class="detect-label">
+                  {#if contentType === 'auto'}
+                    AUTO-DETECTING...
+                  {:else}
+                    DETECTED: {getContentTypeIcon(contentType)} {detectedTypeName}
+                  {/if}
+                </span>
                 <button
                   type="button"
-                  class="content-type-option"
-                  class:active={contentType === type.name}
-                  on:click={() => selectContentType(type.name)}
+                  class="change-type-btn"
+                  on:click={toggleTypeDropdown}
                   disabled={isSubmitting}
                 >
-                  <span class="option-icon">
-                    {#if type.name === 'document'}📄
-                    {:else if type.name === 'video'}🎥
-                    {:else if type.name === 'article'}📰
-                    {:else if type.name === 'tutorial'}🎓
-                    {:else if type.name === 'image'}🖼️
-                    {:else if type.name === 'note'}📝
-                    {:else if type.name === 'link'}🔗
-                    {:else if type.name === 'audio'}🎵
-                    {:else if type.name === 'code'}💻
-                    {:else if type.name === 'development'}⚡
-                    {:else}📋{/if}
-                  </span>
-                  <span class="option-label">{type.display_name.substring(0, 4).toUpperCase()}</span
-                  >
+                  Change Type
+                  <span class="dropdown-arrow">{showTypeDropdown ? '▲' : '▼'}</span>
                 </button>
-              {/each}
+              </div>
+
+              <!-- Dropdown menu -->
+              {#if showTypeDropdown}
+                <div class="type-dropdown">
+                  <!-- Auto option -->
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    class:active={contentType === 'auto'}
+                    on:click={() => selectContentType('auto')}
+                  >
+                    <span class="item-icon">🤖</span>
+                    <span class="item-label">Auto-detect</span>
+                  </button>
+
+                  <div class="dropdown-divider"></div>
+
+                  <!-- Grouped content types -->
+                  {#each Object.entries(groupContentTypes(availableTypes)) as [category, types]}
+                    <div class="dropdown-category">
+                      <div class="category-header">{category}</div>
+                      {#each types as type}
+                        <button
+                          type="button"
+                          class="dropdown-item"
+                          class:active={contentType === type.type}
+                          on:click={() => selectContentType(type.type)}
+                        >
+                          <span class="item-icon">{getContentTypeIcon(type.type)}</span>
+                          <span class="item-label">{getContentTypeDisplayName(type.type)}</span>
+                        </button>
+                      {/each}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
 
             {#if stepStatus[2] === 'completed'}
@@ -670,9 +818,10 @@
           class="step-section"
           class:active={currentStep === 3}
           class:completed={stepStatus[3] === 'completed'}
+          use:autoId={{type: "step-3-section", component: "capture"}}
         >
-          <div class="step-header">
-            <div class="step-indicator">
+          <div class="step-header" use:autoId={"step-3-header"}>
+            <div class="step-indicator" use:autoId={"step-3-indicator"}>
               {#if stepStatus[3] === 'completed'}
                 <Icon name="check" size="small" color="#00ff64" />
               {:else}
@@ -724,22 +873,37 @@
         </div>
 
         <!-- Step 4: Memory Trace Metadata -->
-        <div class="step-section" class:active={currentStep === 4}>
-          <div class="step-header">
-            <div class="step-indicator">
+        <div class="step-section" class:active={currentStep === 4} use:autoId={{type: "step-4-section", component: "capture"}}>
+          <div class="step-header" use:autoId={"step-4-header"}>
+            <div class="step-indicator" use:autoId={"step-4-indicator"}>
               <span class="step-number">4</span>
             </div>
             <span class="step-title">[STEP 4] MEMORY TRACE METADATA</span>
           </div>
 
-          <div class="step-content">
-            <div class="metadata-inputs">
+          <div class="step-content" use:autoId={"step-4-content"}>
+            <div class="metadata-inputs" use:autoId={"metadata-inputs"}>
+              {#if isLoadingSuggestions}
+                <div class="ai-loading">
+                  <Spinner size="small" />
+                  <span>AI is analyzing the URL...</span>
+                </div>
+              {/if}
+
+              {#if suggestionsError}
+                <div class="ai-error">
+                  <Icon name="alert-triangle" size="small" color="#DC143C" />
+                  <span>{suggestionsError}</span>
+                </div>
+              {/if}
+
               <input
                 bind:value={title}
                 type="text"
                 class="terminal-input"
                 placeholder="Title (auto-generated if empty)"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingSuggestions}
+                use:autoId={"title-input"}
               />
 
               <textarea
@@ -747,13 +911,14 @@
                 class="terminal-textarea"
                 placeholder="Highlight or notes"
                 rows="3"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingSuggestions}
+                use:autoId={"highlight-textarea"}
               ></textarea>
 
               <TagAutocomplete
                 value=""
                 placeholder="Tags: #tech #ai #neural"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingSuggestions}
                 on:tags={handleTagsUpdate}
               />
             </div>
@@ -806,11 +971,12 @@
         {/if}
 
         <!-- Execute Button -->
-        <div class="execute-section">
+        <div class="execute-section" use:autoId={"execute-section"}>
           <button
             type="submit"
             class="execute-button"
             disabled={isSubmitting || (!url && !highlight && uploadedFiles.length === 0)}
+            use:autoId={"execute-button"}
           >
             {#if isSubmitting}
               <Spinner size="small" />
@@ -820,7 +986,7 @@
             {/if}
           </button>
 
-          <div class="command-hint">
+          <div class="command-hint" use:autoId={"command-hint"}>
             <Icon name="keyboard" size="small" color="#666" />
             <span>Cmd+Enter to execute</span>
           </div>
@@ -1210,46 +1376,132 @@
     font-weight: 600;
   }
 
-  .content-type-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+  .content-type-selector {
+    position: relative;
   }
 
-  .content-type-option {
+  .auto-detect-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid #333;
-    color: var(--text-secondary);
-    padding: 0.75rem;
+    border: 1px solid rgba(0, 255, 100, 0.2);
     border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+  }
+
+  .detect-icon {
+    font-size: 24px;
+  }
+
+  .detect-label {
+    flex: 1;
+    font-size: 14px;
+    color: #00ff64;
+    font-weight: 600;
+  }
+
+  .change-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 255, 100, 0.1);
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    color: #00ff64;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 13px;
     cursor: pointer;
     transition: all var(--transition-base);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    font-family: var(--font-mono);
-    font-size: 12px;
   }
 
-  .content-type-option:hover {
+  .change-type-btn:hover:not(:disabled) {
+    background: rgba(0, 255, 100, 0.2);
     border-color: #00ff64;
-    background: rgba(0, 255, 100, 0.1);
   }
 
-  .content-type-option.active {
-    border-color: #dc143c;
+  .change-type-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dropdown-arrow {
+    font-size: 10px;
+  }
+
+  .type-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(26, 26, 26, 0.98);
+    border: 1px solid rgba(0, 255, 100, 0.3);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .dropdown-item:hover {
+    background: rgba(0, 255, 100, 0.1);
+    color: #00ff64;
+  }
+
+  .dropdown-item.active {
     background: rgba(220, 20, 60, 0.2);
     color: #dc143c;
   }
 
-  .option-icon {
-    font-size: 16px;
+  .dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
   }
 
-  .option-label {
+  .dropdown-category {
+    padding: 0.5rem 0;
+  }
+
+  .dropdown-category + .dropdown-category {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .category-header {
+    padding: 0.5rem 1rem;
+    font-size: 11px;
     font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .item-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+
+  .item-label {
+    flex: 1;
   }
 
   .enhancement-toggles {
@@ -1317,6 +1569,32 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(0, 255, 100, 0.1);
+    border: 1px solid rgba(0, 255, 100, 0.2);
+    border-radius: var(--radius-sm);
+    color: #00ff64;
+    font-size: 13px;
+    font-family: var(--font-mono);
+  }
+
+  .ai-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(220, 20, 60, 0.1);
+    border: 1px solid rgba(220, 20, 60, 0.2);
+    border-radius: var(--radius-sm);
+    color: #dc143c;
+    font-size: 13px;
+    font-family: var(--font-mono);
   }
 
   .file-upload-section {
@@ -1427,8 +1705,14 @@
       margin-left: 0;
     }
 
-    .content-type-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .auto-detect-display {
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
+    }
+
+    .type-dropdown {
+      max-height: 300px;
     }
 
     .terminal-container {
@@ -1450,5 +1734,19 @@
     background: rgba(9, 105, 218, 0.1);
     border: 1px solid rgba(9, 105, 218, 0.3);
     color: #0969da;
+  }
+
+  /* AI-enhanced field styling */
+  input.ai-enhanced,
+  textarea.ai-enhanced {
+    border-color: #22C55E !important;
+    background: rgba(34, 197, 94, 0.05) !important;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2) !important;
+  }
+
+  input.ai-enhanced:focus,
+  textarea.ai-enhanced:focus {
+    border-color: #22C55E !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
   }
 </style>

@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from uuid import UUID
 
-from langfuse import observe
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from celery import group, chord
 from app.workers.celery_app import celery_app
 from app.workers.retry_strategies import IntelligentRetryTask, apply_retry_strategy

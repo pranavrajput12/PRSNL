@@ -14,8 +14,7 @@ from typing import Dict, Any, List, Optional
 from uuid import UUID
 from pathlib import Path
 
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.workers.celery_app import celery_app
 from app.db.database import get_db_connection
 from app.services.document_processor import DocumentProcessor

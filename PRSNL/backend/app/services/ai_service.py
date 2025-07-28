@@ -6,7 +6,7 @@ Provides a simple interface to Azure OpenAI for the voice service
 import logging
 from typing import Dict, List, Any, Optional
 from openai import AzureOpenAI
-# from langfuse import observe  # Temporarily disabled due to get_tracer error
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 
 from app.config import settings
 # from app.core.langfuse_client import langfuse_client  # Temporarily disabled due to get_tracer error
@@ -25,7 +25,7 @@ class AIService:
         )
         self.deployment = settings.AZURE_OPENAI_DEPLOYMENT
         
-    # @observe(name="generate_response")  # Temporarily disabled due to get_tracer error
+    @observe(name="generate_response")
     async def generate_response(
         self,
         messages: List[Dict[str, str]],

@@ -121,6 +121,11 @@ Use the matrix below to identify which files will need updates when task complet
 
 ### 🎨 Frontend Tasks (Windsurf)
 **Typical Changes**: UI components, styling, simple interactions
+**🆔 NEW: Unique Element ID System Available**:
+- Use precise element IDs instead of vague descriptions
+- Press `Ctrl+Shift+I` to toggle ID inspector overlay
+- Example: "Change `#voice-chat-button-1` color to blue" (precise) vs "change the voice button" (vague)
+- Documentation: `/docs/FRONTEND_DESIGN_COMMUNICATION.md`
 **Files to Update on Completion**:
 - ✅ `TASK_HISTORY.md` (status update)
 - ⚠️ `PROJECT_STATUS.md` (if major UI changes)

@@ -41,7 +41,7 @@ from typing import Optional, Dict, Any
 import random
 import json
 
-# from langfuse import observe  # Temporarily disabled due to get_tracer error
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.services.ai_service import AIService
 from app.services.chat_service import ChatService
 from app.services.tts_manager import get_tts_manager

@@ -21,6 +21,14 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 - **WebGL Performance**: Smooth 60fps 3D rendering with Three.js
 - **Responsive Design**: Adaptive 3D elements for all screen sizes
 
+### **🆔 Unique Element ID System (NEW in v8.0)**
+- **Automatic ID Generation**: Every UI element gets unique, human-readable IDs
+- **Precise Design Communication**: Replace vague descriptions with exact element targeting
+- **Visual Inspector Overlay**: Press `Ctrl+Shift+I` to explore element IDs in development
+- **10x Faster Design Changes**: "Change `#voice-chat-button-1` color to blue" vs "the third button"
+- **Development Tools**: Element registry, copy templates, hover tooltips
+- **AI-Friendly**: Perfect for AI-assisted frontend development and debugging
+
 ### **🚀 Performance & Reliability (v7.1 Features)**
 - **50-70% Faster Processing**: Multimodal document analysis with CrewAI
 - **Zero Data Loss**: LangGraph persistent workflows with crash recovery

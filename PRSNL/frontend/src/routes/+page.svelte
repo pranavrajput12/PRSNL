@@ -20,6 +20,7 @@
   import Terminal3D from '$lib/components/Terminal3D.svelte';
   import { getTypeIcon } from '$lib/stores/contentTypes';
   import { goto } from '$app/navigation';
+  import { autoId } from '$lib/actions/autoId';
 
   type Item = {
     id: string;
@@ -205,27 +206,27 @@
   }
 </script>
 
-<div class="container animate-in">
+<div class="container animate-in" use:autoId={"container"}>
   <!-- Motherboard Ecosystem Navigation -->
-  <div class="motherboard-hero-section">
-    <div class="hero-header">
-      <h1 class="hero-title">
+  <div class="motherboard-hero-section" use:autoId={"hero-section"}>
+    <div class="hero-header" use:autoId={"hero-header"}>
+      <h1 class="hero-title" use:autoId={"hero-title"}>
         <span class="title-main">PRSNL</span>
         <span class="title-sub">Your Second Brain</span>
       </h1>
-      <p class="hero-tagline">Never lose a brilliant idea again</p>
+      <p class="hero-tagline" use:autoId={"hero-tagline"}>Never lose a brilliant idea again</p>
     </div>
 
     <!-- Side-by-Side Layout: Mac3D Left, Icons Right -->
-    <div class="hero-layout">
+    <div class="hero-layout" use:autoId={"hero-layout"}>
       <!-- Mac3D Monitor on Left -->
-      <div class="hero-mac-left">
+      <div class="hero-mac-left" use:autoId={"hero-mac-display"}>
         <Mac3D />
       </div>
 
       <!-- Navigation Icons Grid on Right -->
-      <div class="navigation-section-right">
-        <div class="navigation-icons-right">
+      <div class="navigation-section-right" use:autoId={"navigation-section"}>
+        <div class="navigation-icons-right" use:autoId={"navigation-icons"}>
           <div class="icon-item">
             <MacMini3D onClick={() => goto('/dashboard')} tooltip="Dashboard" />
           </div>

@@ -81,6 +81,13 @@ CONTENT_TYPE_DEFINITIONS = {
         "description": "Development documentation, tutorials, and code resources",
         "color": "#10B981"
     },
+    "recipe": {
+        "name": "recipe",
+        "display_name": "Recipe",
+        "icon": "chef-hat",
+        "description": "Cooking recipes with ingredients and instructions",
+        "color": "#FF6B35"
+    },
     "github_repo": {
         "name": "github_repo",
         "display_name": "GitHub Repository", 
@@ -135,8 +142,9 @@ async def get_content_types() -> Dict[str, Any]:
                     "color": "#6B7280"
                 })
                 
-                # Add count to definition
+                # Add count to definition and map name -> type for frontend compatibility
                 type_info = definition.copy()
+                type_info["type"] = type_info["name"]  # Add type field for frontend
                 type_info["count"] = count
                 content_types.append(type_info)
             
@@ -144,6 +152,7 @@ async def get_content_types() -> Dict[str, Any]:
             for type_name, definition in CONTENT_TYPE_DEFINITIONS.items():
                 if type_name not in used_types:
                     type_info = definition.copy()
+                    type_info["type"] = type_info["name"]  # Add type field for frontend
                     type_info["count"] = 0
                     content_types.append(type_info)
             

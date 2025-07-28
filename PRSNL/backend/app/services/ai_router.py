@@ -9,8 +9,7 @@ import logging
 import time
 from typing import Any, Dict, List, Literal, Optional
 
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.config import settings
 from app.services.ai_router_types import (
     AIProvider, TaskType, AITask, ProviderConfig, RoutingDecision

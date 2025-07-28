@@ -177,3 +177,50 @@ export function formatTime(seconds: number): string {
 
   return `${minutes}m ${remainingSeconds}s`;
 }
+
+/**
+ * Extract domain from a URL
+ */
+export function extractDomain(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.replace('www.', '');
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Check if a URL is valid
+ */
+export function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get favicon URL for a domain
+ */
+export function getFaviconUrl(url: string, size: number = 32): string {
+  const domain = extractDomain(url);
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+}
+
+/**
+ * Normalize a URL (add protocol if missing)
+ */
+export function normalizeUrl(url: string): string {
+  if (!url) return '';
+  
+  // If it already has a protocol, return as is
+  if (url.match(/^https?:\/\//)) {
+    return url;
+  }
+  
+  // Add https:// by default
+  return `https://${url}`;
+}

@@ -11,8 +11,7 @@ import os
 from typing import Optional
 
 import httpx
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.config import settings
 
 logger = logging.getLogger(__name__)

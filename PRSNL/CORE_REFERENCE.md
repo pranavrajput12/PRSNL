@@ -367,6 +367,65 @@ curl -X POST http://localhost:8000/api/voice/test \
 
 ---
 
+## 🆔 Unique Element ID System (NEW v8.2)
+
+### Development Inspector Overlay
+```bash
+# Toggle ID inspector overlay in browser
+Ctrl+Shift+I    # Show/hide element ID overlay
+
+# Element interaction
+Alt+Click       # Select element for detailed info
+Ctrl+C         # Copy selected element ID
+Ctrl+Shift+E   # Export all element data
+Escape         # Clear selection
+```
+
+### Design Communication Commands
+```bash
+# Instead of vague descriptions, use precise element IDs:
+
+# OLD WAY (imprecise):
+"Change the third button on the voice page to blue"
+
+# NEW WAY (precise):
+"Change #test-voice-test-optimizations-btn-1 background to #10B981"
+```
+
+### ID System Usage
+```bash
+# View test page with auto-IDs
+open http://localhost:3004/test-voice
+
+# Check element registry in browser console
+window.PRSNL_ELEMENT_REGISTRY.helpers.getStats()
+
+# Find elements by component
+window.PRSNL_ID_UTILS.DEV_HELPERS.findByComponent('TestVoice')
+```
+
+### Element ID Format
+- **Pattern**: `component-name-element-type-number`
+- **Examples**: 
+  - `test-voice-container-1`
+  - `voice-chat-button-2`
+  - `settings-panel-controls-1`
+
+### System Files
+```bash
+# Core implementation files
+/frontend/src/lib/utils/elementIds.ts          # ID generation
+/frontend/src/lib/actions/autoId.ts            # Svelte action
+/frontend/src/lib/stores/elementRegistry.ts    # Development store
+/frontend/src/lib/components/development/IdInspectorOverlay.svelte
+
+# Documentation
+/docs/UNIQUE_ID_SYSTEM.md                      # Complete guide
+/docs/FRONTEND_DESIGN_COMMUNICATION.md         # Usage patterns
+```
+
+---
+
 ## 🤖 AI Services Testing
 
 ### Core AI Endpoints
@@ -378,6 +437,16 @@ curl http://localhost:8000/api/ai/health
 curl -X POST http://localhost:8000/api/ai-suggest \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Create a learning path for FastAPI", "context": {"knowledge": ["Python basics"]}}'
+
+# Extract actionable insights from content
+curl -X POST http://localhost:8000/api/content/extract-insights \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your tutorial content here", "content_type": "tutorial"}'
+
+# Clean scraped web content
+curl -X POST http://localhost:8000/api/content/clean \
+  -H "Content-Type: application/json" \
+  -d '{"content": "<html>Raw HTML content</html>", "preserve_structure": true}'
 
 # LibreChat OpenAI-compatible API
 curl -X POST http://localhost:8000/api/ai/chat/completions \
@@ -563,12 +632,19 @@ Connection: postgresql://pronav@localhost:5432/prsnl
 - **AI Service**: Azure OpenAI + RealtimeSTT
 - **Container Runtime**: Rancher Desktop
 
+### Content Processing Features
+- **Actionable Insights Extraction**: Tips, steps, methods, and takeaways from content
+- **Content Cleaning**: Remove ads, navigation, and boilerplate from scraped content
+- **Voice-Optimized Summaries**: Summaries designed for chatbot/voice consumption
+- **Structured Processing**: Clean content with preserved code blocks and tables
+- **CrewAI Agents**: Specialized agents for content processing tasks
+
 ### Content Statistics
 - **Total Items**: ~30
 - **Videos**: 7 functional video items
 - **Bookmarks**: 17 imported bookmarks  
 - **Articles**: 6 processed articles
-- **Functional Features**: Video streaming, AI suggestions, search, timeline, voice integration
+- **Functional Features**: Video streaming, AI suggestions, search, timeline, voice integration, actionable insights
 
 ---
 

@@ -19,8 +19,7 @@ from collections import defaultdict, deque
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 logger = logging.getLogger(__name__)
 
 

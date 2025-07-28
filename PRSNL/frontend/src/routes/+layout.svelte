@@ -10,6 +10,8 @@
   import { goto } from '$app/navigation';
   import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import { currentUser, isAuthenticated, authActions } from '$lib/stores/unified-auth';
+  import { autoId } from '$lib/actions/autoId';
+  import IdInspectorOverlay from '$lib/components/development/IdInspectorOverlay.svelte';
   
   export let data;
 
@@ -2098,4 +2100,7 @@
   }
 
 </style>
+
+<!-- Global ID Inspector for Development -->
+<IdInspectorOverlay />
 

@@ -17,8 +17,7 @@ from typing import Dict, List, Any, Optional, Union, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
 
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 logger = logging.getLogger(__name__)
 
 

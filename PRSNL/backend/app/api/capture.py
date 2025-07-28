@@ -31,6 +31,7 @@ from app.services.video_processor import VideoProcessor
 from app.services.websocket_manager import websocket_manager
 from app.utils.media_detector import MediaDetector
 from app.utils.url_classifier import URLClassifier
+from app.utils.classification_validator import classify_url_with_validation
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Force debug level for capture logging
@@ -227,6 +228,8 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     item_type = 'github_repo'
                 elif capture_request.content_type == 'github_document':
                     item_type = 'github_document'
+                elif capture_request.content_type == 'recipe':
+                    item_type = 'recipe'
                 else:
                     # For other content types, use the content_type as item_type
                     item_type = capture_request.content_type
@@ -235,50 +238,49 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
             
             # Rule 3: Auto-detection only when content_type='auto' or not specified
             elif capture_request.url and (not capture_request.content_type or capture_request.content_type == 'auto'):
-                # First check for development content
-                url_classification = URLClassifier.classify_url(str(capture_request.url))
+                # Use validated classification pipeline
+                classified_type, classification_metadata = classify_url_with_validation(
+                    str(capture_request.url), 
+                    capture_request.content_type
+                )
                 
-                if url_classification['is_development']:
-                    # Check if this is a repository URL
+                item_type = classified_type
+                confidence = classification_metadata.get('classification_confidence', 0.5)
+                method = classification_metadata.get('classification_method', 'unknown')
+                platform = classification_metadata.get('platform', 'unknown')
+                
+                logger.info(f"🔍 Validated classification: {platform} → type: {item_type} ({confidence:.0%} via {method})")
+                
+                # Store classification metadata for debugging
+                metadata.update({
+                    'url_classification': classification_metadata
+                })
+                
+                # Apply type-specific logic
+                if classified_type == 'development':
+                    # Auto-fill development fields from classification
+                    if not capture_request.programming_language:
+                        capture_request.programming_language = classification_metadata.get('programming_language')
+                    
+                    if not capture_request.project_category:
+                        capture_request.project_category = classification_metadata.get('project_category')
+                    
+                    if not capture_request.difficulty_level:
+                        capture_request.difficulty_level = classification_metadata.get('difficulty_level')
+                    
+                    # Set career-related flag
+                    capture_request.is_career_related = True
+                    
+                    # Check if it's a repository
                     if _is_repository_url(str(capture_request.url)):
                         item_type = 'repository'
-                        logger.info(f"🔍 Auto-detected repository URL → type: {item_type}")
-                    else:
-                        # Auto-classify as development content
-                        item_type = 'development'
-                        
-                        # Auto-fill development fields if not provided by user
-                        if not capture_request.programming_language and url_classification['programming_language']:
-                            capture_request.programming_language = url_classification['programming_language']
-                        
-                        if not capture_request.project_category and url_classification['project_category']:
-                            capture_request.project_category = url_classification['project_category']
-                        
-                        if not capture_request.difficulty_level and url_classification['difficulty_level']:
-                            capture_request.difficulty_level = url_classification['difficulty_level']
-                        
-                        # Set career-related flag if detected
-                        if url_classification['is_career_related']:
-                            capture_request.is_career_related = True
-                        
-                        logger.info(f"🔍 Auto-detected development content: {url_classification['platform']} → type: {item_type}")
-                        logger.info(f"🔍 Auto-filled: lang={capture_request.programming_language}, category={capture_request.project_category}, difficulty={capture_request.difficulty_level}")
-                elif _is_repository_url(str(capture_request.url)):
-                    # Direct repository URL detection
-                    item_type = 'repository'
-                    logger.info(f"🔍 Auto-detected repository URL → type: {item_type}")
-                else:
-                    # Fall back to media detection
+                
+                # Final fallback to media detection if needed
+                if item_type == 'article' and confidence < 0.5:
                     media_info = MediaDetector.detect_media_type(str(capture_request.url))
-                    
-                    if media_info['type'] == 'video':
-                        item_type = 'video'
-                    elif media_info['type'] == 'image':
-                        item_type = 'image'
-                    elif media_info['type'] == 'article':
-                        item_type = 'article'
-                        
-                    logger.info(f"🔍 Auto-detected from URL: {media_info['type']} → type: {item_type}")
+                    if media_info['type'] in ['video', 'image']:
+                        item_type = media_info['type']
+                        logger.info(f"🔄 Fallback to media detection: {media_info['type']}")
             
             # Rule 4: Special case - if no summarization requested for URL, treat as simple link
             # Exception: Don't convert development content or videos to link (they need rich preview)

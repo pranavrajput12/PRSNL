@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
+  import { autoId } from '$lib/actions/autoId';
+  import IdInspectorOverlay from '$lib/components/development/IdInspectorOverlay.svelte';
   
   // Set a dummy token to avoid auth errors on test page
   onMount(() => {
@@ -394,18 +396,18 @@
   }
 </script>
 
-<div class="container">
-  <div class="header">
-    <h1>🎤 PRSNL Voice System Test - Memory Optimized</h1>
-    <div class="status" style="background-color: {statusColor}">
+<div class="container" use:autoId={"container"}>
+  <div class="header" use:autoId={"header"}>
+    <h1 use:autoId={"title"}>🎤 PRSNL Voice System Test - Memory Optimized</h1>
+    <div class="status" style="background-color: {statusColor}" use:autoId={"status"}>
       Status: {status}
     </div>
   </div>
 
   <!-- Memory Optimization Stats -->
-  <div class="stats-panel">
-    <h3>📊 Memory Optimization Results</h3>
-    <div class="stats-grid">
+  <div class="stats-panel" use:autoId={"stats-panel"}>
+    <h3 use:autoId={"stats-header"}>📊 Memory Optimization Results</h3>
+    <div class="stats-grid" use:autoId={"stats-grid"}>
       <div class="stat-item">
         <strong>STT Model:</strong> {memoryStats.sttModel}
       </div>
@@ -422,9 +424,9 @@
   </div>
 
   <!-- Voice Settings -->
-  <div class="settings-panel">
-    <h3>🎛️ Voice Settings</h3>
-    <div class="settings-grid">
+  <div class="settings-panel" use:autoId={"settings-panel"}>
+    <h3 use:autoId={"settings-header"}>🎛️ Voice Settings</h3>
+    <div class="settings-grid" use:autoId={"settings-grid"}>
       <div class="setting-item">
         <label>Gender:</label>
         <select bind:value={voiceSettings.gender} on:change={updateVoiceSettings}>
@@ -453,16 +455,16 @@
   </div>
 
   <!-- Knowledge Base Test Section -->
-  <div class="knowledge-panel">
-    <h3>🧠 Knowledge Base Integration Test</h3>
-    <div class="knowledge-controls">
+  <div class="knowledge-panel" use:autoId={"knowledge-panel"}>
+    <h3 use:autoId={"knowledge-header"}>🧠 Knowledge Base Integration Test</h3>
+    <div class="knowledge-controls" use:autoId={"knowledge-controls"}>
       <select bind:value={selectedQuery}>
         <option value="">Select a knowledge base query...</option>
         {#each knowledgeBaseQueries as query}
           <option value={query}>{query}</option>
         {/each}
       </select>
-      <button on:click={testKnowledgeBaseQuery} disabled={isTestingKnowledge || !selectedQuery}>
+      <button on:click={testKnowledgeBaseQuery} disabled={isTestingKnowledge || !selectedQuery} use:autoId={"test-knowledge-btn"}>
         {isTestingKnowledge ? '⚙️ Testing...' : '🧠 Test Knowledge Query'}
       </button>
     </div>
@@ -474,17 +476,17 @@
   </div>
 
   <!-- Main Controls -->
-  <div class="controls">
-    <div class="button-group">
-      <button on:click={testVoiceOptimizations} class="primary">
+  <div class="controls" use:autoId={"main-controls"}>
+    <div class="button-group" use:autoId={"button-group-primary"}>
+      <button on:click={testVoiceOptimizations} class="primary" use:autoId={"test-optimizations-btn"}>
         🚀 Test Voice Optimizations
       </button>
-      <button on:click={connectWebSocket} class={ws && ws.readyState === WebSocket.OPEN ? 'connected' : 'disconnected'}>
+      <button on:click={connectWebSocket} class={ws && ws.readyState === WebSocket.OPEN ? 'connected' : 'disconnected'} use:autoId={"websocket-btn"}>
         {ws && ws.readyState === WebSocket.OPEN ? '🔌 Disconnect WS' : '🔌 Connect WebSocket'}
       </button>
     </div>
     
-    <div class="button-group">
+    <div class="button-group" use:autoId={"button-group-recording"}>
       <button 
         bind:this={recordButton}
         on:mousedown={startRecording}
@@ -493,6 +495,7 @@
         disabled={!ws || ws.readyState !== WebSocket.OPEN}
         class="record-button"
         class:recording={isRecording}
+        use:autoId={"record-btn"}
       >
         {isRecording ? '🔴 Recording...' : '🎤 Hold to Record'}
       </button>
@@ -972,3 +975,6 @@
     }
   }
 </style>
+
+<!-- ID Inspector Overlay for Development -->
+<IdInspectorOverlay />

@@ -10,6 +10,7 @@ from app.services.embedding_manager import embedding_manager
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_processor import LLMProcessor
 from app.services.smart_scraper import SmartScraperService
+from app.services.unified_ai_service import unified_ai_service
 from app.utils.content_fingerprint import (
     ContentFingerprintManager,
     generate_content_fingerprint,
@@ -26,6 +27,35 @@ class CaptureEngine:
         self.scraper = SmartScraperService()
         self.llm_processor = LLMProcessor()
         self.embedding_service = EmbeddingService()
+    
+    def _is_recipe_content(self, url: str, content: str) -> bool:
+        """Check if content appears to be a recipe"""
+        if not url and not content:
+            return False
+            
+        # Check URL patterns
+        if url:
+            recipe_indicators = [
+                'recipe', 'recipes', 'cooking', 'food', 'ingredients',
+                'allrecipes', 'foodnetwork', 'epicurious', 'bonappetit'
+            ]
+            url_lower = url.lower()
+            if any(indicator in url_lower for indicator in recipe_indicators):
+                return True
+        
+        # Check content patterns
+        if content:
+            content_lower = content.lower()
+            recipe_keywords = [
+                'ingredients', 'instructions', 'directions', 'prep time',
+                'cook time', 'servings', 'serves', 'tablespoon', 'teaspoon',
+                'cup', 'ounce', 'pound', 'grams', 'preheat', 'bake', 'sauté'
+            ]
+            keyword_count = sum(1 for keyword in recipe_keywords if keyword in content_lower)
+            # If we find 3 or more recipe keywords, likely a recipe
+            return keyword_count >= 3
+        
+        return False
     
     async def process_item(self, item_id: UUID, url: str = None, content: str = None, enable_summarization: bool = False, content_type: str = "auto"):
         """
@@ -174,14 +204,67 @@ class CaptureEngine:
                 else:
                     scraped_data.content = f"Web page content from {url}"
             
+            # Clean the content using ContentCleanerAgent
+            logger.info(f"Cleaning content for item {item_id}")
+            cleaned_result = await unified_ai_service.clean_content(
+                content=scraped_data.content,
+                content_type=content_type,
+                preserve_structure=True,
+                aggressive_cleaning=False
+            )
+            
+            # Use cleaned content if successful
+            if cleaned_result and cleaned_result.get('content'):
+                scraped_data.content = cleaned_result['content']
+                logger.info(f"Content cleaned successfully. Stats: {cleaned_result.get('cleaning_stats', {})}")
+            
+            # Check if this is a recipe URL and extract recipe data
+            recipe_data = None
+            if content_type == "recipe" or self._is_recipe_content(url, scraped_data.content):
+                logger.info(f"Extracting recipe data for item {item_id}")
+                try:
+                    recipe_data = await unified_ai_service.extract_recipe_data(
+                        content=scraped_data.content,
+                        url=url,
+                        title=scraped_data.title
+                    )
+                    logger.info(f"Recipe extraction successful: {recipe_data.get('title', 'Unknown Recipe')}")
+                except Exception as e:
+                    logger.error(f"Recipe extraction failed: {e}")
+                    recipe_data = None
+
             # Process with LLM (if enabled and not a link-only capture)
             if enable_summarization and content_type != "link":
-                logger.info(f"Processing content with LLM for item {item_id}")
+                logger.info(f"Processing content with LLM and extracting actionable insights for item {item_id}")
+                
+                # Extract actionable insights
+                insights_result = await unified_ai_service.extract_actionable_insights(
+                    content=scraped_data.content,
+                    content_type=content_type,
+                    url=url,
+                    title=scraped_data.title
+                )
+                
+                # Generate actionable summary
+                actionable_summary = await unified_ai_service.generate_actionable_summary(
+                    content=scraped_data.content,
+                    content_type=content_type,
+                    max_length=500
+                )
+                
+                # Also get regular analysis for backward compatibility
                 processed = await self.llm_processor.process_content(
                     content=scraped_data.content,
                     url=url,
                     title=scraped_data.title
                 )
+                
+                # Override summary with actionable summary
+                processed.summary = actionable_summary
+                
+                # Store insights in processed object
+                processed.actionable_insights = insights_result
+                
             else:
                 if content_type == "link":
                     logger.info(f"Link-only capture for item {item_id} - extracting meta only")
@@ -194,7 +277,8 @@ class CaptureEngine:
                     'content': scraped_data.content,
                     'tags': [],
                     'key_points': [],
-                    'sentiment': None
+                    'sentiment': None,
+                    'actionable_insights': None
                 })()
             
             # First, fetch existing metadata to preserve it
@@ -252,6 +336,14 @@ class CaptureEngine:
                     "questions": getattr(processed, 'questions', []),
                     "processed_at": time.time()
                 }
+                
+                # Add actionable insights if available
+                if hasattr(processed, 'actionable_insights') and processed.actionable_insights:
+                    metadata["actionable_insights"] = processed.actionable_insights
+            
+            # Add recipe data if available
+            if recipe_data:
+                metadata["recipe_data"] = recipe_data
 
             # Update the item in database
             async with pool.acquire() as conn:

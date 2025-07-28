@@ -6,11 +6,13 @@ classify development-related links and extract metadata.
 """
 
 import re
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup
+
+from app.utils.domain_classification_cache import domain_cache
 
 
 class URLClassifier:
@@ -91,6 +93,32 @@ class URLClassifier:
         r'hackernoon\.com'
     ]
     
+    RECIPE_PATTERNS = [
+        r'allrecipes\.com',
+        r'foodnetwork\.com',
+        r'cooking\.com',
+        r'epicurious\.com',
+        r'bonappetit\.com',
+        r'seriouseats\.com',
+        r'food\.com',
+        r'yummly\.com',
+        r'delish\.com',
+        r'tasteofhome\.com',
+        r'simplyrecipes\.com',
+        r'thekitchn\.com',
+        r'cookinglight\.com',
+        r'eatingwell\.com',
+        r'myrecipes\.com',
+        r'recipe',
+        r'recipes',
+        r'cooking',
+        r'ingredients',
+        r'instructions',
+        r'/cook/',
+        r'/recipe/',
+        r'/recipes/'
+    ]
+    
     # Language detection patterns
     LANGUAGE_PATTERNS = {
         'python': [r'python', r'django', r'flask', r'fastapi', r'pytorch', r'tensorflow'],
@@ -163,6 +191,7 @@ class URLClassifier:
     def classify_url(cls, url: str) -> Dict[str, any]:
         """
         Classify a URL and extract metadata for simplified permalink system.
+        Uses fast domain cache for instant classification when possible.
         
         Args:
             url: The URL to classify
@@ -186,6 +215,30 @@ class URLClassifier:
             'is_career_related': False,
             'metadata': {}
         }
+        
+        # Fast domain cache lookup first (sub-millisecond)
+        cache_result = domain_cache.classify_url(url)
+        if cache_result:
+            result['content_type'] = cache_result['type']
+            result['platform'] = cache_result['platform']
+            result['metadata']['classification_confidence'] = cache_result['confidence']
+            result['metadata']['classification_method'] = cache_result['classification_method']
+            
+            # Set specific flags based on cached type
+            if cache_result['type'] == 'development':
+                result['is_development'] = True
+                result['is_career_related'] = True
+                result['category'] = 'code'
+            elif cache_result['type'] == 'recipe':
+                result['category'] = 'recipe'
+                # Extract recipe-specific metadata from URL
+                result['metadata']['recipe'] = cls._extract_recipe_metadata(url)
+            elif cache_result['type'] == 'video':
+                result['category'] = 'media'
+            
+            # If we have a high-confidence match, return early
+            if cache_result['confidence'] >= 0.90:
+                return result
         
         # Determine simplified category first
         result['category'] = cls._classify_simplified_category(full_url, domain, path)
@@ -217,6 +270,14 @@ class URLClassifier:
                 'github': github_info,
                 'general': cls._extract_metadata(url, 'github')
             }
+            
+        # Check if it's a recipe URL
+        elif cls._is_recipe_url(full_url, domain, path):
+            result['content_type'] = 'recipe'
+            result['category'] = 'recipe'
+            result['platform'] = cls._detect_recipe_platform(domain)
+            metadata = cls._extract_recipe_metadata(url)
+            result['metadata'] = {'recipe': metadata}
             
         # Check if it's other development-related URLs
         elif cls._is_development_url(full_url, domain, path):
@@ -290,6 +351,16 @@ class URLClassifier:
         if any(pattern in url or pattern in domain for pattern in learn_patterns):
             return 'learn'
         
+        # Check for recipe content
+        recipe_patterns = [
+            'allrecipes.com', 'foodnetwork.com', 'cooking.com', 'epicurious.com',
+            'bonappetit.com', 'seriouseats.com', 'food.com', 'yummly.com',
+            'delish.com', 'tasteofhome.com', 'simplyrecipes.com', 'thekitchn.com',
+            'recipe', 'recipes', 'cooking', 'ingredients', '/cook/', '/recipe/'
+        ]
+        if any(pattern in url or pattern in domain for pattern in recipe_patterns):
+            return 'recipe'
+        
         # Check for media content
         if any(pattern in url or pattern in domain for pattern in media_patterns):
             return 'media'
@@ -356,6 +427,55 @@ class URLClassifier:
             }
         
         return None
+    
+    @classmethod
+    def _is_recipe_url(cls, url: str, domain: str, path: str) -> bool:
+        """Check if URL is recipe-related."""
+        for pattern in cls.RECIPE_PATTERNS:
+            if re.search(pattern, url, re.IGNORECASE):
+                return True
+        return False
+    
+    @classmethod
+    def _detect_recipe_platform(cls, domain: str) -> str:
+        """Detect recipe platform from domain."""
+        recipe_platforms = {
+            'allrecipes.com': 'allrecipes',
+            'foodnetwork.com': 'food_network',
+            'cooking.com': 'cooking',
+            'epicurious.com': 'epicurious',
+            'bonappetit.com': 'bon_appetit',
+            'seriouseats.com': 'serious_eats',
+            'food.com': 'food',
+            'yummly.com': 'yummly',
+            'delish.com': 'delish',
+            'tasteofhome.com': 'taste_of_home',
+            'simplyrecipes.com': 'simply_recipes',
+            'thekitchn.com': 'the_kitchn'
+        }
+        
+        for platform_domain, platform_name in recipe_platforms.items():
+            if platform_domain in domain:
+                return platform_name
+        return 'recipe_site'
+    
+    @classmethod
+    def _extract_recipe_metadata(cls, url: str) -> Dict[str, Any]:
+        """Extract recipe-specific metadata from URL."""
+        metadata = {}
+        
+        # Try to extract recipe ID or name from URL
+        recipe_match = re.search(r'/recipe/([^/]+)', url)
+        if recipe_match:
+            metadata['recipe_id'] = recipe_match.group(1)
+        
+        # Extract recipe name from URL path
+        path_match = re.search(r'/([^/]+)(?:/recipe|/recipes)?/?$', url)
+        if path_match:
+            recipe_name = path_match.group(1).replace('-', ' ').replace('_', ' ')
+            metadata['recipe_name_from_url'] = recipe_name
+        
+        return metadata
     
     @classmethod
     def _is_development_url(cls, url: str, domain: str, path: str) -> bool:

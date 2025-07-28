@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from langfuse import observe
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel
 

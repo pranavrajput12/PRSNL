@@ -12,8 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from openai import AsyncAzureOpenAI
-from langfuse import observe
-
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.config import settings
 from app.services.ai_validation_service import ai_validation_service
 from app.services.cache import cache_service, CacheKeys
@@ -806,6 +805,235 @@ Create a structured learning path in JSON format:
         except Exception as e:
             logger.error(f"Error in stream_chat_response: {e}")
             yield f"Error generating response: {str(e)}"
+    
+    @observe(name="extract_actionable_insights")
+    async def extract_actionable_insights(
+        self,
+        content: str,
+        content_type: Optional[str] = None,
+        url: Optional[str] = None,
+        title: Optional[str] = None,
+        focus_areas: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract actionable insights using the ActionableInsightsAgent
+        
+        Args:
+            content: The content to analyze
+            content_type: Type of content (article, tutorial, documentation, etc.)
+            url: Source URL if available
+            title: Content title
+            focus_areas: Specific areas to focus on
+            
+        Returns:
+            Dictionary containing categorized actionable insights
+        """
+        try:
+            from app.agents.content.actionable_insights_agent import ActionableInsightsAgent
+            
+            insights_agent = ActionableInsightsAgent()
+            insights = await insights_agent.extract_insights(
+                content=content,
+                content_type=content_type,
+                url=url,
+                title=title,
+                focus_areas=focus_areas
+            )
+            
+            return insights.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Failed to extract actionable insights: {e}")
+            # Return basic insights on error
+            return {
+                "tips": [],
+                "steps": [],
+                "methods": [],
+                "takeaways": [],
+                "summary": "Unable to extract insights",
+                "total_insights": 0
+            }
+    
+    @observe(name="clean_content") 
+    async def clean_content(
+        self,
+        content: str,
+        content_type: Optional[str] = None,
+        preserve_structure: bool = True,
+        aggressive_cleaning: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Clean and structure content using the ContentCleanerAgent
+        
+        Args:
+            content: Raw content to clean
+            content_type: Type of content (article, documentation, tutorial, etc.)
+            preserve_structure: Whether to preserve heading structure
+            aggressive_cleaning: Use more aggressive cleaning
+            
+        Returns:
+            Dictionary containing cleaned content and metadata
+        """
+        try:
+            from app.agents.content.content_cleaner_agent import ContentCleanerAgent
+            
+            cleaner_agent = ContentCleanerAgent()
+            cleaned = await cleaner_agent.clean_content(
+                content=content,
+                content_type=content_type,
+                preserve_structure=preserve_structure,
+                aggressive_cleaning=aggressive_cleaning
+            )
+            
+            return cleaned.to_dict()
+            
+        except Exception as e:
+            logger.error(f"Failed to clean content: {e}")
+            # Return minimally cleaned content on error
+            return {
+                "content": content.strip(),
+                "title": None,
+                "sections": [],
+                "metadata": {"error": str(e)},
+                "cleaning_stats": {"error": str(e)}
+            }
+    
+    @observe(name="extract_recipe_data")
+    async def extract_recipe_data(
+        self,
+        content: str,
+        url: Optional[str] = None,
+        title: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract structured recipe data using the RecipeExtractorAgent
+        
+        Args:
+            content: Raw recipe content (HTML or text)
+            url: Source URL for context
+            title: Page title if available
+            
+        Returns:
+            Dictionary containing structured recipe information
+        """
+        try:
+            from app.agents.content.recipe_extractor_agent import RecipeExtractorAgent
+            
+            recipe_agent = RecipeExtractorAgent()
+            recipe_data = await recipe_agent.extract_recipe(
+                content=content,
+                url=url,
+                title=title
+            )
+            
+            # Convert to dictionary format
+            return {
+                "title": recipe_data.title,
+                "description": recipe_data.description,
+                "ingredients": [
+                    {
+                        "name": ing.name,
+                        "quantity": ing.quantity,
+                        "unit": ing.unit,
+                        "notes": ing.notes,
+                        "category": ing.category
+                    } for ing in (recipe_data.ingredients or [])
+                ],
+                "steps": [
+                    {
+                        "step_number": step.step_number,
+                        "instruction": step.instruction,
+                        "time_minutes": step.time_minutes,
+                        "temperature": step.temperature,
+                        "equipment": step.equipment,
+                        "tips": step.tips
+                    } for step in (recipe_data.steps or [])
+                ],
+                "prep_time_minutes": recipe_data.prep_time_minutes,
+                "cook_time_minutes": recipe_data.cook_time_minutes,
+                "total_time_minutes": recipe_data.total_time_minutes,
+                "servings": recipe_data.servings,
+                "difficulty": recipe_data.difficulty,
+                "cuisine_type": recipe_data.cuisine_type,
+                "dietary_info": recipe_data.dietary_info or [],
+                "nutritional_info": recipe_data.nutritional_info or {},
+                "voice_friendly_summary": recipe_data.voice_friendly_summary,
+                "tips_and_notes": recipe_data.tips_and_notes or []
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to extract recipe data: {e}")
+            # Return basic recipe structure on error
+            return {
+                "title": title or "Recipe",
+                "description": "Unable to extract recipe details",
+                "ingredients": [],
+                "steps": [],
+                "prep_time_minutes": None,
+                "cook_time_minutes": None,
+                "total_time_minutes": None,
+                "servings": None,
+                "difficulty": "unknown",
+                "cuisine_type": None,
+                "dietary_info": [],
+                "nutritional_info": {},
+                "voice_friendly_summary": "Recipe extraction failed. Please review manually.",
+                "tips_and_notes": [],
+                "error": str(e)
+            }
+    
+    @observe(name="generate_actionable_summary")
+    async def generate_actionable_summary(
+        self,
+        content: str,
+        content_type: Optional[str] = None,
+        max_length: int = 300
+    ) -> str:
+        """
+        Generate a summary focused on actionable insights, optimized for voice/chat
+        
+        Args:
+            content: Content to summarize
+            content_type: Type of content
+            max_length: Maximum character length for voice output
+            
+        Returns:
+            Voice-friendly actionable summary
+        """
+        try:
+            # First extract actionable insights
+            insights_dict = await self.extract_actionable_insights(
+                content=content,
+                content_type=content_type
+            )
+            
+            # Generate voice-friendly summary from insights
+            from app.agents.content.actionable_insights_agent import ActionableInsightsAgent, InsightsCollection, ActionableInsight
+            
+            # Reconstruct InsightsCollection from dict
+            collection = InsightsCollection()
+            for tip_data in insights_dict.get('tips', []):
+                collection.tips.append(ActionableInsight(**tip_data))
+            for step_data in insights_dict.get('steps', []):
+                collection.steps.append(ActionableInsight(**step_data))
+            for method_data in insights_dict.get('methods', []):
+                collection.methods.append(ActionableInsight(**method_data))
+            for takeaway_data in insights_dict.get('takeaways', []):
+                collection.takeaways.append(ActionableInsight(**takeaway_data))
+            collection.summary = insights_dict.get('summary', '')
+            
+            insights_agent = ActionableInsightsAgent()
+            summary = await insights_agent.generate_voice_friendly_summary(
+                insights=collection,
+                max_length=max_length
+            )
+            
+            return summary
+            
+        except Exception as e:
+            logger.error(f"Failed to generate actionable summary: {e}")
+            # Fallback to regular summary
+            return await self.generate_summary(content, summary_type="brief")
 
 
 # Singleton instance

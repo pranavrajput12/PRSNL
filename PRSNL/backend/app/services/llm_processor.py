@@ -144,5 +144,23 @@ Requirements:
 
 Return only the tags, comma-separated."""
 
+    async def process_with_llm(
+        self,
+        prompt: str,
+        system_message: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1000
+    ) -> str:
+        """
+        Process a prompt with the LLM and return the response.
+        This method provides backward compatibility for existing code.
+        """
+        return await self.unified_ai.complete(
+            prompt=prompt,
+            system_prompt=system_message,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+
 # Create singleton instance for backward compatibility
 llm_processor = LLMProcessor()

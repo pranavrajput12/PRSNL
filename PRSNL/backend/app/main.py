@@ -298,7 +298,7 @@ from app.api import (
     file_upload,
     firecrawl,
     health,
-    # import_data,  # Temporarily disabled due to CrewAI OpenTelemetry conflicts
+    import_data,  # Re-enabled - CrewAI conflicts resolved
     insights,
     items,
     questions,
@@ -345,7 +345,7 @@ app.include_router(duplicates.router, prefix=settings.API_V1_STR)
 app.include_router(summarization.router, prefix=settings.API_V1_STR)
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(insights.router, prefix=settings.API_V1_STR)
-# app.include_router(import_data.router, prefix=settings.API_V1_STR)  # Temporarily disabled
+app.include_router(import_data.router, prefix=settings.API_V1_STR)  # Re-enabled
 app.include_router(conversations.router, prefix=settings.API_V1_STR)  # Neural Echo - AI chat conversations
 app.include_router(conversation_intelligence.router, prefix=settings.API_V1_STR)  # AI-powered analysis
 app.include_router(conversation_groups.router, prefix=settings.API_V1_STR)  # Conversation groups endpoint

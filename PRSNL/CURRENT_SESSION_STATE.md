@@ -1,238 +1,192 @@
 # CURRENT SESSION STATE
-**Last Updated:** 2025-07-23
-**Session Status:** COMPLETED
-**Phase:** Voice System Integration & Documentation Consolidation
+**Last Updated:** 2025-01-24
+**Session Status:** PAUSED FOR SLEEP
+**Phase:** Capture Page UI Enhancement & AI Integration Debugging
 
 ## 🎯 Current Session Overview
-**Primary Focus:** Voice system enhancements, knowledge base integration, and documentation consolidation
-**Started:** Voice system debugging and enhancement
-**Current Task:** Session completed successfully - ready for next phase
+**Primary Focus:** Fixing capture page UI issues and AI auto-generation functionality
+**Started:** Duplicate content type buttons issue
+**Current Task:** Debugging AI suggestions not populating title/notes fields
+
+## 🔧 ACTIVE DEBUGGING TASK
+
+### **AI Auto-Generation Not Populating Fields** 🔄
+**Status:** IN PROGRESS - DEBUGGING NEEDED
+**Priority:** HIGH
+**Issue:** AI suggestions endpoint returns data but fields don't update in UI
+
+**Current State:**
+- Backend `/api/suggest` endpoint is confirmed working
+- Frontend calls `getAISuggestions()` and receives response
+- Console logs added to track data flow
+- Fields (title, highlight) still not updating with AI data
+
+**What We've Tried:**
+1. Removed conditional logic (`&& !title`, `&& !highlight`) that prevented updates
+2. Added extensive console.log debugging
+3. Added visual feedback (loading spinner, error messages)
+4. Added CSS styling for AI-enhanced fields (green border)
+5. Verified backend response format matches frontend expectations
+
+**Next Debugging Steps:**
+1. **Check browser console for:**
+   ```
+   Loading AI suggestions for URL: [url]
+   AI suggestions received: [response object]
+   Title updated to: [title]
+   Highlight updated to: [summary]
+   ```
+
+2. **Test API directly:**
+   ```bash
+   curl -X POST http://localhost:8000/api/suggest \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://smartsail.ai"}'
+   ```
+
+3. **Possible root causes to investigate:**
+   - Svelte reactivity not triggering DOM updates
+   - CORS issues between frontend/backend
+   - Authentication token missing
+   - Response data structure mismatch
+   - Timing issue with reactive statements
 
 ## ✅ COMPLETED TASKS (This Session)
 
-### 1. **Voice System Knowledge Base Integration** ✅
+### 1. **Fixed Duplicate Content Type Buttons** ✅
 **Status:** COMPLETED
-**Impact:** Critical - Voice now uses PRSNL knowledge instead of repeating questions
+**Impact:** High - Improved UI clarity
 
-**What Was Implemented:**
-- Fixed voice API `/api/voice/test` endpoint to use `process_text_message` for knowledge base integration
-- Added PRSNL documentation to knowledge base (6 comprehensive documents)
-- Voice responses now leverage system knowledge instead of generic responses
-- Enhanced voice processing with Cortex personality integration
-- Knowledge context indicators (🧠) when knowledge base is used
+**What Was Fixed:**
+- Multiple "GITH" buttons showing (github_issue, github_pr, github_repo all truncated to "GITH")
+- Replaced grid of 20+ buttons with clean dropdown interface
+- Implemented content type grouping (Development, Documents, Media, Web)
 
-**Technical Details:**
-- Voice service integration with chat service for knowledge base access
-- Cortex personality system with mood-based responses
-- Knowledge base search and context enhancement for voice interactions
-
-### 2. **Enhanced Voice Quality with Piper TTS** ✅
-**Status:** COMPLETED  
-**Impact:** High - Significantly improved voice naturalness and quality
-
-**What Was Implemented:**
-- Switched primary TTS engine from Edge-TTS to Piper for better voice quality
-- Added TTS abstraction layer supporting multiple backends (Piper, Chatterbox, Edge-TTS)
-- Implemented mood-based speech rate control (0.75-0.95x based on conversation context)
-- Enhanced voice settings with emotion strength control
-- Improved voice selection based on Cortex personality moods
-
-**Technical Details:**
-- TTS Manager architecture with fallback support
-- Memory-optimized Piper TTS for natural speech synthesis
-- Voice personality mapping with emotional intelligence
-- Speech rate optimization for different conversation contexts
-
-### 3. **Live Transcription Display System** ✅
+### 2. **Simplified Content Type Selection** ✅
 **Status:** COMPLETED
-**Impact:** High - Enhanced user experience with real-time voice feedback
+**Impact:** High - Better UX
 
 **What Was Implemented:**
-- Added comprehensive live transcription display with animated waveform indicators
-- Enhanced test page with conversation history, speaker labels, and timestamps
-- Real-time speech status indicators during recording
-- Empty state instructions for better user guidance
-- Conversation display with user/AI message differentiation
+- Auto-detect as primary interface with "AUTO-DETECTING..." status
+- Dropdown menu for manual type selection
+- Categories: Development, Documents, Media, Web
+- Clean visual hierarchy with emojis for each type
 
-**Technical Details:**
-- Animated waveform visualization during voice recording
-- Real-time transcription updates with status indicators
-- Conversation history persistence with timestamps
-- Speaker identification and message formatting
-
-### 4. **Frontend Voice Compatibility** ✅
+### 3. **Fixed Auto-Detection for Regular URLs** ✅
 **Status:** COMPLETED
-**Impact:** Critical - Voice system now works across entire application
+**Impact:** Medium - Better detection accuracy
 
-**What Was Implemented:**
-- Fixed WebSocket message handling compatibility between frontend and backend
-- Updated VoiceChat.svelte component for new backend message format
-- Enhanced chat page WebSocket integration for voice functionality
-- Added knowledge context indicators throughout voice interfaces
-- Synchronized message format handling across all voice components
+**What Was Fixed:**
+- Auto-detection was stuck on "AUTO-DETECTING..." for regular websites
+- Added default case to detect regular URLs as 'link' type
+- Now properly detects: video URLs, GitHub URLs, and regular websites
 
-**Technical Details:**
-- WebSocket message format standardization (data.data.* pattern)
-- Frontend component message handling updates
-- Real-time voice communication protocol enhancement
-- Cross-component voice functionality integration
-
-### 5. **Repository Documentation Consolidation** ✅
+### 4. **Added Visual Feedback for AI Processing** ✅
 **Status:** COMPLETED
-**Impact:** Medium - Improved codebase organization and maintainability
+**Impact:** Medium - Better user feedback
 
-**What Was Implemented:**
-- Major documentation consolidation: removed 49 obsolete files, added 26 consolidated guides
-- Enhanced .gitignore to exclude test files and temporary data
-- Added new advanced code analysis APIs and services
-- Updated repository structure for better organization
-- Comprehensive cleanup of test artifacts and temporary files
+**What Was Added:**
+- Loading spinner while AI analyzes URL
+- Error messages with specific reasons (404, auth, network, etc.)
+- Green border styling for AI-enhanced fields (ready but not working yet)
+- Terminal output for AI analysis progress
 
-**Technical Details:**
-- Documentation architecture consolidation
-- Repository cleanup and organization
-- Advanced API service implementations
-- Test artifact management and exclusion
+## 📝 CODE CHANGES SUMMARY
 
-## 🔄 PREVIOUS SESSION TASKS (Referenced for Context)
+### Modified Files:
+1. **`/frontend/src/routes/(protected)/capture/+page.svelte`**
+   - Replaced content type grid with dropdown
+   - Fixed auto-detection logic
+   - Added AI feedback UI components
+   - Updated `loadAISuggestions()` function
+   - Added debugging console.logs
+   - Added CSS for AI-enhanced fields
 
-### Previous: **WebSocket Real-Time Progress Updates** ✅
-**Status:** COMPLETED (Previous Session)
-**Impact:** High - Real-time user experience improvement
+### Key Code Snippets:
 
-### Previous: **Password Reset Email Functionality** ✅  
-**Status:** COMPLETED (Previous Session)
-**Impact:** High - Complete authentication system
+**Content Type Dropdown:**
+```svelte
+<div class="auto-detect-display">
+  <span class="detect-icon">🤖</span>
+  <span class="detect-label">
+    {#if contentType === 'auto'}
+      AUTO-DETECTING...
+    {:else}
+      DETECTED: {getContentTypeIcon(contentType)} {detectedTypeName}
+    {/if}
+  </span>
+  <button type="button" class="change-type-btn" on:click={toggleTypeDropdown}>
+    Change Type
+  </button>
+</div>
+```
 
-### Previous: **Production Debug Mode Configuration** ✅
-**Status:** COMPLETED (Previous Session)
-**Impact:** Critical - Production security and performance
+**AI Suggestions Update (Still Not Working):**
+```javascript
+// Always update fields if we have AI suggestions
+if (suggestions.title) {
+  title = suggestions.title;
+  console.log('Title updated to:', title);
+}
+if (suggestions.summary) {
+  highlight = suggestions.summary;
+  console.log('Highlight updated to:', highlight);
+}
+```
 
-### Previous: **Security Key Generation** ✅
-**Status:** COMPLETED (Previous Session)
-**Impact:** Critical - Production security
+## 🏗️ TECHNICAL CONTEXT
 
-## 🔄 PENDING TASKS
+### Environment:
+- Frontend: Svelte 5 on port 3004
+- Backend: FastAPI on port 8000
+- AI: Azure OpenAI with Jina Reader for web scraping
 
-### Next Session: **Performance Optimization & Enhancement** ⏳
-**Status:** READY FOR NEXT SESSION
-**Priority:** Medium
-**Description:** System performance optimization and additional feature enhancements
-**Estimated Effort:** Future session planning
+### API Flow:
+1. User enters URL → triggers `loadAISuggestions()`
+2. Frontend calls `/api/suggest` endpoint
+3. Backend scrapes with Jina Reader
+4. AI generates title, summary, tags
+5. Response sent back to frontend
+6. **ISSUE:** Frontend receives data but doesn't update fields
 
-### Next Session: **Update Outdated Dependencies** ⏳
-**Status:** READY FOR NEXT SESSION
-**Priority:** Low
-**Description:** Update outdated dependencies to latest secure versions
-**Estimated Effort:** 30-45 minutes
-
-## 🏗️ TECHNICAL ARCHITECTURE UPDATES
-
-### New Components Added (This Session):
-1. **Enhanced Voice Service** (`app/services/voice_service.py`)
-   - Knowledge base integration for intelligent responses
-   - Cortex personality system with mood-based speech
-   - TTS Manager abstraction layer with multiple backend support
-   - Memory-optimized faster-whisper for speech recognition
-
-2. **TTS Manager System** (`app/services/tts_manager.py`)
-   - Multi-backend TTS support (Piper, Chatterbox, Edge-TTS)
-   - Automatic fallback handling between TTS engines
-   - Voice quality optimization with speech rate control
-   - Emotion and mood-based voice synthesis
-
-3. **Voice API Enhancements** (`app/api/voice.py`)
-   - Knowledge base integrated voice processing
-   - Real-time WebSocket voice communication
-   - Voice settings and personality configuration
-   - Health monitoring and diagnostics
-
-4. **Frontend Voice Integration** (Multiple components)
-   - Live transcription display with animated waveforms
-   - Real-time conversation history and speaker identification
-   - Enhanced WebSocket message handling for voice
-   - Cross-component voice functionality
-
-### Enhanced Components (This Session):
-1. **Voice Service** - Complete knowledge base integration and TTS enhancement
-2. **Chat Service** - Voice context processing and personality integration
-3. **Frontend Components** - Voice UI enhancement and real-time feedback
-4. **WebSocket Communication** - Voice message format standardization
-5. **Documentation Architecture** - Comprehensive consolidation and organization
-
-## 📊 SYSTEM STATUS
-
-### Core Systems:
-- ✅ **Voice Integration**: Complete with knowledge base, Piper TTS, and live transcription
-- ✅ **Authentication**: Complete with password reset functionality
-- ✅ **Real-time Communication**: WebSocket voice communication and progress updates operational
-- ✅ **Knowledge Base**: Integrated with voice system for intelligent responses
-- ✅ **AI Services**: Enhanced with voice personality and mood-based processing
-- ✅ **Email System**: All email types supported (verification, welcome, magic link, password reset)
-- ✅ **Security Configuration**: Production-ready with secure keys
-- ✅ **Logging System**: Environment-aware and optimized
-
-### Voice System:
-- ✅ **TTS Quality**: Piper TTS with natural speech synthesis
-- ✅ **Knowledge Integration**: Voice responses use PRSNL documentation
-- ✅ **Live Transcription**: Real-time display with animated waveforms
-- ✅ **Frontend Compatibility**: Cross-application voice functionality
-- ✅ **WebSocket Communication**: Standardized voice message protocol
-
-### Database:
-- ✅ **Schema**: Up to date with all features including voice and auth
-- ✅ **Migrations**: 21 migrations applied
-- ✅ **Security**: Secure keys generated and configured
-- ✅ **Knowledge Base**: PRSNL documentation integrated for voice responses
-
-### Infrastructure:
-- ✅ **Production Deployment**: Ready with voice system and proper configuration
-- ✅ **Development Environment**: Maintained with debug features and voice testing
-- ✅ **Docker**: Production-optimized
-- ✅ **Documentation**: Consolidated and comprehensive
+### Files for Tomorrow's Debugging:
+- `/frontend/src/routes/(protected)/capture/+page.svelte` - Main capture page
+- `/frontend/src/lib/api.ts` - API client (line 537+)
+- `/backend/app/api/ai_suggest.py` - Backend endpoint
+- Browser DevTools - Network tab and Console
 
 ## 🔄 NEXT SESSION PREPARATION
 
-**System Status:** Ready for next phase development
-**Current State:** All voice system features operational and documented
+**Immediate Priority:** Debug why AI suggestions aren't updating the form fields
 
-**Potential Next Steps:**
-1. Performance optimization and advanced voice features
-2. Additional AI service integrations  
-3. Mobile app voice integration
-4. Dependency updates and cleanup (low priority)
+**Debug Checklist:**
+1. [ ] Check browser console logs
+2. [ ] Verify network request/response in DevTools
+3. [ ] Test if manual field updates work: `title = "Test"`
+4. [ ] Check Svelte reactivity with `$: console.log('title changed:', title)`
+5. [ ] Verify no errors in backend logs
+6. [ ] Test with different URLs
 
-**Technical Opportunities:**
-- Voice system advanced features (voice cloning, multi-language)
-- Performance optimizations for voice processing
-- Enhanced AI orchestration capabilities
-- Mobile platform voice integration
+**Potential Solutions to Try:**
+- Force Svelte update with `title = title`
+- Use stores instead of regular variables
+- Add `$:` reactive statement for field updates
+- Check if form binding is interfering
+- Try setTimeout to delay update
 
-## 🎉 SESSION ACHIEVEMENTS
+## 📊 SESSION METRICS
 
-**Major Accomplishments:**
-1. **Complete Voice System Integration**: Knowledge base integrated voice responses that leverage PRSNL documentation
-2. **Enhanced Voice Quality**: Piper TTS implementation with natural speech synthesis and mood-based control
-3. **Live Voice Interface**: Real-time transcription with animated waveforms and conversation history
-4. **Cross-Platform Voice**: Voice functionality working across entire application, not just test pages
-5. **Documentation Consolidation**: Major cleanup and organization of project documentation
+**Tasks Completed:** 4/5 (80%)
+**Code Quality:** High - Clean refactoring with proper organization
+**User Impact:** Significant UI improvements, AI feature pending
+**Time Spent:** ~2 hours
+**Blockers:** Svelte reactivity issue with AI field updates
 
-**Quality Metrics:**
-- ✅ All voice implementations tested and validated across frontend and backend
-- ✅ Knowledge base integration working seamlessly with voice responses
-- ✅ Natural voice quality significantly improved with Piper TTS
-- ✅ Real-time user experience enhanced with live transcription
-- ✅ Production-ready voice system with proper error handling
+## 🎯 TOMORROW'S FOCUS
 
-**Files Modified/Created:** ~15 files (voice system + documentation)
-**New Features:** 5 major voice system features completed
-**Performance Improvements:** Voice quality optimization, speech rate control
-**User Experience:** Real-time voice feedback, knowledge-based responses
-**Documentation Updates:** 8+ key documentation files updated with voice capabilities
+1. **PRIMARY:** Fix AI auto-generation field updates
+2. **SECONDARY:** Ensure AI suggestions work across all URL types
+3. **OPTIONAL:** Add more visual feedback for successful AI enhancement
 
-**Session Impact:**
-- 🎤 **Voice System**: Now fully functional with knowledge base integration
-- 🧠 **Knowledge Integration**: Voice responses use PRSNL documentation intelligently  
-- 💬 **User Experience**: Live transcription and natural conversation flow
-- 📱 **Cross-Platform**: Voice works throughout entire application
-- 📚 **Documentation**: Comprehensive and well-organized for future development
+**Session End Time:** 2025-01-24 (Sleep Time)
+**Resume Point:** Debug `loadAISuggestions()` field update issue

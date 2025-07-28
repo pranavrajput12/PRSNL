@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from langfuse import observe
+from app.core.langfuse_wrapper import observe  # Safe wrapper to handle get_tracer error
 from app.core.langfuse_client import langfuse_client
 
 logger = logging.getLogger(__name__)

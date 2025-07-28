@@ -72,6 +72,11 @@ function getDefaultTypes(): ContentTypeDefinition[] {
       description: 'PDF files and other documents',
     },
     {
+      type: 'recipe',
+      count: 0,
+      description: 'Cooking recipes with ingredients and instructions',
+    },
+    {
       type: 'image',
       count: 0,
       description: 'Images and visual content',
@@ -105,6 +110,7 @@ export function getTypeIcon(typeName: string): string {
     ['article', 'file-text'],
     ['video', 'play-circle'],
     ['document', 'file'],
+    ['recipe', 'chef-hat'],
     ['image', 'image'],
     ['note', 'edit'],
     ['link', 'link'],
@@ -122,6 +128,7 @@ export function getTypeColor(typeName: string): string {
     ['article', '#3B82F6'],
     ['video', '#EF4444'],
     ['document', '#10B981'],
+    ['recipe', '#FF6B35'],
     ['image', '#8B5CF6'],
     ['note', '#F59E0B'],
     ['link', '#6B7280'],
