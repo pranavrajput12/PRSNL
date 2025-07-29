@@ -8,6 +8,7 @@
   import VideoPlayer from '$lib/components/VideoPlayer.svelte';
   import TagList from '$lib/components/TagList.svelte';
   import { browser } from '$app/environment';
+  import { getItemUrl } from '$lib/utils/url';
 
   type Item = {
     id: string;
@@ -252,7 +253,7 @@
 
               <div class="trace-header">
                 <div class="trace-main">
-                  <a href={item.permalink || `/item/${item.id}`} class="trace-title">
+                  <a href={getItemUrl(item)} class="trace-title">
                     {item.title || 'Untitled'}
                     {#if item.status === 'pending'}
                       <span class="processing-indicator">

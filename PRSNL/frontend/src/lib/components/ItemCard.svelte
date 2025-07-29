@@ -6,6 +6,7 @@
   import { aiApi } from '$lib/api';
   import type { Item, TimelineItem } from '$lib/types/api';
   import { getTypeIcon } from '$lib/stores/contentTypes';
+  import { getItemUrl } from '$lib/utils/url';
 
   export let item: Item | TimelineItem;
   export let view: 'feed' | 'grid' | 'list' = 'feed';
@@ -35,8 +36,8 @@
   let transcriptLoading = false;
 
   function handleClick() {
-    // Use the new permalink URL if available, fallback to old format
-    const targetUrl = item.permalink || `/item/${item.id}`;
+    // Use the unified URL generation function
+    const targetUrl = getItemUrl(item);
     goto(targetUrl);
   }
 

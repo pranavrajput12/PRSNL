@@ -21,6 +21,7 @@
   import { getTypeIcon } from '$lib/stores/contentTypes';
   import { goto } from '$app/navigation';
   import { autoId } from '$lib/actions/autoId';
+  import { getItemUrl } from '$lib/utils/url';
 
   type Item = {
     id: string;
@@ -409,7 +410,7 @@
             </div>
             <div class="neural-results-grid">
               {#each searchResults.slice(0, 5) as result}
-                <a href={result.url || `/item/${result.id}`} class="neural-result-node">
+                <a href={getItemUrl(result)} class="neural-result-node">
                   <div class="node-connection">
                     <div class="connection-pulse"></div>
                   </div>
@@ -472,6 +473,162 @@
           {/if}
         </div>
       {/if}
+    </div>
+  </div>
+
+  <!-- Knowledge Library Navigation Section -->
+  <div class="knowledge-library-section">
+    <div class="library-container">
+      <div class="library-header">
+        <div class="neural-title-bar">
+          <span class="neural-indicator">◉</span>
+          <span class="neural-path">knowledge_matrix.exe</span>
+          <span class="neural-status">[ACTIVE]</span>
+        </div>
+        <h3>🧠 Knowledge Matrix</h3>
+        <div class="neural-stats">
+          <div class="stat-node">
+            <span class="stat-value">{stats.totalItems}</span>
+            <span class="stat-label">Total Items</span>
+          </div>
+          <div class="stat-node">
+            <span class="stat-value">{stats.totalTags}</span>
+            <span class="stat-label">Neural Tags</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Type Cards -->
+      <div class="content-types-grid">
+        <div class="grid-section-title">
+          <span class="section-indicator">▶</span>
+          <span>Content Categories</span>
+        </div>
+        <div class="type-cards-grid">
+          <a href="/articles" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon articles-icon">📄</div>
+              <div class="type-info">
+                <span class="type-name">Articles</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+          
+          <a href="/videos" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon videos-icon">🎥</div>
+              <div class="type-info">
+                <span class="type-name">Videos</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+          
+          <a href="/code" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon code-icon">💻</div>
+              <div class="type-info">
+                <span class="type-name">Code</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+          
+          <a href="/recipes" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon recipes-icon">🍳</div>
+              <div class="type-info">
+                <span class="type-name">Recipes</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+          
+          <a href="/documents" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon documents-icon">📋</div>
+              <div class="type-info">
+                <span class="type-name">Documents</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+          
+          <a href="/bookmarks" class="neural-type-card">
+            <div class="card-circuit-pattern"></div>
+            <div class="card-glow"></div>
+            <div class="card-content">
+              <div class="type-icon bookmarks-icon">🔖</div>
+              <div class="type-info">
+                <span class="type-name">Bookmarks</span>
+                <span class="type-count">Loading...</span>
+              </div>
+            </div>
+            <div class="card-connector"></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Category Navigation -->
+      <div class="categories-section">
+        <div class="grid-section-title">
+          <span class="section-indicator">▶</span>
+          <span>Neural Categories</span>
+        </div>
+        <div class="categories-hexgrid">
+          <a href="/categories/development" class="category-hex development">
+            <div class="hex-glow"></div>
+            <div class="hex-content">
+              <span class="hex-icon">⚡</span>
+              <span class="hex-label">Development</span>
+            </div>
+          </a>
+          <a href="/categories/learning" class="category-hex learning">
+            <div class="hex-glow"></div>
+            <div class="hex-content">
+              <span class="hex-icon">🧪</span>
+              <span class="hex-label">Learning</span>
+            </div>
+          </a>
+          <a href="/categories/work" class="category-hex work">
+            <div class="hex-glow"></div>
+            <div class="hex-content">
+              <span class="hex-icon">🏢</span>
+              <span class="hex-label">Work</span>
+            </div>
+          </a>
+          <a href="/categories/personal" class="category-hex personal">
+            <div class="hex-glow"></div>
+            <div class="hex-content">
+              <span class="hex-icon">🌟</span>
+              <span class="hex-label">Personal</span>
+            </div>
+          </a>
+          <a href="/categories/reference" class="category-hex reference">
+            <div class="hex-glow"></div>
+            <div class="hex-content">
+              <span class="hex-icon">📚</span>
+              <span class="hex-label">Reference</span>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4489,6 +4646,444 @@
 
     .confidence-meter {
       justify-content: center;
+    }
+  }
+
+  /* Knowledge Library Section - Neural Theme */
+  .knowledge-library-section {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .knowledge-library-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(45, 212, 191, 0.03) 50%,
+      transparent 70%
+    );
+    animation: neural-sweep 12s linear infinite;
+    pointer-events: none;
+  }
+
+  .library-container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .library-header {
+    margin-bottom: 2rem;
+  }
+
+  .neural-title-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: rgba(45, 212, 191, 0.8);
+    margin-bottom: 1rem;
+  }
+
+  .neural-indicator {
+    animation: neural-pulse 2s ease-in-out infinite;
+  }
+
+  .neural-path {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .neural-status {
+    color: rgba(0, 255, 100, 0.8);
+    font-weight: bold;
+  }
+
+  .library-header h3 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    text-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
+  }
+
+  .neural-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-node::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, rgba(45, 212, 191, 0.5), transparent);
+    border-radius: 8px;
+    z-index: -1;
+    animation: border-glow 3s linear infinite;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgba(45, 212, 191, 1);
+    font-family: var(--font-mono);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Content Types Grid */
+  .content-types-grid {
+    margin: 2rem 0;
+  }
+
+  .grid-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    color: rgba(45, 212, 191, 0.9);
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .section-indicator {
+    animation: indicator-pulse 2s ease-in-out infinite;
+  }
+
+  .type-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .neural-type-card {
+    display: block;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .neural-type-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(45, 212, 191, 0.5);
+    box-shadow: 0 10px 30px rgba(45, 212, 191, 0.2);
+  }
+
+  .card-circuit-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2345d4bf' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3Cpath d='M30 20v10m0 10v10m-10-20h10m10 0h10'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .neural-type-card:hover .card-circuit-pattern {
+    opacity: 1;
+  }
+
+  .card-glow {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, rgba(45, 212, 191, 0.3), transparent);
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .neural-type-card:hover .card-glow {
+    opacity: 1;
+    animation: glow-rotate 2s linear infinite;
+  }
+
+  .card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .type-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(45, 212, 191, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .neural-type-card:hover .type-icon {
+    background: rgba(45, 212, 191, 0.2);
+    transform: scale(1.1);
+  }
+
+  .type-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .type-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .type-count {
+    font-size: 0.9rem;
+    color: rgba(45, 212, 191, 0.8);
+    font-family: var(--font-mono);
+  }
+
+  .card-connector {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 2px;
+    background: rgba(45, 212, 191, 0.5);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .card-connector::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid rgba(45, 212, 191, 0.5);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+
+  .neural-type-card:hover .card-connector {
+    opacity: 1;
+    animation: connector-pulse 1s ease-in-out infinite;
+  }
+
+  /* Categories Hexgrid */
+  .categories-section {
+    margin: 2rem 0;
+  }
+
+  .categories-hexgrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .category-hex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin: 10px;
+  }
+
+  .category-hex:hover {
+    transform: scale(1.1) rotate(5deg);
+    border-color: rgba(45, 212, 191, 0.8);
+  }
+
+  .hex-glow {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background: linear-gradient(60deg, transparent, rgba(45, 212, 191, 0.4), transparent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .category-hex:hover .hex-glow {
+    opacity: 1;
+    animation: hex-glow-rotate 3s linear infinite;
+  }
+
+  .hex-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  .hex-icon {
+    font-size: 1.5rem;
+  }
+
+  .hex-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Category-specific colors */
+  .category-hex.development:hover {
+    border-color: #84CC16;
+  }
+  .category-hex.development:hover .hex-glow {
+    background: linear-gradient(60deg, transparent, rgba(132, 204, 22, 0.4), transparent);
+  }
+
+  .category-hex.learning:hover {
+    border-color: #06B6D4;
+  }
+  .category-hex.learning:hover .hex-glow {
+    background: linear-gradient(60deg, transparent, rgba(6, 182, 212, 0.4), transparent);
+  }
+
+  .category-hex.work:hover {
+    border-color: #F59E0B;
+  }
+  .category-hex.work:hover .hex-glow {
+    background: linear-gradient(60deg, transparent, rgba(245, 158, 11, 0.4), transparent);
+  }
+
+  .category-hex.personal:hover {
+    border-color: #EC4899;
+  }
+  .category-hex.personal:hover .hex-glow {
+    background: linear-gradient(60deg, transparent, rgba(236, 72, 153, 0.4), transparent);
+  }
+
+  .category-hex.reference:hover {
+    border-color: #6B7280;
+  }
+  .category-hex.reference:hover .hex-glow {
+    background: linear-gradient(60deg, transparent, rgba(107, 114, 128, 0.4), transparent);
+  }
+
+  /* Animations */
+  @keyframes neural-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes neural-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+  }
+
+  @keyframes border-glow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes indicator-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes glow-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes connector-pulse {
+    0%, 100% { opacity: 0.5; transform: translateY(-50%) scaleX(1); }
+    50% { opacity: 1; transform: translateY(-50%) scaleX(1.2); }
+  }
+
+  @keyframes hex-glow-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .knowledge-library-section {
+      padding: 1rem;
+      margin: 2rem 0;
+    }
+
+    .neural-stats {
+      justify-content: center;
+    }
+
+    .type-cards-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .categories-hexgrid {
+      gap: 0.5rem;
+    }
+
+    .category-hex {
+      width: 100px;
+      height: 100px;
+    }
+
+    .hex-icon {
+      font-size: 1.2rem;
+    }
+
+    .hex-label {
+      font-size: 0.7rem;
     }
   }
 </style>

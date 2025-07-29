@@ -3,6 +3,31 @@
  * Helps with URL validation, detection, and processing
  */
 
+import { generateContentUrl } from '$lib/config/urlMappings';
+
+/**
+ * Generate the correct URL for an item based on its type
+ * This is the single source of truth for item URLs
+ */
+export function getItemUrl(item: { 
+  id: string; 
+  type?: string; 
+  item_type?: string; 
+  itemType?: string;
+  permalink?: string;
+}): string {
+  // If item has a permalink, use it
+  if (item.permalink) {
+    return item.permalink;
+  }
+
+  // Get the item type (handle different field names)
+  const itemType = item.type || item.item_type || item.itemType;
+  
+  // Use centralized URL generation (handles all mappings and fallbacks)
+  return generateContentUrl(itemType, item.id);
+}
+
 /**
  * Detects if a URL is from Instagram
  * @param url The URL to check

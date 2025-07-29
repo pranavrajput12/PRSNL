@@ -4,6 +4,7 @@ Knowledge Graph API endpoints
 
 import logging
 from typing import List, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -11,11 +12,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.db.database import get_db
-from app.services.knowledge_graph import KnowledgeGraphService
+from app.services.knowledge_graph_service import KnowledgeGraphService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/knowledge-graph", tags=["knowledge-graph"])
+
+# Additional response models for enhanced functionality
+class GraphNode(BaseModel):
+    id: str
+    title: str
+    type: str
+    summary: Optional[str] = None
+    tags: List[str] = []
+    importance: float = 1.0
+    metadata: dict = {}
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    relationship: str
+    strength: float
+    metadata: dict = {}
+
+class VisualGraphResponse(BaseModel):
+    nodes: List[GraphNode]
+    edges: List[GraphEdge]
+    metadata: dict = {}
 
 
 # Request/Response Models
@@ -377,3 +400,162 @@ async def delete_relationship(
 
 # Import text from sqlalchemy
 from sqlalchemy import text
+
+
+# === NEW VISUAL GRAPH ENDPOINTS ===
+
+@router.get("/visual/{item_id}", response_model=VisualGraphResponse)
+async def get_visual_graph(
+    item_id: str,
+    depth: int = Query(2, ge=1, le=3, description="Graph depth"),
+    limit: int = Query(50, ge=10, le=200, description="Max nodes"),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get visual graph data centered on an item (for D3.js visualization).
+    
+    Returns nodes and edges formatted for frontend visualization.
+    """
+    try:
+        graph_data = await graph_service.generate_item_graph(
+            db=db,
+            item_id=UUID(item_id),
+            depth=depth,
+            limit=limit
+        )
+        
+        return VisualGraphResponse(**graph_data)
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generating visual graph: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate graph")
+
+
+@router.get("/visual/full", response_model=VisualGraphResponse)
+async def get_full_visual_graph(
+    content_type: Optional[str] = Query(None, description="Filter by content type"),
+    tag: Optional[str] = Query(None, description="Filter by tag"),
+    limit: int = Query(100, ge=10, le=500, description="Max nodes"),
+    threshold: float = Query(0.7, ge=0.5, le=0.95, description="Similarity threshold"),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get the full knowledge graph with filters (for D3.js visualization).
+    
+    Returns complete graph data with automatic similarity-based edges.
+    """
+    try:
+        graph_data = await graph_service.generate_full_graph(
+            db=db,
+            content_type=content_type,
+            tag=tag,
+            limit=limit,
+            similarity_threshold=threshold
+        )
+        
+        return VisualGraphResponse(**graph_data)
+        
+    except Exception as e:
+        logger.error(f"Error generating full graph: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate graph")
+
+
+@router.get("/path/{start_id}/{end_id}")
+async def find_learning_path(
+    start_id: str,
+    end_id: str,
+    max_steps: int = Query(10, ge=3, le=20, description="Max path length"),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Find optimal learning path between two items.
+    
+    Uses A* search with semantic similarity as heuristic.
+    """
+    try:
+        path_data = await graph_service.find_learning_path(
+            db=db,
+            start_id=UUID(start_id),
+            end_id=UUID(end_id),
+            max_steps=max_steps
+        )
+        
+        if not path_data["path"]:
+            raise HTTPException(
+                status_code=404,
+                detail="No learning path found between these items"
+            )
+        
+        return path_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error finding learning path: {e}")
+        raise HTTPException(status_code=500, detail="Failed to find path")
+
+
+@router.get("/related/{item_id}")
+async def get_semantically_related(
+    item_id: str,
+    limit: int = Query(10, ge=5, le=50, description="Number of items"),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get semantically related items based on embeddings.
+    
+    Returns items with similarity scores.
+    """
+    try:
+        related = await graph_service.find_related_items(
+            db=db,
+            item_id=UUID(item_id),
+            limit=limit
+        )
+        
+        return {
+            "item_id": item_id,
+            "related_items": related,
+            "total": len(related)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error finding related items: {e}")
+        raise HTTPException(status_code=500, detail="Failed to find related items")
+
+
+@router.post("/analyze/{item_id}")
+async def analyze_connections(
+    item_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Analyze item to discover and create automatic relationships.
+    
+    Finds highly similar items and creates relationships.
+    """
+    try:
+        results = await graph_service.analyze_item_connections(
+            db=db,
+            item_id=UUID(item_id)
+        )
+        
+        return {
+            "success": True,
+            "item_id": item_id,
+            "relationships_created": results["count"],
+            "relationships": results["relationships"]
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error analyzing connections: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze connections")

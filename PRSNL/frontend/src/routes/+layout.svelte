@@ -116,6 +116,11 @@
         e.preventDefault();
         window.location.href = '/conversations';
       }
+      // CMD/CTRL + P for dreamscape
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault();
+        window.location.href = '/dreamscape';
+      }
       // CMD/CTRL + B for toggle sidebar
       if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
         e.preventDefault();
@@ -216,6 +221,18 @@
           <div class="nav-icon"></div>
           <span class="nav-text">Visual Cortex</span>
           <div class="nav-tooltip">Visual Cortex</div>
+        </a>
+
+        <a href="/knowledge-graph" class="nav-item {$page.url.pathname === '/knowledge-graph' ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Knowledge Graph</span>
+          <div class="nav-tooltip">Knowledge Graph</div>
+        </a>
+
+        <a href="/dreamscape" class="nav-item {$page.url.pathname.startsWith('/dreamscape') ? 'active' : ''}">
+          <div class="nav-icon"></div>
+          <span class="nav-text">Dreamscape</span>
+          <div class="nav-tooltip">Dreamscape</div>
         </a>
 
         <a

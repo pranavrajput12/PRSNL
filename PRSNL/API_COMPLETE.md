@@ -27,6 +27,7 @@ This comprehensive API reference combines detailed endpoint documentation with s
 - **Mind Palace** (`/chat`) - Conversational interface with knowledge base
 - **Visual Cortex** (`/videos`) - Video content management
 - **Code Cortex** (`/code-cortex`) - Development content management hub
+- **Dreamscape** (`/dreamscape`) - AI-powered personal intelligence system
 - **Knowledge Sync** (`/import`) - External data import and synchronization
 
 ---
@@ -476,6 +477,178 @@ Real-time speech transcription with RealtimeSTT
   "type": "ai_response",
   "text": "I understand your request. Let me help you with that.",
   "audio_url": "/api/voice/audio/response_123.mp3"
+}
+```
+
+---
+
+## 🧠 Dreamscape PersonaAnalysisCrew API
+
+### PersonaAnalysisCrew Health Check
+
+#### GET /api/persona/health
+Check the status of the PersonaAnalysisCrew 5-agent system
+
+**Response (200):**
+```json
+{
+  "status": "healthy",
+  "service": "persona-analysis",
+  "crew_agents": [
+    "technical_agent",
+    "lifestyle_agent",
+    "learning_agent",
+    "cross_domain_agent",
+    "orchestrator_agent"
+  ]
+}
+```
+
+### Persona Analysis
+
+#### POST /api/persona/analyze
+Trigger comprehensive persona analysis using 5-agent CrewAI system
+
+**Request Body:**
+```json
+{
+  "user_id": "uuid",
+  "analysis_depth": "standard",
+  "focus_areas": ["technical", "learning"],
+  "background": true
+}
+```
+
+**Parameters:**
+- `analysis_depth`: "light" (30-60s), "standard" (1-2min), "deep" (2-5min)
+- `focus_areas`: Array of areas to focus on (optional)
+- `background`: Run analysis in background (default: true)
+
+**Response (200) - Background Mode:**
+```json
+{
+  "user_id": "uuid",
+  "status": "started",
+  "message": "Persona analysis started in background",
+  "analysis_id": "uuid"
+}
+```
+
+**Response (200) - Synchronous Mode:**
+```json
+{
+  "user_id": "uuid",
+  "status": "completed",
+  "message": "Persona analysis completed",
+  "persona_data": {
+    "technical_profile": {...},
+    "lifestyle_profile": {...},
+    "learning_style": {...},
+    "cross_domain_insights": {...},
+    "behavioral_metrics": {...}
+  }
+}
+```
+
+### Persona Data Retrieval
+
+#### GET /api/persona/user/{user_id}
+Retrieve complete persona analysis for a user
+
+**Response (200):**
+```json
+{
+  "user_id": "uuid",
+  "analysis_timestamp": "2025-07-29T10:30:00Z",
+  "technical_profile": {
+    "primary_languages": ["Python", "JavaScript"],
+    "skill_levels": {"Python": "intermediate"},
+    "domains": ["Web Development", "Data Science"],
+    "tools": ["VSCode", "Git"]
+  },
+  "lifestyle_profile": {
+    "interests": ["technology", "learning"],
+    "activity_patterns": {"morning": 0.3, "afternoon": 0.4, "evening": 0.3},
+    "content_preferences": {"article": 0.6, "video": 0.4}
+  },
+  "learning_style": {
+    "preferred_formats": ["hands-on", "visual"],
+    "attention_span": "medium",
+    "complexity_preference": "moderate"
+  },
+  "cross_domain_insights": {
+    "connections": [],
+    "project_potential": [],
+    "innovation_opportunities": []
+  },
+  "life_phase": "mid_career",
+  "behavioral_metrics": {
+    "learning_velocity": 0.75,
+    "engagement_score": 0.82,
+    "diversity_score": 0.6
+  }
+}
+```
+
+#### GET /api/persona/user/{user_id}/summary
+Get concise persona summary for dashboards
+
+**Response (200):**
+```json
+{
+  "user_id": "uuid",
+  "life_phase": "mid_career",
+  "last_analyzed": "2025-07-29T10:30:00Z",
+  "technical_summary": {
+    "primary_languages": ["Python", "JavaScript", "TypeScript"],
+    "top_domains": ["Web Development", "Data Science"],
+    "skill_level": "intermediate"
+  },
+  "lifestyle_summary": {
+    "top_interests": ["technology", "learning", "productivity"],
+    "activity_preference": "evening",
+    "content_preference": "article"
+  },
+  "learning_summary": {
+    "preferred_format": "hands-on",
+    "attention_span": "medium",
+    "complexity_preference": "moderate"
+  },
+  "key_recommendations": [
+    "Consider advanced features and power-user tools",
+    "Focus on evening learning sessions"
+  ]
+}
+```
+
+### Persona Updates
+
+#### PUT /api/persona/user/{user_id}/insights
+Update specific persona insights without full reanalysis
+
+**Request Body:**
+```json
+{
+  "insights": {
+    "connections": [
+      {
+        "domain1": "programming",
+        "domain2": "music",
+        "connection_type": "pattern_recognition",
+        "strength": 0.8
+      }
+    ],
+    "project_potential": ["AI-powered music composition tool"]
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "user_id": "uuid",
+  "status": "updated",
+  "message": "Persona insights updated successfully"
 }
 ```
 

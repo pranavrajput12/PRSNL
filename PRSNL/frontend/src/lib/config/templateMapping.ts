@@ -88,7 +88,7 @@ export const CONTENT_TYPE_MAPPING: Record<string, TemplateConfig> = {
   // Recipe content
   'recipe': {
     template: 'recipe',
-    route: '/recipe/[id]',
+    route: '/items/[id]',
     features: ['ingredients-list', 'step-tracker', 'timer', 'serving-calculator', 'voice-mode']
   },
   

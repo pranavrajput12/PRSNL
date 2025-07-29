@@ -151,6 +151,7 @@ async def get_item_detail(item_id: UUID):
                 "content": row["content"],
                 "summary": summary,
                 "type": row["type"],
+                "category": row.get("type", "uncategorized"),  # Use type as category since category column doesn't exist
                 "content_type": row["content_type"],
                 "created_at": row["created_at"].isoformat(),
                 "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,

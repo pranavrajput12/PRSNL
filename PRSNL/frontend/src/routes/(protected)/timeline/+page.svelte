@@ -312,7 +312,7 @@
 
               <div class="trace-header">
                 <div class="trace-main">
-                  <a href={item.permalink || `/item/${item.id}`} class="trace-title">
+                  <a href={item.permalink || `/items/${item.id}`} class="trace-title">
                     {item.title || 'Untitled'}
                     {#if item.status === 'pending'}
                       <span class="processing-indicator">

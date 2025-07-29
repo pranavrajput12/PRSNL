@@ -178,6 +178,8 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 - **NEW**: AI Router status: `curl http://localhost:8000/api/ai-router/status`
 - **NEW**: Enhanced routing test: `curl -X POST http://localhost:8000/api/ai-router/test-routing -H "Content-Type: application/json" -d '{"content": "Test", "task_type": "text_generation", "priority": 8}'`
 - **NEW**: Integration tests: `cd backend && python3 test_integrations.py`
+- **NEW**: Dreamscape health: `curl http://localhost:8000/api/persona/health`
+- **NEW**: Persona analysis test: `curl -X POST http://localhost:8000/api/persona/analyze -H "Content-Type: application/json" -d '{"user_id": "123e4567-e89b-12d3-a456-426614174000", "analysis_depth": "light"}'`
 
 ## HTTPie Integration for API Testing
 **HTTPie is now installed for improved API debugging and testing.**
@@ -250,6 +252,14 @@ http POST localhost:8000/api/rag/query query="test"
   - **Re-enable**: Uncomment lines 183-189 in `+layout.svelte` when ready
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **NEW: Dreamscape PersonaAnalysisCrew (2025-07-28)** - AI-powered personal intelligence system
+  - **Feature**: 5-agent CrewAI system for comprehensive user persona analysis
+  - **Agents**: Technical, Lifestyle, Learning, Cross-Domain, and Orchestrator agents
+  - **API**: `/api/persona/*` endpoints for analysis and persona management
+  - **Database**: 5 specialized tables for behavior tracking and persona storage
+  - **Documentation**: Complete API docs and database schema documentation
+  - **Test Command**: `curl http://localhost:8000/api/persona/health`
+  - **Status**: Fully operational with Azure OpenAI integration
 - **FIX: LangGraph Dependencies (2025-07-19)** - Resolved backend startup issues
   - **Issue**: Missing `langgraph-checkpoint-sqlite` package for SqliteSaver
   - **Solution**: Install with `pip3 install langgraph-checkpoint-sqlite`

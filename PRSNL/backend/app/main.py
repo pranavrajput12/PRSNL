@@ -267,6 +267,7 @@ from app.api import task_monitoring  # Enterprise task monitoring for Celery
 from app.api import package_intelligence  # Package dependency intelligence
 from app.api import background_processing  # Phase 1 Celery background processing
 from app.api import knowledge_graph_api  # Phase 2 Knowledge Graph API
+from app.api import knowledge_graph  # Enhanced Knowledge Graph with visualization
 # from app.api import agent_monitoring_api  # Phase 2 Agent Monitoring API - temporarily disabled
 from app.api import github  # GitHub OAuth and repository sync
 from app.api import websocket_enhanced  # Enhanced WebSocket with FastAPI 0.116.1 improvements
@@ -301,6 +302,8 @@ from app.api import (
     import_data,  # Re-enabled - CrewAI conflicts resolved
     insights,
     items,
+    library,  # Three-tier categorization system
+    persona_analysis,  # PersonaAnalysisCrew for Dreamscape feature
     questions,
     rag,
     search,
@@ -313,7 +316,7 @@ from app.api import (
     vision,
     ws,
 )
-from app.api.v2 import items as v2_items
+# V2 API removed - consolidated to single API for simplicity
 
 # STEP 3: Include routers with optional debug logging
 if settings.ENABLE_VERBOSE_LOGGING:
@@ -329,6 +332,7 @@ if settings.ENABLE_VERBOSE_LOGGING:
 app.include_router(search.router, prefix=settings.API_V1_STR)
 app.include_router(timeline.router, prefix=settings.API_V1_STR)
 app.include_router(items.router, prefix=settings.API_V1_STR)
+app.include_router(library.router, prefix=settings.API_V1_STR)  # Library categorization system
 app.include_router(tags.router, prefix=settings.API_V1_STR)
 app.include_router(user_profile.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
@@ -381,6 +385,7 @@ app.include_router(task_monitoring.router)  # Enterprise task monitoring for Cel
 app.include_router(package_intelligence.router)  # Package dependency intelligence
 app.include_router(background_processing.router)  # Phase 1 Celery background processing
 app.include_router(knowledge_graph_api.router)  # Phase 2 Knowledge Graph API
+app.include_router(knowledge_graph.router)  # Enhanced Knowledge Graph with visualization
 # app.include_router(agent_monitoring_api.router)  # Phase 2 Agent Monitoring API - temporarily disabled
 app.include_router(github.router)  # GitHub OAuth and repository sync
 # app.include_router(crew_api.router)  # Crew.ai autonomous agent system - temporarily disabled
@@ -391,14 +396,14 @@ app.include_router(websocket_enhanced.router)  # Enhanced WebSocket with FastAPI
 # app.include_router(enhanced_processing.router)  # Enhanced processing with updated package features - temporarily disabled
 app.include_router(voice.router, prefix=settings.API_V1_STR)  # Voice chat with Cortex personality
 app.include_router(user_settings.router, prefix=settings.API_V1_STR)  # User settings API
+app.include_router(persona_analysis.router)  # PersonaAnalysisCrew for Dreamscape feature
 
 # Phase 5: Advanced AI Features - Multi-modal Processing & Intelligence
 app.include_router(multimodal_ai.router)  # Multi-modal AI processing (includes /api/multimodal prefix)
 # app.include_router(advanced_code_api.router)  # Advanced code intelligence (includes /api/code prefix) - temporarily disabled
 # app.include_router(natural_language_api.router)  # Natural language system control (includes /api/nl prefix) - temporarily disabled
 
-# V2 API endpoints with improved standards
-app.include_router(v2_items.router, prefix="/api/v2", tags=["v2-items"])
+# V2 API removed - using single unified API for simplicity
 
 # Mount static files for media
 media_path = os.path.abspath(settings.MEDIA_DIR)

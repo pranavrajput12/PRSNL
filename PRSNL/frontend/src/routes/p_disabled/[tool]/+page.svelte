@@ -16,23 +16,23 @@
       switch (tool) {
         case 'timeline':
           // Fix: Import without destructuring to avoid syntax errors
-          const timelineModule = await import('../../timeline/+page.svelte');
+          const timelineModule = await import('../../(protected)/timeline/+page.svelte');
           ToolComponent = timelineModule.default;
           break;
         case 'insights':
-          const insightsModule = await import('../../insights/+page.svelte');
+          const insightsModule = await import('../../(protected)/insights/+page.svelte');
           ToolComponent = insightsModule.default;
           break;
         case 'chat':
-          const chatModule = await import('../../chat/+page.svelte');
+          const chatModule = await import('../../(protected)/chat/+page.svelte');
           ToolComponent = chatModule.default;
           break;
         case 'visual':
-          const videosModule = await import('../../videos/+page.svelte');
+          const videosModule = await import('../../(protected)/videos/+page.svelte');
           ToolComponent = videosModule.default;
           break;
         case 'code':
-          const codeModule = await import('../../code-cortex/+page.svelte');
+          const codeModule = await import('../../(protected)/code-cortex/+page.svelte');
           ToolComponent = codeModule.default;
           break;
         default:

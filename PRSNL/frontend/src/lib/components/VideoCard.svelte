@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import { formatDate } from '$lib/utils/date';
+  import { getItemUrl } from '$lib/utils/url';
 
   export let video: any;
 
@@ -68,7 +69,7 @@
   }
 </script>
 
-<a href="/videos/{video.id}" class="video-card">
+<a href={getItemUrl(video)} class="video-card">
   <div class="thumbnail-container">
     {#if displayThumbnail}
       <img

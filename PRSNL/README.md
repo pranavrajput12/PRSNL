@@ -46,6 +46,7 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 - **LibreChat API**: OpenAI-compatible endpoint for third-party integrations
 - **Multimodal Processing**: Text, image, code, and document analysis
 - **Knowledge Graphs**: Dynamic relationship mapping between content
+- **Dreamscape AI**: 5-agent personal intelligence system with CrewAI orchestration
 
 ### **📡 Capture & Processing**
 - **Universal Capture**: Screenshots, documents, code, web articles, videos
@@ -74,6 +75,7 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 - **AI Insights**: Pattern detection and trend analysis
 - **Custom Reports**: Export data in multiple formats
 - **Real-time Dashboards**: WebSocket-powered live updates
+- **Dreamscape Intelligence**: Personal behavior analysis and persona generation
 
 ## 🚀 **Quick Start**
 
@@ -221,6 +223,7 @@ docker-compose up -d
 - **[Authentication Guide](docs/AUTH_GUIDE.md)**: Dual auth system setup
 - **[Development Guide](docs/DEVELOPMENT.md)**: Contributing guidelines
 - **[Deployment Guide](docs/DEPLOYMENT.md)**: Production setup
+- **[Dreamscape Documentation](docs/DREAMSCAPE_FEATURE_DOCUMENTATION.md)**: AI-powered personal intelligence system
 
 ## 🤝 **Contributing**
 
