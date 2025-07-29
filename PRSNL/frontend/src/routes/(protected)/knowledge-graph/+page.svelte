@@ -144,12 +144,12 @@
       let response;
       if (itemId) {
         // Load graph centered on specific item
-        response = await api.get(`/api/knowledge-graph/visual/${itemId}`, {
+        response = await api.get(`/knowledge-graph/visual/${itemId}`, {
           params: { depth: depthLevel, limit: 100 }
         });
       } else {
         // Load full graph
-        response = await api.get('/api/knowledge-graph/visual/full', {
+        response = await api.get('/knowledge-graph/visual/full', {
           params: {
             content_type: filterType !== 'all' ? filterType : undefined,
             limit: 200,

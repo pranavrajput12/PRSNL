@@ -22,7 +22,7 @@ from app.db.database import get_db_connection
 from app.services.unified_ai_service import unified_ai_service
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/knowledge-graph", tags=["knowledge-graph"])
+router = APIRouter(prefix="/api/knowledge-graph-v1", tags=["knowledge-graph-v1"])
 
 
 class KnowledgeGraphBuildRequest(BaseModel):
