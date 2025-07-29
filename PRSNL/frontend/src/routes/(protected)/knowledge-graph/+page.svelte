@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import * as d3 from 'd3';
   import { getApiClient } from '$lib/api/client';
-  import { currentUser } from '$lib/stores/unified-auth';
+  import { currentUser, authToken } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   import type { GraphNode, GraphEdge } from '$lib/types/knowledge-graph';
   
@@ -119,10 +119,11 @@
   }
   
   async function loadPersonaData() {
-    if (!$currentUser?.id) return;
+    if (!$currentUser?.id || !$authToken) return;
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       const response = await api.get(`/persona/user/${$currentUser.id}`);
       personaData = response.data;
       console.log('Loaded persona data for knowledge graph enhancement');
@@ -138,8 +139,15 @@
     loading = true;
     error = null;
     
+    if (!$authToken) {
+      error = 'Authentication required';
+      loading = false;
+      return;
+    }
+    
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       
       let response;
       if (itemId) {
