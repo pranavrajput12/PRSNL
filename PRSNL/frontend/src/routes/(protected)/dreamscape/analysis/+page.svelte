@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getApiClient } from '$lib/api/client';
-  import { currentUser } from '$lib/stores/unified-auth';
+  import { currentUser, authToken } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   
   // Analysis state
@@ -42,10 +42,11 @@
   });
 
   async function loadExistingPersona() {
-    if (!$currentUser?.id) return;
+    if (!$currentUser?.id || !$authToken) return;
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       const response = await api.get(`/persona/user/${$currentUser.id}`);
       analysisResult = response.data;
       analysisState = 'completed';
@@ -59,7 +60,7 @@
   }
 
   async function startAnalysis() {
-    if (!$currentUser?.id || analysisState === 'running') return;
+    if (!$currentUser?.id || !$authToken || analysisState === 'running') return;
     
     analysisState = 'running';
     analysisProgress = 0;
@@ -72,6 +73,7 @@
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       
       // Start the analysis
       updateAgentStates('running', 0);
@@ -140,6 +142,7 @@
     const pollInterval = setInterval(async () => {
       try {
         const api = getApiClient();
+        api.setAuthToken($authToken);
         const response = await api.get(`/persona/user/${$currentUser.id}`);
         
         if (response.data) {

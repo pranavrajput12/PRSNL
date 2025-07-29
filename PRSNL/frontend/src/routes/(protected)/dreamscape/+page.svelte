@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { getApiClient } from '$lib/api/client';
-  import { currentUser } from '$lib/stores/unified-auth';
+  import { currentUser, authToken } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   
   // State
@@ -29,13 +29,14 @@
   });
 
   async function loadPersonaData() {
-    if (!$currentUser?.id) return;
+    if (!$currentUser?.id || !$authToken) return;
     
     loading = true;
     error = null;
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       
       // Try to get existing persona data
       try {
@@ -70,13 +71,14 @@
   }
 
   async function triggerAnalysis() {
-    if (!$currentUser?.id || analysisRunning) return;
+    if (!$currentUser?.id || !$authToken || analysisRunning) return;
     
     analysisRunning = true;
     error = null;
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       
       const response = await api.post('/persona/analyze', {
         user_id: $currentUser.id,

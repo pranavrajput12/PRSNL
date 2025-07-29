@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getApiClient } from '$lib/api/client';
-  import { currentUser } from '$lib/stores/unified-auth';
+  import { currentUser, authToken } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   import * as d3 from 'd3';
   
@@ -120,10 +120,11 @@
   });
 
   async function loadPersonaData() {
-    if (!$currentUser?.id) return;
+    if (!$currentUser?.id || !$authToken) return;
     
     try {
       const api = getApiClient();
+      api.setAuthToken($authToken);
       const response = await api.get(`/persona/user/${$currentUser.id}`);
       personaData = response.data;
     } catch (e: any) {
