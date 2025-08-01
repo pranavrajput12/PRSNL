@@ -277,6 +277,7 @@ from app.api import user_settings  # User settings API
 # from app.api import crew_api  # Crew.ai autonomous agent system - temporarily disabled
 # Phase 5: Advanced AI Features
 from app.api import multimodal_ai  # Multi-modal AI processing (Vision + Text + Voice)
+from app.api import cipher_pattern_analysis  # CrewAI-powered Cipher pattern analysis
 # from app.api import advanced_code_api  # Advanced code intelligence - temporarily disabled due to missing bandit
 # from app.api import natural_language_api  # Natural language system control - temporarily disabled due to bandit dependency
 from app.api import (
@@ -400,6 +401,7 @@ app.include_router(persona_analysis.router)  # PersonaAnalysisCrew for Dreamscap
 
 # Phase 5: Advanced AI Features - Multi-modal Processing & Intelligence
 app.include_router(multimodal_ai.router)  # Multi-modal AI processing (includes /api/multimodal prefix)
+app.include_router(cipher_pattern_analysis.router)  # CrewAI-powered Cipher pattern analysis
 # app.include_router(advanced_code_api.router)  # Advanced code intelligence (includes /api/code prefix) - temporarily disabled
 # app.include_router(natural_language_api.router)  # Natural language system control (includes /api/nl prefix) - temporarily disabled
 

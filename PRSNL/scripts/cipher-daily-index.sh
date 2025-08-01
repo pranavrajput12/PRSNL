@@ -165,7 +165,34 @@ EOF
 fi
 
 echo ""
+echo "🤖 7. Pattern Analysis Check"
+echo "----------------------------"
+
+# Check if pattern analysis is overdue
+if [ -f "$SCRIPT_DIR/cipher-pattern-analysis.sh" ]; then
+    echo "🔍 Checking pattern analysis status..."
+    
+    if "$SCRIPT_DIR/cipher-pattern-analysis.sh" --check >/dev/null 2>&1; then
+        echo "✅ Pattern analysis is up to date"
+    else
+        echo "⏰ Pattern analysis is overdue (>7 days)"
+        echo "💡 Consider running: ./cipher-pattern-analysis.sh quality async"
+        
+        # Count patterns added today
+        TODAY_PATTERNS=$(grep "$(date '+%Y-%m-%d')" "$SCRIPT_DIR/../.cipher-memories/memories.log" 2>/dev/null | wc -l | tr -d ' ')
+        
+        if [ "$TODAY_PATTERNS" -gt 5 ]; then
+            echo "📈 $TODAY_PATTERNS patterns added today - analysis recommended"
+            store_daily "ANALYSIS TRIGGER: $TODAY_PATTERNS new patterns suggest running analysis"
+        fi
+    fi
+else
+    echo "⚠️  Pattern analysis script not found"
+fi
+
+echo ""
 echo "✅ Daily indexing complete!"
 echo ""
 echo "🔄 Run this at the end of each development day."
 echo "📊 Review weekly with: ./prsnl-cipher.sh recall \"[$(date '+%Y-%m-%d')]\""
+echo "🤖 Check pattern analysis: ./cipher-analysis-status.sh"

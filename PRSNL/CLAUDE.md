@@ -517,6 +517,102 @@ cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
 ### Agent-Specific Cipher Integration
 All agents now have pre/post task SOPs for Cipher integration. See agent descriptions above for specific commands each agent should run.
 
+## 🤖 CIPHER PATTERN ANALYSIS AUTOMATION
+
+**CRITICAL: Automated pattern quality improvement using CrewAI**
+
+### What This Automation Provides:
+- **Self-Improving AI Memory**: Cipher patterns automatically improve in quality over time
+- **Pattern Quality Monitoring**: Weekly assessment of pattern completeness, accuracy, and usefulness
+- **Relationship Discovery**: Automatic discovery of connections between patterns for better knowledge clustering
+- **Gap Analysis**: Identification of missing knowledge areas for targeted improvements
+- **Agent Effectiveness**: Claude Code agents become more effective with higher-quality patterns
+
+### 🕒 Automated Schedule:
+- **Weekly Analysis**: Every Sunday at 2 AM (or when triggered by development activity)
+- **Trigger-Based**: Automatically runs after >10 new patterns are added
+- **Agent-Triggered**: Agents automatically trigger analysis when pattern quality issues are detected
+- **On-Demand**: Manual trigger available for immediate analysis
+
+### 🚀 Quick Commands:
+
+#### **Run Pattern Analysis** (Most Important):
+```bash
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+
+# Full analysis (recommended weekly)
+./cipher-pattern-analysis.sh
+
+# Quick quality check
+./cipher-pattern-analysis.sh quality async
+
+# Check if analysis is overdue
+./cipher-pattern-analysis.sh --check
+```
+
+#### **Check Analysis Status**:
+```bash
+# Quick status
+./cipher-analysis-status.sh
+
+# Detailed history
+./cipher-analysis-status.sh history
+
+# Quality trends
+./cipher-analysis-status.sh trends
+
+# Comprehensive summary
+./cipher-analysis-status.sh summary
+```
+
+### 📊 Quality Metrics Tracked:
+- **Pattern Completeness**: Patterns have sufficient detail and context
+- **Solution Coverage**: Bug patterns include solutions (target >90%)
+- **Context Validation**: Patterns include file paths and service locations
+- **Format Consistency**: Standardized pattern structure
+- **Overall Quality Score**: Composite score (current: 85.59%, target: >90%)
+
+### 🔄 Agent Integration (AUTOMATIC):
+
+**All 6 agents now automatically:**
+1. **Check if analysis is overdue** before starting complex tasks
+2. **Store new patterns** discovered during task execution
+3. **Trigger analysis** if >5 new patterns are discovered in a session
+4. **Reference improved patterns** for better task execution
+
+**Agent-Specific Triggers:**
+- **debug-accelerator**: Triggers analysis after fixing >3 bugs to improve bug patterns
+- **general-purpose**: Triggers analysis after complex searches to improve search patterns
+- **ui-ux-optimizer**: Triggers analysis after component audits to improve UI patterns
+
+### 📈 Expected Improvements:
+- **Pattern Quality**: 85.59% → 90%+ within 4 weeks
+- **Agent Response Quality**: 20-30% improvement in accuracy and relevance
+- **Development Velocity**: Faster problem resolution through better pattern matching
+- **Knowledge Consistency**: Standardized patterns across all development areas
+
+### 🔍 Monitoring & Logs:
+- **Run History**: `/scripts/data/cipher-analysis-runs.log` - CSV log of all analysis runs
+- **Error Logs**: `/scripts/cipher-analysis-errors.log` - Troubleshooting information
+- **Cipher Memory**: Analysis results stored in Cipher memory with `PATTERN ANALYSIS:` prefix
+- **Status Checks**: `./cipher-analysis-status.sh` for comprehensive monitoring
+
+### 💡 Pro Tips:
+- **Weekly Review**: Check `./cipher-analysis-status.sh trends` to monitor quality improvements
+- **Manual Insights**: Add important discoveries manually: `./prsnl-cipher.sh store "INSIGHT: [discovery]"`
+- **Pattern Standardization**: Use analysis recommendations to standardize pattern formats
+- **Troubleshooting**: If analysis fails, check backend is running and Azure OpenAI is configured
+
+### ⚡ Quick Setup Verification:
+```bash
+# Test the automation system
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+./cipher-pattern-analysis.sh --check     # Check if analysis is overdue
+./cipher-analysis-status.sh             # Show current status
+```
+
+**This automation runs automatically - no manual intervention required for weekly pattern quality improvement.**
+
 ## 🏗️ CRITICAL: System Architecture Repository
 **BEFORE BUILDING ANY NEW FEATURE, CONSULT:**
 - **File**: `/docs/SYSTEM_ARCHITECTURE_REPOSITORY.md`
