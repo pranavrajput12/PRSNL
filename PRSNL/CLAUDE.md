@@ -343,7 +343,7 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 - Remote: https://github.com/pranavrajput12/PRSNL.git
 - ALWAYS verify which commit to rollback to before suggesting git reset
 
-## Testing Commands - Phase 4 Enhanced
+## Testing Commands - Phase 4 Enhanced + Knowledge Graph v10.0
 - Lint: `npm run lint`
 - Type check: `npm run check`
 - Format: `npm run format`
@@ -351,14 +351,57 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 - **Test UI Mode**: `npm run test:ui`
 - **Debug Tests**: `npm run test:debug`
 - **Test Suites**: `npm run test:suite` (comprehensive), `npm run test:chat`, `npm run test:codemirror`
-- **NEW**: AI health: `curl http://localhost:8000/api/ai/health`
-- **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
-- **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/ai/health`
-- **NEW**: AI Router status: `curl http://localhost:8000/api/ai-router/status`
-- **NEW**: Enhanced routing test: `curl -X POST http://localhost:8000/api/ai-router/test-routing -H "Content-Type: application/json" -d '{"content": "Test", "task_type": "text_generation", "priority": 8}'`
-- **NEW**: Integration tests: `cd backend && python3 test_integrations.py`
-- **NEW**: Dreamscape health: `curl http://localhost:8000/api/persona/health`
-- **NEW**: Persona analysis test: `curl -X POST http://localhost:8000/api/persona/analyze -H "Content-Type: application/json" -d '{"user_id": "123e4567-e89b-12d3-a456-426614174000", "analysis_depth": "light"}'`
+
+### **AI Services Health Checks**
+- **AI health**: `curl http://localhost:8000/api/ai/health`
+- **LibreChat health**: `curl http://localhost:8000/api/ai/health`
+- **Full AI test**: `curl -X POST http://localhost:8000/api/ai/health`
+- **AI Router status**: `curl http://localhost:8000/api/ai-router/status`
+- **Enhanced routing test**: `curl -X POST http://localhost:8000/api/ai-router/test-routing -H "Content-Type: application/json" -d '{"content": "Test", "task_type": "text_generation", "priority": 8}'`
+- **Dreamscape health**: `curl http://localhost:8000/api/persona/health`
+- **Persona analysis test**: `curl -X POST http://localhost:8000/api/persona/analyze -H "Content-Type: application/json" -d '{"user_id": "123e4567-e89b-12d3-a456-426614174000", "analysis_depth": "light"}'`
+
+### **🧠 Knowledge Graph System Tests (NEW v10.0)**
+- **Knowledge Graph Stats**: `curl http://localhost:8000/api/unified-knowledge-graph/stats`
+- **Full Graph Data**: `curl "http://localhost:8000/api/unified-knowledge-graph/visual/full?limit=50&min_confidence=0.6"`
+- **Entity Types Filter**: `curl "http://localhost:8000/api/unified-knowledge-graph/visual/full?entity_type=knowledge_concept&limit=20"`
+- **Item-Centered Graph**: `curl "http://localhost:8000/api/unified-knowledge-graph/visual/{item_id}?depth=2&limit=30"`
+
+### **🎯 Semantic Clustering Tests (NEW v10.0)**
+- **Semantic Clustering**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/clustering/semantic -H "Content-Type: application/json" -d '{"clustering_algorithm": "semantic", "max_clusters": 8, "min_cluster_size": 3}'`
+- **Structural Clustering**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/clustering/semantic -H "Content-Type: application/json" -d '{"clustering_algorithm": "structural", "max_clusters": 6, "min_cluster_size": 4}'`
+- **Hybrid Clustering**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/clustering/semantic -H "Content-Type: application/json" -d '{"clustering_algorithm": "hybrid", "max_clusters": 10, "min_cluster_size": 3, "min_confidence": 0.7}'`
+
+### **🔍 Knowledge Gap Analysis Tests (NEW v10.0)**
+- **Standard Gap Analysis**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/analysis/gaps -H "Content-Type: application/json" -d '{"analysis_depth": "standard", "min_severity": "medium", "include_suggestions": true}'`
+- **Comprehensive Analysis**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/analysis/gaps -H "Content-Type: application/json" -d '{"analysis_depth": "comprehensive", "focus_domains": ["Technology", "AI"], "min_severity": "low"}'`
+- **Quick Gap Check**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/analysis/gaps -H "Content-Type: application/json" -d '{"analysis_depth": "quick", "min_severity": "high"}'`
+
+### **🛤️ Learning Path Discovery Tests (NEW v10.0)**
+- **Path Discovery**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/paths/discover -H "Content-Type: application/json" -d '{"start_entity_id": "start-uuid", "end_entity_id": "end-uuid", "max_depth": 5, "min_confidence": 0.6}'`
+- **Relationship-Filtered Paths**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/paths/discover -H "Content-Type: application/json" -d '{"start_entity_id": "start-uuid", "end_entity_id": "end-uuid", "relationship_types": ["explains", "builds_on", "prerequisite"], "max_depth": 4}'`
+
+### **💡 Relationship Management Tests (NEW v10.0)**
+- **Create Relationship**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/relationships -H "Content-Type: application/json" -d '{"source_entity_id": "uuid1", "target_entity_id": "uuid2", "relationship_type": "explains", "confidence_score": 0.8, "context": "Test relationship"}'`
+- **Relationship Suggestions**: `curl -X POST http://localhost:8000/api/unified-knowledge-graph/relationships/suggest -H "Content-Type: application/json" -d '{"entity_id": "uuid", "limit": 10, "min_confidence": 0.6, "exclude_existing": true}'`
+- **Delete Relationship**: `curl -X DELETE http://localhost:8000/api/unified-knowledge-graph/relationships/{relationship_id}`
+
+### **⚡ Auto-Processing System Tests (NEW v10.0)**
+- **Queue Status**: `curl http://localhost:8000/api/auto-processing/queue/status`
+- **Process Item**: `curl -X POST http://localhost:8000/api/auto-processing/process-item/{item_id}`
+- **Processing Status**: `curl http://localhost:8000/api/auto-processing/status/{processing_id}`
+- **Batch Processing**: `curl -X POST http://localhost:8000/api/auto-processing/batch-process -H "Content-Type: application/json" -d '{"item_ids": ["uuid1", "uuid2"], "priority": "high"}'`
+
+### **🔬 Entity Extraction Tests (NEW v10.0)**
+- **Extract Entities**: `curl -X POST http://localhost:8000/api/entity-extraction/extract/{item_id} -H "Content-Type: application/json" -d '{"content_type": "article", "extraction_options": {"include_relationships": true, "confidence_threshold": 0.7}}'`
+- **List Entities**: `curl "http://localhost:8000/api/entity-extraction/entities?entity_type=knowledge_concept&min_confidence=0.6"`
+- **Entity Stats**: `curl http://localhost:8000/api/entity-extraction/stats`
+
+### **🧪 Integration Tests**
+- **Backend Integration**: `cd backend && python3 test_integrations.py`
+- **Knowledge Graph Integration**: `cd backend && python3 test_entity_extraction_comprehensive.py`
+- **Entity Extraction Stats**: `cd backend && python3 test_entity_extraction_stats.py`
+- **API Endpoint Test**: `cd backend && python3 test_api_endpoint.py`
 
 ## HTTPie Integration for API Testing
 **HTTPie is now installed for improved API debugging and testing.**
