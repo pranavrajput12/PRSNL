@@ -83,8 +83,8 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
 
   // TEMPORARY: Bypass authentication for development
   // TODO: Remove this before production deployment
-  console.log('⚠️ AUTH BYPASSED FOR DEVELOPMENT - Remove before production!');
-  return true;
+  // console.log('⚠️ AUTH BYPASSED FOR DEVELOPMENT - Remove before production!');
+  // return true;
 
   // Allow public routes
   if (isPublicRoute(pathname)) {
@@ -98,7 +98,7 @@ export async function authGuard(pathname: string, options: AuthGuardOptions = {}
     console.log('Auth guard: User not authenticated - redirecting to login');
     // Redirect to login page
     if (typeof window !== 'undefined') {
-      window.location.href = '/login?redirect=' + encodeURIComponent(pathname);
+      window.location.href = '/auth/login?redirect=' + encodeURIComponent(pathname);
     }
     return false;
   }

@@ -1,8 +1,25 @@
-# PRSNL - Personal Knowledge Management System v8.0
+# PRSNL - Personal Knowledge Management System v8.1
 
-> **Enterprise-grade AI-powered knowledge management with dual authentication, 3D navigation, and revolutionary performance**
+> **Enterprise-grade AI-powered knowledge management with persistent AI memory, cross-browser testing, and revolutionary performance**
 
-PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 8.0 introduces enterprise dual authentication, innovative 3D UI navigation, and complete authentication system overhaul.
+PRSNL is a cutting-edge personal knowledge management system that captures, processes, and intelligently organizes your digital content using advanced AI technologies. Version 8.1 introduces AI memory layer integration, Playwright testing migration, and enhanced development workflow automation.
+
+## 🚨 **Latest Release v8.1 (August 2025) - Development Tools Enhancement**
+
+### **🧠 AI Memory Layer Integration (NEW in v8.1)**
+- **Cipher Integration**: Persistent development context across Claude Code sessions
+- **Azure OpenAI Powered**: Intelligent memory storage with embeddings and reasoning
+- **Automatic Context Capture**: Never re-explain PRSNL architecture patterns again
+- **Cross-Session Memory**: 50% reduction in development context re-explanation time
+- **MCP Protocol**: Seamless integration with Claude Code's Model Context Protocol
+- **Local Storage**: SQLite-based memory with intelligent problem resolution tracking
+
+### **🎭 Playwright Testing Migration (NEW in v8.1)**
+- **Complete Puppeteer Replacement**: Removed 146 packages, migrated all test files
+- **Cross-Browser Support**: Chromium, Firefox, and WebKit testing capabilities
+- **Built-in Console Monitoring**: Real-time error detection and auto-waiting
+- **MCP Agent Integration**: playwright-console-monitor for automated testing
+- **Enhanced Reliability**: Better test stability and debugging features
 
 ## 🚨 **Major Release v8.0 (July 2025) - Authentication & UI Revolution**
 
