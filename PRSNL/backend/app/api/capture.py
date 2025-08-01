@@ -29,6 +29,7 @@ from app.services.preview_service import preview_service
 from app.services.repository_analyzer import repository_analyzer
 from app.services.video_processor import VideoProcessor
 from app.services.websocket_manager import websocket_manager
+from app.services.auto_processing_service import auto_processing_service
 from app.utils.media_detector import MediaDetector
 from app.utils.url_classifier import URLClassifier
 from app.utils.classification_validator import classify_url_with_validation
@@ -513,8 +514,28 @@ async def capture_item(request: Request, capture_request: CaptureRequest, backgr
                     # Process video metadata quickly, then enhance with AI in background if requested
                     background_tasks.add_task(process_video_metadata_fast, item_id, str(capture_request.url), capture_request.enable_summarization)
             else:
-                # Let the worker handle all non-video processing
-                logger.info(f"Item {item_id} will be processed by worker")
+                # AUTO-PROCESSING: Trigger automatic AI processing pipeline for non-video content
+                if capture_request.enable_summarization:
+                    logger.info(f"🤖 Triggering auto-processing pipeline for item {item_id}")
+                    background_tasks.add_task(
+                        auto_processing_service.process_captured_item,
+                        item_id,
+                        initial_content,  # Pass the raw content
+                        str(capture_request.url) if capture_request.url else None,
+                        capture_request.title or 'Untitled',
+                        True  # enable_ai_processing
+                    )
+                else:
+                    # Just basic processing without AI enhancement
+                    logger.info(f"Basic processing for item {item_id} (AI disabled)")
+                    background_tasks.add_task(
+                        auto_processing_service.process_captured_item,
+                        item_id,
+                        initial_content,
+                        str(capture_request.url) if capture_request.url else None,
+                        capture_request.title or 'Untitled',
+                        False  # disable AI processing
+                    )
             
             VIDEO_CAPTURE_REQUESTS.labels(status='success').inc()
             logger.info(f"Capture initiated successfully for item {item_id}")

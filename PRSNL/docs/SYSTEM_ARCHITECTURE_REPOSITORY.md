@@ -11,8 +11,134 @@ This repository serves as the **single source of truth** for building new featur
 3. How to integrate frontend components
 4. How to maintain data consistency
 
-## 🆕 **Recent Major Upgrade (2025-07-11)**
-**Advanced Integrations & Architecture v2.4** - Complete system enhancement:
+## 🆕 **Recent Major Upgrades**
+
+### **Knowledge Graph Analytics v2.7 (2025-08-01)**
+**Advanced AI-Powered Knowledge Graph System** - Complete semantic clustering, gap analysis, and intelligent insights:
+
+#### **Knowledge Graph Analytics Architecture**
+- **APIs**: Complete `/api/unified-knowledge-graph/*` - 8+ endpoints for graph visualization, analysis, clustering
+- **Semantic Clustering**: 3 algorithms (semantic, structural, hybrid) for intelligent entity grouping  
+- **Gap Analysis**: AI-powered knowledge domain analysis with completeness scoring
+- **Learning Paths**: Graph traversal algorithms for knowledge connection discovery
+- **Relationship Suggestions**: AI-powered recommendations for new entity relationships
+- **Real-time Visualization**: D3.js-compatible graph data with advanced filtering
+- **Statistics Dashboard**: Comprehensive analytics with 140+ entities, 176+ relationships
+- **Performance**: Optimized with materialized views, composite indexes, and JSONB storage
+
+#### **Knowledge Graph Integration Pattern**
+```python
+# Knowledge graph API integration pattern
+from app.api.unified_knowledge_graph import router as kg_router
+
+# Get full knowledge graph for visualization
+graph_data = await fetch('/api/unified-knowledge-graph/visual/full?min_confidence=0.7&limit=200')
+
+# Perform semantic clustering
+clusters = await fetch('/api/unified-knowledge-graph/clustering/semantic', {
+    method: 'POST',
+    body: JSON.stringify({
+        clustering_algorithm: 'hybrid',
+        max_clusters: 8,
+        min_cluster_size: 3
+    })
+})
+
+# Analyze knowledge gaps
+gap_analysis = await fetch('/api/unified-knowledge-graph/analysis/gaps', {
+    method: 'POST', 
+    body: JSON.stringify({
+        analysis_depth: 'comprehensive',
+        min_severity: 'medium',
+        include_suggestions: true
+    })
+})
+```
+
+### **Auto-Processing System v1.0 (2025-08-02)**
+**Complete AI Processing Pipeline** - Automatic content intelligence with knowledge graph integration:
+
+#### **Auto-Processing Architecture**
+- **Service**: `AutoProcessingService` - Centralized AI processing coordinator
+- **Pipeline**: 5-step process (AI Analysis → Categorization → Summarization → **Entity Extraction** → Embeddings)
+- **API**: `/api/auto-processing/*` - 6 REST endpoints for processing management
+- **Queue**: Background processing with concurrency controls (up to 10 items)
+- **Integration**: Automatic trigger on content capture with `enable_summarization=true`
+- **Storage**: Processing metadata in `items.metadata.auto_processing` JSONB field
+- **Knowledge Graph**: Automatic entity extraction and relationship creation for cross-feature integration
+
+#### **Processing Pipeline Pattern**
+```python
+# Auto-processing integration pattern
+background_tasks.add_task(
+    auto_processing_service.process_captured_item,
+    item_id, content, url, title, enable_ai_processing
+)
+
+# Processing results stored in items.metadata:
+{
+  "auto_processing": {
+    "steps_completed": ["ai_analysis", "categorization", "summarization", "entity_extraction", "embeddings"],
+    "success_rate": 1.0,
+    "errors": [],
+    "entity_extraction": {
+      "entities_created": 3,
+      "relationships_created": 2,
+      "extraction_method": "ai_extracted"
+    }
+  }
+}
+```
+
+### **Entity Extraction System v1.0 (2025-08-02)**
+**Knowledge Graph Integration for Cross-Feature Intelligence**:
+
+#### **Entity Extraction Architecture**
+- **Service**: `EntityExtractionService` - AI-powered entity and relationship extraction
+- **Database**: 6 specialized tables for unified entity storage and relationships
+- **API**: `/api/entity-extraction/*` - 5 REST endpoints for entity management
+- **Integration**: Seamlessly integrated with Auto-Processing pipeline (Step 4 of 5)
+- **Content Types**: Supports conversation, video, code, articles, notes, and timeline events
+- **AI Models**: Uses Azure OpenAI for intelligent entity recognition and relationship inference
+
+#### **Entity Extraction Pattern**
+```python
+# Entity extraction service integration
+from app.services.entity_extraction_service import entity_extraction_service
+
+# Extract entities from content
+entity_results = await entity_extraction_service.extract_entities_from_content(
+    content_id=item_id,
+    content_type='article',  # conversation, video, code, etc.
+    content_text=content[:5000],
+    metadata={"processing_context": "auto_processing"}
+)
+
+# Results include created entities and relationships
+{
+  "success": true,
+  "entities_created": [
+    {"entity_id": "uuid", "name": "React 18", "entity_type": "knowledge_concept"},
+    {"entity_id": "uuid", "name": "useTransition", "entity_type": "code_function"}
+  ],
+  "relationships_created": [
+    {"relationship_id": "uuid", "relationship_type": "implements", "confidence": 0.8}
+  ]
+}
+```
+
+#### **Database Schema for Knowledge Graph**
+- **unified_entities**: Central entity table for all content types (140+ entities)
+- **unified_relationships**: Cross-feature relationships with confidence scoring (176+ relationships)
+- **conversation_turns**: Enhanced conversation analysis with entity linking
+- **video_segments**: Time-based video segments with AI analysis
+- **code_entities**: Code structure entities (functions, classes, modules)
+- **timeline_events**: Timeline events with enhanced context and relationships
+- **entity_statistics**: Materialized view for performance analytics
+- **relationship_statistics**: Materialized view for relationship analytics
+
+### **Advanced Integrations & Architecture v2.4 (2025-07-11)**
+**Complete system enhancement:**
 
 ### **Frontend Modernization**
 - **Svelte**: 4.2.20 → 5.35.6 (Runes system replaces stores for local state)
@@ -149,6 +275,101 @@ async def filter_items(
     
     query = f"SELECT * FROM items WHERE {' AND '.join(conditions)}"
     return await conn.fetch(query, *params)
+```
+
+### **NEW: Knowledge Graph API Pattern**
+```python
+# Knowledge graph visualization endpoints
+@router.get("/unified-knowledge-graph/visual/full", response_model=UnifiedGraphResponse)
+async def get_unified_visual_graph(
+    entity_type: Optional[str] = Query(None),
+    relationship_type: Optional[str] = Query(None),
+    limit: int = Query(100, ge=10, le=500),
+    min_confidence: float = Query(0.5, ge=0.0, le=1.0)
+):
+    """Get complete knowledge graph for D3.js visualization with filtering."""
+    
+    # Build dynamic query with filters
+    entity_query = """
+        SELECT ue.id, ue.name as title, ue.entity_type as type,
+               ue.description as summary, ue.confidence_score as confidence,
+               i.content_type, i.title as source_title
+        FROM unified_entities ue
+        LEFT JOIN items i ON ue.source_content_id = i.id
+        WHERE ue.confidence_score >= $1
+    """
+    
+    params = [min_confidence]
+    if entity_type:
+        entity_query += f" AND ue.entity_type = ${len(params) + 1}"
+        params.append(entity_type)
+    
+    # Get entities and relationships
+    entities = await conn.fetch(entity_query + " LIMIT $" + str(len(params) + 1), *params, limit)
+    relationships = await get_relationships_for_entities([e['id'] for e in entities])
+    
+    return UnifiedGraphResponse(
+        nodes=[UnifiedGraphNode(**entity) for entity in entities],
+        edges=[UnifiedGraphEdge(**rel) for rel in relationships],
+        metadata={"total_nodes": len(entities), "total_edges": len(relationships)}
+    )
+
+# Semantic clustering endpoint
+@router.post("/unified-knowledge-graph/clustering/semantic")
+async def perform_semantic_clustering(request: SemanticClusteringRequest):
+    """Perform semantic clustering using multiple algorithms."""
+    
+    # Select algorithm
+    if request.clustering_algorithm == "semantic":
+        clusters = await _semantic_clustering(entities, relationships, request)
+    elif request.clustering_algorithm == "structural":
+        clusters = await _structural_clustering(entities, relationships, request)
+    else:  # hybrid
+        clusters = await _hybrid_clustering(entities, relationships, request)
+    
+    return SemanticClusteringResponse(
+        clusters=clusters,
+        total_entities_clustered=sum(len(c.entities) for c in clusters),
+        clustering_metadata={
+            "algorithm": request.clustering_algorithm,
+            "total_entities_processed": len(entities)
+        }
+    )
+
+# Knowledge gap analysis endpoint
+@router.post("/unified-knowledge-graph/analysis/gaps")
+async def analyze_knowledge_gaps(request: KnowledgeGapAnalysisRequest):
+    """Comprehensive knowledge gap analysis with domain scoring."""
+    
+    gaps, domains, completeness = await _analyze_knowledge_gaps(
+        entities, relationships, request
+    )
+    
+    return KnowledgeGapAnalysisResponse(
+        gaps=gaps,
+        domains=domains,
+        overall_completeness=completeness,
+        recommendations=_generate_gap_recommendations(gaps, domains, completeness)
+    )
+
+# Learning path discovery endpoint
+@router.post("/unified-knowledge-graph/paths/discover")
+async def discover_knowledge_paths(request: KnowledgePathRequest):
+    """Find learning paths using graph traversal algorithms."""
+    
+    # Build adjacency graph for pathfinding
+    graph = await build_graph_for_pathfinding(relationships, request.min_confidence)
+    
+    # Find paths using BFS with confidence weighting
+    paths = await _find_knowledge_paths(
+        graph, request.start_entity_id, request.end_entity_id, request.max_depth
+    )
+    
+    return KnowledgePathResponse(
+        paths=sorted(paths, key=lambda p: p.total_confidence, reverse=True)[:5],
+        total_paths=len(paths),
+        search_metadata={"algorithm": "bfs_confidence_weighted"}
+    )
 ```
 
 ### **NEW: Enhanced Search API Pattern**
@@ -329,6 +550,152 @@ similar = await embedding_manager.search_similar(
 )
 ```
 
+### **NEW: Knowledge Graph Schema Pattern**
+```sql
+-- Central entity table for cross-feature integration
+CREATE TABLE unified_entities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type TEXT NOT NULL CHECK (entity_type IN (
+        'conversation_turn', 'video_segment', 'code_function', 'code_class', 
+        'code_module', 'timeline_event', 'file_attachment', 'image_entity', 
+        'audio_entity', 'text_entity', 'knowledge_concept'
+    )),
+    source_content_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    parent_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    metadata JSONB DEFAULT '{}',
+    start_position INTEGER, -- For segments (video time, text position, line numbers)
+    end_position INTEGER,
+    confidence_score FLOAT DEFAULT 1.0 CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    extraction_method TEXT DEFAULT 'manual', -- manual, ai_extracted, user_defined
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Cross-feature relationships with semantic types
+CREATE TABLE unified_relationships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    target_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    relationship_type TEXT NOT NULL CHECK (relationship_type IN (
+        -- Temporal relationships
+        'precedes', 'follows', 'concurrent', 'enables', 'depends_on',
+        -- Content relationships  
+        'discusses', 'implements', 'references', 'explains', 'demonstrates',
+        -- Structural relationships
+        'contains', 'part_of', 'similar_to', 'related_to', 'opposite_of',
+        -- Cross-modal relationships
+        'visualizes', 'describes', 'transcribes', 'summarizes', 'extends',
+        -- Learning relationships
+        'prerequisite', 'builds_on', 'reinforces', 'applies', 'teaches'
+    )),
+    confidence_score FLOAT DEFAULT 1.0 CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    strength FLOAT DEFAULT 1.0,
+    bidirectional BOOLEAN DEFAULT false,
+    context TEXT, -- Why this relationship exists
+    extraction_method TEXT DEFAULT 'manual',
+    evidence JSONB DEFAULT '{}', -- Supporting evidence
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (source_entity_id, target_entity_id, relationship_type)
+);
+
+-- Performance optimization with materialized views
+CREATE MATERIALIZED VIEW entity_statistics AS
+SELECT 
+    entity_type,
+    COUNT(*) as total_entities,
+    AVG(confidence_score) as avg_confidence,
+    COUNT(DISTINCT source_content_id) as unique_sources,
+    MIN(created_at) as first_created,
+    MAX(created_at) as last_created
+FROM unified_entities 
+GROUP BY entity_type;
+
+CREATE MATERIALIZED VIEW relationship_statistics AS
+SELECT 
+    relationship_type,
+    COUNT(*) as total_relationships,
+    AVG(confidence_score) as avg_confidence,
+    AVG(strength) as avg_strength,
+    COUNT(DISTINCT source_entity_id) as unique_sources,
+    COUNT(DISTINCT target_entity_id) as unique_targets
+FROM unified_relationships 
+GROUP BY relationship_type;
+
+-- Composite indexes for complex graph queries
+CREATE INDEX idx_unified_entities_composite ON unified_entities(entity_type, source_content_id, created_at);
+CREATE INDEX idx_unified_relationships_composite ON unified_relationships(relationship_type, confidence_score, created_at);
+
+-- Full-text search indexes for semantic operations
+CREATE INDEX idx_unified_entities_name_fts ON unified_entities USING gin(to_tsvector('english', name));
+CREATE INDEX idx_unified_entities_description_fts ON unified_entities USING gin(to_tsvector('english', description));
+
+-- PostgreSQL functions for graph operations
+CREATE OR REPLACE FUNCTION create_entity_from_content(
+    p_entity_type text,
+    p_source_content_id uuid,
+    p_name text,
+    p_description text DEFAULT NULL,
+    p_metadata jsonb DEFAULT '{}'
+) RETURNS uuid AS $$
+DECLARE
+    new_entity_id uuid;
+BEGIN
+    INSERT INTO unified_entities (entity_type, source_content_id, name, description, metadata, extraction_method)
+    VALUES (p_entity_type, p_source_content_id, p_name, p_description, p_metadata, 'ai_extracted')
+    RETURNING id INTO new_entity_id;
+    
+    RETURN new_entity_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Automatic relationship validation and creation
+CREATE OR REPLACE FUNCTION create_relationship(
+    p_source_entity_id uuid,
+    p_target_entity_id uuid,
+    p_relationship_type text,
+    p_confidence_score float DEFAULT 1.0,
+    p_context text DEFAULT NULL,
+    p_bidirectional boolean DEFAULT false
+) RETURNS uuid AS $$
+DECLARE
+    new_relationship_id uuid;
+BEGIN
+    -- Prevent self-relationships
+    IF p_source_entity_id = p_target_entity_id THEN
+        RAISE EXCEPTION 'Cannot create relationship between entity and itself';
+    END IF;
+    
+    INSERT INTO unified_relationships (
+        source_entity_id, target_entity_id, relationship_type, 
+        confidence_score, context, bidirectional, extraction_method
+    )
+    VALUES (
+        p_source_entity_id, p_target_entity_id, p_relationship_type,
+        p_confidence_score, p_context, p_bidirectional, 'ai_inferred'
+    )
+    RETURNING id INTO new_relationship_id;
+    
+    -- Create reverse relationship if bidirectional
+    IF p_bidirectional THEN
+        INSERT INTO unified_relationships (
+            source_entity_id, target_entity_id, relationship_type,
+            confidence_score, context, bidirectional, extraction_method
+        )
+        VALUES (
+            p_target_entity_id, p_source_entity_id, p_relationship_type,
+            p_confidence_score, p_context, false, 'ai_inferred'
+        );
+    END IF;
+    
+    RETURN new_relationship_id;
+END;
+$$ LANGUAGE plpgsql;
+```
+
 ### Relationship Patterns
 ```sql
 -- One-to-Many (items → tags)
@@ -465,6 +832,361 @@ export class NewFeatureState {
         return newItem;
     }
 }
+```
+
+### **NEW: Knowledge Graph Component Pattern (Svelte 5)**
+```svelte
+<!-- components/KnowledgeGraphVisualization.svelte -->
+<script lang="ts">
+    import { onMount } from 'svelte';
+    import { KnowledgeGraphState } from '$lib/stores/knowledgeGraph.svelte';
+    import { knowledgeGraphAPI } from '$lib/api/knowledgeGraph';
+    import * as d3 from 'd3';
+    
+    interface Props {
+        itemId?: string;
+        entityType?: string;
+        showClustering?: boolean;
+        analyticsMode?: boolean;
+    }
+    
+    let { itemId, entityType, showClustering = false, analyticsMode = false }: Props = $props();
+    
+    // Knowledge graph state management
+    const graphState = new KnowledgeGraphState();
+    
+    let svgElement: SVGElement;
+    let simulation: d3.Simulation<any, any>;
+    
+    onMount(async () => {
+        await loadGraphData();
+        initializeVisualization();
+    });
+    
+    // Reactive graph loading based on props
+    $effect(async () => {
+        if (itemId || entityType) {
+            await loadGraphData();
+            updateVisualization();
+        }
+    });
+
+    // Load graph data based on context
+    async function loadGraphData() {
+        try {
+            if (analyticsMode) {
+                // Load analytics dashboard data
+                const [graphData, stats, clusters, gaps] = await Promise.all([
+                    knowledgeGraphAPI.getFullGraph({ entityType, minConfidence: 0.6 }),
+                    knowledgeGraphAPI.getStats(),
+                    showClustering ? knowledgeGraphAPI.performClustering({ 
+                        algorithm: 'hybrid', maxClusters: 8 
+                    }) : null,
+                    knowledgeGraphAPI.analyzeGaps({ analysisDepth: 'standard' })
+                ]);
+                
+                graphState.setAnalyticsData(graphData, stats, clusters, gaps);
+            } else if (itemId) {
+                // Load item-centered graph
+                const graphData = await knowledgeGraphAPI.getItemGraph(itemId, { depth: 2 });
+                graphState.setGraphData(graphData);
+            } else {
+                // Load filtered full graph
+                const graphData = await knowledgeGraphAPI.getFullGraph({ 
+                    entityType, 
+                    limit: 150,
+                    minConfidence: 0.5 
+                });
+                graphState.setGraphData(graphData);
+            }
+        } catch (error) {
+            graphState.setError(error.message);
+        }
+    }
+
+    // D3.js visualization setup
+    function initializeVisualization() {
+        if (!svgElement || !graphState.nodes.length) return;
+        
+        const svg = d3.select(svgElement);
+        const width = 800;
+        const height = 600;
+        
+        // Create force simulation
+        simulation = d3.forceSimulation(graphState.nodes)
+            .force('link', d3.forceLink(graphState.edges).id(d => d.id).strength(0.5))
+            .force('charge', d3.forceManyBody().strength(-300))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collide', d3.forceCollide().radius(30));
+        
+        // Create links
+        const link = svg.append('g')
+            .selectAll('line')
+            .data(graphState.edges)
+            .enter().append('line')
+            .attr('stroke', '#999')
+            .attr('stroke-opacity', 0.6)
+            .attr('stroke-width', d => Math.sqrt(d.strength * 3));
+        
+        // Create nodes
+        const node = svg.append('g')
+            .selectAll('circle')
+            .data(graphState.nodes)
+            .enter().append('circle')
+            .attr('r', d => 5 + d.confidence * 10)
+            .attr('fill', d => getNodeColor(d.type))
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+        
+        // Add labels
+        const label = svg.append('g')
+            .selectAll('text')
+            .data(graphState.nodes)
+            .enter().append('text')
+            .text(d => d.title)
+            .attr('font-size', 10)
+            .attr('dx', 15)
+            .attr('dy', 4);
+        
+        // Update positions on simulation tick
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            
+            node
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y);
+            
+            label
+                .attr('x', d => d.x)
+                .attr('y', d => d.y);
+        });
+        
+        // Handle clustering visualization
+        if (showClustering && graphState.clusters.length) {
+            highlightClusters();
+        }
+    }
+    
+    // Clustering visualization
+    function highlightClusters() {
+        const svg = d3.select(svgElement);
+        
+        graphState.clusters.forEach((cluster, i) => {
+            const clusterNodes = cluster.entities.map(e => e.id);
+            
+            svg.selectAll('circle')
+                .filter(d => clusterNodes.includes(d.id))
+                .attr('stroke', d3.schemeCategory10[i % 10])
+                .attr('stroke-width', 3);
+        });
+    }
+    
+    // Node color mapping
+    function getNodeColor(entityType: string): string {
+        const colorMap = {
+            'knowledge_concept': '#ff6b6b',
+            'text_entity': '#4ecdc4',
+            'code_function': '#45b7d1',
+            'video_segment': '#96ceb4',
+            'conversation_turn': '#ffeaa7'
+        };
+        return colorMap[entityType] || '#74b9ff';
+    }
+    
+    // D3 drag handlers
+    function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+    }
+    
+    function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+    }
+    
+    function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+    }
+</script>
+
+<div class="knowledge-graph-container">
+    {#if graphState.loading}
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading knowledge graph...</p>
+        </div>
+    {:else if graphState.error}
+        <div class="error">
+            <p>Error loading graph: {graphState.error}</p>
+            <button onclick={() => loadGraphData()}>Retry</button>
+        </div>
+    {:else}
+        <div class="graph-controls">
+            <div class="stats">
+                <span>{graphState.nodes.length} entities</span>
+                <span>{graphState.edges.length} relationships</span>
+                {#if graphState.clusters.length}
+                    <span>{graphState.clusters.length} clusters</span>
+                {/if}
+            </div>
+            
+            {#if analyticsMode}
+                <div class="analytics-panel">
+                    <h3>Knowledge Analytics</h3>
+                    <div class="metric">
+                        <label>Completeness Score:</label>
+                        <span class="score">{(graphState.analytics?.overallCompleteness * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="gaps-summary">
+                        <label>Knowledge Gaps:</label>
+                        <span>{graphState.analytics?.gaps?.length || 0} identified</span>
+                    </div>
+                </div>
+            {/if}
+        </div>
+        
+        <svg 
+            bind:this={svgElement}
+            width="800" 
+            height="600"
+            class="knowledge-graph-svg"
+        ></svg>
+        
+        {#if showClustering && graphState.clusters.length}
+            <div class="clusters-panel">
+                <h4>Semantic Clusters</h4>
+                {#each graphState.clusters as cluster, i}
+                    <div class="cluster-item" style="border-left-color: {d3.schemeCategory10[i % 10]}">
+                        <strong>{cluster.clusterName}</strong>
+                        <p>{cluster.description}</p>
+                        <small>{cluster.entities.length} entities | Cohesion: {cluster.cohesionScore.toFixed(2)}</small>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    {/if}
+</div>
+
+<style>
+    .knowledge-graph-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: var(--color-bg-secondary);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .graph-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--color-bg-primary);
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .stats {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .stats span {
+        padding: 0.25rem 0.5rem;
+        background: var(--color-bg-tertiary);
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+    
+    .analytics-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .metric, .gaps-summary {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .score {
+        font-weight: bold;
+        color: var(--color-success);
+    }
+    
+    .knowledge-graph-svg {
+        flex: 1;
+        background: white;
+    }
+    
+    .clusters-panel {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 1rem;
+        background: var(--color-bg-primary);
+        border-top: 1px solid var(--color-border);
+    }
+    
+    .cluster-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: var(--color-bg-secondary);
+        border-left: 4px solid;
+        border-radius: 4px;
+    }
+    
+    .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        gap: 1rem;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--color-border);
+        border-top: 4px solid var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        gap: 1rem;
+        color: var(--color-error);
+    }
+
+    .error button {
+        padding: 0.5rem 1rem;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
 ```
 
 ### Component Pattern (Svelte 5)

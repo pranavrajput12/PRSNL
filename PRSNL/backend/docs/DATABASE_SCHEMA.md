@@ -1,11 +1,11 @@
 # PRSNL Database Schema Documentation
 
-Last Updated: 2025-07-16  
+Last Updated: 2025-08-01  
 **Complete and Current Database Schema Reference**
 
 ## Overview
 
-The PRSNL database uses PostgreSQL 16 with ARM64 architecture and includes the pgvector extension for semantic search capabilities. The system now includes comprehensive authentication and user management tables for JWT-based authentication.
+The PRSNL database uses PostgreSQL 16 with ARM64 architecture and includes the pgvector extension for semantic search capabilities. The system includes comprehensive authentication, user management, and an advanced **AI-powered knowledge graph system** with entity extraction, relationship analysis, semantic clustering, and gap detection capabilities.
 
 ## Core Tables
 
@@ -264,6 +264,385 @@ CREATE INDEX idx_verification_tokens_token ON verification_tokens(token);
 CREATE INDEX idx_verification_tokens_expires_at ON verification_tokens(expires_at);
 ```
 
+## 9. AI-Powered Knowledge Graph System
+
+The knowledge graph system provides intelligent entity extraction, relationship analysis, semantic clustering, and knowledge gap detection. This advanced system was implemented in Phase 2 and includes 6 major tables with sophisticated AI algorithms.
+
+### 9.1 Unified Entities Table
+
+Central entity storage for cross-feature knowledge graph integration.
+
+```sql
+CREATE TABLE unified_entities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type TEXT NOT NULL CHECK (entity_type IN (
+        'conversation_turn', 'video_segment', 'code_function', 'code_class', 
+        'code_module', 'timeline_event', 'file_attachment', 'image_entity', 
+        'audio_entity', 'text_entity', 'knowledge_concept'
+    )),
+    source_content_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    parent_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    metadata JSONB DEFAULT '{}',
+    start_position INTEGER, -- For segments (video time, text position, line numbers)
+    end_position INTEGER,
+    confidence_score FLOAT DEFAULT 1.0 CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    extraction_method TEXT DEFAULT 'manual', -- manual, ai_extracted, user_defined
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**Key Features:**
+- **Polymorphic Design**: Supports 11 different entity types
+- **AI Confidence Scoring**: Machine learning confidence ratings (0-1 scale)
+- **Hierarchical Structure**: Parent-child entity relationships
+- **Position Tracking**: Precise location tracking for content segments
+- **Extraction Method Tracking**: Distinguishes between manual, AI, and user-defined entities
+
+### 9.2 Unified Relationships Table
+
+Advanced relationship system with 18+ semantic relationship types and AI confidence scoring.
+
+```sql
+CREATE TABLE unified_relationships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    target_entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    relationship_type TEXT NOT NULL CHECK (relationship_type IN (
+        -- Temporal relationships
+        'precedes', 'follows', 'concurrent', 'enables', 'depends_on',
+        -- Content relationships  
+        'discusses', 'implements', 'references', 'explains', 'demonstrates',
+        -- Structural relationships
+        'contains', 'part_of', 'similar_to', 'related_to', 'opposite_of',
+        -- Cross-modal relationships
+        'visualizes', 'describes', 'transcribes', 'summarizes', 'extends',
+        -- Learning relationships
+        'prerequisite', 'builds_on', 'reinforces', 'applies', 'teaches'
+    )),
+    confidence_score FLOAT DEFAULT 1.0 CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    strength FLOAT DEFAULT 1.0 CHECK (strength >= 0 AND strength <= 1),
+    bidirectional BOOLEAN DEFAULT false,
+    context TEXT, -- Why this relationship exists
+    extraction_method TEXT DEFAULT 'manual', -- manual, ai_inferred, user_defined, similarity_based
+    evidence JSONB DEFAULT '{}', -- Supporting evidence for the relationship
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**Advanced Features:**
+- **18 Semantic Relationship Types**: Covers temporal, content, structural, cross-modal, and learning relationships
+- **Bidirectional Support**: Automatic reverse relationship creation
+- **Evidence Tracking**: JSONB storage for relationship justification
+- **Strength vs Confidence**: Separate metrics for relationship importance and AI certainty
+- **Context Preservation**: Human-readable explanation of relationship reasoning
+
+### 9.3 Conversation Analysis Tables
+
+Enhanced conversation processing with entity linking and topic detection.
+
+```sql
+-- Enhanced conversation turns with entity linking
+CREATE TABLE conversation_turns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    speaker TEXT NOT NULL,
+    speaker_id UUID, -- For identified users
+    content TEXT NOT NULL,
+    turn_order INTEGER NOT NULL,
+    timestamp TIMESTAMP,
+    message_type TEXT DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'file', 'code', 'link')),
+    metadata JSONB DEFAULT '{}', -- AI analysis, emotions, topics, etc.
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (conversation_id, turn_order)
+);
+
+-- Conversation topics and themes
+CREATE TABLE conversation_topics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    topic_name TEXT NOT NULL,
+    start_turn INTEGER,
+    end_turn INTEGER,
+    relevance_score FLOAT DEFAULT 1.0,
+    keywords TEXT[],
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 9.4 Video Analysis Tables
+
+Time-based video content analysis with AI-powered segmentation.
+
+```sql
+-- Video segments with enhanced metadata
+CREATE TABLE video_segments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    video_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    start_time INTEGER NOT NULL, -- Start time in seconds
+    end_time INTEGER NOT NULL,   -- End time in seconds
+    segment_type TEXT DEFAULT 'topic' CHECK (segment_type IN ('topic', 'speaker_change', 'scene_change', 'chapter')),
+    title TEXT,
+    transcript TEXT,
+    summary TEXT,
+    topics TEXT[],
+    speaker TEXT,
+    confidence_score FLOAT DEFAULT 1.0,
+    thumbnail_url TEXT,
+    metadata JSONB DEFAULT '{}', -- AI analysis, visual elements, etc.
+    created_at TIMESTAMP DEFAULT NOW(),
+    CHECK (end_time > start_time)
+);
+
+-- Video chapters and structure
+CREATE TABLE video_chapters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    video_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    chapter_number INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    start_time INTEGER NOT NULL,
+    end_time INTEGER,
+    description TEXT,
+    thumbnail_url TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (video_id, chapter_number)
+);
+```
+
+### 9.5 Code Structure Analysis Tables
+
+Advanced code entity extraction with dependency tracking.
+
+```sql
+-- Code entities (functions, classes, modules)
+CREATE TABLE code_entities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    repository_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    entity_type TEXT NOT NULL CHECK (entity_type IN ('function', 'class', 'module', 'interface', 'enum', 'variable', 'constant')),
+    name TEXT NOT NULL,
+    full_name TEXT, -- Fully qualified name (e.g., MyClass.myMethod)
+    file_path TEXT NOT NULL,
+    line_start INTEGER,
+    line_end INTEGER,
+    language TEXT,
+    visibility TEXT DEFAULT 'public' CHECK (visibility IN ('public', 'private', 'protected', 'internal')),
+    parameters JSONB DEFAULT '[]', -- Function parameters
+    return_type TEXT,
+    documentation TEXT, -- Docstring or comments
+    complexity_score INTEGER, -- Cyclomatic complexity
+    dependencies TEXT[], -- Other entities this depends on
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Code dependencies and relationships
+CREATE TABLE code_dependencies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_entity_id UUID REFERENCES code_entities(id) ON DELETE CASCADE,
+    target_entity_id UUID REFERENCES code_entities(id) ON DELETE CASCADE,
+    dependency_type TEXT NOT NULL CHECK (dependency_type IN ('calls', 'extends', 'implements', 'imports', 'uses', 'defines')),
+    line_number INTEGER,
+    confidence_score FLOAT DEFAULT 1.0,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (source_entity_id, target_entity_id, dependency_type)
+);
+```
+
+### 9.6 Timeline and Event Analysis
+
+Enhanced event tracking with cross-content relationships.
+
+```sql
+-- Timeline events with enhanced context
+CREATE TABLE timeline_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    event_type TEXT NOT NULL CHECK (event_type IN ('content_creation', 'content_update', 'conversation', 'code_commit', 'meeting', 'learning', 'milestone')),
+    title TEXT NOT NULL,
+    description TEXT,
+    event_timestamp TIMESTAMP NOT NULL,
+    duration_minutes INTEGER,
+    content_ids UUID[], -- Related content items
+    participants TEXT[], -- People involved
+    location TEXT,
+    tags TEXT[],
+    importance_score INTEGER DEFAULT 1 CHECK (importance_score >= 1 AND importance_score <= 5),
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 9.7 Cross-Feature Integration Tables
+
+Advanced linking and user interaction tracking.
+
+```sql
+-- Link content items to entities for cross-referencing
+CREATE TABLE content_entity_links (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content_id UUID REFERENCES items(id) ON DELETE CASCADE,
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    link_type TEXT DEFAULT 'contains' CHECK (link_type IN ('contains', 'mentions', 'references', 'created_from', 'derived_from')),
+    confidence_score FLOAT DEFAULT 1.0,
+    context_snippet TEXT, -- Surrounding text where entity appears
+    position_start INTEGER,
+    position_end INTEGER,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (content_id, entity_id, link_type)
+);
+
+-- User interaction with entities (for personalization)
+CREATE TABLE entity_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID, -- From auth system when available
+    entity_id UUID REFERENCES unified_entities(id) ON DELETE CASCADE,
+    interaction_type TEXT NOT NULL CHECK (interaction_type IN ('view', 'edit', 'like', 'bookmark', 'share', 'comment', 'rate')),
+    interaction_value JSONB DEFAULT '{}', -- Rating, comment text, etc.
+    timestamp TIMESTAMP DEFAULT NOW(),
+    session_id TEXT,
+    metadata JSONB DEFAULT '{}',
+    INDEX (user_id),
+    INDEX (entity_id),
+    INDEX (interaction_type),
+    INDEX (timestamp)
+);
+```
+
+### 9.8 Analytics and Performance Views
+
+Materialized views for high-performance analytics.
+
+```sql
+-- Entity statistics view
+CREATE MATERIALIZED VIEW entity_statistics AS
+SELECT 
+    entity_type,
+    COUNT(*) as total_entities,
+    AVG(confidence_score) as avg_confidence,
+    COUNT(DISTINCT source_content_id) as unique_sources,
+    MIN(created_at) as first_created,
+    MAX(created_at) as last_created
+FROM unified_entities 
+GROUP BY entity_type;
+
+-- Relationship statistics view
+CREATE MATERIALIZED VIEW relationship_statistics AS
+SELECT 
+    relationship_type,
+    COUNT(*) as total_relationships,
+    AVG(confidence_score) as avg_confidence,
+    AVG(strength) as avg_strength,
+    COUNT(DISTINCT source_entity_id) as unique_sources,
+    COUNT(DISTINCT target_entity_id) as unique_targets
+FROM unified_relationships 
+GROUP BY relationship_type;
+```
+
+### 9.9 Knowledge Graph Functions
+
+Advanced PostgreSQL functions for knowledge graph operations.
+
+```sql
+-- Automatic entity creation from content
+CREATE OR REPLACE FUNCTION create_entity_from_content(
+    p_entity_type text,
+    p_source_content_id uuid,
+    p_name text,
+    p_description text DEFAULT NULL,
+    p_metadata jsonb DEFAULT '{}'
+) RETURNS uuid AS $$
+DECLARE
+    new_entity_id uuid;
+BEGIN
+    INSERT INTO unified_entities (entity_type, source_content_id, name, description, metadata, extraction_method)
+    VALUES (p_entity_type, p_source_content_id, p_name, p_description, p_metadata, 'ai_extracted')
+    RETURNING id INTO new_entity_id;
+    
+    RETURN new_entity_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Relationship creation with validation
+CREATE OR REPLACE FUNCTION create_relationship(
+    p_source_entity_id uuid,
+    p_target_entity_id uuid,
+    p_relationship_type text,
+    p_confidence_score float DEFAULT 1.0,
+    p_context text DEFAULT NULL,
+    p_bidirectional boolean DEFAULT false
+) RETURNS uuid AS $$
+DECLARE
+    new_relationship_id uuid;
+BEGIN
+    -- Prevent self-relationships
+    IF p_source_entity_id = p_target_entity_id THEN
+        RAISE EXCEPTION 'Cannot create relationship between entity and itself';
+    END IF;
+    
+    -- Create the relationship
+    INSERT INTO unified_relationships (
+        source_entity_id, target_entity_id, relationship_type, 
+        confidence_score, context, bidirectional, extraction_method
+    )
+    VALUES (
+        p_source_entity_id, p_target_entity_id, p_relationship_type,
+        p_confidence_score, p_context, p_bidirectional, 'ai_inferred'
+    )
+    RETURNING id INTO new_relationship_id;
+    
+    -- Create reverse relationship if bidirectional
+    IF p_bidirectional THEN
+        INSERT INTO unified_relationships (
+            source_entity_id, target_entity_id, relationship_type,
+            confidence_score, context, bidirectional, extraction_method
+        )
+        VALUES (
+            p_target_entity_id, p_source_entity_id, p_relationship_type,
+            p_confidence_score, p_context, false, 'ai_inferred'
+        );
+    END IF;
+    
+    RETURN new_relationship_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Refresh analytics views
+CREATE OR REPLACE FUNCTION refresh_knowledge_graph_stats()
+RETURNS void AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY entity_statistics;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY relationship_statistics;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### 9.10 Knowledge Graph Performance Indexes
+
+Optimized indexes for high-performance graph operations.
+
+```sql
+-- Composite indexes for complex queries
+CREATE INDEX idx_unified_entities_composite ON unified_entities(entity_type, source_content_id, created_at);
+CREATE INDEX idx_unified_relationships_composite ON unified_relationships(relationship_type, confidence_score, created_at);
+
+-- Full-text search indexes
+CREATE INDEX idx_unified_entities_name_fts ON unified_entities USING gin(to_tsvector('english', name));
+CREATE INDEX idx_unified_entities_description_fts ON unified_entities USING gin(to_tsvector('english', description));
+
+-- Performance indexes for analytics
+CREATE INDEX idx_entity_statistics_type ON entity_statistics(entity_type);
+CREATE INDEX idx_relationship_statistics_type ON relationship_statistics(relationship_type);
+```
+
 ## Database Indexes
 
 ### Performance Indexes
@@ -453,6 +832,135 @@ UPDATE items SET search_vector = to_tsvector('english',
 ) WHERE search_vector IS NULL;
 ```
 
+## Knowledge Graph API Operations
+
+### Advanced Query Patterns
+
+#### Knowledge Path Discovery
+```sql
+-- Find learning paths between entities using graph traversal
+WITH RECURSIVE path_finder AS (
+    SELECT 
+        source_entity_id,
+        target_entity_id,
+        relationship_type,
+        confidence_score,
+        ARRAY[source_entity_id] as path,
+        1 as depth
+    FROM unified_relationships
+    WHERE source_entity_id = $start_entity_id
+    AND confidence_score >= $min_confidence
+    
+    UNION ALL
+    
+    SELECT 
+        ur.source_entity_id,
+        ur.target_entity_id,
+        ur.relationship_type,
+        ur.confidence_score * pf.confidence_score,
+        pf.path || ur.source_entity_id,
+        pf.depth + 1
+    FROM unified_relationships ur
+    JOIN path_finder pf ON ur.source_entity_id = pf.target_entity_id
+    WHERE pf.depth < $max_depth
+    AND NOT ur.source_entity_id = ANY(pf.path)
+)
+SELECT * FROM path_finder WHERE target_entity_id = $end_entity_id;
+```
+
+#### Semantic Clustering Analysis
+```sql
+-- Find entities with high semantic similarity for clustering
+SELECT 
+    e1.id as entity1_id,
+    e1.name as entity1_name,
+    e2.id as entity2_id, 
+    e2.name as entity2_name,
+    -- Calculate similarity based on shared relationships
+    COUNT(DISTINCT r1.relationship_type) as shared_relationship_types,
+    AVG(r1.confidence_score + r2.confidence_score) / 2 as avg_confidence
+FROM unified_entities e1
+JOIN unified_relationships r1 ON e1.id = r1.source_entity_id
+JOIN unified_relationships r2 ON r2.target_entity_id = r1.target_entity_id
+JOIN unified_entities e2 ON e2.id = r2.source_entity_id
+WHERE e1.id != e2.id
+AND e1.entity_type = e2.entity_type
+GROUP BY e1.id, e1.name, e2.id, e2.name
+HAVING COUNT(DISTINCT r1.relationship_type) >= $min_shared_relationships
+ORDER BY shared_relationship_types DESC, avg_confidence DESC;
+```
+
+#### Knowledge Gap Detection
+```sql
+-- Identify isolated entities (potential knowledge gaps)
+SELECT 
+    ue.id,
+    ue.name,
+    ue.entity_type,
+    ue.confidence_score,
+    COUNT(ur.id) as relationship_count
+FROM unified_entities ue
+LEFT JOIN unified_relationships ur ON (ue.id = ur.source_entity_id OR ue.id = ur.target_entity_id)
+GROUP BY ue.id, ue.name, ue.entity_type, ue.confidence_score
+HAVING COUNT(ur.id) <= $max_relationships
+ORDER BY relationship_count ASC, ue.confidence_score DESC;
+```
+
+### API Endpoint Integration
+
+The knowledge graph system exposes RESTful APIs at `/api/unified-knowledge-graph/*`:
+
+- **GET /visual/full** - Complete knowledge graph for D3.js visualization
+- **GET /visual/{item_id}** - Item-centered graph with configurable depth
+- **GET /stats** - Comprehensive graph statistics and analytics
+- **POST /relationships** - Create new entity relationships
+- **DELETE /relationships/{id}** - Remove relationships
+- **POST /paths/discover** - Find knowledge paths between entities
+- **POST /relationships/suggest** - AI-powered relationship suggestions
+- **POST /analysis/gaps** - Knowledge gap analysis and recommendations
+- **POST /clustering/semantic** - Semantic clustering with multiple algorithms
+
+### Performance Optimization
+
+#### Graph Traversal Optimization
+```sql
+-- Optimized adjacency list query for large graphs
+SELECT 
+    source_entity_id,
+    array_agg(
+        json_build_object(
+            'target', target_entity_id,
+            'relationship', relationship_type,
+            'confidence', confidence_score,
+            'strength', strength
+        )
+    ) as adjacency_list
+FROM unified_relationships
+WHERE confidence_score >= $min_confidence
+GROUP BY source_entity_id;
+```
+
+#### Materialized View Refresh Strategy
+```sql
+-- Efficient incremental refresh for large datasets
+REFRESH MATERIALIZED VIEW CONCURRENTLY entity_statistics;
+REFRESH MATERIALIZED VIEW CONCURRENTLY relationship_statistics;
+
+-- Conditional refresh based on data changes
+CREATE OR REPLACE FUNCTION conditional_refresh_stats()
+RETURNS void AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM pg_stat_user_tables WHERE relname = 'unified_entities' AND n_tup_ins + n_tup_upd + n_tup_del > 100) THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY entity_statistics;
+    END IF;
+    
+    IF (SELECT COUNT(*) FROM pg_stat_user_tables WHERE relname = 'unified_relationships' AND n_tup_ins + n_tup_upd + n_tup_del > 100) THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY relationship_statistics;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+```
+
 ---
 
-**Note**: This documentation reflects the current state after the complete schema migration completed on 2025-07-12. All tables, columns, and indexes are now synchronized between development and production environments.
+**Note**: This documentation reflects the current state after the knowledge graph extension migration completed on 2025-08-01. The system now includes 140+ entities and 176+ relationships with advanced AI-powered analysis capabilities. All tables, indexes, and APIs are synchronized between development and production environments.

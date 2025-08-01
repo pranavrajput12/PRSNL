@@ -261,6 +261,9 @@ from app.api import librechat_bridge  # New LibreChat integration bridge
 from app.api import openclip  # OpenCLIP vision service
 from app.api import crawl_ai_integration  # New Crawl.ai multi-agent system
 from app.api import persistence  # New unified job persistence system
+from app.api import auto_processing  # Auto-processing pipeline API
+from app.api import entity_extraction  # Entity extraction for knowledge graph integration
+from app.api import unified_knowledge_graph  # Unified knowledge graph API for D3.js frontend
 from app.api import codemirror  # CodeMirror - AI repository intelligence
 from app.api import codemirror_websocket  # CodeMirror WebSocket for real-time sync
 from app.api import task_monitoring  # Enterprise task monitoring for Celery
@@ -380,6 +383,9 @@ app.include_router(enhanced_search.router, prefix=settings.API_V1_STR)
 app.include_router(embeddings.router, prefix=settings.API_V1_STR)
 app.include_router(openclip.router, prefix=settings.API_V1_STR)  # OpenCLIP vision service
 app.include_router(persistence.router, prefix=settings.API_V1_STR + "/persistence", tags=["persistence"])  # Unified job persistence system
+app.include_router(auto_processing.router, prefix=settings.API_V1_STR + "/auto-processing", tags=["auto-processing"])  # Auto-processing pipeline API
+app.include_router(entity_extraction.router, prefix=settings.API_V1_STR + "/entity-extraction", tags=["entity-extraction"])  # Entity extraction for knowledge graph integration
+app.include_router(unified_knowledge_graph.router)  # Unified knowledge graph API for D3.js frontend
 app.include_router(codemirror.router)  # CodeMirror - AI repository intelligence (includes /api/code-cortex/codemirror prefix)
 app.include_router(codemirror_websocket.router)  # CodeMirror WebSocket endpoints for real-time sync
 app.include_router(task_monitoring.router)  # Enterprise task monitoring for Celery
