@@ -50,7 +50,8 @@ async def websocket_sync(
             try:
                 payload = verify_token(token)
                 user_id = payload.get("sub")
-            except:
+            except Exception as jwt_error:
+                logger.debug(f"JWT verification failed: {jwt_error}")
                 # Try API key (CLI clients)
                 pool = await get_db_pool()
                 async with pool.acquire() as db:
@@ -84,8 +85,8 @@ async def websocket_sync(
         logger.error(f"WebSocket error: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
-            pass
+        except Exception as close_error:
+            logger.debug(f"Error closing websocket: {close_error}")
 
 
 @router.websocket("/analysis/{analysis_id}")
@@ -112,7 +113,8 @@ async def websocket_analysis_updates(
             try:
                 payload = verify_token(token)
                 user_id = payload.get("sub")
-            except:
+            except Exception as auth_error:
+                logger.warning(f"WebSocket authentication failed: {auth_error}")
                 await websocket.close(code=1008, reason="Authentication failed")
                 return
         else:
@@ -272,8 +274,8 @@ async def websocket_cli_sync(
                         WHERE user_id = $1 AND machine_id = $2 
                         AND disconnected_at IS NULL
                     """, UUID(user_id), machine_id)
-            except:
-                pass
+            except Exception as db_error:
+                logger.error(f"Failed to update CLI connection status: {db_error}")
 
 
 async def _handle_cli_analysis_complete(user_id: str, data: Dict[str, Any]):

@@ -289,7 +289,7 @@ class PackageIntelligenceService:
                     )
                     
                     # Cache the result
-                    await cache_service.set(cache_key, package_info.__dict__, ttl=self.cache_ttl)
+                    await cache_service.set(cache_key, package_info.__dict__, expire=self.cache_ttl)
                     return package_info
                     
         except Exception as e:
@@ -325,7 +325,7 @@ class PackageIntelligenceService:
                     )
                     
                     # Cache the result
-                    await cache_service.set(cache_key, package_info.__dict__, ttl=self.cache_ttl)
+                    await cache_service.set(cache_key, package_info.__dict__, expire=self.cache_ttl)
                     return package_info
                     
         except Exception as e:
@@ -362,7 +362,7 @@ class PackageIntelligenceService:
                     )
                     
                     # Cache the result
-                    await cache_service.set(cache_key, package_info.__dict__, ttl=self.cache_ttl)
+                    await cache_service.set(cache_key, package_info.__dict__, expire=self.cache_ttl)
                     return package_info
                     
         except Exception as e:
@@ -398,7 +398,7 @@ class PackageIntelligenceService:
                         )
                         
                         # Cache the result
-                        await cache_service.set(cache_key, package_info.__dict__, ttl=self.cache_ttl)
+                        await cache_service.set(cache_key, package_info.__dict__, expire=self.cache_ttl)
                         return package_info
                         
         except Exception as e:

@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS audio_journals (
     
     -- Processing status
     transcription_status VARCHAR(20) DEFAULT 'pending' CHECK (transcription_status IN ('pending', 'processing', 'completed', 'failed')),
-    transcription_service VARCHAR(20), -- 'whisper_cloud', 'whisper_cpp', 'vosk'
+    transcription_service VARCHAR(20), -- 'whisper_cloud', 'whisper_cpp'
     ai_analysis_status VARCHAR(20) DEFAULT 'pending' CHECK (ai_analysis_status IN ('pending', 'processing', 'completed', 'failed')),
     
     -- Content analysis

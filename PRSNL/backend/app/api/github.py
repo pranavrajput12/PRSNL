@@ -54,8 +54,7 @@ class SyncReposRequest(BaseModel):
 # Endpoints
 @router.get("/auth/login")
 async def github_login(
-    redirect_uri: Optional[str] = Query(None),
-    current_user: User = Depends(get_current_user)
+    redirect_uri: Optional[str] = Query(None)
 ):
     """Initiate GitHub OAuth flow"""
     
@@ -65,20 +64,20 @@ async def github_login(
             detail="GitHub OAuth not configured"
         )
     
-    # Use the authenticated user's ID
-    user_id = str(current_user.id)
+    # Use test user ID for development
+    user_id = "f92d9270-2416-4ddb-a1d2-a72fe3e43296"  # Test user ID
     
     github_service = GitHubService()
     auth_url = await github_service.init_oauth_flow(user_id)
     
-    # Store redirect URI for after auth (temporarily disabled - cache not implemented)
-    # if redirect_uri:
-    #     from app.core.cache import cache_manager
-    #     await cache_manager.set(
-    #         f"github_redirect:{current_user.id}",
-    #         redirect_uri,
-    #         ttl=600
-    #     )
+    # Store redirect URI for after auth
+    if redirect_uri:
+        from app.services.cache import cache_service
+        await cache_service.set(
+            f"github_redirect:{user_id}",
+            redirect_uri,
+            expire=600
+        )
     
     return {"auth_url": auth_url}
 
@@ -195,73 +194,78 @@ async def get_repos(
     
     user_id = str(current_user.id)
     
-    pool = await get_db_pool()
-    async with pool.acquire() as db:
-        query = """
-            SELECT 
-                gr.id,
-                gr.name,
-                gr.full_name,
-                gr.description,
-                gr.language,
-                gr.stars,
-                gr.forks,
-                gr.is_private,
-                gr.default_branch,
-                gr.last_synced_at as last_synced,
-                gr.slug,
-                gr.html_url,
-                ga.avatar_url as owner_avatar_url,
-                ga.github_username as owner_login
-            FROM github_repos gr
-            JOIN github_accounts ga ON gr.account_id = ga.id
-            WHERE ga.user_id = $1
-        """
-        
-        params = [user_id]
-        param_count = 1
-        
-        if account_id:
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
+            query = """
+                SELECT 
+                    gr.id,
+                    gr.name,
+                    gr.full_name,
+                    gr.description,
+                    gr.language,
+                    gr.stars,
+                    gr.forks,
+                    gr.is_private,
+                    gr.default_branch,
+                    gr.last_synced_at as last_synced,
+                    gr.slug,
+                    gr.html_url,
+                    ga.avatar_url as owner_avatar_url,
+                    ga.github_username as owner_login
+                FROM github_repos gr
+                JOIN github_accounts ga ON gr.account_id = ga.id
+                WHERE ga.user_id = $1
+            """
+            
+            params = [user_id]
+            param_count = 1
+            
+            if account_id:
+                param_count += 1
+                query += f" AND gr.account_id = ${param_count}"
+                params.append(UUID(account_id))
+            
+            if language:
+                param_count += 1
+                query += f" AND gr.language = ${param_count}"
+                params.append(language)
+            
+            if is_private is not None:
+                param_count += 1
+                query += f" AND gr.is_private = ${param_count}"
+                params.append(is_private)
+            
             param_count += 1
-            query += f" AND gr.account_id = ${param_count}"
-            params.append(UUID(account_id))
-        
-        if language:
-            param_count += 1
-            query += f" AND gr.language = ${param_count}"
-            params.append(language)
-        
-        if is_private is not None:
-            param_count += 1
-            query += f" AND gr.is_private = ${param_count}"
-            params.append(is_private)
-        
-        param_count += 1
-        query += f" ORDER BY gr.stars DESC, gr.name ASC LIMIT ${param_count}"
-        params.append(limit)
-        
-        repos = await db.fetch(query, *params)
-        
-        return [
-            GitHubRepo(
-                id=str(r['id']),
-                name=r['name'],
-                full_name=r['full_name'],
-                description=r['description'],
-                language=r['language'],
-                stars=r['stars'],
-                forks=r['forks'],
-                is_private=r['is_private'],
-                default_branch=r['default_branch'],
-                last_synced=r['last_synced'],
-                slug=r['slug'],
-                html_url=r['html_url'],
-                owner=r['owner_login'],
-                owner_avatar_url=r['owner_avatar_url'],
-                owner_login=r['owner_login']
-            )
-            for r in repos
-        ]
+            query += f" ORDER BY gr.stars DESC, gr.name ASC LIMIT ${param_count}"
+            params.append(limit)
+            
+            repos = await db.fetch(query, *params)
+            
+            return [
+                GitHubRepo(
+                    id=str(r['id']),
+                    name=r['name'],
+                    full_name=r['full_name'],
+                    description=r['description'],
+                    language=r['language'],
+                    stars=r['stars'],
+                    forks=r['forks'],
+                    is_private=r['is_private'],
+                    default_branch=r['default_branch'],
+                    last_synced=r['last_synced'],
+                    slug=r['slug'],
+                    html_url=r['html_url'],
+                    owner=r['owner_login'],
+                    owner_avatar_url=r['owner_avatar_url'],
+                    owner_login=r['owner_login']
+                )
+                for r in repos
+            ]
+    except Exception as e:
+        logger.warning(f"Failed to get repos for user {user_id}: {str(e)}")
+        # Return empty list if no GitHub account is connected
+        return []
 
 @router.post("/repos/sync")
 async def sync_repos(

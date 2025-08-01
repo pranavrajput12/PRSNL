@@ -7,7 +7,7 @@ PRSNL has been significantly enhanced with production-grade AI capabilities:
 ### ✅ Completed Integrations
 
 1. **Guardrails-AI** - Automatic validation of all AI outputs
-2. **whisper.cpp** - High-accuracy offline transcription (replaced Vosk and cloud Whisper)
+2. **whisper.cpp** - High-accuracy offline transcription for privacy-focused use cases
 3. **Unified AI Service** - Centralized AI operations with validation
 4. **AI REST API** - Full API access to all AI features
 
@@ -16,7 +16,7 @@ PRSNL has been significantly enhanced with production-grade AI capabilities:
 ### Before
 ```
 Multiple Services → Inconsistent outputs → Manual validation → Errors
-Cloud + Vosk → Complex routing → Rate limits → Privacy concerns
+Cloud-only → Rate limits → Privacy concerns → No offline fallback
 ```
 
 ### After
@@ -34,7 +34,7 @@ whisper.cpp only → Simple & accurate → Fully offline → Complete privacy
 - Graceful error handling
 
 ### 2. Transcription Accuracy
-- **5-10x better** than Vosk
+- **High accuracy** offline transcription
 - 99 language support
 - Word-level timestamps
 - CPU-optimized performance
@@ -149,7 +149,7 @@ from app.services.unified_ai_service import unified_ai_service
 result = await unified_ai_service.analyze_content("Your content")
 
 # Transcription
-from app.services.whisper_only_transcription import transcription_service
+from app.services.hybrid_transcription import hybrid_transcription_service as transcription_service
 result = await transcription_service.transcribe_audio("audio.mp3")
 ```
 
@@ -217,7 +217,7 @@ Key metrics to track:
 ## Next Steps
 
 ### Phase 2 - Ready to implement:
-1. **Haystack v2** - Structured RAG pipelines
+1. **LangChain RAG** - Enhanced RAG pipelines
 2. **RAGAS** - AI quality monitoring
 3. **OpenCLIP** - Multi-modal search
 4. **Firecrawl** - Enhanced web scraping

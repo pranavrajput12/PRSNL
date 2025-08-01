@@ -18,73 +18,13 @@ from app.config import settings
 from app.services.firecrawl_service import firecrawl_service
 
 # Import all services to test
-from app.services.haystack_rag_service import HAYSTACK_AVAILABLE, haystack_rag_service
 from app.services.openclip_service import openclip_service
 from app.services.unified_ai_service import unified_ai_service
 
 print("🚀 PRSNL v4.2.0 - Comprehensive AI Integration Test Suite")
 print("=" * 70)
 
-async def test_rag_integration():
-    """Test RAG/Haystack integration"""
-    print("\n" + "=" * 50)
-    print("🧠 Test 1: RAG & Haystack Integration")
-    print("=" * 50)
-    
-    try:
-        # Test service availability
-        print(f"✅ Haystack Available: {HAYSTACK_AVAILABLE}")
-        print(f"✅ RAG Service Enabled: {haystack_rag_service.enabled}")
-        print(f"✅ Document Store Type: {type(haystack_rag_service.document_store).__name__ if haystack_rag_service.document_store else 'None'}")
-        
-        if not haystack_rag_service.enabled:
-            print("❌ RAG service not enabled, skipping tests")
-            return False
-        
-        # Test document ingestion
-        print("\n📝 Testing Document Ingestion...")
-        test_doc = {
-            "content": "This is a test document about Python programming. Python is a versatile programming language used for web development, data science, and artificial intelligence.",
-            "metadata": {"title": "Python Programming", "source": "test", "type": "educational"}
-        }
-        
-        result = await haystack_rag_service.ingest_document(
-            content=test_doc["content"],
-            metadata=test_doc["metadata"],
-            doc_id="test_doc_001"
-        )
-        
-        if result:
-            print("✅ Document ingestion successful")
-        else:
-            print("❌ Document ingestion failed")
-            return False
-        
-        # Test querying
-        print("\n🔍 Testing RAG Query...")
-        query_result = await haystack_rag_service.query(
-            question="What is Python used for?",
-            top_k=3
-        )
-        
-        if query_result.get("answer"):
-            print(f"✅ RAG Query successful")
-            print(f"   Answer: {query_result['answer'][:100]}...")
-            print(f"   Confidence: {query_result.get('confidence', 'N/A')}")
-            print(f"   Documents found: {len(query_result.get('documents', []))}")
-        else:
-            print("❌ RAG Query failed")
-            return False
-        
-        # Test document count
-        doc_count = await haystack_rag_service.get_document_count()
-        print(f"✅ Total documents in store: {doc_count}")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ RAG Integration Test Failed: {e}")
-        return False
+# Note: We use LangChain for all RAG functionality, not Haystack
 
 async def test_firecrawl_integration():
     """Test Firecrawl web scraping integration"""
@@ -266,14 +206,14 @@ async def test_database_connectivity():
             result = await conn.fetchval("SELECT 1")
             print(f"✅ Database connection successful: {result}")
             
-            # Check for RAG tables
-            rag_tables = await conn.fetch("""
+            # Check for core tables
+            core_tables = await conn.fetch("""
                 SELECT table_name FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                AND table_name IN ('haystack_documents', 'rag_query_history')
+                AND table_name IN ('items', 'embeddings', 'tags')
             """)
             
-            print(f"✅ RAG tables found: {[r['table_name'] for r in rag_tables]}")
+            print(f"✅ Core tables found: {[r['table_name'] for r in core_tables]}")
             
             # Check for pgvector extension
             vector_ext = await conn.fetchval("""
@@ -347,7 +287,7 @@ async def main():
     tests = [
         ("Environment Configuration", test_environment_configuration),
         ("Database Connectivity", test_database_connectivity),
-        ("RAG Integration", test_rag_integration),
+        # Note: RAG functionality is handled by LangChain in unified_ai_service
         ("Firecrawl Integration", test_firecrawl_integration),
         ("OpenCLIP Integration", test_openclip_integration),
         ("Unified AI Service", test_unified_ai_service),

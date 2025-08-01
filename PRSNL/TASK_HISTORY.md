@@ -282,7 +282,7 @@ This document consolidates all task tracking, project history, and progress moni
 - Fixed: .env file (removed invalid EOF line)
 **Environment Changes**:
 - **Hardware**: Migrated to Mac Mini M4 (Apple Silicon)
-- **Storage**: Freed ~28GB by cleaning npm cache, Puppeteer cache, old IDEs, Xcode support files
+- **Storage**: Freed ~28GB by cleaning npm cache, Playwright cache, old IDEs, Xcode support files
 - **Container Runtime**: Replaced Rancher Desktop with Colima (lightweight Docker alternative)
 - **Database**: PostgreSQL 16 ARM64 on port 5432 (changed from 5432)
 - **Services**: All services running (Frontend: 3004, Backend: 8000, Keycloak: 8080, FusionAuth: 9011)

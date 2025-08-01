@@ -106,7 +106,7 @@ services:
   #   volumes:
   #     - librechat_meili_data:/meili_data
 
-  # LibreChat RAG API - Disabled in favor of PRSNL's Haystack RAG
+  # LibreChat RAG API - Disabled in favor of PRSNL's LangChain RAG
   # librechat-rag:
   #   image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
   #   container_name: prsnl_librechat_rag

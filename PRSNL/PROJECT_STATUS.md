@@ -431,7 +431,7 @@ PRSNL is now a production-ready intelligent AI second brain with advanced capabi
 #### Mac Mini M4 Migration:
 1. **Storage Cleanup**
    - Freed ~28GB disk space
-   - Cleaned npm cache (2GB), Puppeteer cache (964MB), old IDEs (333MB), Xcode support (4.4GB)
+   - Cleaned npm cache (2GB), Playwright cache (964MB), old IDEs (333MB), Xcode support (4.4GB)
    - Status: ✅ COMPLETED
 
 2. **Infrastructure Migration**

@@ -188,7 +188,7 @@ async def test_transcription():
         print("   Creating a simple test to verify service availability...")
         
         # Test service availability
-        from app.services.whisper_only_transcription import transcription_service
+        from app.services.hybrid_transcription import hybrid_transcription_service as transcription_service
         
         if transcription_service.is_available():
             print("✅ Transcription service is available")
@@ -207,7 +207,7 @@ async def test_transcription():
             print("❌ Transcription service not available")
     else:
         # Test actual transcription
-        from app.services.whisper_only_transcription import transcription_service
+        from app.services.hybrid_transcription import hybrid_transcription_service as transcription_service
         
         print(f"\n🎤 Transcribing test audio: {test_audio}")
         

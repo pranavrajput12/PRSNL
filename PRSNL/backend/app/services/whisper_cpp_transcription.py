@@ -1,481 +1,255 @@
 """
-Whisper.cpp-based offline transcription service for PRSNL
+Whisper.cpp Transcription Service
 
-Provides high-accuracy local transcription using whisper.cpp.
-Significantly better accuracy than Vosk with CPU optimization.
+High-quality offline transcription using whisper.cpp bindings.
+Provides better accuracy than Vosk for offline scenarios.
 """
 
 import asyncio
-import hashlib
-import json
 import logging
 import os
-import subprocess
 import tempfile
-import time
-import wave
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Union
 
-try:
-    from pywhispercpp.model import Model as WhisperModel
-    WHISPER_CPP_AVAILABLE = True
-except ImportError:
-    WHISPER_CPP_AVAILABLE = False
-    WhisperModel = None
+import pywhispercpp.model as whisper_model
+from pywhispercpp.model import Model as WhisperModel
 
 logger = logging.getLogger(__name__)
 
 
 class WhisperCppTranscriptionService:
-    """High-accuracy offline transcription using whisper.cpp."""
+    """
+    Whisper.cpp transcription service for high-quality offline transcription.
     
-    # Model sizes and their download URLs
-    MODEL_INFO = {
-        "tiny": {
-            "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
-            "size_mb": 39,
-            "accuracy": "Good for quick transcription",
-            "speed": "Very fast"
-        },
-        "base": {
-            "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
-            "size_mb": 74,
-            "accuracy": "Better accuracy, still fast",
-            "speed": "Fast"
-        },
-        "small": {
-            "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
-            "size_mb": 244,
-            "accuracy": "Good balance of speed and accuracy",
-            "speed": "Moderate"
-        },
-        "medium": {
-            "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
-            "size_mb": 769,
-            "accuracy": "High accuracy",
-            "speed": "Slower"
-        },
-        "large": {
-            "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large.bin",
-            "size_mb": 1550,
-            "accuracy": "Highest accuracy",
-            "speed": "Slowest"
-        }
-    }
+    Features:
+    - High accuracy offline transcription
+    - Multiple model sizes for quality/speed tradeoff
+    - Word-level timestamps support
+    - Language detection
+    - Multi-language support
+    """
     
     def __init__(self):
-        self.models_dir = Path("storage/whisper_models")
-        self.models_dir.mkdir(parents=True, exist_ok=True)
-        self._models_cache = {}
-        self._default_model = "base"  # Good balance for most use cases
+        self._models_cache: Dict[str, WhisperModel] = {}
+        self._models_dir = Path.home() / ".cache" / "whisper-cpp"
+        self._models_dir.mkdir(parents=True, exist_ok=True)
         
+        # Available model sizes with quality/speed tradeoffs
+        self.available_models = {
+            "tiny": {"size": "39M", "quality": "low", "speed": "fastest"},
+            "base": {"size": "74M", "quality": "moderate", "speed": "fast"},
+            "small": {"size": "244M", "quality": "good", "speed": "medium"},
+            "medium": {"size": "769M", "quality": "very good", "speed": "slow"},
+            "large": {"size": "1550M", "quality": "excellent", "speed": "slowest"}
+        }
+        
+        logger.info("🚀 Whisper.cpp Transcription Service initialized")
+        logger.info(f"   Models directory: {self._models_dir}")
+    
     async def ensure_model_available(self, model_name: str = "base") -> bool:
         """
-        Ensure the specified Whisper model is downloaded and available.
+        Ensure the specified model is available for use.
+        Downloads the model if not already present.
         
         Args:
-            model_name: Name of the model to ensure is available
+            model_name: Model size to use (tiny, base, small, medium, large)
             
         Returns:
             True if model is available, False otherwise
         """
-        if not WHISPER_CPP_AVAILABLE:
-            logger.warning("pywhispercpp is not available - whisper.cpp transcription disabled")
+        if model_name not in self.available_models:
+            logger.error(f"Invalid model name: {model_name}")
             return False
-            
-        model_path = self.models_dir / f"ggml-{model_name}.bin"
         
-        if model_path.exists():
-            logger.info(f"✅ Whisper model {model_name} already available at {model_path}")
-            return True
-            
-        # Download model if not available
         try:
-            logger.info(f"📥 Downloading Whisper model {model_name}...")
-            model_info = self.MODEL_INFO.get(model_name)
+            # Check if model already loaded
+            if model_name in self._models_cache:
+                return True
             
-            if not model_info:
-                logger.error(f"Unknown model: {model_name}")
-                return False
+            # Try to load the model
+            model_path = self._models_dir / f"ggml-{model_name}.bin"
+            
+            # Download model if not exists
+            if not model_path.exists():
+                logger.info(f"📥 Downloading whisper.cpp model: {model_name}")
+                # pywhispercpp will automatically download models
                 
-            # Download model
-            await self._download_model(model_info['url'], model_path)
-            logger.info(f"✅ Whisper model {model_name} downloaded successfully")
+            # Load the model
+            model = WhisperModel(model_name)
+            self._models_cache[model_name] = model
+            
+            logger.info(f"✅ Whisper.cpp model loaded: {model_name}")
             return True
             
         except Exception as e:
-            logger.error(f"Failed to download Whisper model {model_name}: {e}")
+            logger.error(f"Failed to ensure model {model_name}: {e}")
             return False
     
-    async def _download_model(self, url: str, save_path: Path):
-        """Download Whisper model."""
-        import httpx
-        
-        async with httpx.AsyncClient() as client:
-            async with client.stream("GET", url) as response:
-                if response.status_code != 200:
-                    raise Exception(f"Failed to download model: HTTP {response.status_code}")
-                
-                total_size = int(response.headers.get('content-length', 0))
-                downloaded = 0
-                
-                with open(save_path, 'wb') as f:
-                    async for chunk in response.aiter_bytes(chunk_size=8192):
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        
-                        # Progress logging
-                        if total_size > 0:
-                            progress = (downloaded / total_size) * 100
-                            if int(progress) % 10 == 0:
-                                logger.info(f"Download progress: {progress:.0f}%")
-    
-    def _load_model(self, model_name: str = "base") -> Optional[WhisperModel]:
-        """Load Whisper model into memory."""
-        if not WHISPER_CPP_AVAILABLE:
-            return None
-            
+    def _get_model(self, model_name: str = "base") -> Optional[WhisperModel]:
+        """Get cached model or load it."""
         if model_name in self._models_cache:
             return self._models_cache[model_name]
-            
-        model_path = self.models_dir / f"ggml-{model_name}.bin"
         
-        if not model_path.exists():
-            logger.error(f"Whisper model not found: {model_path}")
-            return None
-            
         try:
-            # Initialize whisper.cpp model
-            model = WhisperModel(
-                model_path=str(model_path),
-                n_threads=os.cpu_count() or 4,  # Use all CPU cores
-                print_progress=False,
-                print_realtime=False
-            )
-            
+            model = WhisperModel(model_name)
             self._models_cache[model_name] = model
-            logger.info(f"✅ Loaded Whisper model: {model_name}")
             return model
-            
         except Exception as e:
-            logger.error(f"Failed to load Whisper model {model_name}: {e}")
-            return None
-    
-    async def convert_to_wav(self, input_path: str) -> Optional[str]:
-        """
-        Convert audio file to WAV format required by whisper.cpp.
-        
-        Args:
-            input_path: Path to input audio file
-            
-        Returns:
-            Path to converted WAV file or None if conversion failed
-        """
-        try:
-            # Create temporary WAV file
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-                output_path = tmp_file.name
-            
-            # Use ffmpeg to convert to WAV (16kHz, mono, 16-bit)
-            cmd = [
-                'ffmpeg', '-i', input_path,
-                '-acodec', 'pcm_s16le',
-                '-ar', '16000',
-                '-ac', '1',
-                '-y',  # Overwrite output file
-                output_path
-            ]
-            
-            # Run conversion
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            
-            stdout, stderr = await process.communicate()
-            
-            if process.returncode == 0:
-                logger.info(f"✅ Audio converted to WAV: {output_path}")
-                return output_path
-            else:
-                logger.error(f"FFmpeg conversion failed: {stderr.decode()}")
-                if os.path.exists(output_path):
-                    os.unlink(output_path)
-                return None
-                
-        except Exception as e:
-            logger.error(f"Audio conversion failed: {e}")
+            logger.error(f"Failed to load model {model_name}: {e}")
             return None
     
     async def transcribe_audio(
-        self, 
-        audio_path: str, 
+        self,
+        audio_path: str,
         model_name: str = "base",
         language: str = "en",
-        translate: bool = False,
-        temperature: float = 0.0,
-        word_timestamps: bool = True
-    ) -> Optional[Dict[str, Any]]:
+        word_timestamps: bool = True,
+        initial_prompt: Optional[str] = None
+    ) -> Optional[Dict[str, any]]:
         """
         Transcribe audio file using whisper.cpp.
         
         Args:
             audio_path: Path to audio file
-            model_name: Whisper model to use (tiny, base, small, medium, large)
-            language: Language code for transcription
-            translate: Whether to translate to English
-            temperature: Sampling temperature (0.0 = greedy decoding)
+            model_name: Model size to use
+            language: Language code (e.g., "en", "es", "fr")
             word_timestamps: Whether to include word-level timestamps
+            initial_prompt: Optional prompt to guide transcription
             
         Returns:
-            Transcription result with text and metadata
+            Transcription result with text, segments, and metadata
         """
-        if not WHISPER_CPP_AVAILABLE:
-            logger.warning("whisper.cpp not available - cannot perform offline transcription")
-            return None
-            
         try:
             # Ensure model is available
             if not await self.ensure_model_available(model_name):
+                logger.error(f"Model {model_name} not available")
                 return None
-                
-            # Load model
-            model = self._load_model(model_name)
+            
+            # Get the model
+            model = self._get_model(model_name)
             if not model:
                 return None
             
-            # Convert audio to WAV if needed
-            wav_path = audio_path
-            cleanup_wav = False
+            logger.info(f"🎙️ Transcribing with whisper.cpp ({model_name} model): {audio_path}")
             
-            if not audio_path.lower().endswith('.wav'):
-                wav_path = await self.convert_to_wav(audio_path)
-                if not wav_path:
-                    return None
-                cleanup_wav = True
+            # Configure transcription parameters
+            params = {
+                "language": language if language != "auto" else None,
+                "word_timestamps": word_timestamps,
+                "initial_prompt": initial_prompt,
+                "print_progress": False,
+                "print_realtime": False
+            }
             
-            try:
-                # Transcribe audio
-                start_time = time.time()
+            # Run transcription in thread pool (whisper.cpp is CPU-bound)
+            loop = asyncio.get_event_loop()
+            segments = await loop.run_in_executor(
+                None,
+                lambda: model.transcribe(audio_path, **params)
+            )
+            
+            # Process segments
+            full_text = ""
+            processed_segments = []
+            word_count = 0
+            
+            for segment in segments:
+                segment_text = segment.text.strip()
+                full_text += segment_text + " "
                 
-                # Configure transcription parameters
-                model.params.language = language.encode('utf-8')
-                model.params.translate = translate
-                model.params.temperature = temperature
-                model.params.print_progress = False
-                model.params.print_realtime = False
-                model.params.token_timestamps = word_timestamps
-                
-                # Perform transcription
-                segments = model.transcribe(wav_path)
-                
-                # Process results
-                full_text = ""
-                all_words = []
-                total_confidence = 0.0
-                segment_count = 0
-                
-                for segment in segments:
-                    full_text += segment.text + " "
-                    
-                    # Extract word-level information if available
-                    if hasattr(segment, 'words') and segment.words:
-                        for word in segment.words:
-                            all_words.append({
-                                'word': word.word,
-                                'start': word.start,
-                                'end': word.end,
-                                'probability': word.probability
-                            })
-                    
-                    # Track confidence (using segment probability if available)
-                    if hasattr(segment, 'probability'):
-                        total_confidence += segment.probability
-                        segment_count += 1
-                
-                # Calculate metrics
-                processing_time = time.time() - start_time
-                avg_confidence = total_confidence / segment_count if segment_count > 0 else 0.95
-                
-                # Get audio duration
-                audio_duration = self._get_audio_duration(wav_path)
-                
-                result = {
-                    'text': full_text.strip(),
-                    'confidence': avg_confidence,
-                    'word_count': len(full_text.split()),
-                    'duration': audio_duration,
-                    'processing_time': processing_time,
-                    'real_time_factor': processing_time / audio_duration if audio_duration > 0 else 0,
-                    'model_used': model_name,
-                    'service': 'whisper.cpp',
-                    'language': language,
-                    'translated': translate,
-                    'segments': len(segments),
-                    'words': all_words if word_timestamps else []
+                segment_data = {
+                    "start": segment.start,
+                    "end": segment.end,
+                    "text": segment_text
                 }
                 
-                return result
+                # Add word timestamps if available
+                if word_timestamps and hasattr(segment, 'words'):
+                    segment_data["words"] = [
+                        {
+                            "word": word.word,
+                            "start": word.start,
+                            "end": word.end,
+                            "probability": word.probability
+                        }
+                        for word in segment.words
+                    ]
+                    word_count += len(segment.words)
+                else:
+                    word_count += len(segment_text.split())
                 
-            finally:
-                # Cleanup temporary WAV file
-                if cleanup_wav and os.path.exists(wav_path):
-                    os.unlink(wav_path)
-                    
+                processed_segments.append(segment_data)
+            
+            result = {
+                "text": full_text.strip(),
+                "segments": processed_segments,
+                "language": language,
+                "duration": processed_segments[-1]["end"] if processed_segments else 0,
+                "word_count": word_count,
+                "model": model_name,
+                "confidence": 0.85,  # whisper.cpp doesn't provide overall confidence
+                "service": "whisper.cpp"
+            }
+            
+            logger.info(f"✅ Transcription complete: {word_count} words, {len(processed_segments)} segments")
+            return result
+            
         except Exception as e:
             logger.error(f"Whisper.cpp transcription failed: {e}")
             return None
     
-    def _get_audio_duration(self, wav_path: str) -> float:
-        """Get duration of WAV file in seconds."""
-        try:
-            with wave.open(wav_path, 'rb') as wf:
-                frames = wf.getnframes()
-                rate = wf.getframerate()
-                duration = frames / float(rate)
-                return duration
-        except:
-            return 0.0
-    
-    async def transcribe_streaming(
-        self,
-        audio_stream,
-        model_name: str = "base",
-        language: str = "en",
-        chunk_duration: float = 5.0
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    async def detect_language(self, audio_path: str, model_name: str = "base") -> Optional[str]:
         """
-        Streaming transcription for real-time audio.
+        Detect the language of audio file.
         
         Args:
-            audio_stream: Async generator yielding audio chunks
-            model_name: Model to use
-            language: Language code
-            chunk_duration: Duration of audio chunks to process
+            audio_path: Path to audio file
+            model_name: Model to use for detection
             
-        Yields:
-            Transcription results for each chunk
+        Returns:
+            Detected language code or None
         """
-        if not WHISPER_CPP_AVAILABLE:
-            logger.warning("whisper.cpp not available for streaming")
-            return
+        try:
+            model = self._get_model(model_name)
+            if not model:
+                return None
             
-        # Load model
-        model = self._load_model(model_name)
-        if not model:
-            return
+            # Run language detection
+            loop = asyncio.get_event_loop()
+            language = await loop.run_in_executor(
+                None,
+                lambda: model.detect_language(audio_path)
+            )
             
-        # Process audio chunks
-        buffer = bytearray()
-        chunk_size = int(16000 * chunk_duration)  # 16kHz sample rate
-        
-        async for audio_chunk in audio_stream:
-            buffer.extend(audio_chunk)
+            logger.info(f"🌐 Detected language: {language}")
+            return language
             
-            # Process when we have enough audio
-            if len(buffer) >= chunk_size * 2:  # 2 bytes per sample
-                # Extract chunk
-                chunk_data = bytes(buffer[:chunk_size * 2])
-                buffer = buffer[chunk_size * 2:]
-                
-                # Write to temporary file and transcribe
-                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-                    # Write WAV header and data
-                    self._write_wav_chunk(tmp_file.name, chunk_data)
-                    
-                    # Transcribe chunk
-                    result = await self.transcribe_audio(
-                        tmp_file.name,
-                        model_name=model_name,
-                        language=language,
-                        word_timestamps=False  # Faster for streaming
-                    )
-                    
-                    # Cleanup
-                    os.unlink(tmp_file.name)
-                    
-                    if result:
-                        yield {
-                            'text': result['text'],
-                            'is_final': False,
-                            'timestamp': time.time()
-                        }
+        except Exception as e:
+            logger.error(f"Language detection failed: {e}")
+            return None
     
-    def _write_wav_chunk(self, path: str, audio_data: bytes):
-        """Write audio data as WAV file."""
-        with wave.open(path, 'wb') as wf:
-            wf.setnchannels(1)  # Mono
-            wf.setsampwidth(2)  # 16-bit
-            wf.setframerate(16000)  # 16kHz
-            wf.writeframes(audio_data)
-    
-    async def get_supported_languages(self) -> List[str]:
-        """Get list of supported languages."""
-        # Whisper supports 99 languages
-        return [
-            "en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko",
-            "ar", "hi", "tr", "pl", "nl", "sv", "fi", "da", "no", "he",
-            "id", "ms", "th", "vi", "ro", "cs", "hu", "el", "bg", "uk",
-            "hr", "sr", "sk", "sl", "et", "lv", "lt", "ca", "sq", "mk",
-            "is", "cy", "eu", "gl", "af", "sw", "am", "ka", "hy", "az",
-            "kk", "fa", "ur", "ps", "sd", "ne", "si", "my", "km", "lo",
-            "ml", "kn", "ta", "te", "bn", "gu", "mr", "pa", "or", "as",
-            "mn", "bo", "tl", "mg", "mt", "ha", "yo", "so", "sn", "mi",
-            "ht", "lb", "bs", "nn", "oc", "la", "br", "tk", "tt", "ba",
-            "jw", "su", "ln", "zu", "om", "fo", "ti", "tg", "eo", "yi"
-        ]
-    
-    async def get_model_info(self, model_name: str = "base") -> Dict[str, Any]:
-        """Get information about a Whisper model."""
-        model_path = self.models_dir / f"ggml-{model_name}.bin"
-        model_info = self.MODEL_INFO.get(model_name, {})
-        
-        return {
-            'name': model_name,
-            'available': model_path.exists(),
-            'path': str(model_path),
-            'size_mb': model_info.get('size_mb', 0),
-            'accuracy': model_info.get('accuracy', 'Unknown'),
-            'speed': model_info.get('speed', 'Unknown'),
-            'loaded': model_name in self._models_cache,
-            'download_url': model_info.get('url', '')
+    async def get_model_info(self) -> Dict[str, any]:
+        """Get information about available models."""
+        info = {
+            "available_models": self.available_models,
+            "loaded_models": list(self._models_cache.keys()),
+            "models_directory": str(self._models_dir),
+            "recommended_model": "base"  # Good balance of quality and speed
         }
+        
+        # Check which models are downloaded
+        for model_name in self.available_models:
+            model_path = self._models_dir / f"ggml-{model_name}.bin"
+            info[f"{model_name}_downloaded"] = model_path.exists()
+        
+        return info
     
-    async def benchmark_model(self, model_name: str = "base", test_audio_path: Optional[str] = None) -> Dict[str, Any]:
-        """Benchmark a model's performance."""
-        if not test_audio_path:
-            # Use a sample audio file
-            test_audio_path = "samples/test_audio.wav"
-            
-        if not os.path.exists(test_audio_path):
-            return {
-                'error': 'Test audio file not found',
-                'model': model_name
-            }
-        
-        # Run transcription and measure performance
-        start_time = time.time()
-        result = await self.transcribe_audio(test_audio_path, model_name=model_name)
-        total_time = time.time() - start_time
-        
-        if result:
-            return {
-                'model': model_name,
-                'transcription_time': total_time,
-                'audio_duration': result.get('duration', 0),
-                'real_time_factor': result.get('real_time_factor', 0),
-                'word_count': result.get('word_count', 0),
-                'confidence': result.get('confidence', 0),
-                'words_per_second': result.get('word_count', 0) / total_time if total_time > 0 else 0
-            }
-        else:
-            return {
-                'error': 'Transcription failed',
-                'model': model_name
-            }
+    def cleanup(self):
+        """Clean up loaded models to free memory."""
+        self._models_cache.clear()
+        logger.info("🧹 Whisper.cpp models cleaned up")
 
 
-# Singleton instance
+# Create a global instance
 whisper_cpp_service = WhisperCppTranscriptionService()

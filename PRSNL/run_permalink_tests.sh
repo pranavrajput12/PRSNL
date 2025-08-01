@@ -204,15 +204,16 @@ if [ "$FRONTEND_RUNNING" = true ]; then
     if command -v node >/dev/null 2>&1 && [ -f "$FRONTEND_DIR/package.json" ]; then
         cd "$FRONTEND_DIR"
         
-        # Install puppeteer if not already installed
-        if ! npm list puppeteer >/dev/null 2>&1; then
-            echo -e "${YELLOW}📦 Installing puppeteer for frontend testing...${NC}"
-            npm install puppeteer --save-dev
+        # Install playwright if not already installed
+        if ! npm list playwright >/dev/null 2>&1; then
+            echo -e "${YELLOW}📦 Installing playwright for frontend testing...${NC}"
+            npm install playwright @playwright/test --save-dev
+            npx playwright install
         fi
         
         cd ..
         
-        if run_test "Frontend Routes" "node test_permalink_routes.js" "$FRONTEND_DIR"; then
+        if run_test "Frontend Routes" "node playwright-permalink-routes.js" "$FRONTEND_DIR"; then
             ((TESTS_PASSED++))
             cat >> "$REPORT_FILE" << EOF
 

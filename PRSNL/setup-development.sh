@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PRSNL Development Environment Setup Script
-# Sets up pre-commit hooks, downloads Vosk models, and prepares monitoring
+# Sets up pre-commit hooks and prepares monitoring
 
 set -e
 
@@ -58,36 +58,10 @@ else
     print_error ".pre-commit-config.yaml not found"
 fi
 
-# Set up Vosk models directory
+# Note: whisper.cpp models are automatically downloaded on first use
 echo ""
-echo "🎙️ Setting up Vosk offline transcription models..."
-
-MODELS_DIR="backend/storage/vosk_models"
-mkdir -p "$MODELS_DIR"
-
-# Download small English model for testing
-MODEL_URL="https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
-MODEL_NAME="vosk-model-small-en-us-0.15"
-
-if [ ! -d "$MODELS_DIR/$MODEL_NAME" ]; then
-    print_status "Downloading Vosk small English model (~50MB)..."
-    
-    # Create temp directory
-    TEMP_DIR=$(mktemp -d)
-    
-    # Download model
-    curl -L "$MODEL_URL" -o "$TEMP_DIR/model.zip"
-    
-    # Extract model
-    unzip "$TEMP_DIR/model.zip" -d "$MODELS_DIR"
-    
-    # Cleanup
-    rm -rf "$TEMP_DIR"
-    
-    print_status "Vosk model downloaded to $MODELS_DIR"
-else
-    print_status "Vosk model already exists"
-fi
+echo "🎙️ Offline transcription uses whisper.cpp (models auto-download on first use)"
+print_status "whisper.cpp models will be downloaded automatically when needed"
 
 # Create logs directory for monitoring
 echo ""
@@ -211,7 +185,7 @@ echo "🎉 PRSNL development environment setup complete!"
 echo ""
 echo "📋 Summary of what was set up:"
 echo "  ✅ Pre-commit hooks for code quality"
-echo "  ✅ Vosk offline transcription model"
+echo "  ✅ whisper.cpp for offline transcription (auto-downloads models)"
 echo "  ✅ Monitoring directory structure"
 echo "  ✅ Environment configuration template"
 echo "  ✅ Python dependencies"

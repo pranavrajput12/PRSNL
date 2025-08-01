@@ -262,10 +262,10 @@ curl -I "http://localhost:3004/library/videos/abc"
 ### 2. Frontend Navigation Tests
 ```bash
 # Navigate to timeline and verify links
-npx puppeteer-cli screenshot http://localhost:3004/timeline timeline.png
+npx playwright screenshot http://localhost:3004/timeline timeline.png
 
 # Check category navigation
-npx puppeteer-cli screenshot http://localhost:3004/categories/development categories.png
+npx playwright screenshot http://localhost:3004/categories/development categories.png
 ```
 
 ### 3. Content Accessibility Tests

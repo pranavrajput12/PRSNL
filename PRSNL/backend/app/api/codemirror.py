@@ -84,7 +84,7 @@ async def start_analysis(
             SELECT gr.* FROM github_repos gr
             JOIN github_accounts ga ON gr.account_id = ga.id
             WHERE gr.id = $1 AND ga.user_id = $2
-        """, UUID(repo_id), current_user.id)
+        """, UUID(repo_id), str(str(current_user.id)))
         
         if not repo:
             raise HTTPException(status_code=404, detail="Repository not found")
@@ -100,7 +100,7 @@ async def start_analysis(
             job_type="crawl_ai",
             input_data={
                 "repo_id": repo_id,
-                "user_id": str(current_user.id),
+                "user_id": str(str(current_user.id)),
                 "analysis_type": "codemirror",
                 "analysis_depth": request.analysis_depth,
                 "include_patterns": request.include_patterns,
@@ -109,187 +109,52 @@ async def start_analysis(
             tags=["codemirror", "repository_analysis", request.analysis_depth]
         )
     
-    # For now, create a mock analysis result since Celery is not running
-    # In production, this would use Celery workers
+    # Start the actual analysis in the background
+    background_tasks.add_task(
+        run_analysis_background,
+        repo_id=repo_id,
+        job_id=job_id,
+        user_id=str(str(current_user.id)),
+        analysis_depth=request.analysis_depth
+    )
     
-    # Base analysis structure
-    analysis_result = {
-        "repo_id": repo_id,
-        "analysis_depth": request.analysis_depth,
-        "structure": {
-            "total_files": 150,
-            "total_lines": 15000,
-            "directories": 25,
-            "languages": ["Python", "JavaScript", "TypeScript"]
-        },
-        "frameworks": ["FastAPI", "React", "Svelte"],
-        "analysis_type": "web",
-        "completed_at": datetime.utcnow().isoformat()
-    }
-    
-    # Customize based on analysis depth
-    if request.analysis_depth == "quick":
-        analysis_result["insights"] = [
-            {
-                "type": "structure",
-                "severity": "info",
-                "title": "Basic Structure Analysis",
-                "description": "Quick scan completed - basic file structure and README analyzed",
-                "recommendation": "Run standard analysis for more detailed insights"
-            }
-        ]
-        analysis_result["patterns"] = []
-        analysis_result["security_findings"] = []
-        
-    elif request.analysis_depth == "standard":
-        analysis_result["insights"] = [
-            {
-                "type": "code_quality",
-                "severity": "medium",
-                "title": "Code Quality Assessment",
-                "description": "Standard analysis completed - patterns and dependencies analyzed",
-                "recommendation": "Consider adding more test coverage"
-            },
-            {
-                "type": "documentation",
-                "severity": "low",
-                "title": "Documentation Quality",
-                "description": "README and documentation files reviewed",
-                "recommendation": "Add API documentation and contributing guidelines"
-            }
-        ]
-        analysis_result["patterns"] = [
-            {"type": "mvc", "confidence": 0.8, "description": "MVC pattern detected"},
-            {"type": "dependency_injection", "confidence": 0.7, "description": "Dependency injection pattern found"}
-        ]
-        analysis_result["security_findings"] = []
-        
-    elif request.analysis_depth == "deep":
-        analysis_result["insights"] = [
-            {
-                "type": "architecture",
-                "severity": "high",
-                "title": "Architecture Analysis",
-                "description": "Deep analysis completed - full architecture and learning recommendations generated",
-                "recommendation": "Consider implementing microservices architecture for better scalability"
-            },
-            {
-                "type": "performance",
-                "severity": "medium",
-                "title": "Performance Optimization",
-                "description": "Performance bottlenecks identified",
-                "recommendation": "Optimize database queries and implement caching"
-            },
-            {
-                "type": "security",
-                "severity": "high",
-                "title": "Security Review",
-                "description": "Security vulnerabilities detected",
-                "recommendation": "Update dependencies and implement input validation"
-            }
-        ]
-        analysis_result["patterns"] = [
-            {"type": "mvc", "confidence": 0.9, "description": "MVC pattern detected"},
-            {"type": "dependency_injection", "confidence": 0.8, "description": "Dependency injection pattern found"},
-            {"type": "repository", "confidence": 0.7, "description": "Repository pattern implemented"},
-            {"type": "observer", "confidence": 0.6, "description": "Observer pattern found in event handling"}
-        ]
-        analysis_result["security_findings"] = [
-            {
-                "type": "vulnerability",
-                "severity": "medium",
-                "title": "Outdated Dependencies",
-                "description": "Some dependencies have known security vulnerabilities",
-                "recommendation": "Update to latest versions"
-            }
-        ]
-        analysis_result["learning_recommendations"] = [
-            "Study microservices architecture patterns",
-            "Learn about container orchestration with Kubernetes",
-            "Explore event-driven architecture principles"
-        ]
-    
-    # Store the analysis result in both processing_jobs and codemirror_analyses tables
-    pool = await get_db_pool()
-    async with pool.acquire() as conn:
-        # Update the processing job
-        await conn.execute("""
-            UPDATE processing_jobs
-            SET 
-                status = 'completed',
-                progress_percentage = 100,
-                result_data = $2,
-                completed_at = NOW()
-            WHERE job_id = $1
-        """, job_id, json.dumps(analysis_result))
-        
-        # Create the codemirror_analyses entry
-        analysis_id = await conn.fetchval("""
-            INSERT INTO codemirror_analyses (
-                repo_id, 
-                job_id, 
-                analysis_type, 
-                analysis_depth,
-                results,
-                file_count,
-                total_lines,
-                languages_detected,
-                frameworks_detected,
-                security_score,
-                performance_score,
-                quality_score,
-                analysis_completed_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
-            RETURNING id
-        """, 
-            UUID(repo_id), 
-            job_id,
-            'web',
-            request.analysis_depth,
-            json.dumps(analysis_result),
-            analysis_result['structure']['total_files'],
-            analysis_result['structure']['total_lines'],
-            json.dumps(analysis_result['structure']['languages']),
-            json.dumps(analysis_result['frameworks']),
-            analysis_result.get('security_score', 85.0),
-            analysis_result.get('performance_score', 78.0),
-            analysis_result.get('quality_score', 82.0)
-        )
-        
-        # Insert insights into codemirror_insights table
-        if analysis_result.get('insights'):
-            for insight in analysis_result['insights']:
-                await conn.execute("""
-                    INSERT INTO codemirror_insights (
-                        analysis_id,
-                        insight_type,
-                        title,
-                        description,
-                        severity,
-                        recommendation,
-                        generated_by_agent,
-                        confidence_score
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                """, 
-                    analysis_id,
-                    insight.get('type', 'general'),
-                    insight.get('title', 'Analysis Insight'),
-                    insight.get('description', ''),
-                    insight.get('severity', 'medium'),
-                    insight.get('recommendation', ''),
-                    'codemirror_analyzer',
-                    0.8
-                )
-    
+    # Return immediately with job tracking info
     return {
         "job_id": job_id,
-        "status": "completed",
-        "message": f"CodeMirror analysis completed with {request.analysis_depth} depth",
-        "analysis_result": analysis_result,
-        "analysis_id": str(analysis_id),
+        "status": "running",
+        "message": f"CodeMirror analysis started with {request.analysis_depth} depth",
         "monitor_url": f"/api/persistence/status/{job_id}",
         "websocket_channel": f"codemirror.{job_id}"
     }
+
+# Background task function
+async def run_analysis_background(
+    repo_id: str,
+    job_id: str,
+    user_id: str,
+    analysis_depth: str = "standard"
+):
+    """Run CodeMirror analysis in background"""
+    try:
+        service = CodeMirrorService()
+        await service.analyze_repository(
+            repo_id=repo_id,
+            job_id=job_id,
+            user_id=user_id,
+            analysis_depth=analysis_depth
+        )
+    except Exception as e:
+        logger.error(f"Background analysis failed for job {job_id}: {e}")
+        # Update job status to failed
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            job_service = JobPersistenceService(conn)
+            await job_service.update_job_status(
+                job_id=job_id,
+                status="failed",
+                error=str(e)
+            )
+
 
 @router.get("/analyses")
 async def get_all_analyses(
@@ -328,7 +193,7 @@ async def get_all_analyses(
             WHERE ga.user_id = $1
             ORDER BY ca.created_at DESC
             LIMIT $2
-        """, current_user.id, limit)
+        """, str(str(current_user.id)), limit)
         
         return [
             {
@@ -351,8 +216,14 @@ async def get_all_analyses(
                 "created_at": row["created_at"].isoformat() if row["created_at"] else None,
                 "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
                 "completed_at": row["analysis_completed_at"].isoformat() if row["analysis_completed_at"] else None,
-                "patterns_found": 0,  # TODO: Count from patterns table
-                "insights_generated": 0  # TODO: Count from insights table
+                "patterns_found": await db.fetchval("""
+                    SELECT COUNT(*) FROM codemirror_patterns 
+                    WHERE analysis_id = $1
+                """, row["id"]) or 0,
+                "insights_generated": await db.fetchval("""
+                    SELECT COUNT(*) FROM codemirror_insights 
+                    WHERE analysis_id = $1
+                """, row["id"]) or 0
             }
             for row in analyses
         ]
@@ -374,7 +245,7 @@ async def get_analyses(
                 JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE gr.id = $1 AND ga.user_id = $2
             )
-        """, UUID(repo_id), current_user.id)
+        """, UUID(repo_id), str(current_user.id))
         
         if not has_access:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -418,7 +289,7 @@ async def get_patterns(
     
     try:
         # Get authenticated user ID
-        user_id = str(current_user.id) if current_user else None
+        user_id = str(str(current_user.id)) if current_user else None
         
         if not user_id:
             raise HTTPException(status_code=401, detail="Authentication required")
@@ -464,18 +335,8 @@ async def get_patterns(
             ]
     except Exception as e:
         logger.error(f"Error fetching patterns: {e}")
-        # Return demo patterns on error
-        return [
-            {
-                "id": "demo-1",
-                "pattern_signature": "authentication_middleware",
-                "pattern_type": "authentication",
-                "description": "Common authentication middleware pattern",
-                "occurrence_count": 15,
-                "solutions": [{"title": "JWT Authentication", "description": "Implement JWT-based auth"}],
-                "confidence": 0.85
-            }
-        ]
+        # Return empty list on error
+        return []
 
 @router.get("/insights/{analysis_id}")
 async def get_insights(
@@ -490,7 +351,7 @@ async def get_insights(
         pool = await get_db_pool()
         async with pool.acquire() as db:
             # Check access for authenticated user
-            user_id = str(current_user.id) if current_user else None
+            user_id = str(str(current_user.id)) if current_user else None
             
             if not user_id:
                 raise HTTPException(status_code=401, detail="Authentication required")
@@ -569,7 +430,7 @@ async def update_insight_status(
                 JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE ci.id = $1 AND ga.user_id = $2
             )
-        """, UUID(insight_id), current_user.id)
+        """, UUID(insight_id), str(current_user.id))
         
         if not has_access:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -627,7 +488,7 @@ async def sync_cli_analysis(
         repo_mapping = await db.fetchrow("""
             SELECT id, repo_id FROM codemirror_repo_mappings
             WHERE user_id = $1 AND local_path = $2
-        """, current_user.id, request.local_path)
+        """, str(current_user.id), request.local_path)
         
         if not repo_mapping:
             # Create new mapping
@@ -638,7 +499,7 @@ async def sync_cli_analysis(
                 ) VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING id
             """, 
-                current_user.id, 
+                str(current_user.id), 
                 request.local_path, 
                 request.repo_name,
                 request.analysis_results.get('integrations', {}),
@@ -681,7 +542,7 @@ async def sync_cli_analysis(
                 sync_status, synced_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
         """,
-            current_user.id,
+            str(current_user.id),
             sync_token,
             request.cli_analysis_id,
             analysis_id,
@@ -694,7 +555,7 @@ async def sync_cli_analysis(
         service = CodeMirrorService()
         await service.process_cli_results(
             str(analysis_id),
-            str(current_user.id),
+            str(str(current_user.id)),
             request.analysis_results
         )
         
@@ -715,51 +576,14 @@ async def synthesize_solution(
     
     service = CodeMirrorService()
     solution = await service.synthesize_solution(
-        user_id=str(current_user.id),
+        user_id=str(str(current_user.id)),
         problem_description=problem_description,
         file_context=file_context
     )
     
     return solution
 
-@router.post("/test-analyze/{repo_id}")
-async def test_analyze_direct(
-    repo_id: str,
-    current_user = Depends(get_current_user)
-):
-    """Test direct analysis without background task"""
-    
-    job_id = f"test_{repo_id}_{datetime.now().timestamp()}"
-    
-    try:
-        # Create job first
-        pool = await get_db_pool()
-        async with pool.acquire() as conn:
-            job_service = JobPersistenceService(conn)
-            await job_service.create_job(
-                job_id=job_id,
-                job_type="crawl_ai",
-                input_data={
-                    "repo_id": repo_id,
-                    "user_id": str(current_user.id),
-                    "analysis_type": "codemirror",
-                    "analysis_depth": "quick"
-                },
-                tags=["codemirror", "repository_analysis", "test"]
-            )
-        
-        # Run analysis
-        service = CodeMirrorService()
-        await service.analyze_repository(
-            repo_id,
-            job_id,
-            str(current_user.id),
-            "quick"
-        )
-        return {"status": "completed", "job_id": job_id}
-    except Exception as e:
-        logger.error(f"Direct analysis failed: {e}", exc_info=True)
-        return {"status": "failed", "error": str(e), "job_id": job_id}
+# Test endpoint removed for production
 
 @router.get("/analysis/{analysis_id}")
 async def get_analysis_by_id(
@@ -803,7 +627,7 @@ async def get_analysis_by_id(
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
             WHERE {where_clause} AND (ga.user_id = $2)
-        """, query_param, str(current_user.id))
+        """, query_param, str(str(current_user.id)))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -833,7 +657,7 @@ async def get_analysis_knowledge(
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
             WHERE ca.id = $1 AND (ga.user_id = $2)
-        """, UUID(analysis_id), str(current_user.id))
+        """, UUID(analysis_id), str(str(current_user.id)))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -906,7 +730,7 @@ async def get_analysis_packages(
                 LEFT JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE ca.id = $1 AND (ga.user_id = $2)
             )
-        """, UUID(analysis_id), str(current_user.id))
+        """, UUID(analysis_id), str(str(current_user.id)))
         
         if not has_access:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -984,7 +808,7 @@ async def get_repo_package_overview(
                 JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE gr.id = $1 AND ga.user_id = $2
             )
-        """, UUID(repo_id), current_user.id)
+        """, UUID(repo_id), str(current_user.id))
         
         if not has_access:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -1056,7 +880,7 @@ async def get_analysis_by_slug(
             LEFT JOIN github_repos gr ON ca.repo_id = gr.id
             LEFT JOIN github_accounts ga ON gr.account_id = ga.id
             WHERE ca.analysis_slug = $1 AND (ga.user_id = $2)
-        """, analysis_slug, str(current_user.id))
+        """, analysis_slug, str(str(current_user.id)))
         
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
@@ -1080,7 +904,7 @@ async def get_analyses_by_repo_slug(
                 JOIN github_accounts ga ON gr.account_id = ga.id
                 WHERE gr.slug = $1 AND ga.user_id = $2
             )
-        """, repo_slug, current_user.id)
+        """, repo_slug, str(current_user.id))
         
         if not has_access:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -1106,7 +930,7 @@ async def get_analyses_by_repo_slug(
             WHERE gr.slug = $1 AND ga.user_id = $2
             ORDER BY ca.created_at DESC
             LIMIT $3
-        """, repo_slug, current_user.id, limit)
+        """, repo_slug, str(current_user.id), limit)
         
         return [dict(analysis) for analysis in analyses]
 
@@ -1118,13 +942,14 @@ async def get_analysis_timeline(
 ):
     """Get unified timeline of all analyses and insights for the user"""
     
-    pool = await get_db_pool()
-    async with pool.acquire() as db:
-        timeline_items = []
-        
-        # Get all analyses for user's repositories
-        user_id = str(current_user.id)
-        analyses = await db.fetch("""
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
+            timeline_items = []
+            
+            # Get all analyses for user's repositories
+            user_id = str(str(current_user.id))
+            analyses = await db.fetch("""
             SELECT 
                 ca.id,
                 ca.repo_id,
@@ -1151,12 +976,12 @@ async def get_analysis_timeline(
             WHERE ga.user_id = $1
             ORDER BY ca.created_at DESC
             LIMIT $2
-        """, user_id, limit)
-        
-        # Convert analyses to timeline items
-        for analysis in analyses:
-            timeline_items.append({
-                "id": str(analysis["id"]),
+            """, user_id, limit)
+            
+            # Convert analyses to timeline items
+            for analysis in analyses:
+                timeline_items.append({
+                    "id": str(analysis["id"]),
                 "type": "analysis",
                 "title": f"{analysis['analysis_depth'].title()} Analysis - {analysis['repo_name']}",
                 "subtitle": f"{analysis['analysis_type'].upper()} • {analysis['file_count'] or 0} files",
@@ -1181,11 +1006,11 @@ async def get_analysis_timeline(
                 },
                 "created_at": analysis["created_at"].isoformat() if analysis["created_at"] else None,
                 "completed_at": analysis["analysis_completed_at"].isoformat() if analysis["analysis_completed_at"] else None
-            })
-        
-        # If insights are requested, get all insights from completed analyses
-        if include_insights:
-            insights = await db.fetch("""
+                })
+            
+            # If insights are requested, get all insights from completed analyses
+            if include_insights:
+                insights = await db.fetch("""
                 SELECT 
                     ci.id,
                     ci.insight_type,
@@ -1207,11 +1032,11 @@ async def get_analysis_timeline(
                 WHERE ga.user_id = $1
                 ORDER BY ci.created_at DESC
                 LIMIT $2
-            """, user_id, limit)
-            
-            # Convert insights to timeline items
-            for insight in insights:
-                timeline_items.append({
+                """, user_id, limit)
+                
+                # Convert insights to timeline items
+                for insight in insights:
+                    timeline_items.append({
                     "id": str(insight["id"]),
                     "type": "insight",
                     "title": insight["title"],
@@ -1229,14 +1054,23 @@ async def get_analysis_timeline(
                     "confidence": insight["confidence_score"],
                     "status": insight["status"],
                     "created_at": insight["created_at"].isoformat() if insight["created_at"] else None
-                })
+                    })
+            
+            # Sort all timeline items by creation date
+            timeline_items.sort(key=lambda x: x["created_at"] or "", reverse=True)
         
-        # Sort all timeline items by creation date
-        timeline_items.sort(key=lambda x: x["created_at"] or "", reverse=True)
-        
+            return {
+                "timeline": timeline_items[:limit],
+                "total_analyses": len([item for item in timeline_items if item["type"] == "analysis"]),
+                "total_insights": len([item for item in timeline_items if item["type"] == "insight"]),
+                "has_more": len(timeline_items) >= limit
+            }
+    except Exception as e:
+        logger.warning(f"Failed to get timeline for user {current_user.id}: {str(e)}")
+        # Return empty timeline if error occurs
         return {
-            "timeline": timeline_items[:limit],
-            "total_analyses": len([item for item in timeline_items if item["type"] == "analysis"]),
-            "total_insights": len([item for item in timeline_items if item["type"] == "insight"]),
-            "has_more": len(timeline_items) >= limit
+            "timeline": [],
+            "total_analyses": 0,
+            "total_insights": 0,
+            "has_more": False
         }

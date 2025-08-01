@@ -11,11 +11,13 @@ import os
 from enum import Enum
 from typing import Any, Dict, Literal, Optional
 
-from .vosk_transcription import VOSK_AVAILABLE, VoskTranscriptionService
-from .whisper_cpp_transcription import (
-    WHISPER_CPP_AVAILABLE,
-    WhisperCppTranscriptionService,
-)
+# Import whisper.cpp for high-quality offline transcription
+try:
+    from .whisper_cpp_transcription import whisper_cpp_service as WhisperCppTranscriptionService
+    WHISPER_CPP_AVAILABLE = True
+except ImportError:
+    WHISPER_CPP_AVAILABLE = False
+    WhisperCppTranscriptionService = None
 
 # Import existing transcription service if available
 try:
@@ -41,17 +43,15 @@ class TranscriptionStrategy(str, Enum):
 class HybridTranscriptionService:
     """
     Hybrid transcription service that intelligently routes between
-    Azure OpenAI Whisper and Vosk based on availability, performance, and privacy needs.
+    Azure OpenAI Whisper and whisper.cpp based on availability, performance, and privacy needs.
     """
     
     def __init__(self):
-        self.whisper_cpp_service = WhisperCppTranscriptionService() if WHISPER_CPP_AVAILABLE else None
-        self.vosk_service = VoskTranscriptionService() if VOSK_AVAILABLE else None  # Keep as fallback
+        self.whisper_cpp_service = WhisperCppTranscriptionService if WHISPER_CPP_AVAILABLE else None
         self.whisper_cloud_service = TranscriptionService() if WHISPER_CLOUD_AVAILABLE else None
         
         # Service availability flags
         self.whisper_cpp_available = WHISPER_CPP_AVAILABLE
-        self.vosk_available = VOSK_AVAILABLE
         self.whisper_cloud_available = WHISPER_CLOUD_AVAILABLE
         
         # Rate limiting tracking for cloud Whisper (3 requests per minute)
@@ -60,7 +60,6 @@ class HybridTranscriptionService:
         
         logger.info(f"Hybrid Transcription Service initialized:")
         logger.info(f"  🚀 whisper.cpp (offline): {'✅ Available' if self.whisper_cpp_available else '❌ Not available'}")
-        logger.info(f"  🎯 Vosk (offline fallback): {'✅ Available' if self.vosk_available else '❌ Not available'}")
         logger.info(f"  ☁️ Whisper (cloud): {'✅ Available' if self.whisper_cloud_available else '❌ Not available'}")
     
     async def transcribe_audio(
@@ -136,11 +135,9 @@ class HybridTranscriptionService:
             Tuple of (primary_service, fallback_service)
         """
         if strategy == TranscriptionStrategy.OFFLINE_ONLY:
-            # Prefer whisper.cpp over vosk for better accuracy
+            # Use whisper.cpp for high-quality offline transcription
             if self.whisper_cpp_available:
-                return ("whisper_cpp", "vosk") if self.vosk_available else ("whisper_cpp", None)
-            elif self.vosk_available:
-                return ("vosk", None)
+                return ("whisper_cpp", None)
             else:
                 return (None, None)
         
@@ -148,11 +145,9 @@ class HybridTranscriptionService:
             return ("whisper_cloud", None) if self.whisper_cloud_available else (None, None)
         
         elif strategy == TranscriptionStrategy.PRIVACY_MODE:
-            # Force offline for privacy - prefer whisper.cpp
+            # Force offline for privacy - use whisper.cpp
             if self.whisper_cpp_available:
-                return ("whisper_cpp", "vosk") if self.vosk_available else ("whisper_cpp", None)
-            elif self.vosk_available:
-                return ("vosk", None)
+                return ("whisper_cpp", None)
             else:
                 return (None, None)
         
@@ -161,12 +156,8 @@ class HybridTranscriptionService:
             if self.whisper_cpp_available:
                 if self.whisper_cloud_available:
                     return ("whisper_cpp", "whisper_cloud")
-                elif self.vosk_available:
-                    return ("whisper_cpp", "vosk")
                 else:
                     return ("whisper_cpp", None)
-            elif self.vosk_available:
-                return ("vosk", "whisper_cloud") if self.whisper_cloud_available else ("vosk", None)
             elif self.whisper_cloud_available:
                 return ("whisper_cloud", None)
             else:
@@ -177,15 +168,11 @@ class HybridTranscriptionService:
                 # Cloud available - use whisper.cpp as fallback
                 if self.whisper_cpp_available:
                     return ("whisper_cloud", "whisper_cpp")
-                elif self.vosk_available:
-                    return ("whisper_cloud", "vosk")
                 else:
                     return ("whisper_cloud", None)
             # Cloud not available, fall back to offline
             elif self.whisper_cpp_available:
-                return ("whisper_cpp", "vosk") if self.vosk_available else ("whisper_cpp", None)
-            elif self.vosk_available:
-                return ("vosk", None)
+                return ("whisper_cpp", None)
             else:
                 return (None, None)
         
@@ -196,14 +183,10 @@ class HybridTranscriptionService:
             if cloud_available and self.whisper_cpp_available:
                 # Both available - prefer cloud for latest features, whisper.cpp as fallback
                 return ("whisper_cloud", "whisper_cpp")
-            elif cloud_available and self.vosk_available:
-                return ("whisper_cloud", "vosk")
             elif cloud_available:
                 return ("whisper_cloud", None)
             elif self.whisper_cpp_available:
-                return ("whisper_cpp", "vosk") if self.vosk_available else ("whisper_cpp", None)
-            elif self.vosk_available:
-                return ("vosk", None)
+                return ("whisper_cpp", None)
             else:
                 return (None, None)
     
@@ -248,20 +231,6 @@ class HybridTranscriptionService:
                 
                 if result:
                     result['service_used'] = 'whisper.cpp'
-                return result
-                
-            elif service == "vosk" and self.vosk_service:
-                # Use Vosk as fallback offline option
-                model_name = self._get_vosk_model_for_language(language)
-                
-                result = await self.vosk_service.transcribe_audio(
-                    audio_path=audio_path,
-                    model_name=model_name,
-                    language=language
-                )
-                
-                if result:
-                    result['service_used'] = 'vosk'
                 return result
                 
             elif service == "whisper_cloud" and self.whisper_cloud_service:
@@ -313,22 +282,6 @@ class HybridTranscriptionService:
             # Default to base model on any error
             return "base"
     
-    def _get_vosk_model_for_language(self, language: str) -> str:
-        """Get appropriate Vosk model for language."""
-        language_models = {
-            "en": "en-us-small",
-            "es": "en-us-small",  # Use English model as fallback
-            "fr": "en-us-small",
-            "de": "en-us-small",
-            "ru": "en-us-small",
-            "zh": "en-us-small",
-            "ja": "en-us-small",
-            "ko": "en-us-small",
-            "hi": "en-us-small",
-            "ar": "en-us-small"
-        }
-        return language_models.get(language, "en-us-small")
-    
     async def get_service_status(self) -> Dict[str, Any]:
         """Get status of all transcription services."""
         status = {
@@ -337,13 +290,6 @@ class HybridTranscriptionService:
                 'status': 'ready' if self.whisper_cpp_available else 'unavailable',
                 'accuracy': 'high',
                 'speed': 'fast',
-                'privacy': 'fully offline'
-            },
-            'vosk': {
-                'available': self.vosk_available,
-                'status': 'ready' if self.vosk_available else 'unavailable',
-                'accuracy': 'moderate',
-                'speed': 'very fast',
                 'privacy': 'fully offline'
             },
             'whisper_cloud': {
@@ -356,7 +302,7 @@ class HybridTranscriptionService:
                 'privacy': 'cloud-based'
             },
             'hybrid': {
-                'ready': self.vosk_available or self.whisper_cloud_available or self.whisper_cpp_available,
+                'ready': self.whisper_cloud_available or self.whisper_cpp_available,
                 'preferred_strategy': self._get_recommended_strategy()
             }
         }
@@ -369,19 +315,11 @@ class HybridTranscriptionService:
             except:
                 pass
         
-        # Add Vosk model information if available
-        if self.vosk_available and self.vosk_service:
-            try:
-                model_info = await self.vosk_service.get_model_info()
-                status['vosk']['model_info'] = model_info
-            except:
-                pass
-        
         return status
     
     def _get_recommended_strategy(self) -> str:
         """Get recommended strategy based on current service availability."""
-        offline_available = self.whisper_cpp_available or self.vosk_available
+        offline_available = self.whisper_cpp_available
         
         if not self.whisper_cloud_available and not offline_available:
             return "none_available"
@@ -394,28 +332,28 @@ class HybridTranscriptionService:
         else:
             return "auto"
     
-    async def download_vosk_models(self, models: list[str] = None) -> Dict[str, bool]:
-        """Download Vosk models for offline transcription."""
-        if not self.vosk_available or not self.vosk_service:
+    async def download_whisper_models(self, models: list[str] = None) -> Dict[str, bool]:
+        """Download whisper.cpp models for offline transcription."""
+        if not self.whisper_cpp_available or not self.whisper_cpp_service:
             return {}
         
         if models is None:
-            models = ["en-us-small"]  # Default model
+            models = ["base"]  # Default model with good balance
         
         results = {}
         for model in models:
-            logger.info(f"📥 Downloading Vosk model: {model}")
-            success = await self.vosk_service.ensure_model_available(model)
+            logger.info(f"📥 Downloading whisper.cpp model: {model}")
+            success = await self.whisper_cpp_service.ensure_model_available(model)
             results[model] = success
             
         return results
     
     async def cleanup_resources(self):
         """Cleanup resources and cached models."""
-        if self.vosk_service:
+        if self.whisper_cpp_service:
             # Clear model cache to free memory
-            self.vosk_service._models_cache.clear()
-            logger.info("🧹 Vosk model cache cleared")
+            self.whisper_cpp_service.cleanup()
+            logger.info("🧹 Whisper.cpp model cache cleared")
 
 
 # Global instance for use across the application

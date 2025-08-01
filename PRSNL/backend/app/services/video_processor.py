@@ -25,7 +25,7 @@ from app.services.platforms.twitter import TwitterProcessor
 from app.services.platforms.vimeo import VimeoProcessor
 from app.services.platforms.youtube import YouTubeProcessor
 from app.services.websocket_manager import websocket_manager
-from app.services.whisper_only_transcription import transcription_service
+from app.services.hybrid_transcription import hybrid_transcription_service, TranscriptionStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -309,19 +309,19 @@ class VideoProcessor:
         return generated_thumbnail_path
 
     async def transcribe_video(self, video_path: str) -> Optional[str]:
-        """Transcribes the given video file using whisper.cpp transcription service."""
+        """Transcribes the given video file using hybrid transcription service."""
         logger.info(f"Starting transcription for video: {video_path}")
         
-        # Use whisper.cpp with automatic model selection
-        result = await transcription_service.transcribe_audio(
+        # Use hybrid transcription with automatic strategy selection
+        result = await hybrid_transcription_service.transcribe_audio(
             audio_path=video_path,
             language="en",  # Default to English, could be made configurable
-            auto_model_selection=True  # Automatically select best model
+            strategy=TranscriptionStrategy.AUTO
         )
         
         if result:
             logger.info(f"Transcription complete for {video_path}")
-            logger.info(f"Model used: {result.get('model_used', 'unknown')}")
+            logger.info(f"Service used: {result.get('service_used', 'unknown')}")
             logger.info(f"Confidence: {result.get('confidence', 0):.2f}")
             return result.get('text', '')
         else:

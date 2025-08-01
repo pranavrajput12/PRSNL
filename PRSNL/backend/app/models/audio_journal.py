@@ -38,7 +38,7 @@ class ProcessingStatus(str, Enum):
 class TranscriptionService(str, Enum):
     WHISPER_CLOUD = "whisper_cloud"
     WHISPER_CPP = "whisper_cpp"
-    VOSK = "vosk"
+    # VOSK = "vosk"  # Deprecated - removed from codebase
 
 class AudioJournal(Base):
     """

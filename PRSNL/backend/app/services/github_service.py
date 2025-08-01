@@ -41,13 +41,13 @@ class GitHubService:
         import secrets
         state = f"{user_id}:{secrets.token_urlsafe(32)}"
         
-        # Store state temporarily (temporarily disabled - cache not implemented)
-        # from app.core.cache import cache_manager
-        # await cache_manager.set(f"github_oauth_state:{state}", user_id, ttl=600)
+        # Store state temporarily
+        from app.services.cache import cache_service
+        await cache_service.set(f"github_oauth_state:{state}", user_id, expire=600)
         
         params = {
             "client_id": settings.GITHUB_CLIENT_ID,
-            "redirect_uri": f"{settings.FRONTEND_URL}/code-cortex/github-callback",
+            "redirect_uri": f"{settings.BACKEND_URL}/api/github/auth/callback",
             "scope": " ".join(self.SCOPES),
             "state": state
         }
@@ -57,18 +57,21 @@ class GitHubService:
     async def complete_oauth_flow(self, code: str, state: str) -> Dict[str, Any]:
         """Exchange OAuth code for access token"""
         
-        # Verify state (temporarily disabled - cache not implemented)
-        # from app.core.cache import cache_manager
-        # user_id = await cache_manager.get(f"github_oauth_state:{state}")
-        # if not user_id:
-        #     raise ValueError("Invalid or expired OAuth state")
+        logger.info(f"Starting OAuth flow completion with code={code[:10]}... state={state[:20]}...")
         
-        # Extract user_id from state
-        # State format: "user_id:random_string"
-        user_id = state.split(":")[0] if ":" in state else None
+        # Verify state
+        from app.services.cache import cache_service
+        user_id = await cache_service.get(f"github_oauth_state:{state}")
         
         if not user_id:
-            raise ValueError("Invalid state parameter - missing user ID")
+            # Fallback: Extract user_id from state for development
+            # State format: "user_id:random_string"
+            user_id = state.split(":")[0] if ":" in state else None
+            
+            if not user_id:
+                raise ValueError("Invalid or expired OAuth state")
+            
+            logger.warning(f"GitHub OAuth: Using fallback user_id extraction from state, user_id={user_id}")
         
         # Exchange code for token
         async with self.http_client_factory.client_session(ClientType.GITHUB) as client:
@@ -79,16 +82,20 @@ class GitHubService:
                     "client_id": settings.GITHUB_CLIENT_ID,
                     "client_secret": settings.GITHUB_CLIENT_SECRET,
                     "code": code,
-                    "redirect_uri": f"{settings.FRONTEND_URL}/code-cortex/github-callback"
+                    "redirect_uri": f"{settings.BACKEND_URL}/api/github/auth/callback"
                 }
             )
         
         token_data = token_response.json()
         if "access_token" not in token_data:
+            logger.error(f"OAuth token exchange failed: {token_data}")
             raise ValueError(f"OAuth failed: {token_data.get('error_description', 'Unknown error')}")
+        
+        logger.info(f"Successfully obtained access token")
         
         # Get user info
         user_info = await self.get_user_info(token_data["access_token"])
+        logger.info(f"Got GitHub user info: id={user_info.get('id')}, login={user_info.get('login')}")
         
         # Encrypt token with separate nonce
         aesgcm = AESGCM(self.encryption_key)
@@ -97,30 +104,61 @@ class GitHubService:
         
         pool = await get_db_pool()
         async with pool.acquire() as db:
-            await db.execute("""
-                INSERT INTO github_accounts (
-                    user_id, github_id, github_username, github_email,
-                    avatar_url, access_token_encrypted, access_token_nonce,
-                    repos_url, organizations_url
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                ON CONFLICT (user_id, github_id) DO UPDATE SET
-                    github_username = EXCLUDED.github_username,
-                    github_email = EXCLUDED.github_email,
-                    avatar_url = EXCLUDED.avatar_url,
-                    access_token_encrypted = EXCLUDED.access_token_encrypted,
-                    access_token_nonce = EXCLUDED.access_token_nonce,
-                    updated_at = NOW()
-            """, 
-                user_id,
-                user_info["id"],
-                user_info["login"],
-                user_info.get("email"),
-                user_info.get("avatar_url"),
-                encrypted_token,
-                nonce,
-                user_info.get("repos_url"),
-                user_info.get("organizations_url")
-            )
+            # Check if GitHub account already exists (for any user)
+            existing_account = await db.fetchrow("""
+                SELECT id, user_id FROM github_accounts WHERE github_id = $1
+            """, user_info["id"])
+            
+            if existing_account:
+                # GitHub account exists - update it with new user and tokens
+                logger.info(f"GitHub account {user_info['id']} already exists for user {existing_account['user_id']}, updating to user {user_id}")
+                
+                await db.execute("""
+                    UPDATE github_accounts SET
+                        user_id = $1,
+                        github_username = $2,
+                        github_email = $3,
+                        avatar_url = $4,
+                        access_token_encrypted = $5,
+                        access_token_nonce = $6,
+                        repos_url = $7,
+                        organizations_url = $8,
+                        updated_at = NOW()
+                    WHERE github_id = $9
+                """, 
+                    user_id,
+                    user_info["login"],
+                    user_info.get("email"),
+                    user_info.get("avatar_url"),
+                    encrypted_token,
+                    nonce,
+                    user_info.get("repos_url"),
+                    user_info.get("organizations_url"),
+                    user_info["id"]
+                )
+                
+                logger.info(f"Successfully updated GitHub account for user {user_id}, github_id={user_info['id']}")
+            else:
+                # New GitHub account - insert it
+                await db.execute("""
+                    INSERT INTO github_accounts (
+                        user_id, github_id, github_username, github_email,
+                        avatar_url, access_token_encrypted, access_token_nonce,
+                        repos_url, organizations_url
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """, 
+                    user_id,
+                    user_info["id"],
+                    user_info["login"],
+                    user_info.get("email"),
+                    user_info.get("avatar_url"),
+                    encrypted_token,
+                    nonce,
+                    user_info.get("repos_url"),
+                    user_info.get("organizations_url")
+                )
+                
+                logger.info(f"Successfully created new GitHub account for user {user_id}, github_id={user_info['id']}")
         
         # Clean up state (cache_manager not implemented yet)
         # await cache_manager.delete(f"github_oauth_state:{state}")

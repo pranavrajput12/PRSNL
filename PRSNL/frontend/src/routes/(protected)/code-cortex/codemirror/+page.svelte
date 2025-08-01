@@ -135,6 +135,18 @@
     }
   }
 
+  async function connectGitHub() {
+    try {
+      const response = await api.get('/github/auth/login');
+      if (response.auth_url) {
+        window.location.href = response.auth_url;
+      }
+    } catch (error) {
+      console.error('Failed to connect GitHub:', error);
+      alert('Failed to connect GitHub. Please try again.');
+    }
+  }
+
   function startOnboarding() {
     showOnboarding = true;
   }
@@ -322,7 +334,7 @@
         <div class="connect-icon">🔗</div>
         <h2>Connect your GitHub repositories</h2>
         <p>Analyze your code with AI-powered insights, pattern detection, and security analysis.</p>
-        <a href="/api/github/auth/login" class="connect-btn"> Connect GitHub </a>
+        <button class="connect-btn" onclick={connectGitHub}> Connect GitHub </button>
       </div>
     </section>
   {:else}

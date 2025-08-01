@@ -130,7 +130,7 @@
     </section>
   {/if}
   
-  <div class="recipe-content" class:cooking-mode>
+  <div class="recipe-content" class:cooking-mode={cookingMode}>
     <!-- Ingredients Section -->
     {#if ingredients.length > 0}
       <section class="ingredients-section">

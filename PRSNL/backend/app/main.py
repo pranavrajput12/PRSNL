@@ -305,7 +305,7 @@ from app.api import (
     library,  # Three-tier categorization system
     persona_analysis,  # PersonaAnalysisCrew for Dreamscape feature
     questions,
-    rag,
+    # rag,  # Removed - Haystack RAG service not used
     search,
     summarization,
     tags,
@@ -373,7 +373,7 @@ app.include_router(file_upload.router, prefix=settings.API_V1_STR + "/file")
 app.include_router(content_types.router, prefix=settings.API_V1_STR)
 app.include_router(development.router, prefix=settings.API_V1_STR)
 app.include_router(ai.router, prefix=settings.API_V1_STR)
-app.include_router(rag.router, prefix=settings.API_V1_STR)  # Haystack RAG service
+# app.include_router(rag.router, prefix=settings.API_V1_STR)  # Removed - Haystack RAG service not used
 app.include_router(firecrawl.router, prefix=settings.API_V1_STR)
 app.include_router(enhanced_search.router, prefix=settings.API_V1_STR)
 app.include_router(embeddings.router, prefix=settings.API_V1_STR)

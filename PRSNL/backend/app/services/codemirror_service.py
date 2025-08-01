@@ -159,6 +159,30 @@ class CodeMirrorService:
                 current_stage=stage,
                 stage_message=message
             )
+    
+    async def _store_insight(
+        self, 
+        analysis_id: str, 
+        insight_type: str,
+        title: str,
+        description: str,
+        severity: str = "medium",
+        recommendation: str = "",
+        agent: str = "codemirror_analyzer",
+        confidence: float = 0.9
+    ):
+        """Store an insight in the database"""
+        pool = await get_db_pool()
+        async with pool.acquire() as db:
+            await db.execute("""
+                INSERT INTO codemirror_insights (
+                    analysis_id, insight_type, title, description,
+                    severity, recommendation, generated_by_agent, confidence_score
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            """, 
+                UUID(analysis_id), insight_type, title, description,
+                severity, recommendation, agent, confidence
+            )
 
     async def _quick_analysis_phase(
         self, repo_id: str, job_id: str, analysis_id: str, user_id: str
@@ -182,9 +206,17 @@ class CodeMirrorService:
             )
         except Exception as e:
             logger.warning(f"Failed to fetch README from GitHub: {e}")
-            # Return error state instead of mock data
             readme_content = None
-            logger.warning(f"README analysis skipped for {repo_data.get('name', 'Repository')} due to GitHub API failure")
+            # Store error in analysis for user visibility
+            await self._store_insight(
+                analysis_id,
+                insight_type="error",
+                title="GitHub API Access Issue",
+                description=f"Unable to fetch README.md: {str(e)}",
+                severity="medium",
+                recommendation="Check repository permissions or GitHub API limits",
+                agent="codemirror_analyzer"
+            )
         
         # Prepare repo data for analysis
         analysis_data = {
@@ -208,9 +240,17 @@ class CodeMirrorService:
             structure = await self.github.fetch_repo_structure(repo_data['full_name'])
         except Exception as e:
             logger.warning(f"Failed to fetch repo structure from GitHub: {e}")
-            # Return empty structure and mark analysis as incomplete
             structure = []
-            logger.error(f"Repository structure analysis failed for {repo_data['full_name']} - GitHub API unavailable")
+            # Store error in analysis for user visibility
+            await self._store_insight(
+                analysis_id,
+                insight_type="error",
+                title="Repository Structure Access Issue",
+                description=f"Unable to fetch repository file structure: {str(e)}",
+                severity="high",
+                recommendation="Ensure repository exists and you have proper access permissions",
+                agent="codemirror_analyzer"
+            )
         
         # Detect frameworks and build tools
         frameworks = self._detect_frameworks(structure)
@@ -981,9 +1021,9 @@ class CodeMirrorService:
     def _calculate_quality_scores(self, analysis: Dict[str, Any]) -> Dict[str, float]:
         """Calculate quality scores from analysis data"""
         scores = {
-            'security': 70.0,  # Base score
-            'performance': 70.0,
-            'quality': 70.0
+            'security': getattr(settings, 'CODEMIRROR_BASE_SECURITY_SCORE', 70.0),
+            'performance': getattr(settings, 'CODEMIRROR_BASE_PERFORMANCE_SCORE', 70.0),
+            'quality': getattr(settings, 'CODEMIRROR_BASE_QUALITY_SCORE', 70.0)
         }
         
         # Adjust based on findings

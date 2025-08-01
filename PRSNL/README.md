@@ -35,7 +35,7 @@ PRSNL is a cutting-edge personal knowledge management system that captures, proc
 - **100% Reliable JSON**: OpenAI structured outputs guarantee valid data
 - **85%+ Cache Hit Rate**: DragonflyDB (25x faster than Redis)
 - **3x Task Throughput**: Celery priority queues for critical operations
-- **40% Search Improvement**: Haystack hybrid search (BM25 + embeddings)
+- **40% Search Improvement**: LangChain hybrid search (BM25 + embeddings)
 
 ## 🌟 **Core Features**
 
@@ -161,9 +161,9 @@ npm run dev -- --port 3004
 ### **AI & ML**
 - **OpenAI GPT-4**: Advanced reasoning and analysis
 - **CrewAI**: Multi-agent collaboration framework
-- **Haystack**: Hybrid search and RAG pipeline
+- **LangChain**: Hybrid search and RAG pipeline
 - **pgvector**: Vector similarity search
-- **Vosk**: Offline speech recognition
+- **whisper.cpp**: High-quality offline speech recognition
 
 ## 🔧 **Development**
 
@@ -179,8 +179,45 @@ pytest               # Run tests
 cd frontend
 npm run lint         # ESLint
 npm run check        # Type checking
-npm run test         # Vitest
+npm run test         # Playwright tests
 ```
+
+## 🧪 **Testing**
+
+### **Frontend Testing with Playwright**
+PRSNL uses Playwright for comprehensive cross-browser testing with built-in console monitoring.
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with UI mode
+npm run test:ui
+
+# Run specific test suites
+npm run test:suite      # Comprehensive test suite
+npm run test:chat       # Chat functionality tests
+npm run test:codemirror # CodeMirror editor tests
+
+# Debug tests
+npm run test:debug
+npm run test:headed     # Run with browser visible
+```
+
+### **Key Testing Features**
+- **Multi-browser Support**: Tests run on Chromium, Firefox, and WebKit
+- **Console Monitoring**: Automatic detection of console errors and warnings
+- **Visual Testing**: Screenshots and videos on test failures
+- **Accessibility Testing**: Built-in a11y checks
+- **Performance Metrics**: Page load and interaction timings
+- **Network Mocking**: API response simulation
+
+### **Playwright MCP Integration**
+The `playwright-console-monitor` agent provides real-time console error detection:
+- Captures all console messages during page execution
+- Categorizes errors, warnings, and debug messages
+- Provides detailed reporting for CI/CD pipelines
+- Supports automated frontend testing workflows
 
 ### **Database Migrations**
 ```bash

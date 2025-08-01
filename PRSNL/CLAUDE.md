@@ -1,5 +1,12 @@
 # PRSNL Project Configuration for Claude
 
+## 🚨 ALWAYS USE AGENTS FOR COMPLEX TASKS
+**Before doing manual work, check if an agent can handle it better. See "Claude Code Agents" section below.**
+- Use `general-purpose` agent for complex searches and research
+- Use `debug-accelerator` for debugging issues
+- Use `ui-ux-optimizer` for component audits
+- Use specialized agents for their domains
+
 ## CRITICAL: Database Configuration
 **WE USE LOCAL POSTGRESQL, NOT DOCKER DATABASE**
 - Database: Local PostgreSQL on port 5432 (ARM64 version)
@@ -84,6 +91,102 @@ lsof -ti:5432 | xargs kill -9  # PostgreSQL (ARM64)
 # Always stop frontend container during development
 docker-compose stop frontend
 ```
+
+## 🤖 Claude Code Agents - USE THESE FOR COMPLEX TASKS
+
+**IMPORTANT: Always use agents for tasks that match their descriptions. This improves performance and accuracy.**
+
+### Available Agents:
+
+#### 1. **general-purpose**
+- **Purpose**: General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks
+- **When to use**: 
+  - Searching for files/code when not confident about exact matches
+  - Complex research requiring multiple searches
+  - Multi-step analysis tasks
+- **Example**:
+  ```
+  Task(description="Find all API endpoints", prompt="Search for all API endpoints in the backend and analyze their authentication requirements", subagent_type="general-purpose")
+  ```
+
+#### 2. **url-architecture-manager**
+- **Purpose**: Design, analyze, and restructure URL hierarchies and routing patterns in SvelteKit projects
+- **When to use**:
+  - Reorganizing site URL structure
+  - Optimizing template inheritance
+  - Implementing SEO-friendly permalinks
+  - Managing hierarchical content taxonomies
+- **Example**:
+  ```
+  Task(description="Optimize URL structure", prompt="Analyze and propose optimized URL hierarchy for the blog section", subagent_type="url-architecture-manager")
+  ```
+
+#### 3. **feature-ideator-pkm**
+- **Purpose**: Generate innovative feature ideas for PRSNL PKM based on user insights, feedback, or market trends
+- **When to use**:
+  - Processing user feedback for feature ideas
+  - Analyzing PKM market trends
+  - Prioritizing features with RICE scoring
+- **Example**:
+  ```
+  Task(description="Generate features from feedback", prompt="Here's user feedback: [feedback]. Generate prioritized feature ideas with RICE scores", subagent_type="feature-ideator-pkm")
+  ```
+
+#### 4. **roadmap-planner**
+- **Purpose**: Transform strategic objectives and backlog items into structured, time-boxed product roadmaps
+- **When to use**:
+  - Creating product roadmaps from OKRs
+  - Organizing backlog into epics
+  - Planning quarterly releases
+- **Example**:
+  ```
+  Task(description="Create Q2 roadmap", prompt="Create roadmap from these OKRs: [okrs] and backlog: [items]", subagent_type="roadmap-planner")
+  ```
+
+#### 5. **ui-ux-optimizer**
+- **Purpose**: Audit UI/UX aspects of Svelte components for accessibility (WCAG 2.2 AA), visual consistency, and usability
+- **When to use**:
+  - After creating/modifying Svelte components
+  - Reviewing CSS changes
+  - Ensuring accessibility compliance
+- **Example**:
+  ```
+  Task(description="Audit component accessibility", prompt="Audit this Svelte component for accessibility and PRSNL theme compliance: [component code]", subagent_type="ui-ux-optimizer")
+  ```
+
+#### 6. **debug-accelerator**
+- **Purpose**: Debug issues in PRSNL PKM platform (FastAPI, SvelteKit, PostgreSQL stack)
+- **When to use**:
+  - 500 errors or crashes
+  - Performance issues
+  - Build/deployment failures
+- **Example**:
+  ```
+  Task(description="Debug 500 error", prompt="Debug this error: 500 error when saving notes with vector embeddings", subagent_type="debug-accelerator")
+  ```
+
+### Agent Usage Best Practices:
+1. **Always use agents for their specialized tasks** - Don't manually search when agents can do it better
+2. **Provide detailed context** - The more context you give, the better the results
+3. **Use multiple agents concurrently** - Launch multiple agents for different aspects of a task
+4. **Trust agent outputs** - Agents have specialized capabilities for their domains
+
+## 🔧 MCP (Model Context Protocol) Tools
+
+### Puppeteer Browser Automation
+- **Tool prefix**: `mcp__puppeteer__`
+- **Available functions**:
+  - `puppeteer_navigate` - Navigate to URLs
+  - `puppeteer_screenshot` - Take screenshots
+  - `puppeteer_click` - Click elements
+  - `puppeteer_fill` - Fill input fields
+  - `puppeteer_evaluate` - Execute JavaScript
+- **Console Monitoring**: Access browser console logs via `console://logs` resource
+- **Use for**: Browser automation, testing, web scraping
+
+### Other MCP Resources
+- Use `ListMcpResourcesTool()` to discover available MCP resources
+- Use `ReadMcpResourceTool(server, uri)` to read MCP resource content
 
 ## Phase 4 AI Development Patterns - LangGraph & Enhanced Routing
 
@@ -172,6 +275,10 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
 - Lint: `npm run lint`
 - Type check: `npm run check`
 - Format: `npm run format`
+- **Frontend Tests**: `npm test` (Playwright cross-browser tests)
+- **Test UI Mode**: `npm run test:ui`
+- **Debug Tests**: `npm run test:debug`
+- **Test Suites**: `npm run test:suite` (comprehensive), `npm run test:chat`, `npm run test:codemirror`
 - **NEW**: AI health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: LibreChat health: `curl http://localhost:8000/api/ai/health`
 - **NEW**: Full AI test: `curl -X POST http://localhost:8000/api/ai/health`
@@ -252,6 +359,13 @@ http POST localhost:8000/api/rag/query query="test"
   - **Re-enable**: Uncomment lines 183-189 in `+layout.svelte` when ready
 
 ## Recent Features (DO NOT ROLLBACK BEFORE THESE)
+- **NEW: Playwright Testing Migration (2025-08-01)** - Complete migration from Puppeteer to Playwright
+  - **Removed**: All Puppeteer dependencies (146 packages removed)
+  - **Added**: Playwright with cross-browser support (Chromium, Firefox, WebKit)
+  - **Features**: Built-in console monitoring, auto-waiting, better debugging
+  - **Test Scripts**: All test files converted to Playwright APIs
+  - **MCP Integration**: `playwright-console-monitor` agent for real-time error detection
+  - **Commands**: `npm test`, `npm run test:ui`, `npm run test:debug`
 - **NEW: Dreamscape PersonaAnalysisCrew (2025-07-28)** - AI-powered personal intelligence system
   - **Feature**: 5-agent CrewAI system for comprehensive user persona analysis
   - **Agents**: Technical, Lifestyle, Learning, Cross-Domain, and Orchestrator agents
@@ -286,7 +400,7 @@ http POST localhost:8000/api/rag/query query="test"
   - **Detection**: Hybrid approach (automatic + user enhancement)
 - **NEW: GitHub Actions CI/CD Pipeline (2025-07-11)** - Comprehensive automated testing, security scanning, and deployment workflows
 - **NEW: Svelte 5 Full Migration v2.3 (2025-07-11)** - Complete upgrade to Svelte 5.35.6, SvelteKit 2.22.5, Vite 7.0.4, Node.js >=24, resolved all security vulnerabilities, AI service fixes
-- **NEW: Advanced Integrations v2.2 (2025-07-11)** - Vosk offline transcription, OpenTelemetry monitoring, pre-commit hooks  
+- **NEW: Advanced Integrations v2.2 (2025-07-11)** - whisper.cpp offline transcription, OpenTelemetry monitoring, pre-commit hooks  
 - System Architecture Repository (2025-07-10) - Foundation for consistent development
 - Expert Engineer Development Tools (2025-07-10) - Port management, health checks, debugging
 - Fan3D component (commit b383191)

@@ -6,9 +6,9 @@
 
 ### 1. Backend Authentication Bypass
 **File**: `backend/app/core/auth.py`
-- **Lines**: 38-42, 50-54, 131
-- **Issue**: Returns hardcoded test user when no authentication provided
-- **Fix**: Remove the bypass and implement proper authentication
+- **Lines**: 35-42 (no credentials check), 50-57 (invalid token fallback)
+- **Issue**: Returns hardcoded test user when no authentication provided or invalid token
+- **Fix**: Remove both bypasses and implement proper authentication
 
 ### 2. WebSocket Authentication Bypass  
 **File**: `backend/app/api/ws.py`
@@ -33,6 +33,12 @@
 - **Lines**: 42-43 (PUBLIC_ROUTES)
 - **Issue**: Added `/ws/chat` and `/ws/floating-chat` to public routes to bypass auth for chat WebSocket connections
 - **Fix**: Implement proper WebSocket authentication for chat endpoints
+
+### 6. Frontend Auth Guard Complete Bypass (Added 2025-08-01)
+**File**: `frontend/src/lib/auth/auth-guard.ts`
+- **Lines**: 84-87
+- **Issue**: Returns true for all routes without any authentication check
+- **Fix**: Remove the bypass and require proper authentication
 
 ## Summary
 These bypasses were added to allow development to continue while the authentication system is being implemented. They create serious security vulnerabilities and must be removed before any public deployment.

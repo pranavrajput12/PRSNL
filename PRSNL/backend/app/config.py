@@ -120,7 +120,10 @@ class Settings(BaseSettings):
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     
     # Frontend URL for OAuth callbacks
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3003")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3004")
+    
+    # Backend URL for OAuth redirects
+    BACKEND_URL: str = os.getenv("BACKEND_URL", f"http://localhost:{BACKEND_PORT}")
     
     # Sentry Error Tracking & Performance Monitoring
     SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", None)

@@ -17,9 +17,9 @@ from pydantic import BaseModel, Field
 # Guardrails removed per SDE2 recommendation
 from app.core.auth import get_current_user_optional
 from app.services.unified_ai_service import unified_ai_service
-from app.services.whisper_only_transcription import (
-    transcription_service,
-    TranscriptionModel,
+from app.services.hybrid_transcription import (
+    hybrid_transcription_service,
+    TranscriptionStrategy,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class SummaryGenerationRequest(BaseModel):
 class TranscriptionRequest(BaseModel):
     """Request model for transcription."""
     audio_url: str = Field(..., description="URL or path to audio file")
-    model: Optional[TranscriptionModel] = None
+    strategy: Optional[TranscriptionStrategy] = TranscriptionStrategy.AUTO
     language: str = "en"
     priority: Literal["speed", "balanced", "accuracy"] = "balanced"
 
@@ -177,36 +177,33 @@ async def transcribe_audio(
     current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
     """
-    Transcribe audio using whisper.cpp.
+    Transcribe audio using hybrid transcription service.
     
-    Priority options:
-    - speed: Uses tiny model for fastest results
-    - balanced: Uses base model (default)
-    - accuracy: Uses small model for best accuracy
+    Strategy options:
+    - auto: Automatically choose best service
+    - prefer_offline: Prefer local transcription
+    - prefer_cloud: Prefer cloud transcription
+    - offline_only: Only use local transcription
+    - cloud_only: Only use cloud transcription
     """
     try:
         user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
-        logger.info(f"Transcribing audio for user {user_id} with priority: {request.priority}")
-        
-        if not transcription_service.is_available():
-            raise HTTPException(
-                status_code=503,
-                detail="Transcription service not available"
-            )
+        logger.info(f"Transcribing audio for user {user_id} with strategy: {request.strategy}")
         
         # Handle URL vs local path
         audio_path = request.audio_url
         # In production, you'd download the URL or validate the path
         
-        result = await transcription_service.transcribe_with_options(
+        result = await hybrid_transcription_service.transcribe_audio(
             audio_path=audio_path,
-            priority=request.priority
+            strategy=request.strategy,
+            language=request.language
         )
         
         if not result:
             raise HTTPException(
                 status_code=500,
-                detail="Transcription failed"
+                detail="Transcription failed - no available services"
             )
         
         return {
@@ -214,8 +211,8 @@ async def transcribe_audio(
             "confidence": result.get("confidence", 0.0),
             "word_count": result.get("word_count", 0),
             "duration": result.get("duration", 0),
-            "model_used": result.get("model_used", "unknown"),
-            "service": "whisper.cpp"
+            "service_used": result.get("service_used", "unknown"),
+            "service_details": result.get("service_details", {})
         }
         
     except Exception as e:
@@ -230,15 +227,14 @@ async def transcribe_audio(
 async def get_available_transcription_models(
     current_user = Depends(get_current_user_optional)
 ) -> Dict[str, Any]:
-    """Get information about available transcription models."""
+    """Get information about available transcription services and strategies."""
     try:
-        models = await transcription_service.get_available_models()
-        languages = await transcription_service.get_supported_languages()
+        status = await hybrid_transcription_service.get_service_status()
         
         return {
-            "models": models,
-            "supported_languages": len(languages),
-            "language_sample": languages[:10]
+            "available_services": status,
+            "strategies": [s.value for s in TranscriptionStrategy],
+            "recommended_strategy": TranscriptionStrategy.AUTO.value
         }
         
     except Exception as e:
