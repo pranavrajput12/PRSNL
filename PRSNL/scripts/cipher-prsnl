@@ -1,0 +1,8 @@
+#!/bin/bash
+# Simple Cipher command for PRSNL development
+# Uses the file-based memory system since Azure OpenAI auth differs from OpenAI
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Use the file-based memory system we already created
+"$SCRIPT_DIR/prsnl-cipher.sh" "$@"

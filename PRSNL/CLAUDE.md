@@ -364,14 +364,46 @@ cipher "ADR-001: Chose pgvector over Pinecone because [reasons]"
 - Testing: Playwright cross-browser, agents: general-purpose, debug-accelerator, ui-ux-optimizer
 - Key files: CLAUDE.md, DATABASE_SCHEMA.md, CRASH_RECOVERY_GUIDE.md
 
-### Setup:
+### Setup & Usage:
+
+**🎉 AUTOMATIC MEMORY NOW WORKING!**
+
+#### Start Cipher Memory (One Time):
 ```bash
-# Already installed and configured with Azure OpenAI
-cipher --version  # Should show 0.2.0
-cipher recall "PRSNL overview"  # Test memory access
+# Start the Azure OpenAI proxy for Cipher
+./scripts/start-cipher.sh
 ```
 
-**Full Documentation**: `/docs/CIPHER_IMPLEMENTATION.md`
+#### Use Cipher Normally:
+```bash
+# Set environment variables (add to your shell profile)
+export OPENAI_API_KEY="sk-cipher-azure-proxy"
+export OPENAI_BASE_URL="http://localhost:8002/v1"
+
+# Now Cipher works automatically with Claude Code!
+cipher "Your development insight"
+cipher recall "search term"
+```
+
+**✅ Azure OpenAI Integration**: 
+- **Solution**: SDK proxy on port 8002 handles Azure auth
+- **Proxy**: `/scripts/cipher-azure-proxy.py` using official OpenAI SDK
+- **Config**: `~/.cipher/cipher.yml` points to localhost:8002
+- **Automatic**: Works seamlessly with Claude Code MCP
+
+**How It Works**:
+1. Proxy receives OpenAI-format requests from Cipher
+2. Uses `AzureOpenAI` SDK to handle auth conversion
+3. Returns responses in OpenAI format
+4. Cipher stores memories automatically
+
+**Manual File-Based Backup**:
+- Still available: `./scripts/cipher-prsnl` for file-based memory
+- Location: `.cipher-memories/` directory
+
+**Full Documentation**: 
+- `/docs/CIPHER_IMPLEMENTATION.md` - Cipher setup guide
+- Check proxy logs: `scripts/cipher-proxy.log`
 
 ## 🏗️ CRITICAL: System Architecture Repository
 **BEFORE BUILDING ANY NEW FEATURE, CONSULT:**
