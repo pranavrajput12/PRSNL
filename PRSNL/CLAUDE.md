@@ -104,6 +104,18 @@ docker-compose stop frontend
   - Searching for files/code when not confident about exact matches
   - Complex research requiring multiple searches
   - Multi-step analysis tasks
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "PRSNL architecture overview"
+  ./scripts/prsnl-cipher.sh recall "[search topic]"  # Check existing knowledge
+  ./scripts/prsnl-cipher.sh recall "previous searches: [similar topic]"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "SEARCH RESULT: [topic] → found in [files]"
+  ./scripts/prsnl-cipher.sh store "CODE PATTERN: [pattern found] in [location]"
+  ./scripts/prsnl-cipher.sh store "ARCHITECTURE INSIGHT: [discovery about system]"
+  ```
 - **Example**:
   ```
   Task(description="Find all API endpoints", prompt="Search for all API endpoints in the backend and analyze their authentication requirements", subagent_type="general-purpose")
@@ -116,6 +128,18 @@ docker-compose stop frontend
   - Optimizing template inheritance
   - Implementing SEO-friendly permalinks
   - Managing hierarchical content taxonomies
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "URL PATTERN"  # Check existing URL patterns
+  ./scripts/prsnl-cipher.sh recall "routing architecture"
+  ./scripts/prsnl-cipher.sh recall "SEO patterns"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "URL PATTERN: [route type] → [pattern used]"
+  ./scripts/prsnl-cipher.sh store "ROUTING DECISION: Chose [pattern] because [reason]"
+  ./scripts/prsnl-cipher.sh store "SEO SUCCESS: [URL structure] improved [metric]"
+  ```
 - **Example**:
   ```
   Task(description="Optimize URL structure", prompt="Analyze and propose optimized URL hierarchy for the blog section", subagent_type="url-architecture-manager")
@@ -127,6 +151,18 @@ docker-compose stop frontend
   - Processing user feedback for feature ideas
   - Analyzing PKM market trends
   - Prioritizing features with RICE scoring
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "FEATURE REQUEST"  # Check similar requests
+  ./scripts/prsnl-cipher.sh recall "user feedback patterns"
+  ./scripts/prsnl-cipher.sh recall "RICE scores"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "FEATURE IDEA: [name] → RICE score [score]"
+  ./scripts/prsnl-cipher.sh store "USER INSIGHT: [feedback pattern] suggests [feature]"
+  ./scripts/prsnl-cipher.sh store "MARKET TREND: [trend] → opportunity for [feature]"
+  ```
 - **Example**:
   ```
   Task(description="Generate features from feedback", prompt="Here's user feedback: [feedback]. Generate prioritized feature ideas with RICE scores", subagent_type="feature-ideator-pkm")
@@ -138,6 +174,18 @@ docker-compose stop frontend
   - Creating product roadmaps from OKRs
   - Organizing backlog into epics
   - Planning quarterly releases
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "OKR history"
+  ./scripts/prsnl-cipher.sh recall "sprint velocity"
+  ./scripts/prsnl-cipher.sh recall "backlog patterns"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "ROADMAP DECISION: [epic] scheduled for [timeline]"
+  ./scripts/prsnl-cipher.sh store "EPIC BREAKDOWN: [epic] → [tasks list]"
+  ./scripts/prsnl-cipher.sh store "VELOCITY INSIGHT: Team can handle [X] story points/sprint"
+  ```
 - **Example**:
   ```
   Task(description="Create Q2 roadmap", prompt="Create roadmap from these OKRs: [okrs] and backlog: [items]", subagent_type="roadmap-planner")
@@ -149,6 +197,18 @@ docker-compose stop frontend
   - After creating/modifying Svelte components
   - Reviewing CSS changes
   - Ensuring accessibility compliance
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "COMPONENT PATTERN"  # Check existing components
+  ./scripts/prsnl-cipher.sh recall "accessibility issues"
+  ./scripts/prsnl-cipher.sh recall "PRSNL theme patterns"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "ACCESSIBILITY FIX: [issue] → [solution]"
+  ./scripts/prsnl-cipher.sh store "UX PATTERN: [component type] → [best practice]"
+  ./scripts/prsnl-cipher.sh store "THEME COMPLIANCE: [element] uses [PRSNL pattern]"
+  ```
 - **Example**:
   ```
   Task(description="Audit component accessibility", prompt="Audit this Svelte component for accessibility and PRSNL theme compliance: [component code]", subagent_type="ui-ux-optimizer")
@@ -160,6 +220,18 @@ docker-compose stop frontend
   - 500 errors or crashes
   - Performance issues
   - Build/deployment failures
+- **Pre-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh recall "BUG PATTERN [error message]"
+  ./scripts/prsnl-cipher.sh recall "similar error"
+  ./scripts/prsnl-cipher.sh recall "debugging [service name]"
+  ```
+- **Post-task Cipher SOP**:
+  ```bash
+  ./scripts/prsnl-cipher.sh store "BUG PATTERN: [error] → [solution]"
+  ./scripts/prsnl-cipher.sh store "ROOT CAUSE: [issue] caused by [reason]"
+  ./scripts/prsnl-cipher.sh store "DEBUGGING TIP: For [error type] check [location]"
+  ```
 - **Example**:
   ```
   Task(description="Debug 500 error", prompt="Debug this error: 500 error when saving notes with vector embeddings", subagent_type="debug-accelerator")
@@ -404,6 +476,46 @@ cipher recall "search term"
 **Full Documentation**: 
 - `/docs/CIPHER_IMPLEMENTATION.md` - Cipher setup guide
 - Check proxy logs: `scripts/cipher-proxy.log`
+
+### 🚀 AUTOMATIC CIPHER INDEXING (Run These Scripts)
+
+**IMPORTANT: Agents should automatically run these scripts when appropriate:**
+
+#### 1. Initial Setup (Run once or after major changes):
+```bash
+# Index all critical documentation files (50+ files)
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+./cipher-index-critical-files.sh
+
+# Index codebase patterns (routes, services, models)
+./cipher-index-codebase.sh
+```
+
+#### 2. Daily Development (Run at start of session):
+```bash
+# Load project context into memory
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+./prsnl-cipher.sh recall "PRSNL architecture"
+./prsnl-cipher.sh recall "port"
+./prsnl-cipher.sh recall "BUG PATTERN"
+```
+
+#### 3. End of Day (Run before session end):
+```bash
+# Capture daily patterns and insights
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+./cipher-daily-index.sh
+```
+
+#### 4. Component Development (Run when working with UI):
+```bash
+# Check component inventory before creating new ones
+cd /Users/pronav/Personal\ Knowledge\ Base/PRSNL/scripts
+./component-inventory.sh
+```
+
+### Agent-Specific Cipher Integration
+All agents now have pre/post task SOPs for Cipher integration. See agent descriptions above for specific commands each agent should run.
 
 ## 🏗️ CRITICAL: System Architecture Repository
 **BEFORE BUILDING ANY NEW FEATURE, CONSULT:**
