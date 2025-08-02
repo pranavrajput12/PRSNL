@@ -490,12 +490,25 @@ export async function getItem(id: string): Promise<Item> {
   return fetchWithErrorHandling<Item>(`/items/${id}`);
 }
 
+// Simple cache for tags to prevent redundant API calls
+let tagsCache: { data: Tag[] | null; timestamp: number } = { data: null, timestamp: 0 };
+const TAGS_CACHE_TTL = 30000; // 30 seconds cache
+
 /**
- * Get recent tags for autocomplete
+ * Internal function to fetch tags with caching
  */
-export async function getRecentTags(): Promise<Tag[]> {
+async function fetchTagsWithCache(): Promise<Tag[]> {
+  const now = Date.now();
+  
+  // Return cached data if it exists and is not expired
+  if (tagsCache.data && (now - tagsCache.timestamp) < TAGS_CACHE_TTL) {
+    return tagsCache.data;
+  }
+  
   try {
-    return await fetchWithErrorHandling<Tag[]>('/tags');
+    const tags = await fetchWithErrorHandling<Tag[]>('/tags');
+    tagsCache = { data: tags, timestamp: now };
+    return tags;
   } catch (error) {
     console.error('Failed to fetch tags, returning empty array:', error);
     return [];
@@ -503,11 +516,18 @@ export async function getRecentTags(): Promise<Tag[]> {
 }
 
 /**
+ * Get recent tags for autocomplete
+ */
+export async function getRecentTags(): Promise<Tag[]> {
+  return fetchTagsWithCache();
+}
+
+/**
  * Get all tags
  */
 export async function getTags(): Promise<{ tags: Tag[] }> {
-  const tags = await fetchWithErrorHandling<Tag[]>('/tags');
-
+  const tags = await fetchTagsWithCache();
+  
   // Backend returns array directly, frontend expects object with tags array
   return { tags: Array.isArray(tags) ? tags : [] };
 }

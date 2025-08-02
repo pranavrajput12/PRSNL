@@ -4,7 +4,7 @@
       "command": "/bin/bash",
       "args": [
         "-c",
-        "cd '/Users/pronav/Personal Knowledge Base' && source .env.cipher && OPENAI_API_KEY=\"$OPENAI_API_KEY\" OPENAI_BASE_URL=\"$OPENAI_BASE_URL\" MCP_SERVER_MODE=\"aggregator\" npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
+        "cd '/Users/pronav/Personal Knowledge Base' && source .env.cipher && OPENAI_API_KEY=\"$OPENAI_API_KEY\" OPENAI_BASE_URL=\"$OPENAI_BASE_URL\" MCP_SERVER_MODE=\"$MCP_SERVER_MODE\" ANTHROPIC_API_KEY=\"$ANTHROPIC_API_KEY\" npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
       ],
       "env": {}
     }

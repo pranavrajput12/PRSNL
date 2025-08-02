@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { authActions, isAuthenticated, isLoading, authError } from '$lib/stores/unified-auth';
   import Icon from '$lib/components/Icon.svelte';
   import NeuralBackground from '$lib/components/NeuralBackground.svelte';
@@ -37,7 +38,10 @@
 
   // Redirect if already authenticated
   $: if ($isAuthenticated) {
-    goto('/');
+    // Check for redirect parameter in URL
+    const redirectTo = $page.url.searchParams.get('redirect');
+    const destination = redirectTo || '/';
+    goto(destination);
   }
 
   // Validation
@@ -77,7 +81,11 @@
           email: formData.email,
           password: formData.password
         });
-        goto('/');
+        
+        // Redirect to intended destination or homepage
+        const redirectTo = $page.url.searchParams.get('redirect');
+        const destination = redirectTo || '/';
+        goto(destination);
       } catch (error) {
         console.error('Login failed:', error);
       }
