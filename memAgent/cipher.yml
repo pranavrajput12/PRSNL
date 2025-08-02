@@ -1,19 +1,201 @@
-# MCP Servers (optional)
-mcpServers: {}
+# Enhanced MCP Servers with Aggregator Mode
+mcpServers:
+  # Playwright for browser automation and testing
+  playwright:
+    type: stdio
+    command: node
+    args: ["/Users/pronav/.nvm/versions/node/v20.18.1/bin/mcp-server-playwright"]
+    env: {}
+    
+  # Puppeteer for browser automation (backup option)
+  puppeteer:
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-puppeteer"]
+    env: {}
+    
+  # Filesystem access for file operations
+  filesystem:
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/Users/pronav/Personal Knowledge Base"]
+    env: {}
+    
+  # Git operations for version control
+  git:
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-git"]
+    env: {}
+    
+  # SQLite for database operations
+  sqlite:
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-sqlite", "/Users/pronav/Personal Knowledge Base/data"]
+    env: {}
 
-# LLM Configuration
+# Primary LLM Configuration - OpenAI-compatible with Azure OpenAI
 llm:
-  provider: azure
+  # Using Azure OpenAI through OpenAI-compatible interface
+  provider: openai
   model: gpt-4.1
-  apiKey: $AZURE_OPENAI_API_KEY
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
   maxIterations: 50
-  azure:
-    endpoint: $AZURE_OPENAI_ENDPOINT
-    deploymentName: gpt-4.1
 
-# System Prompt
+# Enhanced System Prompt with Aggregator Context
 systemPrompt:
   enabled: true
   content: |
-    You are an AI assistant with access to a persistent memory system.
-    You can store and retrieve information across conversations.
+    You are an AI assistant with access to a persistent memory system and comprehensive toolset through MCP aggregator mode.
+    
+    Available Tools via Aggregator:
+    - Memory operations: Store and retrieve development context persistently
+    - Browser automation: Playwright for testing, screenshots, and interaction
+    - File operations: Read, write, and manipulate files in the PRSNL codebase
+    - Git operations: Version control and repository management
+    - Database operations: SQLite for data analysis and storage
+    
+    Critical PRSNL Architecture Context:
+    - PostgreSQL with pgvector on port 5432 (ARM64 architecture)
+    - FastAPI backend (port 8000), SvelteKit frontend (port 3004)
+    - Azure OpenAI integration (gpt-4.1 + text-embedding-ada-002)
+    - LangGraph workflows, DragonflyDB caching, dual auth system
+    - Development patterns: Svelte 5 runes, async FastAPI, Playwright testing
+    
+    Memory Instructions:
+    - Automatically capture tool usage patterns and solutions
+    - Store architectural decisions with context and reasoning
+    - Remember cross-session development state and progress
+    - Maintain consistency in coding patterns and standards
+
+# Aggregator Mode Configuration
+aggregator:
+  enabled: true
+  conflictResolution: prefix  # Handle tool name conflicts with server prefix
+  timeout: 60000  # 60 second timeout for tool execution
+  autoContext: true  # Automatically capture context from all tool interactions
+  sessionPersistence: true  # Maintain session state across interactions
+
+# Embedding Configuration for Vector Search
+embedding:
+  # Using OpenAI-compatible Azure endpoint for embeddings
+  type: openai
+  model: text-embedding-ada-002
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
+  dimensions: 1536
+  timeout: 30000
+  maxRetries: 3
+
+# Vector Store Configuration for Enhanced Memory
+vectorStore:
+  type: qdrant
+  url: $QDRANT_URL
+  apiKey: $QDRANT_API_KEY
+  collection: $QDRANT_COLLECTION
+  embedDimension: 1536
+  similarity: cosine
+
+# Database Configuration for Team Collaboration
+database:
+  # PostgreSQL for team shared memory
+  type: postgresql
+  connectionString: $DATABASE_URL
+  poolSize: $DATABASE_POOL_SIZE
+  ssl: $DATABASE_SSL
+  schema: $DATABASE_SCHEMA
+  
+  # Tables created automatically:
+  # - chat_history: Stores all team interactions
+  # - memory_entries: Persistent memory across sessions
+  # - reasoning_patterns: System 2 memory for problem-solving
+  # - team_insights: Collective intelligence discoveries
+
+# Memory Management Configuration
+memory:
+  maxSize: 50000  # Increased for development context
+  embeddingCacheTTL: 86400  # 24 hours
+  autoCleanup: true
+  retentionDays: 90
+  qualityThreshold: 0.7  # Minimum quality score for pattern retention
+
+# Dual Memory System Configuration with Qdrant
+dualMemory:
+  system1:  # Programming concepts, business logic, interactions
+    enabled: true
+    storageType: semantic
+    vectorStore: qdrant
+    clustering: true
+    collection: "prsnl_system1_memory"
+    
+  system2:  # Reasoning steps, decision processes
+    enabled: true
+    storageType: procedural
+    vectorStore: qdrant
+    contextWindow: 10
+    collection: "prsnl_system2_memory"
+
+# Auto-processing Configuration
+autoProcessing:
+  enabled: true
+  triggers:
+    - toolUsage
+    - errorResolution
+    - codeGeneration
+    - architecturalDecisions
+  
+  enrichment:
+    includeFileContext: true
+    includeGitContext: true
+    includeTimestamp: true
+    includeSessionId: true
+
+# Transport Configuration (SSE for better performance)
+transport:
+  type: sse  # Server-Sent Events for improved performance
+  fallback: stdio  # Fallback to stdio if SSE fails
+  keepAlive: true
+  compression: true
+
+# MCP Tools Configuration
+mcpTools:
+  # Enable read operations (default)
+  - ask_cipher
+  
+  # Enable write operations (if supported)
+  - add_to_cipher
+  - update_cipher
+  - delete_from_cipher
+  
+  # Additional tools (if available)
+  - search_cipher
+  - list_cipher_entries
+  - export_cipher_memory
+
+# Team Collaboration Features
+collaboration:
+  # Real-time sync across IDEs
+  realTimeSync: true
+  
+  # Broadcast memory updates to team
+  broadcastUpdates: true
+  
+  # Track which team member created memories
+  attributeMemories: true
+  
+  # Enable collective intelligence features
+  collectiveIntelligence:
+    enabled: true
+    patternRecognition: true
+    solutionSharing: true
+    crossProjectLearning: false
+
+# Development-Specific Configuration
+development:
+  debugMode: false
+  verboseLogging: false
+  patternAnalysis: true  # Enable automatic pattern quality analysis
+  crossSessionLearning: true
+  agentIntegration: true

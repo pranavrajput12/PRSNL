@@ -1,30 +1,12 @@
 {
   "mcpServers": {
-    "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
-      "env": {}
-    },
-    "playwright": {
-      "command": "node",
-      "args": [
-        "/Users/pronav/.nvm/versions/node/v20.18.1/bin/mcp-server-playwright"
-      ],
-      "env": {}
-    },
     "cipher": {
-      "command": "cipher",
+      "command": "/bin/bash",
       "args": [
-        "--mode",
-        "mcp",
-        "--agent",
-        "/Users/pronav/Personal Knowledge Base/memAgent/cipher.yml"
+        "-c",
+        "cd '/Users/pronav/Personal Knowledge Base' && source .env.cipher && OPENAI_API_KEY=\"$OPENAI_API_KEY\" OPENAI_BASE_URL=\"$OPENAI_BASE_URL\" MCP_SERVER_MODE=\"aggregator\" npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
       ],
-      "env": {
-        "OPENAI_API_KEY": "sk-dummy-key-for-cli-validation",
-        "AZURE_OPENAI_API_KEY": "1U6RGbb4XrVh4LUqG5qrNLHd1hvHeCDqseSThAayqhclju9nUCtTJQQJ99BAACHYHv6XJ3w3AAABACOG6tdK",
-        "AZURE_OPENAI_ENDPOINT": "https://airops.openai.azure.com/"
-      }
+      "env": {}
     }
   }
 }

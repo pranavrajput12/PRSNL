@@ -1,0 +1,212 @@
+# Cipher Configuration for Master Inbox Frontend Project
+# AI Memory Layer for React 19 + TypeScript 5.8 + shadcn/ui project
+
+# MCP (Model Context Protocol) Servers Configuration
+mcpServers:
+  # Filesystem access for project files
+  filesystem:
+    type: stdio
+    command: npx
+    args: ['-y', '@modelcontextprotocol/server-filesystem', '.']
+
+# Primary LLM Configuration - OpenAI-compatible with Azure OpenAI
+llm:
+  # Using Azure OpenAI through OpenAI-compatible interface
+  provider: openai
+  model: gpt-4
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
+  maxIterations: 50
+  
+  # Alternative configurations for reference
+  # provider: anthropic
+  # model: claude-3-5-sonnet-20241022
+  # apiKey: $ANTHROPIC_API_KEY
+  
+  # provider: openai
+  # model: gpt-4-turbo
+  # apiKey: $OPENAI_API_KEY
+
+# Embedding Configuration for Vector Search
+embedding:
+  # Using OpenAI-compatible Azure endpoint for embeddings
+  type: openai
+  model: text-embedding-ada-002
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
+  dimensions: 1536
+  timeout: 30000
+  maxRetries: 3
+
+# Vector Store Configuration for Team Search
+vectorStore:
+  # Qdrant Cloud for team vector search
+  type: qdrant
+  url: $QDRANT_URL
+  apiKey: $QDRANT_API_KEY
+  collection: $QDRANT_COLLECTION
+  embedDimension: 1536
+  similarity: cosine
+
+# Database Configuration for Team Collaboration
+database:
+  # PostgreSQL for team shared memory
+  type: postgresql
+  connectionString: $DATABASE_URL
+  poolSize: $DATABASE_POOL_SIZE
+  ssl: $DATABASE_SSL
+  schema: cipher_team
+  # Local SQLite backup option
+  # type: sqlite
+  # path: ./data/cipher.db
+  
+  # Tables created automatically:
+  # - chat_history: Stores all team interactions
+  # - memory_entries: Persistent memory across sessions
+  # - reasoning_patterns: System 2 memory for problem-solving
+  # - team_insights: Collective intelligence discoveries
+
+# Project-Specific System Prompt
+systemPrompt: |
+  You are an AI coding assistant with persistent memory for the Master Inbox Frontend project, part of the Trinity collective intelligence system.
+  
+  ## Project Context
+  - **Tech Stack**: React 19, TypeScript 5.8, Vite 7, shadcn/ui, Tailwind CSS 4
+  - **Architecture**: Atomic design system with 118+ components
+  - **API**: 143 endpoints across Epic 0-3 (Authentication, Client, Inbox, AI)
+  - **Current Status**: Sprint 005 completed, authentication infrastructure operational
+  - **Structure**: Multi-organization SaaS platform for email/LinkedIn inbox management
+  
+  ## Trinity Team System
+  - **Tyler (Chaos Hunter)**: Finds USER RAGE, captures pain with Playwright evidence
+  - **Dev (Systematic Builder)**: Transforms pain to joy, implements solutions
+  - **Guide (Sprint Orchestrator)**: Aligns team, plans sprints, validates completion
+  
+  ## Component Architecture
+  - **Atoms**: 24 base components (buttons, inputs, badges)
+  - **Molecules**: 67 composite components (forms, cards, selectors)  
+  - **Organisms**: 13 complex components (headers, sidebars, lists)
+  - **Templates**: 6 page layouts
+  
+  ## Development Standards
+  - TypeScript strict mode with comprehensive type safety
+  - Direct shadcn/ui usage (no unnecessary wrappers)
+  - Design tokens exclusively (no hardcoded values)
+  - Atomic design principles with reusability analysis
+  - Component reuse strategy before creating new components
+  - Evidence-based development (screenshots, logs, metrics)
+  
+  ## Sprint Methodology
+  - USER RAGE metrics (0-10 scale) guide all decisions
+  - Sprint phases: Discovery → Implementation → Validation → Completion
+  - Complete user journey testing required for sprint approval
+  - Mock Service Worker (MSW) for API development
+  
+  ## Current Sprint Context
+  - Branch: feature/sprint-005-routing  
+  - Recent Achievement: Sub-Sprint 5A authentication completion
+  - Mock Server: MSW with 143 operational endpoints
+  - USER RAGE reduced from 10→0 through systematic debugging
+  - Login → Client → Inbox flow fully functional
+  
+  ## Key Files & Patterns
+  - Component structure: ComponentName.tsx, .types.ts, .stories.tsx, index.ts
+  - API layer: axios-based with comprehensive error handling
+  - State management: Context API + useReducer pattern
+  - Testing: Playwright for E2E, Storybook for component development
+  - Trinity communication: agents/comm.json for team coordination
+  
+  ## Shared Memory Context
+  - All Trinity team interactions are preserved in this shared memory
+  - Solutions and patterns discovered by one team member benefit all
+  - USER RAGE fixes are indexed for future reference
+  - Sprint wisdom compounds over time
+  
+  Remember this context across all interactions and use it to provide more accurate, project-specific assistance. Draw upon the collective intelligence of past Trinity interactions.
+
+# MCP Tools Configuration
+mcpTools:
+  # Enable read operations (default)
+  - ask_cipher
+  
+  # Enable write operations (if supported)
+  - add_to_cipher
+  - update_cipher
+  - delete_from_cipher
+  
+  # Additional tools (if available)
+  - search_cipher
+  - list_cipher_entries
+  - export_cipher_memory
+
+# Memory Configuration
+memory:
+  # Enable automatic memory generation
+  autoGenerate: true
+  
+  # Maximum memory entries to retain
+  maxEntries: 1000
+  
+  # Memory categories
+  categories:
+    # Original categories
+    - components
+    - architecture
+    - api-endpoints
+    - sprint-progress
+    - bug-fixes
+    - architectural-decisions
+    
+    # Trinity team-specific categories
+    - user-rage-fixes
+    - trinity-decisions
+    - sprint-wisdom
+    - tyler-chaos-discoveries
+    - dev-solutions
+    - guide-orchestration
+    - team-patterns
+    - integration-points
+    
+  # Team memory settings
+  teamMode:
+    enabled: true
+    namespace: $TEAM_NAMESPACE
+    syncInterval: $TEAM_SYNC_INTERVAL
+    conflictResolution: $MCP_CONFLICT_RESOLUTION
+    
+# Logging Configuration
+logging:
+  level: info
+  # Set to debug for troubleshooting
+  # level: debug
+
+# Performance Configuration
+performance:
+  # Enable caching for better performance
+  enableCaching: true
+  
+  # Cache TTL in seconds
+  cacheTTL: 3600
+  
+  # Team performance settings
+  batchSize: 50
+  concurrentQueries: 5
+  vectorSearchLimit: 20
+  
+# Team Collaboration Features
+collaboration:
+  # Real-time sync across IDEs
+  realTimeSync: true
+  
+  # Broadcast memory updates to team
+  broadcastUpdates: true
+  
+  # Track which team member created memories
+  attributeMemories: true
+  
+  # Enable collective intelligence features
+  collectiveIntelligence:
+    enabled: true
+    patternRecognition: true
+    solutionSharing: true
+    crossProjectLearning: false

@@ -18,6 +18,8 @@ PRSNL is a keyboard-first, zero-friction personal knowledge management system de
 - Real capture endpoint with background processing
 - Search endpoint with database integration
 - Frontend running on port 3002 with API proxy
+- Cipher MCP integration with 21 AI development tools
+- Azure OpenAI integration through OpenAI-compatible interface
 
 🚧 **IN DEVELOPMENT**
 - Testing end-to-end capture flow
@@ -134,6 +136,30 @@ User Query
                           │   REST API  │
                           │  (FastAPI)  │
                           └─────────────┘
+```
+
+### 6. Development Intelligence Layer
+```
+┌─────────────────────────────────────────────────────────┐
+│                 Cipher MCP Integration                    │
+├─────────────────────────────────────────────────────────┤
+│                   21 AI Tools Available                  │
+├─────────────────┬─────────────────┬─────────────────────┤
+│ File Operations │ Memory & AI Ops │  Reasoning Tools    │
+│ • read_file     │ • ask_cipher    │ • store_reasoning   │
+│ • write_file    │ • memory_search │ • evaluate_reasoning│
+│ • edit_file     │ • add_to_cipher │ • search_patterns   │
+│ • create_dir    │ • update_cipher │ • extract_steps     │
+│ • list_dir      │ • delete_cipher │                     │
+│ • search_files  │ • export_memory │                     │
+└─────────────────┴─────────────────┴─────────────────────┘
+                               │
+                        ┌──────▼──────┐
+                        │ Azure OpenAI│
+                        │   Gateway   │
+                        │ (GPT-4.1 +  │
+                        │ Embeddings) │
+                        └─────────────┘
 ```
 
 ## Database Schema

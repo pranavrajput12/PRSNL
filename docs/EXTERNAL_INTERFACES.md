@@ -244,6 +244,96 @@ class AzureOpenAIClient:
         return response.choices[0].message.content
 ```
 
+### 3. Cipher MCP Integration (AI Development Tools)
+
+PRSNL integrates with Cipher MCP to provide 21 AI development tools via aggregator mode, enhancing the development workflow with persistent memory and intelligent file operations.
+
+#### Available Tools (21 Total)
+
+##### File Operations (14 tools)
+```python
+# File reading and manipulation
+tools = [
+    "read_file",              # Read file contents with AI context
+    "read_text_file",         # Read text files specifically  
+    "read_media_file",        # Read media file metadata
+    "read_multiple_files",    # Read multiple files at once
+    "write_file",             # Write content to files
+    "edit_file",              # Edit existing files with AI assistance
+    "create_directory",       # Create directory structures
+    "list_directory",         # List directory contents
+    "list_directory_with_sizes", # List with file size information
+    "directory_tree",         # Show directory tree structure
+    "move_file",              # Move/rename files
+    "search_files",           # Search within file contents
+    "get_file_info",          # Get detailed file metadata
+    "list_allowed_directories" # List accessible directories
+]
+```
+
+##### Memory & AI Operations (7 tools)
+```python
+# AI-powered memory and reasoning tools
+ai_tools = [
+    "ask_cipher",                      # General AI interactions with memory context
+    "cipher_extract_and_operate_memory", # Extract and store development patterns
+    "cipher_memory_search",            # Search stored memories and patterns
+    "cipher_store_reasoning_memory",   # Store reasoning patterns for reuse
+    "cipher_extract_reasoning_steps",  # Extract reasoning steps from solutions
+    "cipher_evaluate_reasoning",       # Evaluate reasoning quality and effectiveness
+    "cipher_search_reasoning_patterns" # Search for similar reasoning patterns
+]
+```
+
+#### Configuration Interface
+```bash
+# Environment variables for Cipher MCP
+MCP_SERVER_MODE=aggregator              # Enables all 21 tools
+MCP_CONFLICT_RESOLUTION=prefix          # Handle tool name conflicts  
+MCP_TOOL_TIMEOUT=30000                  # 30 second timeout
+OPENAI_API_KEY=$AZURE_OPENAI_API_KEY    # Azure OpenAI through OpenAI interface
+OPENAI_BASE_URL=$AZURE_OPENAI_ENDPOINT  # Azure endpoint as base URL
+```
+
+#### Claude Code MCP Integration
+```json
+{
+  "mcpServers": {
+    "cipher": {
+      "command": "/bin/bash",
+      "args": [
+        "-c", 
+        "source .env.cipher && MCP_SERVER_MODE=aggregator npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+#### Usage Patterns
+```python
+# Example: AI-enhanced file operations
+async def enhanced_file_operations():
+    # Read files with AI context
+    content = await cipher_tool("read_file", {"path": "src/main.py"})
+    
+    # Search for patterns in codebase
+    results = await cipher_tool("search_files", {"pattern": "async def", "directory": "src/"})
+    
+    # Store development insights
+    await cipher_tool("cipher_store_reasoning_memory", {
+        "pattern": "FastAPI async patterns",
+        "solution": "Use async/await with database operations",
+        "context": "Performance optimization"
+    })
+    
+    # Query stored knowledge
+    knowledge = await cipher_tool("cipher_memory_search", {
+        "query": "FastAPI database patterns"
+    })
+```
+
 ## Database Integration
 
 ### PostgreSQL Database Interface

@@ -392,6 +392,15 @@ AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
 AZURE_OPENAI_WHISPER_DEPLOYMENT=whisper
 AZURE_OPENAI_VISION_DEPLOYMENT=gpt-4-vision
 
+# Cipher MCP Configuration (AI Development Tools)
+# Create .env.cipher file for development environment
+MCP_SERVER_MODE=aggregator              # Enables 21 AI tools
+OPENAI_API_KEY=$AZURE_OPENAI_API_KEY    # Use Azure key for OpenAI-compatible interface
+OPENAI_BASE_URL=$AZURE_OPENAI_ENDPOINT  # Azure endpoint as OpenAI base URL
+QDRANT_URL=https://your-qdrant-cloud-url:6333
+QDRANT_API_KEY=your_qdrant_api_key
+QDRANT_COLLECTION=cipher_patterns
+
 # Storage
 MEDIA_ROOT=/app/media
 MAX_VIDEO_SIZE_MB=500

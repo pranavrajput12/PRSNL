@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "cipher-master-inbox": {
+      "type": "stdio",
+      "command": "/bin/bash",
+      "args": ["-c", "source .env.cipher && npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"],
+      "cwd": "/Users/pronav/Documents/Vibecode/Master inbox/Master_Inbox_Frontend"
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/pronav/Documents/Vibecode/Master inbox/Master_Inbox_Frontend"]
+    },
+    "git": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git", "/Users/pronav/Documents/Vibecode/Master inbox/Master_Inbox_Frontend"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"],
+      "env": {
+        "PLAYWRIGHT_BROWSER": "chromium"
+      }
+    }
+  }
+}

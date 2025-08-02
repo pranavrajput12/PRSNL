@@ -1,0 +1,19 @@
+# MCP Servers (optional)
+mcpServers: {}
+
+# LLM Configuration
+llm:
+  provider: azure
+  model: gpt-4.1
+  apiKey: $AZURE_OPENAI_API_KEY
+  maxIterations: 50
+  azure:
+    endpoint: $AZURE_OPENAI_ENDPOINT
+    deploymentName: gpt-4.1
+
+# System Prompt
+systemPrompt:
+  enabled: true
+  content: |
+    You are an AI assistant with access to a persistent memory system.
+    You can store and retrieve information across conversations.

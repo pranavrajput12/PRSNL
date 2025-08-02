@@ -50,11 +50,27 @@ docker-compose up --build
 npm run dev:all
 ```
 
-### 3. Verify Installation
+### 3. Setup Cipher MCP (AI Development Tools)
+```bash
+# Create .env.cipher with Azure OpenAI credentials
+cp .env.cipher.example .env.cipher
+# Edit .env.cipher with your Azure OpenAI credentials
+
+# Set MCP_SERVER_MODE=aggregator for 21 tools
+echo "MCP_SERVER_MODE=aggregator" >> .env.cipher
+
+# Update .mcp.json to use environment loading
+# Command should be: "/bin/bash", "-c", "source .env.cipher && npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
+```
+
+### 4. Verify Installation
 ```bash
 # Check all services are running
 curl http://localhost:8000/health  # Backend
 curl http://localhost:3000         # Frontend
+
+# Verify Cipher MCP tools (should show 21 tools in Claude Code)
+source .env.cipher && npx @byterover/cipher --version
 ```
 
 **Access Points:**
@@ -372,6 +388,104 @@ ollama run llama2 "Summarize this: Hello world example."
 curl http://localhost:11434/api/generate \
   -d '{"model": "llama2", "prompt": "Test prompt", "stream": false}'
 ```
+
+## Cipher MCP Integration (AI Development Tools)
+
+### Overview
+Cipher MCP provides 21 AI development tools via aggregator mode, including file operations, memory management, and reasoning patterns. Successfully configured with Azure OpenAI integration.
+
+### Prerequisites
+- Azure OpenAI subscription with GPT-4.1 deployment
+- Claude Code CLI installed
+- Node.js and npm for @byterover/cipher package
+
+### Configuration Steps
+
+#### 1. Create Environment File
+```bash
+# Create .env.cipher in project root
+cat > .env.cipher << 'EOF'
+# Azure OpenAI Configuration
+AZURE_OPENAI_API_KEY=your_azure_api_key_here
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
+AZURE_OPENAI_GPT4_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+
+# OpenAI-compatible configuration for Cipher
+OPENAI_API_KEY=your_azure_api_key_here
+OPENAI_BASE_URL=https://your-endpoint.openai.azure.com
+
+# Critical: Enable aggregator mode for 21 tools
+MCP_SERVER_MODE=aggregator
+MCP_CONFLICT_RESOLUTION=prefix
+MCP_TOOL_TIMEOUT=30000
+
+# Database and Vector Store
+DATABASE_URL=postgresql://pronav:@localhost:5432/prsnl
+QDRANT_URL=https://your-qdrant-cloud-url:6333
+QDRANT_API_KEY=your_qdrant_api_key
+QDRANT_COLLECTION=prsnl_cipher_patterns
+EOF
+```
+
+#### 2. Configure cipher.yml
+```yaml
+# memAgent/cipher.yml - Key configurations
+llm:
+  provider: openai  # NOT azure - use OpenAI-compatible interface
+  model: gpt-4.1
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
+
+embedding:
+  type: openai
+  model: text-embedding-ada-002
+  apiKey: $OPENAI_API_KEY
+  baseUrl: $OPENAI_BASE_URL
+
+database:
+  type: postgresql
+  connectionString: $DATABASE_URL
+  schema: public
+
+mcpTools:
+  - ask_cipher
+  - add_to_cipher
+  - update_cipher
+  - delete_from_cipher
+  - search_cipher
+  - list_cipher_entries
+  - export_cipher_memory
+```
+
+#### 3. Update Claude Code MCP Configuration
+```json
+{
+  "mcpServers": {
+    "cipher": {
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "cd '/Users/pronav/Personal Knowledge Base' && source .env.cipher && OPENAI_API_KEY=\"$OPENAI_API_KEY\" OPENAI_BASE_URL=\"$OPENAI_BASE_URL\" MCP_SERVER_MODE=\"aggregator\" npx @byterover/cipher --mode mcp --agent memAgent/cipher.yml"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+### Available Tools (21 Total)
+- **File Operations**: read_file, write_file, edit_file, create_directory, list_directory, etc.
+- **Memory Management**: cipher_memory_search, cipher_extract_and_operate_memory, etc.
+- **Reasoning Tools**: cipher_store_reasoning_memory, cipher_evaluate_reasoning, etc.
+- **Core Tool**: ask_cipher for general AI interactions
+
+### Troubleshooting
+- **Only 1 tool visible**: Check MCP_SERVER_MODE=aggregator is set
+- **API key errors**: Verify Azure OpenAI credentials in .env.cipher
+- **Connection failures**: Ensure bash command sources .env.cipher properly
+- **404 errors**: Check Azure OpenAI endpoint URLs and deployment names
 
 ## Development Scripts
 

@@ -39,6 +39,15 @@ curl http://localhost:8000/health
 curl http://localhost:3002
 ```
 
+### Cipher MCP Setup (AI Development Tools)
+```bash
+# Configure environment variables
+source .env.cipher
+
+# Verify 21 tools are available in Claude Code
+# Tools include: file operations, memory management, reasoning patterns
+```
+
 ## 🌟 Key Features
 
 1. **Universal Capture**: Articles, videos, notes with meta-tag extraction
@@ -49,6 +58,7 @@ curl http://localhost:3002
 6. **Import System**: JSON, bookmarks, bulk URL import
 7. **Timeline View**: Chronological feed with infinite scroll
 8. **Beautiful UI**: Manchester United themed interface (#dc143c)
+9. **Cipher MCP Integration**: 21 AI development tools via aggregator mode
 
 ## 🏗️ Architecture
 
@@ -57,6 +67,7 @@ curl http://localhost:3002
 - **Database**: PostgreSQL 16 with pgvector on port 5433
 - **AI**: Azure OpenAI exclusive (GPT-4, Whisper, Embeddings)
 - **Platform**: ARM64 (Apple Silicon) optimized
+- **Development**: Cipher MCP with 21 AI tools for enhanced coding workflows
 
 ## 📚 Documentation Structure
 
