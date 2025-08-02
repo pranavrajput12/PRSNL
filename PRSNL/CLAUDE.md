@@ -25,6 +25,13 @@
 ## 🚨 CRITICAL: Architecture Configuration (Apple Silicon M1/M2)
 **THIS SYSTEM RUNS ON ARM64 ARCHITECTURE - DO NOT MIX WITH x86_64**
 
+### Colima Resource Requirements
+- **CPU**: 4 cores minimum (for DragonflyDB + Auth services)
+- **Memory**: 8GB minimum (4GB for containers + 4GB overhead)  
+- **Disk**: 100GB recommended (container images + volumes)
+- **Architecture**: ARM64 native (Apple Silicon optimized)
+- **Start Command**: `colima start --cpu 4 --memory 8 --disk 100`
+
 ### PostgreSQL Architecture Setup
 - **ALWAYS USE**: `/opt/homebrew/` (ARM64 Homebrew) for PostgreSQL
 - **NEVER USE**: `/usr/local/` (Intel x86_64 Homebrew) for PostgreSQL
@@ -56,8 +63,8 @@ lsof -p $(pgrep -f postgres | head -1) | grep bin/postgres
 4. pgvector should already be installed in ARM64 PostgreSQL
 
 ## Container Runtime - Phase 3 Configuration
-- We use Rancher Desktop for containers
-- **DragonflyDB** runs in Docker (replaced Redis - 25x faster)
+- We use **Colima** for containers (Apple Silicon optimized)
+- **DragonflyDB** runs in Colima containers (replaced Redis - 25x faster)
 - Backend runs locally for better development experience
 - AI agents run as part of backend process (not containerized)
 
@@ -76,6 +83,11 @@ lsof -ti:8000 | xargs kill -9  # Backend
 lsof -ti:3004 | xargs kill -9  # Frontend Dev
 lsof -ti:3003 | xargs kill -9  # Frontend Container
 lsof -ti:5432 | xargs kill -9  # PostgreSQL (ARM64)
+
+# Colima container management
+colima status                   # Check Colima status
+colima start --cpu 4 --memory 8 --disk 100  # Start with resources
+colima stop                     # Stop Colima containers
 ```
 
 ## Running Services - CRITICAL DISTINCTION
@@ -83,7 +95,7 @@ lsof -ti:5432 | xargs kill -9  # PostgreSQL (ARM64)
 - Frontend: Run locally with `cd frontend && npm run dev -- --port 3004` (port 3004)
 - Backend: Run locally with AI integration
 - Database: Local ARM64 PostgreSQL 16 on port 5432
-- Cache: DragonflyDB in Rancher container
+- Cache: DragonflyDB in Colima container
 
 **PRODUCTION/CONTAINER MODE:**
 - Frontend: Container runs on port 3003
@@ -94,8 +106,20 @@ lsof -ti:5432 | xargs kill -9  # PostgreSQL (ARM64)
 - Do NOT start frontend container on port 3003 (conflicts with dev server)
 - The frontend container is ONLY for production deployments
 
-**To avoid conflicts:**
+**Colima Development Workflow:**
 ```bash
+# Quick start all services (recommended)
+./scripts/start-colima-services.sh
+
+# Check service health
+./scripts/colima-health-check.sh
+
+# Graceful shutdown (keeps Colima running)
+./scripts/stop-colima-services.sh
+
+# Full shutdown (stops Colima too)
+./scripts/stop-colima-services.sh --stop-colima
+
 # Always stop frontend container during development
 docker-compose stop frontend
 ```
@@ -339,8 +363,8 @@ AZURE_OPENAI_DEPLOYMENT = settings.AZURE_OPENAI_DEPLOYMENT
    - **Slow responses**: Check if using correct model (should be fast)
    - **Context missing**: Ensure knowledge base integration is working
 6. **DragonflyDB Issues**:
-   - **Connection errors**: Restart with `docker-compose restart dragonflydb`
-   - **Performance issues**: Check Rancher Desktop memory allocation
+   - **Connection errors**: Restart with `docker-compose restart redis` (DragonflyDB service)
+   - **Performance issues**: Check Colima memory allocation with `colima status`
 7. **Service Startup Issues**:
    - **Backend fails to start**: Check for missing Python packages, especially `langgraph-checkpoint-sqlite`
    - **Frontend crashes silently**: Run in foreground first to see errors, then use `nohup` for background
@@ -447,7 +471,9 @@ http POST localhost:8000/api/rag/query query="test"
 **HTTPie Documentation**: `/docs/HTTPIE_USAGE.md` - Complete usage guide with examples
 
 ## Development Tools (Expert Engineer Improvements)
-- Health checks: `make test-health` - Run comprehensive smoke tests
+- **Colima Health Check**: `./scripts/colima-health-check.sh` - Comprehensive Colima service health check
+- **Service Management**: `./scripts/start-colima-services.sh` - Start essential Colima services
+- **Service Shutdown**: `./scripts/stop-colima-services.sh` - Gracefully stop services
 - Port management: `make kill-ports`, `make check-ports`
 - Clean environment: `make clean-dev`
 - Route debugging: `curl http://localhost:8000/api/debug/routes`

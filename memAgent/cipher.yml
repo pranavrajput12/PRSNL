@@ -35,14 +35,15 @@ mcpServers:
     args: ["-y", "@modelcontextprotocol/server-sqlite", "/Users/pronav/Personal Knowledge Base/data"]
     env: {}
 
-# Primary LLM Configuration - OpenAI-compatible with Azure OpenAI
+# Primary LLM Configuration - Azure OpenAI
 llm:
-  # Using Azure OpenAI through OpenAI-compatible interface
-  provider: openai
-  model: gpt-4
-  apiKey: $OPENAI_API_KEY
-  baseUrl: $OPENAI_BASE_URL
+  provider: azure
+  model: gpt-4.1
+  apiKey: $AZURE_OPENAI_API_KEY
   maxIterations: 50
+  azure:
+    endpoint: $AZURE_OPENAI_ENDPOINT
+    deploymentName: gpt-4.1
 
 # Enhanced System Prompt with Aggregator Context
 systemPrompt:
@@ -80,14 +81,16 @@ aggregator:
 
 # Embedding Configuration for Vector Search
 embedding:
-  # Using OpenAI-compatible Azure endpoint for embeddings
-  type: openai
+  # Using Azure OpenAI for embeddings
+  type: azure
   model: text-embedding-ada-002
-  apiKey: $OPENAI_API_KEY
-  baseUrl: $OPENAI_BASE_URL
+  apiKey: $AZURE_OPENAI_API_KEY
   dimensions: 1536
   timeout: 30000
   maxRetries: 3
+  azure:
+    endpoint: $AZURE_OPENAI_ENDPOINT
+    deploymentName: text-embedding-ada-002
 
 # Vector Store Configuration for Enhanced Memory
 vectorStore:
